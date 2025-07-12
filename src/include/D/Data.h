@@ -107,6 +107,7 @@ namespace Modex
 		std::unordered_map<const RE::TESFile*, ModFileItemFlags> 	_itemListModFormTypeMap;
 		std::unordered_map<const RE::TESFile*, std::time_t> 		_modListLastModified;
 
+		void ApplyModFileItemFlags(const RE::TESFile* a_mod, RE::FormType a_formType);
 
 		template <class T>
 		void CacheItems(RE::TESDataHandler* a_data);
@@ -117,7 +118,7 @@ namespace Modex
 		template <class T>
 		void CacheStaticObjects(RE::TESDataHandler* a_data);
 
-		void CacheCells(const RE::TESFile* a_file, std::map<std::tuple<std::uint32_t, const std::string, const std::string>, std::string_view>& out_map);
+		void CacheCells(RE::TESFile* a_file, std::map<std::tuple<std::uint32_t, const std::string, const std::string>, std::string_view>& out_map);
 		void MergeNPCRefIds(std::shared_ptr<std::unordered_map<RE::FormID, RE::FormID>> npc_ref_map);
 	};
 }

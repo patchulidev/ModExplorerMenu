@@ -13,62 +13,134 @@ namespace Modex
 	{
 		static auto tweaks = GetModuleHandleA("po3_Tweaks");
 		static auto function = reinterpret_cast<_GetFormEditorID>(GetProcAddress(tweaks, "GetFormEditorID"));
+
 		if (function) {
 			return function(a_formID);
 		}
+
 		return {};
 	}
 
-	// Attempts to "Validate" the fileName member of a RE:TESFile* pointer.
-	// Returns "`MODEX_ERR`" if the pointer is null or the fileName member is null.
+	// Need this to ensure CTD doesn't occur with weird file names being passed around.
+	constexpr const char* ERROR_FILENAME = "MODEX_ERR";
+
 	std::string ValidateTESFileName(const RE::TESFile* a_file)
 	{
 		if (a_file == nullptr) {
-			return "MODEX_ERR";
+			return ERROR_FILENAME;
 		}
 
 		if (a_file->fileName == nullptr) {
-			return "MODEX_ERR";
+			return ERROR_FILENAME;
 		}
 
-		if (a_file->GetFilename().data() == nullptr) {
-			return "MODEX_ERR";
-		}
-
-		// std::string_view to const char* to std::string. utf-8 entry?
 		return std::string(a_file->fileName);
 	}
 
-	// Attempts to "Validate" the name member of a RE:TESForm or RE::TESName pointer.
-	// Returns "`MODEX_ERR`" if the pointer is null or the name member is null.
 	template <class TESObject>
 	const char* ValidateTESName(const TESObject* a_object)
 	{
 		if (a_object == nullptr) {
-			return "MODEX_ERR";
+			return ERROR_FILENAME;
 		}
 
 		if (a_object->GetName() == nullptr) {
-			return "MODEX_ERR";
+			return ERROR_FILENAME;
 		}
 
-		// Ensure the name is a valid, null-terminated C-string
 		return a_object->GetName();
+	}
+
+	// Helper method to assigning form flags to mod files when caching forms.
+	// Allows us to track and filter what form types a mod file contains.
+	void Data::ApplyModFileItemFlags(const RE::TESFile* a_mod, RE::FormType a_formType)
+	{
+		auto iter = _itemListModFormTypeMap.find(a_mod);
+
+		if (iter == _itemListModFormTypeMap.end()) {
+			_itemListModFormTypeMap[a_mod] = ModFileItemFlags();
+		}
+
+		ModFileItemFlags& flags = _itemListModFormTypeMap[a_mod];
+
+		switch (a_formType) {
+		case RE::FormType::Armor:
+			flags.armor = true;
+			break;
+		case RE::FormType::Book:
+			flags.book = true;
+			break;
+		case RE::FormType::Weapon:
+			flags.weapon = true;
+			break;
+		case RE::FormType::Misc:
+			flags.misc = true;
+			break;
+		case RE::FormType::SoulGem:
+			flags.misc = true;
+			break;
+		case RE::FormType::KeyMaster:
+			flags.key = true;
+			break;
+		case RE::FormType::Ammo:
+			flags.ammo = true;
+			break;
+		case RE::FormType::AlchemyItem:
+			flags.alchemy = true;
+			break;
+		case RE::FormType::Ingredient:
+			flags.ingredient = true;
+			break;
+		case RE::FormType::Scroll:
+			flags.scroll = true;
+			break;
+		case RE::FormType::Tree:
+			flags.tree = true;
+			break;
+		case RE::FormType::Activator:
+			flags.activator = true;
+			break;
+		case RE::FormType::Container:
+			flags.container = true;
+			break;
+		case RE::FormType::Door:
+			flags.door = true;
+			break;
+		case RE::FormType::Light:
+			flags.light = true;
+			break;
+		case RE::FormType::Static:
+			flags.staticObject = true;
+			break;
+		case RE::FormType::Furniture:
+			flags.furniture = true;
+			break;
+		case RE::FormType::Flora:
+			flags.flora = true;
+			break;
+		default:
+			break;
+		}
 	}
 
 	template <class T>
 	void Data::CacheNPCs(RE::TESDataHandler* a_data)
 	{
 		for (RE::TESForm* form : a_data->GetFormArray<T>()) {
+			if (!form) {
+				continue;
+			}
+
 			const RE::TESFile* mod = form->GetFile(0);
 
-			if (!mod)
+			if (!mod) {
 				continue;
+			}
 
-			// RE::TESNPC* npc = form->As<RE::TESNPC>();
-
-			if (RE::TESNPC* npc = form->As<RE::TESNPC>(); npc->IsPlayerRef()) {
-				continue;
+			if (RE::TESNPC* npc = form->As<RE::TESNPC>()) {
+				if (npc->IsPlayerRef()) {
+					continue;
+				}
 			}
 
 			_npcCache.push_back(NPCData{ form });
@@ -76,15 +148,8 @@ namespace Modex
 			if (!_npcModList.contains(mod)) {
 				_npcModList.insert(mod);
 				_modList.insert(mod);
-			}
 
-			if (_npcModList.contains(mod)) {
-				auto it = _itemListModFormTypeMap.find(mod);
-				if (it == _itemListModFormTypeMap.end()) {
-					_itemListModFormTypeMap[mod] = ModFileItemFlags();
-				}
-
-				_itemListModFormTypeMap[mod].npc = true;
+				ApplyModFileItemFlags(mod, form->GetFormType());
 			}
 		}
 	}
@@ -173,6 +238,9 @@ namespace Modex
 	void Data::CacheItems(RE::TESDataHandler* a_data)
 	{
 		for (RE::TESForm* form : a_data->GetFormArray<T>()) {
+			if (!form)
+				continue;
+
 			const RE::TESFile* mod = form->GetFile(0);
 
 			if (!mod)
@@ -180,48 +248,11 @@ namespace Modex
 
 			_cache.push_back(ItemData{ form });
 
-			//Add mod file to list.
 			if (!_itemModList.contains(mod)) {
 				_itemModList.insert(mod);
 				_modList.insert(mod);
-			}
 
-			if (_itemModList.contains(mod)) {
-				// Check if the mod is already in the map
-				auto it = _itemListModFormTypeMap.find(mod);
-				if (it == _itemListModFormTypeMap.end())
-					_itemListModFormTypeMap[mod] = ModFileItemFlags();
-
-				if (_itemListModFormTypeMap[mod].armor == false)
-					_itemListModFormTypeMap[mod].armor = form->GetFormType() == RE::FormType::Armor;
-
-				if (_itemListModFormTypeMap[mod].book == false)
-					_itemListModFormTypeMap[mod].book = form->GetFormType() == RE::FormType::Book;
-
-				if (_itemListModFormTypeMap[mod].weapon == false) {
-					_itemListModFormTypeMap[mod].weapon = form->GetFormType() == RE::FormType::Weapon;
-				}
-
-				if (_itemListModFormTypeMap[mod].misc == false)
-					_itemListModFormTypeMap[mod].misc = form->GetFormType() == RE::FormType::Misc;
-
-				if (_itemListModFormTypeMap[mod].misc == false)
-					_itemListModFormTypeMap[mod].misc = form->GetFormType() == RE::FormType::SoulGem;
-
-				if (_itemListModFormTypeMap[mod].key == false)
-					_itemListModFormTypeMap[mod].key = form->GetFormType() == RE::FormType::KeyMaster;
-
-				if (_itemListModFormTypeMap[mod].ammo == false)
-					_itemListModFormTypeMap[mod].ammo = form->GetFormType() == RE::FormType::Ammo;
-
-				if (_itemListModFormTypeMap[mod].alchemy == false)
-					_itemListModFormTypeMap[mod].alchemy = form->GetFormType() == RE::FormType::AlchemyItem;
-
-				if (_itemListModFormTypeMap[mod].ingredient == false)
-					_itemListModFormTypeMap[mod].ingredient = form->GetFormType() == RE::FormType::Ingredient;
-
-				if (_itemListModFormTypeMap[mod].scroll == false)
-					_itemListModFormTypeMap[mod].scroll = form->GetFormType() == RE::FormType::Scroll;
+				ApplyModFileItemFlags(mod, form->GetFormType());
 			}
 		}
 	}
@@ -230,6 +261,9 @@ namespace Modex
 	void Data::CacheStaticObjects(RE::TESDataHandler* a_data)
 	{
 		for (RE::TESForm* form : a_data->GetFormArray<T>()) {
+			if (!form)
+				continue;
+
 			const RE::TESFile* mod = form->GetFile(0);
 
 			if (!mod)
@@ -240,105 +274,47 @@ namespace Modex
 			if (!_staticModList.contains(mod)) {
 				_staticModList.insert(mod);
 				_modList.insert(mod);
-			}
 
-			if (_staticModList.contains(mod)) {
-				auto it = _itemListModFormTypeMap.find(mod);
-				if (it == _itemListModFormTypeMap.end()) {
-					_itemListModFormTypeMap[mod] = ModFileItemFlags();
-				}
-
-				if (_itemListModFormTypeMap[mod].tree == false)
-					_itemListModFormTypeMap[mod].tree = form->GetFormType() == RE::FormType::Tree;
-
-				if (_itemListModFormTypeMap[mod].activator == false)
-					_itemListModFormTypeMap[mod].activator = form->GetFormType() == RE::FormType::Activator;
-
-				if (_itemListModFormTypeMap[mod].container == false)
-					_itemListModFormTypeMap[mod].container = form->GetFormType() == RE::FormType::Container;
-
-				if (_itemListModFormTypeMap[mod].door == false)
-					_itemListModFormTypeMap[mod].door = form->GetFormType() == RE::FormType::Door;
-
-				if (_itemListModFormTypeMap[mod].light == false)
-					_itemListModFormTypeMap[mod].light = form->GetFormType() == RE::FormType::Light;
-
-				if (_itemListModFormTypeMap[mod].staticObject == false)
-					_itemListModFormTypeMap[mod].staticObject = form->GetFormType() == RE::FormType::Static;
-
-				if (_itemListModFormTypeMap[mod].furniture == false)
-					_itemListModFormTypeMap[mod].furniture = form->GetFormType() == RE::FormType::Furniture;
-
-				if (_itemListModFormTypeMap[mod].flora == false)
-					_itemListModFormTypeMap[mod].flora = form->GetFormType() == RE::FormType::Flora;
+				ApplyModFileItemFlags(mod, form->GetFormType());
 			}
 		}
 	}
 
 	// https://github.com/shad0wshayd3-TES5/BakaHelpExtender | License : MIT
 	// Absolute unit of code here. Super grateful for the author's work!
-	void Data::CacheCells(const RE::TESFile* a_file, std::map<std::tuple<std::uint32_t, const std::string, const std::string>, std::string_view>& out_map)
+	void Data::CacheCells(RE::TESFile* a_file, std::map<std::tuple<std::uint32_t, const std::string, const std::string>, std::string_view>& out_map)
 	{
-		auto tesFile = const_cast<RE::TESFile*>(a_file);
-		if (!tesFile->OpenTES(RE::NiFile::OpenMode::kReadOnly, false)) {
+		if (!a_file->OpenTES(RE::NiFile::OpenMode::kReadOnly, false)) {
 			logger::warn(FMT_STRING("[Data] failed to open file: {:s}"sv), a_file->fileName);
 			return;
 		}
 
 		do {
-			if (tesFile->currentform.form == 'LLEC') {
+			if (a_file->currentform.form == 'LLEC') {
 				char edid[512]{ '\0' };
 				bool gotEDID{ false };
 
-				char luff[1024]{ '\0' };
-				bool gotLUFF{ false };
-
-				std::uint16_t data{ 0 };
-				bool gotDATA{ false };
-
-				std::uint32_t cidx{ 0 };
-				cidx += tesFile->compileIndex << 24;
-				cidx += tesFile->smallFileCompileIndex << 12;
+				std::uint32_t cidx{ a_file->currentform.formID };
+				cidx += a_file->compileIndex << 24;
+				cidx += a_file->smallFileCompileIndex << 12;
 
 				do {
-					switch (tesFile->GetCurrentSubRecordType()) {
+					switch (a_file->GetCurrentSubRecordType()) {
 					case 'DIDE':
-						gotEDID = tesFile->ReadData(edid, tesFile->actualChunkSize);
-						if (gotEDID && gotDATA && ((data & 1) == 0)) {
-							out_map.insert_or_assign(std::make_tuple(cidx, edid, "Unknown"), tesFile->fileName);
-							continue;
-						}
-
-						break;
-					case 'ATAD':
-						gotDATA = tesFile->ReadData(&data, tesFile->actualChunkSize);
-						if (gotEDID && gotDATA && ((data & 1) == 0)) {
-							out_map.insert_or_assign(std::make_tuple(cidx, edid, "Unknown"), tesFile->fileName);
-							continue;
-						}
-
-						break;
-					case 'LLUF':
-						gotLUFF = tesFile->ReadData(luff, tesFile->actualChunkSize);
-						if (gotEDID && gotLUFF) {
-							if (tesFile->actualChunkSize == 4) {
-								// Workaround for missing / scrambled LUFF record | Due to load order
-								strncpy(luff, "Unknown", sizeof(luff) - 1);
-                            	luff[sizeof(luff) - 1] = '\0';
-							}
-							out_map.insert_or_assign(std::make_tuple(cidx, edid, luff), tesFile->fileName);
-							continue;
+						gotEDID = a_file->ReadData(edid, a_file->actualChunkSize);
+						if (gotEDID) {
+							out_map.insert_or_assign(std::make_tuple(cidx, edid, "First Pass"), a_file->fileName);
 						}
 						break;
 					default:
 						break;
 					}
-				} while (tesFile->SeekNextSubrecord());
+				} while (a_file->SeekNextSubrecord());
 			}
-		} while (tesFile->SeekNextForm(true));
+		} while (a_file->SeekNextForm(true));
 
-		if (!tesFile->CloseTES(false)) {
-			logger::error(FMT_STRING("[Data] failed to close file: {:s}"sv), tesFile->fileName);
+		if (!a_file->CloseTES(false)) {
+			logger::error(FMT_STRING("[Data] failed to close file: {:s}"sv), a_file->fileName);
 		}
 	}
 
@@ -376,10 +352,7 @@ namespace Modex
 
 		for (auto& npc : _npcCache) {
 			auto className = npc.GetClass();
-
-			if (_npcClassList.find(className) == _npcClassList.end()) {
-				_npcClassList.insert(className);
-			}
+			_npcClassList.insert(className);
 		}
 	}
 
@@ -389,10 +362,7 @@ namespace Modex
 
 		for (auto& npc : _npcCache) {
 			auto raceName = npc.GetRace();
-
-			if (_npcRaceList.find(raceName) == _npcRaceList.end()) {
-				_npcRaceList.insert(raceName);
-			}
+			_npcRaceList.insert(raceName);
 		}
 	}
 
@@ -404,10 +374,7 @@ namespace Modex
 			auto factionNames = npc.GetFactions();
 			for (auto& faction : factionNames) {
 				std::string factionName = ValidateTESName(faction.faction);
-
-				if (_npcFactionList.find(factionName) == _npcFactionList.end()) {
-					_npcFactionList.insert(factionName);
-				}
+				_npcFactionList.insert(factionName);
 			}
 		}
 	}
@@ -432,17 +399,19 @@ namespace Modex
 	{
 		_cellCache.clear();
 
+		std::map<std::tuple<std::uint32_t, const std::string, const std::string>, std::string_view> rawCellMap;
 		if (auto dataHandler = RE::TESDataHandler::GetSingleton()) {
-			std::map<std::tuple<std::uint32_t, const std::string, const std::string>, std::string_view> rawCellMap;
-			for (const RE::TESForm* form : dataHandler->GetFormArray<RE::TESWorldSpace>()) {
-				const RE::TESFile* mod = form->GetFile(0);
+			auto [forms, lock] = RE::TESForm::GetAllForms();
+			for (auto& iter : *forms) {
+				if (iter.second->GetFormType() == RE::FormType::Cell) {
+					auto file = iter.second->GetFile(-1);
 
-				if (!mod)
-					continue;
+					if (!file || _cellModList.contains(file)) {
+						continue;
+					}
 
-				if (!_cellModList.contains(mod)) {
-					CacheCells(mod, rawCellMap);
-					_cellModList.insert(mod);
+					CacheCells(file, rawCellMap);
+					_cellModList.insert(file);
 				}
 			}
 
@@ -451,8 +420,15 @@ namespace Modex
 			} else {
 				for (const auto& [key, value] : rawCellMap) {
 					const std::string& editorID = std::get<1>(key);
-					const std::string& full = std::get<2>(key);
 					const RE::TESFile* modFile = dataHandler->LookupLoadedModByName(value);
+					std::string full = "";
+
+					// What is causing the cell formid to not be found using LookupByID?
+					// const auto& form = RE::TESForm::LookupByID<RE::TESObjectCELL>(cidx);
+
+					if (const auto& form = RE::TESForm::LookupByEditorID<RE::TESObjectCELL>(editorID)) {
+						full = form->GetFullName();
+					}
 
 					_cellCache.emplace_back(
 						ValidateTESFileName(modFile),
@@ -507,8 +483,7 @@ namespace Modex
 		}
 
 		for (auto& file : _modList) {
-			std::string modName = ValidateTESFileName(file);
-			_modListSorted.insert(modName);
+			_modListSorted.insert(ValidateTESFileName(file));
 		}
 
 		Utils::SetDescriptionFrameworkInterface(DescriptionFrameworkAPI::GetDescriptionFrameworkInterface001());
