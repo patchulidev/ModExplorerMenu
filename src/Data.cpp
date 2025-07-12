@@ -452,7 +452,7 @@ namespace Modex
 		static CellData emptyCell(
 			"MODEX_ERR",
 			"MODEX_ERR",
-			"MODEX_ERR",
+			a_editorid,
 			nullptr);
 		logger::error("[Data] Cell with editor ID '{}' not found.", a_editorid);
 		return emptyCell;
