@@ -75,19 +75,15 @@ namespace Modex
 			case RE::INPUT_EVENT_TYPE::kChar:
 				if (Menu::IsEnabled()) {
 					io.AddInputCharacter(static_cast<const RE::CharEvent*>(event)->keyCode);
-
-					if (!modifierDown) {
-						io.ClearInputKeys();
-					}
 				}
-
 				break;
 			case RE::INPUT_EVENT_TYPE::kButton:
+			{
 				const RE::ButtonEvent* buttonEvent = static_cast<const RE::ButtonEvent*>(event);
 				const uint32_t scanCode = buttonEvent->GetIDCode();
-
-				// Modifier keys are not left/right side conscious.
 				const ImGuiKey imGuiKey = ImGui::ScanCodeToImGuiKey(scanCode);
+
+				// Left/Right agnostic modifier key handler for better experience.
 				if (imGuiKey == ImGuiKey_LeftShift || imGuiKey == ImGuiKey_RightShift) {
 					shiftDown = buttonEvent->IsPressed();
 				} else if (imGuiKey == ImGuiKey_LeftCtrl || imGuiKey == ImGuiKey_RightCtrl) {
@@ -98,9 +94,6 @@ namespace Modex
 
 				modifierDown = shiftDown || ctrlDown || altDown;
 
-				// This is only executed when capturing input for the menu (is open).
-				// We don't want to capture/send imgui input for modifiers when the menu is closed.
-
 				if (Menu::IsEnabled()) {
 					io.AddKeyEvent(ImGuiKey_ModShift, shiftDown);
 					io.AddKeyEvent(ImGuiKey_ModCtrl, ctrlDown);
@@ -108,54 +101,39 @@ namespace Modex
 				}
 
 				switch (buttonEvent->device.get()) {
-				case RE::INPUT_DEVICE::kMouse:
-					if (Menu::IsEnabled()) {
-						if (scanCode > 7)  // Middle Scroll
-							io.AddMouseWheelEvent(0, buttonEvent->Value() * (scanCode == 8 ? 1 : -1));
-						else {
-							if (scanCode > 5) {
-								io.AddMouseButtonEvent(5, buttonEvent->IsPressed());
-							} else {
-								io.AddMouseButtonEvent(scanCode, buttonEvent->IsPressed());
-							}
-						}
-					}
-
-					break;
-				case RE::INPUT_DEVICE::kKeyboard:
-					if (Menu::IsEnabled() && buttonEvent->IsDown()) {
-						if (UIManager::GetSingleton()->InputHandler(imGuiKey)) {
-							io.ClearInputKeys();
-							break;  // early out, don't close menu.
-						}
-					}
-
-					bool isModifierBound = showMenuModifier != 0;
-					bool isMenuToggleKeyDown = isModifierBound ? showMenuKey == scanCode && IsBoundModifierDown() : showMenuKey == scanCode;
-
-					if (isMenuToggleKeyDown && buttonEvent->IsDown()) {
-						if (ImGui::IsKeyboardTextShortcut(imGuiKey) && !isModifierBound) {
-							if (Menu::IsEnabled() && io.WantTextInput) {
-								io.ClearInputKeys();
-								io.AddKeyEvent(imGuiKey, buttonEvent->IsDown());
-							} else {
-								Menu::GetSingleton()->Toggle();
-							}
-						} else {
-							Menu::GetSingleton()->Toggle();
-						}
-					} else {
+					case RE::INPUT_DEVICE::kMouse:
 						if (Menu::IsEnabled()) {
-							if (scanCode == 0x01 && buttonEvent->IsDown()) {  // esc
+							if (scanCode > 7)  // Middle Scroll
+								io.AddMouseWheelEvent(0, buttonEvent->Value() * (scanCode == 8 ? 1 : -1));
+							else {
+								if (scanCode > 5) {
+									io.AddMouseButtonEvent(5, buttonEvent->IsPressed());
+								} else {
+									io.AddMouseButtonEvent(scanCode, buttonEvent->IsPressed());
+								}
+							}
+						}
+						break;
+					case RE::INPUT_DEVICE::kKeyboard:
+						if (!Menu::IsEnabled() && buttonEvent->IsDown()) {
+							bool isMenuKey = showMenuModifier != 0 ? (showMenuKey == scanCode && IsBoundModifierDown()) : (showMenuKey == scanCode);
+							if (isMenuKey) {
+								Menu::GetSingleton()->Toggle();
+								break;
+							}
+						}
+
+						if (Menu::IsEnabled()) {
+							if (scanCode == 0x01 && buttonEvent->IsDown()) { // esc
 								Menu::GetSingleton()->Close();
 								break;
 							}
 
-							// IMPORTANT: We break out of the above code on escape to prevent unpaired press/release events.
-
 							io.AddKeyEvent(imGuiKey, buttonEvent->IsDown());
 						}
+						break;
 					}
+					break;
 				}
 			}
 		}
