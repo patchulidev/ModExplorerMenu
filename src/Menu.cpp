@@ -7,6 +7,9 @@
 #include "include/U/UIManager.h"
 #include "include/U/UserSettings.h"
 
+#include "imgui_impl_win32.h"
+#include "imgui_impl_dx11.h"
+
 namespace Modex
 {
 	bool Menu::AllowMenuOpen()

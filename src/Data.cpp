@@ -285,7 +285,7 @@ namespace Modex
 	void Data::CacheCells(RE::TESFile* a_file, std::map<std::tuple<std::uint32_t, const std::string, const std::string>, std::string_view>& out_map)
 	{
 		if (!a_file->OpenTES(RE::NiFile::OpenMode::kReadOnly, false)) {
-			logger::warn(FMT_STRING("[Data] failed to open file: {:s}"sv), a_file->fileName);
+			logger::warn("[Data] failed to open file: {:s}", a_file->fileName);
 			return;
 		}
 
@@ -314,7 +314,7 @@ namespace Modex
 		} while (a_file->SeekNextForm(true));
 
 		if (!a_file->CloseTES(false)) {
-			logger::error(FMT_STRING("[Data] failed to close file: {:s}"sv), a_file->fileName);
+			logger::error("[Data] failed to close file: {:s}", a_file->fileName);
 		}
 	}
 

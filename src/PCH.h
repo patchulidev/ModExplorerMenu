@@ -5,19 +5,20 @@ void* operator new[](size_t size, const char* pName, int flags, unsigned debugFl
 void* operator new[](size_t size, size_t alignment, size_t alignmentOffset, const char* pName, int flags,
 	unsigned debugFlags, const char* file, int line);
 
+// #define WIN32_LEAN_AND_MEAN
+// #include <Windows.h>
+
 #pragma warning(push)
 #include "RE/Skyrim.h"
 #include "SKSE/SKSE.h"
-#include <xbyak/xbyak.h>
 
-#define IMGUI_USER_CONFIG "imgui_user_config.h"
-#include "extern/imgui_freetype.h"
-
-#include <imgui_impl_dx11.h>
-#include <imgui_impl_win32.h>
+#define IMGUI_USER_CONFIG "extern/imgui/imgui_user_config.h"
 
 #include "imgui.h"
 #include "imgui_internal.h"
+// #include "extern/imgui/imgui_impl_win32.h"
+// #include "extern/imgui/imgui_impl_dx11.h"
+#include "extern/imgui/imgui_freetype.h"
 
 #ifdef DEBUG
 #	include <spdlog/sinks/msvc_sink.h>
@@ -29,8 +30,6 @@ void* operator new[](size_t size, size_t alignment, size_t alignmentOffset, cons
 
 #pragma warning(disable: 4996)  // CRT Deprecation
 
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
 
 using namespace std::literals;
 
@@ -85,22 +84,24 @@ namespace stl
 
 namespace logger = SKSE::log;
 
-#include "Plugin.h"
+// #include "Plugin.h"
 
-#include <ClibUtil/distribution.hpp>
-#include <ClibUtil/editorID.hpp>
-#include <ClibUtil/numeric.hpp>
-#include <ClibUtil/rng.hpp>
-#include <ClibUtil/simpleINI.hpp>
+// #include <ClibUtil/distribution.hpp>
+// #include <ClibUtil/editorID.hpp>
+// #include <ClibUtil/numeric.hpp>
+// #include <ClibUtil/rng.hpp>
+// #include <ClibUtil/simpleINI.hpp>
 
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
+
+#include "SimpleIni.h"
+#include <fmt/core.h>
 
 #include "SimpleMath.h"
 #include <codecvt>
 #include <cstring>
 #include <fstream>
-#include <nlohmann/json.hpp>
 #include <shared_mutex>
 #include <unordered_set>
 

@@ -39,7 +39,7 @@ namespace Modex
 
 		const auto InlineInt = [maxWidth, barSize](const char* label, const int value) {
 			const auto defaultWidth = maxWidth - ImGui::CalcTextSize(std::to_string(value).c_str()).x;
-			const auto width = std::max(defaultWidth, ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(std::to_string(value).c_str()).x);
+			const auto width = (std::max)(defaultWidth, ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(std::to_string(value).c_str()).x);
 			ImGui::Text(label);
 			ImGui::SameLine(width);
 			ImGui::Text("%d", value);
@@ -47,14 +47,14 @@ namespace Modex
 
 		// TODO: Really need to abstract this out.
 		const auto InlineText = [maxWidth](const char* label, const char* text) {
-			const auto width = std::max(maxWidth - ImGui::CalcTextSize(text).x, ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(text).x);
+			const auto width = (std::max)(maxWidth - ImGui::CalcTextSize(text).x, ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(text).x);
 			ImGui::Text(label);
 			ImGui::SameLine(width);
 			ImGui::Text(text);
 		};
 
 		const auto InlineTextMulti = [maxWidth](const char* label, std::vector<std::string> text) {
-			const auto width = std::max(maxWidth - ImGui::CalcTextSize(text[0].c_str()).x, ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(text[0].c_str()).x);
+			const auto width = (std::max)(maxWidth - ImGui::CalcTextSize(text[0].c_str()).x, ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(text[0].c_str()).x);
 			ImGui::Text(label);
 			ImGui::SameLine(width);
 			ImGui::Text(text[0].c_str());
@@ -73,6 +73,26 @@ namespace Modex
 				return truncated;
 			}
 			return std::string(text);
+		};
+
+		// TODO: This is a temporary solution during cmake -> xmake conversion.
+		const auto GetSkillName = [](RE::ActorValue skill) -> std::string {
+			switch (skill) {
+				case RE::ActorValue::kOneHanded: return "One Handed";
+				case RE::ActorValue::kTwoHanded: return "Two Handed";
+				case RE::ActorValue::kArchery: return "Archery";
+				case RE::ActorValue::kBlock: return "Block";
+				case RE::ActorValue::kSmithing: return "Smithing";
+				case RE::ActorValue::kHeavyArmor: return "Heavy Armor";
+				case RE::ActorValue::kLightArmor: return "Light Armor";
+				case RE::ActorValue::kSneak: return "Sneak";
+				case RE::ActorValue::kLockpicking: return "Lockpicking";
+				case RE::ActorValue::kPickpocket: return "Pickpocket";
+				case RE::ActorValue::kAlchemy: return "Alchemy";
+				case RE::ActorValue::kSpeech: return "Speech";
+				case RE::ActorValue::kEnchanting: return "Enchanting";
+				default: return "Unknown Skill";
+			}
 		};
 
 		// Name Bar
@@ -180,7 +200,7 @@ namespace Modex
 					InlineInt(_TICONM(ICON_LC_SWORD, "DPS", ":"), dps);
 					ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 					InlineInt(_TICONM(ICON_LC_SWORD, "DMG", ":"), critDamage);
-					InlineText(_TICONM(ICON_LC_SWORDS, "Skill", ":"), _T(std::to_string(skill).c_str()));
+					InlineText(_TICONM(ICON_LC_SWORDS, "Skill", ":"), _T(GetSkillName(skill).c_str()));
 				} else {
 					const float reach = (float)(weapon->weaponData.reach);
 					const float stagger = weapon->weaponData.staggerValue;
@@ -189,7 +209,7 @@ namespace Modex
 					InlineInt(_TICONM(ICON_LC_SWORD, "DPS", ":"), dps);
 					ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 					InlineInt(_TICONM(ICON_LC_SWORD, "DMG", ":"), critDamage);
-					InlineText(_TICONM(ICON_LC_BOOK_USER, "Skill", ":"), _T(std::to_string(skill).c_str()));
+					InlineText(_TICONM(ICON_LC_BOOK_USER, "Skill", ":"), _T(GetSkillName(skill).c_str()));
 					InlineBar(_TICONM(ICON_LC_CHEVRONS_LEFT_RIGHT, "Reach", ":"), reach, 1.5f);
 					InlineBar(_TICONM(ICON_LC_SCALE, "Stagger", ":"), stagger, 2.0f);
 				}

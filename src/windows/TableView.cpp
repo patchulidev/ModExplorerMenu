@@ -1049,7 +1049,7 @@ namespace Modex
 	{
 		const float maxWidth = ImGui::GetContentRegionAvail().x;
 		const auto InlineText = [maxWidth](const char* label, const char* text, const char* tooltip) {
-			const auto width = std::max(maxWidth - ImGui::CalcTextSize(text).x, ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(text).x);
+			const auto width = (std::max)(maxWidth - ImGui::CalcTextSize(text).x, ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(text).x);
 			ImGui::Text(label);
 			if (ImGui::IsItemHovered()) {
 				ImGui::SetTooltip(tooltip);
@@ -1071,8 +1071,7 @@ namespace Modex
 		// to a cached table, and we're not re-generating it every frame.
 
 		std::ptrdiff_t empty = 0;
-		std::ptrdiff_t hidden_items = std::max(totalGenerated - total_items, empty);
-		// std::ptrdiff_t hidden_plugins = std::max(std::ssize(pluginList) - total_plugins, empty);
+		std::ptrdiff_t hidden_items = (std::max)(totalGenerated - total_items, empty);
 
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 4.0f));
 		InlineText(
@@ -1267,7 +1266,7 @@ namespace Modex
 			case SortType::Skill:
 				if (a_item.GetFormType() == RE::FormType::Weapon) {
 					if (const auto& weapon = a_item.GetForm()->As<RE::TESObjectWEAP>()) {
-						return Utils::IconMap["SKILL"] + std::to_string(weapon->weaponData.skill.get());
+						return Utils::IconMap["SKILL"] + std::to_string(static_cast<int>(weapon->weaponData.skill.get()));
 					}
 				}
 
@@ -2085,7 +2084,7 @@ namespace Modex
 
 				for (int line_idx = item_start; line_idx < item_end; line_idx++) {
 					const int item_min_idx_for_current_line = line_idx * COLUMN_COUNT;
-					const int item_max_idx_for_current_line = std::min((line_idx + 1) * COLUMN_COUNT, ITEMS_COUNT);
+					const int item_max_idx_for_current_line = (std::min)((line_idx + 1) * COLUMN_COUNT, ITEMS_COUNT);
 
 					for (int kit_idx = item_min_idx_for_current_line; kit_idx < item_max_idx_for_current_line; ++kit_idx) {
 						auto& item_data = kitList[kit_idx];
@@ -2099,7 +2098,7 @@ namespace Modex
 						// ImGui::SetNextItemSelectionUserData(kit_idx);
 						// bool is_item_selected = kitSelectionStorage.Contains(item_data->TableID);
 						bool is_item_visible = ImGui::IsRectVisible(LayoutItemSize);
-						const float button_width = std::max(LayoutItemSize.x / 7.0f, 100.0f);
+						const float button_width = (std::max)(LayoutItemSize.x / 7.0f, 100.0f);
 
 						// If we implement a grid or gapped layout, this will be needed.
 						// For now, it just removes the spacing so the selection is within the bounds of the item.
@@ -2517,7 +2516,7 @@ namespace Modex
 						const auto type = weaponTypes[static_cast<int>(weapon->GetWeaponType())];
 
 						const std::string damage_string = ICON_LC_SWORD + std::to_string(damage);
-						const std::string skill_string = ICON_LC_BRAIN + std::to_string(skill);
+						const std::string skill_string = ICON_LC_BRAIN + std::to_string(static_cast<int>(skill));
 						const std::string type_string = _TICON(ICON_LC_PUZZLE, type);
 
 						if (!test_compactView) {
@@ -2673,7 +2672,7 @@ namespace Modex
 
 				for (int line_idx = item_start; line_idx < item_end; line_idx++) {
 					const int item_min_idx_for_current_line = line_idx * COLUMN_COUNT;
-					const int item_max_idx_for_current_line = std::min((line_idx + 1) * COLUMN_COUNT, ITEMS_COUNT);
+					const int item_max_idx_for_current_line = (std::min)((line_idx + 1) * COLUMN_COUNT, ITEMS_COUNT);
 
 					for (int item_idx = item_min_idx_for_current_line; item_idx < item_max_idx_for_current_line; ++item_idx) {
 						if (item_idx >= _tableList.size()) {
