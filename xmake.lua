@@ -46,3 +46,14 @@ target("modex")
     add_headerfiles("src/**.h")
     add_includedirs("src")
     set_pcxxheader("src/pch.h")
+
+    after_build(function (target)
+        -- Create distribution directory using environment variable
+        local dist_dir = os.getenv("XSE_TES5_MODS_PATH") or path.join(os.projectdir(), "dist")
+        os.mkdir(dist_dir)
+
+        -- Copy the built DLL to the distribution directory
+        os.cp(target:targetfile(), dist_dir)
+
+        print("Built DLL copied to: " .. dist_dir)
+    end)
