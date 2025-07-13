@@ -38,21 +38,30 @@ namespace Modex
 		this->recentList.reserve(recentItems.size());  // TODO: Use configurable size.
 
 		for (const auto& pair : recentItems) {
-			auto& cellData = Data::GetSingleton()->GetCellByEditorID(pair.first);
-
-			recentList.emplace_back(std::make_unique<CellData>(cellData));
+			if (!pair.first.empty()) {
+				auto& cellData = Data::GetSingleton()->GetCellByEditorID(pair.first);
+				
+				if (!cellData.editorid.empty() && cellData.mod != nullptr) {
+					recentList.emplace_back(std::make_unique<CellData>(cellData));
+				}
+			}
 		}
 	}
 
 	void TeleportWindow::LoadFavoriteCells()
 	{
+		std::list<std::string> favoriteItems;
 		this->favoriteList.clear();
 
 		// Load favorite items from PersistentData
-		PersistentData::GetSingleton()->GetFavoriteItems(this->favoriteList);
+		PersistentData::GetSingleton()->GetFavoriteItems(favoriteItems);
 
-		if (this->favoriteList.empty()) {
-			return;
+		for (const auto& editorid : favoriteItems) {
+			auto cellData = Data::GetSingleton()->GetCellByEditorID(editorid);
+
+			if (!cellData.editorid.empty() && cellData.mod != nullptr) {
+				favoriteList.emplace_back(std::make_unique<CellData>(cellData));
+			}
 		}
 	}
 
@@ -81,16 +90,16 @@ namespace Modex
 
 		bool showScrollArrow = false;
 		if (ImGui::BeginChild("##TeleportFavoriteScroll", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y / 2.0f), false, flags)) {
-			for (auto& editorid : this->favoriteList) {
-				auto cell = Data::GetSingleton()->GetCellByEditorID(editorid);
+			for (const auto& cell : this->favoriteList) {
 				ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, ImGui::GetFontSize() * 1.0f));
 				ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5f, 0.5f));
 				ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
-				ImGui::PushID(editorid.c_str());
-				if (ImGui::Selectable(cell.cellName.c_str(), false, ImGuiSelectableFlags_AllowDoubleClick | ImGuiSelectableFlags_SpanAllColumns)) {
-					Console::Teleport(editorid);
+				ImGui::PushID(cell->editorid.c_str());
+				const auto displayName = cell->cellName.empty() ? cell->editorid : cell->cellName;
+				if (ImGui::Selectable(displayName.c_str(), false, ImGuiSelectableFlags_AllowDoubleClick | ImGuiSelectableFlags_SpanAllColumns)) {
+					Console::Teleport(cell->editorid);
 					Console::StartProcessThread();
-					this->AddCellToRecent(editorid);
+					this->AddCellToRecent(cell->editorid);
 
 					Menu::GetSingleton()->Close();
 				}
@@ -100,9 +109,9 @@ namespace Modex
 
 				if (ImGui::IsItemHovered()) {
 					ImGui::BeginTooltip();
-					ImGui::Text("%s %s", Utils::IconMap["EDITORID"].c_str(), editorid.c_str());
-					ImGui::Text("%s %s", Utils::IconMap["CELL"].c_str(), cell.cellName.c_str());
-					ImGui::Text("%s %s", Utils::IconMap["LAND"].c_str(), cell.filename.c_str());
+					ImGui::Text("%s %s", Utils::IconMap["EDITORID"].c_str(), cell->editorid.c_str());
+					ImGui::Text("%s %s", Utils::IconMap["CELL"].c_str(), cell->cellName.c_str());
+					ImGui::Text("%s %s", Utils::IconMap["LAND"].c_str(), cell->filename.c_str());
 					ImGui::EndTooltip();
 				}
 
@@ -112,7 +121,7 @@ namespace Modex
 
 				if (ImGui::IsItemClicked(ImGuiMouseButton_Right)) {
 					ImGui::OpenPopup("##Teleport::Favorite::ContextMenu");
-					this->hoveredCellEditorID = editorid;
+					this->hoveredCellEditorID = cell->editorid;
 				}
 			}
 
@@ -152,7 +161,8 @@ namespace Modex
 				ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5f, 0.5f));
 				ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
 				ImGui::PushID(editorid.c_str());
-				if (ImGui::Selectable(cell.get()->cellName.c_str(), false, ImGuiSelectableFlags_AllowDoubleClick | ImGuiSelectableFlags_SpanAllColumns)) {
+				const auto displayName = cell.get()->cellName.empty() ? editorid : cell.get()->cellName;
+				if (ImGui::Selectable(displayName.c_str(), false, ImGuiSelectableFlags_AllowDoubleClick | ImGuiSelectableFlags_SpanAllColumns)) {
 					Console::Teleport(editorid);
 					Console::StartProcessThread();
 					this->AddCellToRecent(editorid);

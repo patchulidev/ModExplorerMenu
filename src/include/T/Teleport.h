@@ -104,6 +104,6 @@ namespace Modex
 		bool 						refreshFavoriteList;
 		bool 						refreshRecentList;
 		std::vector<std::unique_ptr<CellData>> recentList;
-		std::list<std::string> favoriteList;
+		std::vector<std::unique_ptr<CellData>> favoriteList;
 	};
 }
