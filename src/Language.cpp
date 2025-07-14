@@ -3,15 +3,6 @@
 
 namespace Modex
 {
-
-	// Convert wide string to UTF-8 string.
-	// TODO: Replace this with the functions declared in Util.h
-	std::string WideToUTF8(const std::wstring& a_wide)
-	{
-		std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-		return converter.to_bytes(a_wide);
-	}
-
 	void FontManager::BuildFontLibrary()
 	{
 		// Note to self: do not remove this fucking warning.
@@ -20,19 +11,14 @@ namespace Modex
 			return;
 		}
 
-		// Search for fonts relative to Modex mod directory.
 		for (const auto& entry : std::filesystem::directory_iterator(font_path)) {
 			if (entry.path().filename().extension() != ".ttf" && entry.path().filename().extension() != ".otf") {
-				continue;  // Pass invalid file types
+				continue;
 			}
 
-			// Since we're reading from the filesystem, we interpret the path as a wide string
-			// then convert it to a utf-8 string for storage. Since we do not want to store paths or
-			// filenames using wide chars. This ensures utf-8 is used for all strings.
-
 			FontData data;
-			data.name = WideToUTF8(entry.path().filename().stem().wstring());
-			data.fullPath = WideToUTF8(entry.path().wstring());
+			data.name = entry.path().stem().string();
+			data.fullPath = entry.path().string();
 
 			font_library[data.name] = data;
 		}
@@ -41,22 +27,20 @@ namespace Modex
 		if (std::filesystem::exists(imgui_font_path)) {
 			for (const auto& entry : std::filesystem::directory_iterator(imgui_font_path)) {
 				if (entry.path().filename().extension() != ".ttf" && entry.path().filename().extension() != ".otf") {
-					continue;  // Pass invalid file types
+					continue;
 				}
 
 				FontData data;
-				data.name = WideToUTF8(entry.path().filename().stem().wstring());
-				data.fullPath = WideToUTF8(entry.path().wstring());
+				data.name = entry.path().stem().string();
+				data.fullPath = entry.path().string();
 
 				font_library[data.name] = data;
-
-				logger::info("[FontManager] Loaded and Registered Font: {}", data.name);
 			}
 		}
 	}
 
 	// Subtracting -1 from size results in odd font sizes. Good idea?
-	void FontManager::MergeIconFont(ImGuiIO& io, float a_size)
+	void FontManager::MergeIconFont(ImGuiIO& io, float a_size) noexcept
 	{
 		ImFontConfig config;
 		config.MergeMode = true;
@@ -66,53 +50,71 @@ namespace Modex
 		config.GlyphOffset.y = (a_size / 2.0f) / 1.5f;
 
 		static const ImWchar icon_ranges[] = { ICON_MIN_LC, ICON_MAX_LC, 0 };
-		io.Fonts->AddFontFromFileTTF("Data/Interface/Modex/icons/lucide.ttf", a_size + 3.0f, &config, icon_ranges);
+		static const std::filesystem::path icons(icon_font_path / "lucide.ttf");
+
+		if (!std::filesystem::exists(icons)) {
+			logger::error("[FontManager] Icon font file not found: {}", icons.string());
+		} else {
+			io.Fonts->AddFontFromFileTTF(icons.string().c_str(), a_size + 3.0f, &config, icon_ranges);
+		}
 	}
 
-	// TODO: Replace default font from ImGui proggy with a better font.
+	std::filesystem::path FontManager::GetSystemFontPath(const std::string& a_language)
+	{
+		std::string windows = std::getenv("WINDIR") ? std::getenv("WINDIR") : "C:\\Windows";
+		std::filesystem::path system_path = std::filesystem::path(windows) / "Fonts";
+
+		static std::map<std::string, std::string> system_fonts = {
+			{ "English", "arial.ttf" },
+			{ "ChineseFull", "simsun.ttc" },
+			{ "ChineseSimplified", "simsun.ttc" },
+			{ "Japanese", "msgothic.ttc" },
+			{ "Korean", "malgun.ttf" },
+			{ "Cyrillic", "arial.ttf" }
+		};
+
+		auto it = system_fonts.find(a_language);
+		if (it != system_fonts.end()) {
+			auto match = system_path / it->second;
+			if (std::filesystem::exists(match)) {
+				return match;
+			}
+		}
+
+		return std::filesystem::path(windows) / "Fonts" / "arial.ttf";  // Default fallback font
+	}
+
 	void FontManager::AddDefaultFont()
 	{
 		auto& config = Settings::GetSingleton()->GetConfig();
 		auto& io = ImGui::GetIO();
 
 		float size = config.globalFontSize;
+		const auto glyphRange = Language::GetUserGlyphRange(config.glyphRange);
+		const auto language = Language::GetGlyphName(config.glyphRange);
+		const auto fontPath = GetSystemFontPath(language);
 
-		auto glyphRange = Language::GetUserGlyphRange(config.glyphRange);
-
-		switch (config.glyphRange) {
-		case Language::GlyphRanges::ChineseFull:
-		case Language::GlyphRanges::ChineseSimplified:
-			io.Fonts->AddFontFromFileTTF(chinese_font, size, NULL, glyphRange);
-			break;
-		case Language::GlyphRanges::Japanese:
-			io.Fonts->AddFontFromFileTTF(japanese_font, size, NULL, glyphRange);
-			break;
-		case Language::GlyphRanges::Korean:
-			io.Fonts->AddFontFromFileTTF(korean_font, size, NULL, glyphRange);
-			break;
-		case Language::GlyphRanges::Cyrillic:
-			io.Fonts->AddFontFromFileTTF(russian_font, size, NULL, glyphRange);
-			break;
-		default:  // English / Latin; Greek; Cyrillic; Thai; Vietnamese (?)
-			io.Fonts->AddFontFromFileTTF(russian_font, size, NULL, glyphRange);
-			//io.Fonts->AddFontDefault(&imFontConfig);
-			break;
+		if (std::filesystem::exists(fontPath)) {
+			io.Fonts->AddFontFromFileTTF(fontPath.string().c_str(), size, NULL, glyphRange);
+			MergeIconFont(io, size);
+		} else {
+			logger::error("[FontManager] System font not found: {}. Using ImGui default.", fontPath.string());
+			io.Fonts->AddFontDefault();
+			MergeIconFont(io, size);
 		}
-
-		MergeIconFont(io, size);
 	}
 
 	// Do not call this function directly. See Menu::RebuildFontAtlas().
 	// Builds a single font from file with appropriate glyph range.
-	void FontManager::LoadCustomFont(FontData& a_font)
+	void FontManager::LoadCustomFont(FontData& a_font) noexcept
 	{
 		auto& io = ImGui::GetIO();
-		auto& config = Settings::GetSingleton()->GetConfig();
-
-		float size = config.globalFontSize;
+		
+		const auto& config = Settings::GetSingleton()->GetConfig();
 		const auto& glyphRange = Language::GetUserGlyphRange(config.glyphRange);
-
-		io.Fonts->AddFontFromFileTTF(a_font.fullPath.c_str(), size, NULL, glyphRange);
+		
+		float size = config.globalFontSize;
+		io.Fonts->AddFontFromFileTTF(a_font.fullPath.string().c_str(), size, NULL, glyphRange);
 
 		MergeIconFont(io, size);
 	}
@@ -120,17 +122,17 @@ namespace Modex
 	// Runs after Settings are loaded.
 	void FontManager::SetStartupFont()
 	{
-		logger::info("[Font Manager] Setting startup font.");
 		auto& config = Settings::GetSingleton()->GetConfig();
-		auto fontData = GetFontData(config.globalFont);
+		auto data = GetFontData(config.globalFont);
 
-		logger::info("[Font Manager] Global Font: {}", config.globalFont);
-		logger::info("[Font Manager] Loading font: {}", fontData.fullPath);
+		if (data.name.empty() || data.fullPath.empty() || data.name == "Default") {
+			AddDefaultFont();
+			return;
+		}
 
-		if (std::filesystem::exists(fontData.fullPath) == true) {
-			logger::info("[Font Manager] Loading custom font: {}", fontData.name);
-			LoadCustomFont(fontData);
-
+		if (std::filesystem::exists(data.fullPath) == true) {
+			logger::info("[Font Manager] Loading custom font: {}", data.name);
+			LoadCustomFont(data);
 		} else {
 			logger::info("[Font Manager] No Custom font specified. Loading default font.");
 			AddDefaultFont();

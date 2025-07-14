@@ -25,7 +25,7 @@ namespace
 			Modex::FontManager::GetSingleton()->BuildFontLibrary();
 			logger::info("[kDataLoaded] Finished Building Language & Font List");
 
-			Modex::Settings::GetSingleton()->LoadSettings(Modex::Settings::ini_mem_path);
+			Modex::Settings::GetSingleton()->LoadSettings(Modex::Settings::ini_main_path);
 			Modex::Settings::GetSingleton()->LoadUserFontSetting();
 			Modex::Menu::GetSingleton()->RefreshFont();
 			logger::info("[kDataLoaded] Loaded User Settings from ini");

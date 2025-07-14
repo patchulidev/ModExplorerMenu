@@ -12,6 +12,10 @@ namespace Modex
 
 	class GraphicManager
 	{
+	private:
+		const static inline std::filesystem::path image_path = "Data/Interface/Modex/images";
+		const static inline std::filesystem::path imgui_path = "Data/Interface/ImGuiIcons/Icons";
+
 	public:
 		using D3D11View = ID3D11ShaderResourceView*;
 
@@ -25,31 +29,12 @@ namespace Modex
 		static inline std::map<std::string, GraphicManager::Image> image_library;
 		static inline std::map<std::string, GraphicManager::Image> imgui_library;
 
-		static void 				Init();
-		static void 				LoadImagesFromFilepath(std::string a_path, std::map<std::string, Image>& out_struct);
+		static void 		Init();
+		static void 		LoadImagesFromFilepath(const std::filesystem::path& a_path, std::map<std::string, Image>& out_struct);
+		static bool 		GetD3D11Texture(const char* filename, ID3D11ShaderResourceView** out_srv, int& out_width, int& out_height);
 
-		static bool 				GetD3D11Texture(const char* filename, D3D11View* out_srv, int& out_width, int& out_height);
-
-		[[nodiscard]] static Image 	GetImage(std::string a_name)
-		{
-			auto found = image_library.find(a_name);
-			if (found != image_library.end()) {
-				return found->second;
-			}
-
-			return Image();
-		}
-
-		// Note to self: return image_library[key] adds key value if not valid.
-		[[nodiscard]] static std::string GetImageName(Image a_image)
-		{
-			for (const auto& [key, value] : image_library) {
-				if (value.texture == a_image.texture) {
-					return key;
-				}
-			}
-
-			return "None";
-		}
+		[[nodiscard]] static Image GetImage(std::string a_name);
+		[[nodiscard]] static std::string GetImageName(Image a_image);
+		[[nodiscard]] static std::map<std::string, Image> GetListOfImages();
 	};
 }

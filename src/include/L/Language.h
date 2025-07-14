@@ -245,7 +245,7 @@ namespace Modex
 		struct FontData
 		{
 			std::string name;
-			std::string fullPath;
+			std::filesystem::path fullPath;
 		};
 
 		static inline FontManager* GetSingleton()
@@ -253,11 +253,6 @@ namespace Modex
 			static FontManager singleton;
 			return &singleton;
 		}
-
-		void LoadCustomFont(FontData& a_font);
-		void MergeIconFont(ImGuiIO& io, float a_size);
-		void SetStartupFont();
-		void BuildFontLibrary();
 
 		// Returns std::map<std::string, FontData>
 		[[nodiscard]] static inline FontData& GetFontData(const std::string& a_name)
@@ -275,31 +270,26 @@ namespace Modex
 
 			std::sort(fonts.begin(), fonts.end());
 
-			// If we start the game with the Default font, it will duplicate since
-			// we create a default font by indexing the library (?). So we only need to
-			// insert the "Default" font option if it doesn't exist (when custom font is loaded).
-
 			if (font_library.find("Default") == font_library.end()) {
-				fonts.insert(fonts.begin(), "Default");
+				fonts.insert(fonts.begin(), "Default"); // ?
 			}
 
 			return fonts;
 		}
 
-		// members
-		static inline std::map<std::string, FontData> font_library;
-
+		void SetStartupFont();
+		void BuildFontLibrary();
+		
 	private:
-		// TODO: Look at OAR and see how they handle file paths because I can't seem to get it right.
-		inline static const wchar_t* font_path = L"Data/Interface/Modex/Fonts/";
-		inline static const wchar_t* imgui_font_path = L"Data/Interface/ImGuiIcons/Fonts";
+		static inline std::map<std::string, FontData> font_library;
+		static inline const std::filesystem::path font_path = "Data/Interface/Modex/Fonts/";
+		static inline const std::filesystem::path imgui_font_path = "Data/Interface/ImGuiIcons/Fonts/";
+		static inline const std::filesystem::path icon_font_path = "Data/Interface/Modex/Icons/";
 
-		inline static const char* chinese_font = "c:\\Windows\\Fonts\\simsun.ttc";
-		inline static const char* japanese_font = "c:\\Windows\\Fonts\\msgothic.ttc";
-		inline static const char* korean_font = "c:\\Windows\\Fonts\\malgun.ttf";
-		inline static const char* russian_font = "c:\\Windows\\Fonts\\arial.ttf";
-
+		std::filesystem::path GetSystemFontPath(const std::string& a_language);
 		void AddDefaultFont();
+		void LoadCustomFont(FontData& a_font) noexcept;
+		void MergeIconFont(ImGuiIO& io, float a_size) noexcept;
 
 		FontManager() = default;
 		~FontManager() = default;
