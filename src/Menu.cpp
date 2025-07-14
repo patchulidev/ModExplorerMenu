@@ -136,13 +136,21 @@ namespace Modex
 		ImGui_ImplWin32_NewFrame();
 		ImGui_ImplDX11_NewFrame();
 
-		ImGui::NewFrame();
+		// upscaler workaround. overrides the display size from ImplWin32_NewFrame() that uses ::GetClientRect()
+		// instead, we pull the display size from the swapchain gathered during initialization. drawback is that
+		// dynamic window resizing will no longer work.
 
+		// auto& io = ImGui::GetIO();
+		// io.DisplaySize = this->screenSize;
+
+		ImGui::NewFrame();
+		
 		Frame::GetSingleton()->Draw(showSettingWindow);
 		UIManager::GetSingleton()->Draw();
 
 		ImGui::EndFrame();
 		ImGui::Render();
+
 		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 	}
 
@@ -167,30 +175,41 @@ namespace Modex
 		pendingFontChange = false;
 	}
 
-	void Menu::Init(IDXGISwapChain* a_swapchain, ID3D11Device* a_device, ID3D11DeviceContext* a_context)
+	void Menu::Init()
 	{
 		IMGUI_CHECKVERSION();
 
+		const auto a_manager = RE::BSGraphics::Renderer::GetSingleton();
+		const auto a_context = reinterpret_cast<ID3D11DeviceContext*>(a_manager->GetRuntimeData().context);
+		const auto a_swapchain = reinterpret_cast<IDXGISwapChain*>(a_manager->GetRuntimeData().renderWindows->swapChain);
+		const auto a_device = reinterpret_cast<ID3D11Device*>(a_manager->GetRuntimeData().forwarder);
+		
 		DXGI_SWAP_CHAIN_DESC desc;
 		a_swapchain->GetDesc(&desc);
-
-		ImGui::CreateContext();
-
+		
 		RECT rect{};
-		ImVec2 screenScaleRatio;
+		ImVec2 screenScaleRatio{ 1.0f, 1.0f };
 		if (GetClientRect(desc.OutputWindow, &rect) == TRUE) {
-			screenScaleRatio = ImVec2{ static_cast<float>(desc.BufferDesc.Width) / static_cast<float>(rect.right), static_cast<float>(desc.BufferDesc.Height) / static_cast<float>(rect.bottom) };
-		} else {
-			screenScaleRatio = ImVec2{ 1.0f, 1.0f };
+			screenScaleRatio = { static_cast<float>(desc.BufferDesc.Width) / static_cast<float>(rect.right), static_cast<float>(desc.BufferDesc.Height) / static_cast<float>(rect.bottom) };
 		}
-
+		
 		Settings::GetSingleton()->GetConfig().screenScaleRatio = screenScaleRatio;
+
+		this->screenSize = { static_cast<float>(desc.BufferDesc.Width), static_cast<float>(desc.BufferDesc.Height) };
+		
+		ImGui::CreateContext();
+		auto& io = ImGui::GetIO();
+		io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
+		io.DisplaySize = this->screenSize;
 
 		ImGui_ImplWin32_Init(desc.OutputWindow);
 		ImGui_ImplDX11_Init(a_device, a_context);
 
-		this->device = a_device;  // (?)
+		this->device = a_device;
 		this->context = a_context;
+		this->swapchain = a_swapchain;
+		
+		logger::debug("ImGui initialized with swap chain display size: {}x{}", desc.BufferDesc.Width, desc.BufferDesc.Height);
 	}
 
 	void Menu::RefreshStyle()

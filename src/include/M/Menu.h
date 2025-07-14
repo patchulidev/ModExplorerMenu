@@ -16,7 +16,7 @@ namespace Modex
 		void 					RefreshStyle();
 		void 					RefreshFont();
 
-		void 					Init(IDXGISwapChain* swapchain, ID3D11Device* device, ID3D11DeviceContext* context);
+		void 					Init();
 		void 					SyncUserStyleToImGui(Settings::Style user);
 
 		// constructor destructor
@@ -36,20 +36,23 @@ namespace Modex
 		Menu(const Menu&) = delete;
 		Menu& operator=(const Menu&) = delete;
 
-		// members
-		ID3D11Device* 			device;
-		ID3D11DeviceContext* 	context;
-		ID3D11Device* 			GetDevice() const { return device; };
-		ID3D11DeviceContext* 	GetContext() const { return context; };
-
 		bool 					isLoaded;
 		bool 					isEnabled;
 		bool					pendingFontChange;
 		bool 					prevFreezeState;
 		bool					showSettingWindow;
-
+		
+		ID3D11Device* 			GetDevice() const { return device; };
+		ID3D11DeviceContext* 	GetContext() const { return context; };
+		IDXGISwapChain* 		GetSwapChain() const { return swapchain; };
+		
 	private:
-		void 					RebuildFontAtlas(); // internal only
+		ImVec2 					screenSize;
+		ID3D11Device* 			device;
+		ID3D11DeviceContext* 	context;
+		IDXGISwapChain* 		swapchain;
+		
+		void 					RebuildFontAtlas();
 	};
 
 }

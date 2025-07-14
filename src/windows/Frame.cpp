@@ -24,12 +24,12 @@ namespace Modex
 		ImGuiIO& io = ImGui::GetIO();
 
 		// Set the window size based on the display size and the user's screen scale ratio.
-		auto displaySize = io.DisplaySize;
-		displaySize.x *= config.screenScaleRatio.x;
-		displaySize.y *= config.screenScaleRatio.y;
+		const auto displaySize = io.DisplaySize;
+		// displaySize.x *= config.screenScaleRatio.x;
+		// displaySize.y *= config.screenScaleRatio.y;
 
-		const float window_w = (std::min)(displaySize.x, config.fullscreen ? displaySize.x : (displaySize.x * 0.80f) * (config.uiScaleHorizontal / 100.0f));
-		const float window_h = (std::min)(displaySize.y, config.fullscreen ? displaySize.y : (displaySize.y * 0.75f) * (config.uiScaleVertical / 100.0f));
+		const float window_w = (std::min)(displaySize.x, config.fullscreen ? displaySize.x : (1920.0f * 0.80f) * (config.uiScaleHorizontal / 100.0f));
+		const float window_h = (std::min)(displaySize.y, config.fullscreen ? displaySize.y : (1080.0f * 0.75f) * (config.uiScaleVertical / 100.0f));
 
 		// const float min_sidebar_width = window_w * 0.060f;
 		const float min_sidebar_width = 64.0f + (ImGui::GetStyle().WindowPadding.x * 2);
