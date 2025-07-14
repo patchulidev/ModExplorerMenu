@@ -36,7 +36,6 @@ namespace Modex
 		Menu(const Menu&) = delete;
 		Menu& operator=(const Menu&) = delete;
 
-		bool 					isLoaded;
 		bool 					isEnabled;
 		bool					pendingFontChange;
 		bool 					prevFreezeState;

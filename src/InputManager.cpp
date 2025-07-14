@@ -68,7 +68,7 @@ namespace Modex
 			return;
 		}
 
-		ImGuiIO& io = ImGui::GetIO();
+		auto& io = ImGui::GetIO();
 
 		for (const auto& event : inputQueue) {
 			switch (event->GetEventType()) {

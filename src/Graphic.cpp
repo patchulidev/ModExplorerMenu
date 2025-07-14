@@ -67,6 +67,7 @@ namespace Modex
 		return true;
 	}
 
+	// TODO: #77 Convert all filepath operations to std::filesystem::path instead of handling std::string paths.
 	void GraphicManager::LoadImagesFromFilepath(std::string a_path, std::map<std::string, Image>& out_struct)
 	{
 		if (std::filesystem::exists(a_path) == false) {
@@ -91,49 +92,15 @@ namespace Modex
 		}
 	}
 
-	void GraphicManager::DrawImage(Image& a_image, ImVec2 a_center)
-	{
-		auto& io = ImGui::GetIO();
-		auto& config = Settings::GetSingleton()->GetConfig();
-		auto displaySize = io.DisplaySize;
-		displaySize.x *= config.screenScaleRatio.x;
-		displaySize.y *= config.screenScaleRatio.y;
-
-		auto scale = displaySize.y / 1080.0f;
-
-		auto width = a_image.width * scale;
-		auto height = a_image.height * scale;
-		ImTextureID texture = (ImTextureID)(intptr_t)a_image.texture;
-
-		const ImVec2 pos[4] = {
-			ImVec2(a_center.x - width / 2, a_center.y - height / 2),
-			ImVec2(a_center.x + width / 2, a_center.y - height / 2),
-			ImVec2(a_center.x + width / 2, a_center.y + height / 2),
-			ImVec2(a_center.x - width / 2, a_center.y + height / 2)
-		};
-
-		const ImVec2 uv[4] = {
-			ImVec2(0.0f, 0.0f),
-			ImVec2(1.0f, 0.0f),
-			ImVec2(1.0f, 1.0f),
-			ImVec2(0.0f, 1.0f)
-		};
-
-		ImGui::GetBackgroundDrawList()->AddImageQuad(texture, pos[0], pos[1], pos[2], pos[3], uv[0], uv[1], uv[2], uv[3]);
-	}
-
 	void GraphicManager::Init()
 	{
 		image_library["None"] = Image();
 		GraphicManager::LoadImagesFromFilepath(std::string("Data/Interface/Modex/images"), GraphicManager::image_library);
 
-		// Detect ImGui Icons mod and load it if it exists.
+		// TODO: #78 Possible CTD issue here with Edge UI Imgui Icons?
 		if (std::filesystem::exists("Data/Interface/ImGuiIcons")) {
 			GraphicManager::LoadImagesFromFilepath(std::string("Data/Interface/ImGuiIcons/Icons"), GraphicManager::imgui_library);
 			logger::info("[GraphicManager] Successfully found and loaded ImGui Icon Library.");
 		}
-
-		// TODO: This doesn't belong here. Way to coupled.
-		Menu::GetSingleton()->isLoaded = true;
 	}
 }

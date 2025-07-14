@@ -2612,9 +2612,11 @@ namespace Modex
 			}
 		}
 
-		// Should this be routed through the input manager?
-		if (!ImGui::GetIO().WantTextInput) {
-			if (ImGui::IsKeyPressed(ImGuiKey_A, false) && ImGui::GetIO().KeyCtrl) {
+		const auto& io = ImGui::GetIO();
+
+		// Should this be routed through the input manager?s
+		if (!io.WantTextInput) {
+			if (ImGui::IsKeyPressed(ImGuiKey_A, false) && io.KeyCtrl) {
 				for (auto& item : _tableList) {
 					if (item) {
 						selectionStorage.SetItemSelected(item->TableID, true);

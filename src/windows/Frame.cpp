@@ -14,26 +14,19 @@ namespace Modex
 
 	void Frame::Draw(bool is_settings_popped)
 	{
-		auto& style = Settings::GetSingleton()->GetStyle();
+		const auto& io = ImGui::GetIO();
 		const auto& config = Settings::GetSingleton()->GetConfig();
 
 		if (is_settings_popped) {
 			SettingsWindow::DrawPopped();
 		}
 
-		ImGuiIO& io = ImGui::GetIO();
-
-		// Set the window size based on the display size and the user's screen scale ratio.
+		// Set the window size based on the display size and the user's scale settings.
 		const auto displaySize = io.DisplaySize;
-		// displaySize.x *= config.screenScaleRatio.x;
-		// displaySize.y *= config.screenScaleRatio.y;
-
 		const float window_w = (std::min)(displaySize.x, config.fullscreen ? displaySize.x : (1920.0f * 0.80f) * (config.uiScaleHorizontal / 100.0f));
 		const float window_h = (std::min)(displaySize.y, config.fullscreen ? displaySize.y : (1080.0f * 0.75f) * (config.uiScaleVertical / 100.0f));
 
-		// const float min_sidebar_width = window_w * 0.060f;
 		const float min_sidebar_width = 64.0f + (ImGui::GetStyle().WindowPadding.x * 2);
-		// const float max_sidebar_width = window_w * 0.15f;
 		const float max_sidebar_width = 210.0f;
 
 		// Calculate window positions post scaling.
@@ -87,8 +80,6 @@ namespace Modex
 
 					// Minor tweak because of bad UV calculation.
 					ImGui::SetCursorPosX(ImGui::GetCursorPosX() - 2.0f);
-					// ImGui::Image(texture, ImVec2(image_width * (sidebar_w / image_width) - 15.0f, image_height), ImVec2(0, 0), ImVec2(uv_x, 1.0f));
-					// ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 1.0f);
 					ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.f, 0.f, 0.f, 0.f));
 					ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.f, 0.f, 0.f, 0.f));
 					ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.f, 0.f, 0.f, 0.f));
@@ -126,9 +117,6 @@ namespace Modex
 
 				bool is_expanded = false;
 				const auto ExpandButton = [&]() {
-					// if (ImGui::IsWindowHovered() || ImGui::IsItemHovered()) {
-					// 	is_expanded = true;
-					// }
 					if (this->expand_sidebar) {
 						is_expanded = true;
 					}
@@ -251,8 +239,6 @@ namespace Modex
 
 			ImGui::PopClipRect();
 
-			GraphicManager::DrawImage(style.splashImage, ImVec2(displaySize.x * 0.5f, displaySize.y * 0.5f));
-
 			ImGui::End();
 		}
 	}
@@ -279,10 +265,6 @@ namespace Modex
 
 	void Frame::RefreshStyle()
 	{
-		// AddItemWindow::RefreshStyle();
-		// HomeWindow::RefreshStyle();
-		// SettingsWindow::RefreshStyle();
 
-		// auto& style = Settings::GetSingleton()->GetStyle();
 	}
 }  // namespace Modex

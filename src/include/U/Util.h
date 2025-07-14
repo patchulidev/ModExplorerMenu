@@ -192,8 +192,10 @@ namespace ImGui
 		ImGui::Button(a_id, ImVec2(width, height));
 		ImGui::PopStyleColor(3);
 
+		const auto& io = ImGui::GetIO();
+
 		if (ImGui::IsItemActive()) {
-			float mouse_delta = split_vertically ? ImGui::GetIO().MouseDelta.y : ImGui::GetIO().MouseDelta.x;
+			float mouse_delta = split_vertically ? io.MouseDelta.y : io.MouseDelta.x;
 
 			// Minimum pane size
 			if (mouse_delta < min_size - *target)

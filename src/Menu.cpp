@@ -140,8 +140,8 @@ namespace Modex
 		// instead, we pull the display size from the swapchain gathered during initialization. drawback is that
 		// dynamic window resizing will no longer work.
 
-		// auto& io = ImGui::GetIO();
-		// io.DisplaySize = this->screenSize;
+		auto& io = ImGui::GetIO();
+		io.DisplaySize = this->screenSize;
 
 		ImGui::NewFrame();
 		
@@ -161,7 +161,7 @@ namespace Modex
 
 	void Menu::RebuildFontAtlas()
 	{
-		ImGuiIO& io = ImGui::GetIO();
+		auto& io = ImGui::GetIO();
 		io.Fonts->Clear();
 
 		FontManager::GetSingleton()->SetStartupFont();
@@ -186,14 +186,6 @@ namespace Modex
 		
 		DXGI_SWAP_CHAIN_DESC desc;
 		a_swapchain->GetDesc(&desc);
-		
-		RECT rect{};
-		ImVec2 screenScaleRatio{ 1.0f, 1.0f };
-		if (GetClientRect(desc.OutputWindow, &rect) == TRUE) {
-			screenScaleRatio = { static_cast<float>(desc.BufferDesc.Width) / static_cast<float>(rect.right), static_cast<float>(desc.BufferDesc.Height) / static_cast<float>(rect.bottom) };
-		}
-		
-		Settings::GetSingleton()->GetConfig().screenScaleRatio = screenScaleRatio;
 
 		this->screenSize = { static_cast<float>(desc.BufferDesc.Width), static_cast<float>(desc.BufferDesc.Height) };
 		

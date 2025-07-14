@@ -26,7 +26,6 @@ namespace Modex
 		static inline std::map<std::string, GraphicManager::Image> imgui_library;
 
 		static void 				Init();
-		static void 				DrawImage(Image& a_texture, ImVec2 a_center);
 		static void 				LoadImagesFromFilepath(std::string a_path, std::map<std::string, Image>& out_struct);
 
 		static bool 				GetD3D11Texture(const char* filename, D3D11View* out_srv, int& out_width, int& out_height);
