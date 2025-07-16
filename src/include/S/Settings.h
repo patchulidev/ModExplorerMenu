@@ -36,7 +36,7 @@ namespace Modex
 		}
 
 		static inline const std::filesystem::path ini_theme_path = "Data/Interface/Modex/themes/";
-		static inline const std::filesystem::path ini_mem_path = "Data/Interface/Modex/Modex.ini";
+		static inline const std::filesystem::path ini_main_path = "Data/Interface/Modex/Modex.ini";
 
 		enum SECTION
 		{
@@ -264,38 +264,23 @@ namespace Modex
 			return { ImVec2(), false };
 		}
 
-		static std::map<std::string, GraphicManager::Image> GetListOfImages()
-		{
-			return GraphicManager::image_library;
-		}
-
-		// TODO: Remove hard-coded path
 		static std::vector<std::string> GetListOfThemes()
 		{
 			std::vector<std::string> themes;
-			const std::filesystem::path path_to_themes = "Data/Interface/Modex/themes";
 
-			// TODO: Implement scope wide error handling.
-			if (std::filesystem::exists(path_to_themes) == false) {
-				stl::report_and_fail(
-					"Modex.dll] FATAL ERROR:\n\n"
-					"Could not find themes directory (\"DATA/Interface/Modex/themes/\")\n\n"
-					"Make sure the Modex mod contains this directory respective to the data folder."sv);
+			if (std::filesystem::exists(ini_theme_path) == false) {
+				logger::error("[Settings] Themes directory not found: {}", ini_theme_path.string());
+				return themes;
 			}
 
-			for (const auto& entry : std::filesystem::directory_iterator(path_to_themes)) {
-				if (entry.path().filename().extension() != ".ini") {
-					continue;  // Pass invalid file types
+			for (const auto& entry : std::filesystem::directory_iterator(ini_theme_path)) {
+				auto ext = entry.path().extension().string();
+
+				if (ext != ".ini") {
+					continue;
 				}
 
-				// When reading paths or files from the users system, we interpret them as a wide string
-				// then convert it to a utf-8 string for storage. Since we do not want to store paths or
-				// filenames using wide chars. This ensures utf-8 is used for all strings.
-
-				auto index = entry.path().filename().stem().wstring();
-				std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-				auto theme_string = converter.to_bytes(index);
-				themes.push_back(theme_string);
+				themes.push_back(entry.path().stem().string());
 			}
 
 			return themes;
@@ -307,33 +292,33 @@ namespace Modex
 
 			// Case-insensitive comparison for Steamdeck support, and common sense.
 			std::transform(a_theme.begin(), a_theme.end(), a_theme.begin(), ::tolower);
-			std::filesystem::path full_path = ini_theme_path / (a_theme + ".ini");
+			const std::filesystem::path path = ini_theme_path / (a_theme + ".ini");
 
 			for (auto entry : themes) {
 				std::transform(entry.begin(), entry.end(), entry.begin(), ::tolower);
 
 				if (entry == a_theme) {
-					Settings::GetSingleton()->GetIni(full_path, [](CSimpleIniA& a_ini) {
+					Settings::GetSingleton()->GetIni(path, [](CSimpleIniA& a_ini) {
 						Settings::GetSingleton()->LoadThemeFromIni(a_ini);
 					});
+
 					return { a_theme, true };
 				}
 			}
 
-			// If we did not find it, create a new ini with defaults and retry.
-			// Mainly a fail-safe if the user edits the master config and breaks the theme.
-			Settings::GetSingleton()->ExportThemeToIni(full_path, Settings::GetSingleton()->def.style);
+			Settings::GetSingleton()->ExportThemeToIni(path, Settings::GetSingleton()->def.style);
 			SetThemeFromIni(a_theme);
 
 			return { a_theme, false };
 		}
 
 		// Horrendous de-serialization.
-		[[nodiscard]] static inline float GetFloat(std::string& a_str) { return std::stof(a_str); };
-		[[nodiscard]] static inline int GetInt(std::string& a_str) { return std::stoi(a_str); };
-		[[nodiscard]] static inline uint32_t GetUInt(std::string& a_str) { return std::stoul(a_str); };
-		[[nodiscard]] static inline bool GetBool(std::string& a_str) { return a_str == "true"; };
+		[[nodiscard]] static inline float 		GetFloat(std::string& a_str) { return std::stof(a_str); };
+		[[nodiscard]] static inline int 		GetInt(std::string& a_str) { return std::stoi(a_str); };
+		[[nodiscard]] static inline uint32_t 	GetUInt(std::string& a_str) { return std::stoul(a_str); };
+		[[nodiscard]] static inline bool 		GetBool(std::string& a_str) { return a_str == "true"; };
 		[[nodiscard]] static inline std::string GetString(std::string& a_str) { return a_str; };  // lol
+
 		[[nodiscard]] inline Style& GetStyle() { return user.style; };
 		[[nodiscard]] inline Config& GetConfig() { return user.config; };
 

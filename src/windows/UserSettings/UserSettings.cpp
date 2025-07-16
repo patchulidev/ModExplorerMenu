@@ -205,7 +205,7 @@ namespace Modex
 		ImGui::SameLine(ImGui::GetContentRegionMax().x - p_fixedWidth - p_padding - ImGui::GetStyle().IndentSpacing);
 		ImGui::PushItemWidth(p_fixedWidth);
 		if (ImGui::BeginCombo(id.c_str(), imageName.c_str(), flags)) {
-			auto images = Settings::GetListOfImages();
+			auto images = GraphicManager::GetListOfImages();
 			ImGui::PushID("##ImageSelectionPopup");
 			for (const auto& image : images) {
 				if (ImGui::Selectable(image.first.c_str())) {

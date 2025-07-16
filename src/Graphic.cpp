@@ -67,40 +67,71 @@ namespace Modex
 		return true;
 	}
 
+	
+	GraphicManager::Image GraphicManager::GetImage(std::string a_name)
+	{
+		auto found = image_library.find(a_name);
+		if (found != image_library.end()) {
+			return found->second;
+		}
+		return Image();
+	}
+
+	std::string GraphicManager::GetImageName(Image a_image)
+	{
+		for (const auto& [key, value] : image_library) {
+			if (value.texture == a_image.texture) {
+				return key;
+			}
+		}
+
+		return "None";
+	}
+
+	std::map<std::string, GraphicManager::Image> GraphicManager::GetListOfImages()
+	{
+		return GraphicManager::image_library;
+	}
+
+
 	// TODO: #77 Convert all filepath operations to std::filesystem::path instead of handling std::string paths.
-	void GraphicManager::LoadImagesFromFilepath(std::string a_path, std::map<std::string, Image>& out_struct)
+	void GraphicManager::LoadImagesFromFilepath(const std::filesystem::path& a_path, std::map<std::string, Image>& out_struct)
 	{
 		if (std::filesystem::exists(a_path) == false) {
-			auto error_message = std::string("[GraphicManager] Font and/or Graphic asset directory not found. This is because Modex cannot locate the path '") + a_path + "'. Check your installation.";
-			logger::error("{}", error_message);
+			logger::error("[GraphicManager] Font and/or Graphic asset directory not found. This is because Modex cannot locate the path '{}'. Check your installation.", a_path.string());
 			return;
 		}
 
 		for (const auto& entry : std::filesystem::directory_iterator(a_path)) {
-			if (entry.path().filename().extension() != ".png") {
+			if (entry.path().extension() != ".png") {
 				continue;
 			}
 
-			auto index = entry.path().filename().stem().string();  // Get the filename without extension
+        	auto index = entry.path().stem().string();
 
-			bool success = GraphicManager::GetD3D11Texture(entry.path().string().c_str(), &out_struct[index.c_str()].texture,
-				out_struct[index.c_str()].width, out_struct[index.c_str()].height);
+			bool success = GraphicManager::GetD3D11Texture(entry.path().string().c_str(), 
+				&out_struct[index].texture,
+				out_struct[index].width, 
+				out_struct[index].height);
 
 			if (!success) {
 				logger::error("[GraphicManager] Failed to load image: {}", entry.path().string());
 			}
 		}
+
+		logger::info("[GraphicManager] Successfully loaded {} images from '{}'", out_struct.size(), a_path.string());
 	}
 
 	void GraphicManager::Init()
 	{
 		image_library["None"] = Image();
-		GraphicManager::LoadImagesFromFilepath(std::string("Data/Interface/Modex/images"), GraphicManager::image_library);
+		GraphicManager::LoadImagesFromFilepath(GraphicManager::image_path, GraphicManager::image_library);
 
 		// TODO: #78 Possible CTD issue here with Edge UI Imgui Icons?
-		if (std::filesystem::exists("Data/Interface/ImGuiIcons")) {
-			GraphicManager::LoadImagesFromFilepath(std::string("Data/Interface/ImGuiIcons/Icons"), GraphicManager::imgui_library);
-			logger::info("[GraphicManager] Successfully found and loaded ImGui Icon Library.");
+		if (std::filesystem::exists(GraphicManager::imgui_path)) {
+			GraphicManager::LoadImagesFromFilepath(GraphicManager::imgui_path, GraphicManager::imgui_library);
+		} else {
+			logger::info("[GraphicManager] ImGui Icon Library directory not found. Skipping Custom ImGui loading.");
 		}
 	}
 }
