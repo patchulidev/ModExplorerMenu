@@ -347,6 +347,26 @@ namespace Modex
 			Settings::GetSingleton()->SaveSettings();
 		}
 
+		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
+
+		std::vector<std::string> levels = { "trace", "debug", "info", "warn", "error", "critical" };
+
+		ImGui::Spacing();
+		ImGui::Text(_T("SETTING_LOG_LEVEL"));
+		ImGui::SameLine(ImGui::GetContentRegionMax().x - p_fixedWidth - p_padding - ImGui::GetStyle().IndentSpacing);
+		ImGui::PushItemWidth(p_fixedWidth);
+		if (ImGui::BeginCombo("##LogLevelSelection", _T(levels[config.logLevel]))) {
+			for (int i = 0; i < levels.size(); ++i) {
+				if (ImGui::Selectable(_T(levels[i]))) {
+					config.logLevel = static_cast<spdlog::level::level_enum>(i);
+					Settings::GetSingleton()->SaveSettings();
+				}
+			}
+			ImGui::EndCombo();
+		}
+		ImGui::Spacing();
+		ImGui::PopItemWidth();
+
 		AddSubCategoryHeader(_T("SETTING_FONT_AND_LANGUAGE"));
 
 		// Language Dropdown

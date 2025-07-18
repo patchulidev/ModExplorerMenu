@@ -72,6 +72,7 @@ namespace Modex
 			bool fullscreen = false;
 			bool pauseGame = false;
 			bool disableInMenu = false;
+			spdlog::level::level_enum logLevel = spdlog::level::info;
 
 			// Font Stuff
 			std::string language = "English";
@@ -124,6 +125,16 @@ namespace Modex
 				return a_style ? "true" : "false";
 			} else if constexpr (std::is_same_v<int, T>) {
 				return std::to_string(a_style);
+			} else if constexpr (std::is_same_v<spdlog::level::level_enum, T>) {
+				switch (a_style) {
+					case spdlog::level::trace:    return "trace";
+					case spdlog::level::debug:    return "debug";
+					case spdlog::level::info:     return "info";
+					case spdlog::level::warn:     return "warn";
+					case spdlog::level::err:      return "error";
+					case spdlog::level::critical: return "critical";
+					default:                      return "unknown";
+				}
 			} else {
 				stl::report_and_fail("Unsupported type for ToString");  // FIXME: static_assert?
 			}

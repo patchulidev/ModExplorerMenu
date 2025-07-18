@@ -74,6 +74,23 @@ namespace Modex
 			return GraphicManager::GetImage(value);
 		} else if constexpr (std::is_same_v<T, Language::GlyphRanges>) {
 			return Language::GetGlyphRange(value);
+		} else if constexpr (std::is_same_v<T, spdlog::level::level_enum>) {
+			if (value == "trace") {
+				return spdlog::level::trace;
+			} else if (value == "debug") {
+				return spdlog::level::debug;
+			} else if (value == "info") {
+				return spdlog::level::info;
+			} else if (value == "warn") {
+				return spdlog::level::warn;
+			} else if (value == "error") {
+				return spdlog::level::err;
+			} else if (value == "critical") {
+				return spdlog::level::critical;
+			} else {
+				PrettyLog::Error("Unknown log level: {}", value);
+				return a_default;
+			}
 		} else {
 			PrettyLog::Error("Unhandled type passed to GET_VALUE in Menu.cpp!");
 			return a_default;
@@ -104,6 +121,7 @@ namespace Modex
 			a_ini.SetValue(rSections[Main], "Fullscreen", ToString(_default.fullscreen).c_str(), GetComment(iComment::ConfigFullscreen));
 			a_ini.SetValue(rSections[Main], "PauseGame", ToString(_default.pauseGame).c_str(), GetComment(iComment::ConfigPauseGame));
 			a_ini.SetValue(rSections[Main], "DisableInMenu", ToString(_default.disableInMenu).c_str(), GetComment(iComment::ConfigDisableInMenu));
+			a_ini.SetValue(rSections[Main], "LogLevel", ToString(_default.logLevel).c_str(), GetComment(iComment::ConfigDisableInMenu));
 
 			// Font & Localization
 			a_ini.SetValue(rSections[Main], "Language", ToString(_default.language, false).c_str(), GetComment(iComment::ConfigLanguage));
@@ -162,6 +180,7 @@ namespace Modex
 			a_ini.SetValue(rSections[Main], "Fullscreen", ToString(Settings::GetSingleton()->user.config.fullscreen).c_str());
 			a_ini.SetValue(rSections[Main], "PauseGame", ToString(Settings::GetSingleton()->user.config.pauseGame).c_str());
 			a_ini.SetValue(rSections[Main], "DisableInMenu", ToString(Settings::GetSingleton()->user.config.disableInMenu).c_str());
+			a_ini.SetValue(rSections[Main], "LogLevel", ToString(Settings::GetSingleton()->user.config.logLevel).c_str());
 
 			// Font & Localization
 			a_ini.SetValue(rSections[Main], "Language", ToString(Settings::GetSingleton()->user.config.language).c_str());
@@ -197,6 +216,7 @@ namespace Modex
 		user.config.fullscreen = GET_VALUE<bool>(rSections[Main], "Fullscreen", _default.fullscreen, a_ini);
 		user.config.pauseGame = GET_VALUE<bool>(rSections[Main], "PauseGame", _default.pauseGame, a_ini);
 		user.config.disableInMenu = GET_VALUE<bool>(rSections[Main], "DisableInMenu", _default.disableInMenu, a_ini);
+		user.config.logLevel = GET_VALUE<spdlog::level::level_enum>(rSections[Main], "LogLevel", _default.logLevel, a_ini);
 
 		user.config.language = GET_VALUE<std::string>(rSections[Main], "Language", _default.language, a_ini);
 		user.config.glyphRange = GET_VALUE<Language::GlyphRanges>(rSections[Main], "GlyphRange", _default.glyphRange, a_ini);
