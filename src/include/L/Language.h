@@ -4,10 +4,10 @@
 
 namespace Modex
 {
-
-	// TODO: Purge wchar_t and string literals
-	const static inline std::filesystem::path json_lang_path = "Data/Interface/Modex/LaNgUaGe/";
-	const static inline std::filesystem::path json_font_path = "dAtA/intERFACE/MoDEX/user/FonTs/";
+	const static inline std::filesystem::path lang_path = "Data/Interface/Modex/Language/";
+	const static inline std::filesystem::path font_path = "Data/Interface/Modex/Fonts/";
+	const static inline std::filesystem::path imgui_font_path = "Data/Interface/ImGuiIcons/Fonts/";
+	const static inline std::filesystem::path icon_font_path = "Data/Interface/Modex/Icons/";
 
 	class Translate
 	{
@@ -33,21 +33,19 @@ namespace Modex
 				lang.clear();
 			}
 
-			std::filesystem::path full_path = json_lang_path / (a_path + ".json");
+			std::filesystem::path full_path = lang_path / (a_path + ".json");
 
 			std::ifstream file(full_path);
 			if (!file.is_open()) {
 				return;
 			}
 
-			// If the file is empty, don't bother parsing it.
 			file.seekg(0, std::ios::end);
 			if (file.tellg() == 0) {
 				file.close();
 				return;
 			}
 
-			// Reset pointer to beginning.
 			file.seekg(0, std::ios::beg);
 
 			try {
@@ -59,13 +57,13 @@ namespace Modex
 					lang[key] = value;
 				}
 
-				logger::info("[Translation] Loaded language: {}", a_path);
+				PrettyLog::Info("Successfully loaded language from file: \"{}\"", a_path);
 			} catch (const nlohmann::json::parse_error& e) {
+				PrettyLog::Warn("Error parsing language file: {}", e.what());
 				file.close();
-				stl::report_and_fail(std::string("[JSON] Error parsing language file:\n\nValidate your JSON formatting, and try again.\n") + e.what());
 			} catch (const nlohmann::json::exception& e) {
+				PrettyLog::Error("Error Exception reading language file: {}", e.what());
 				file.close();
-				stl::report_and_fail(std::string("[JSON] Error Exception reading language file: ") + e.what());
 			}
 		}
 
@@ -82,8 +80,6 @@ namespace Modex
 		}
 
 	private:
-		const static inline std::filesystem::path json_lang_path = "Data/Interface/Modex/LaNgUaGe/";
-
 		Translate() = default;
 		~Translate() = default;
 		Translate(const Translate&) = delete;
@@ -128,7 +124,8 @@ namespace Modex
 		static inline std::set<std::string> GetLanguages()
 		{
 			if (languages.empty()) {
-				stl::report_and_fail("No languages found in the language directory. Unable to Load Languages.");
+				PrettyLog::Error("No Language files found in the Language directory. Please ensure you have the necessary language file(s) in: {}", lang_path.string());
+				return {};
 			}
 
 			return languages;
@@ -136,12 +133,17 @@ namespace Modex
 
 		static const void BuildLanguageList()
 		{
-			for (const auto& entry : std::filesystem::directory_iterator(json_lang_path)) {
+			if (!std::filesystem::exists(lang_path)) {
+				PrettyLog::Error("Language directory does not exist: {}", lang_path.string());
+				return;
+			}
+
+			for (const auto& entry : std::filesystem::directory_iterator(lang_path)) {
 				if (entry.path().extension() == L".json") {
 					std::string path = entry.path().filename().string();
 					languages.insert(path.substr(0, path.find_last_of('.')));
 
-					logger::info("[Language] Added language to master list: {}", path);
+					PrettyLog::Info("Added {} to language list.", path);
 				}
 			}
 		}
@@ -282,9 +284,6 @@ namespace Modex
 		
 	private:
 		static inline std::map<std::string, FontData> font_library;
-		static inline const std::filesystem::path font_path = "Data/Interface/Modex/Fonts/";
-		static inline const std::filesystem::path imgui_font_path = "Data/Interface/ImGuiIcons/Fonts/";
-		static inline const std::filesystem::path icon_font_path = "Data/Interface/Modex/Icons/";
 
 		std::filesystem::path GetSystemFontPath(const std::string& a_language);
 		void AddDefaultFont();

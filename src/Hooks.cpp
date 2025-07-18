@@ -93,18 +93,18 @@ namespace Hooks
 
 		SKSE::AllocTrampoline(14);
 		PollInputDevices_Hook::func = trampoline.write_call<5>(_input.address() + REL::VariantOffset(0x7B, 0x7B, 0x81).offset(), PollInputDevices_Hook::thunk);
-		logger::debug("[Hook] Hooked PollInputDevices at {:#x}", _input.address() + REL::VariantOffset(0x7B, 0x7B, 0x81).offset());
+		PrettyLog::Info("Hooked PollInputDevices at {:#x}", _input.address() + REL::VariantOffset(0x7B, 0x7B, 0x81).offset());
 
 		SKSE::AllocTrampoline(8); // 14?
 		RegisterClassA_Hook::func = *(uintptr_t*)trampoline.write_call<6>(_register.address() + REL::VariantOffset(0x8E, 0x15C, 0x99).offset(), RegisterClassA_Hook::thunk);
-		logger::debug("[Hook] Hooked RegisterClassA at {:#x}", _register.address() + REL::VariantOffset(0x8E, 0x15C, 0x99).offset());
+		PrettyLog::Info("Hooked RegisterClassA at {:#x}", _register.address() + REL::VariantOffset(0x8E, 0x15C, 0x99).offset());
 
 		SKSE::AllocTrampoline(14);
 		D3D11Create_Hook::func = trampoline.write_call<5>(_create.address() + REL::VariantOffset(0x9, 0x275, 0x9).offset(), D3D11Create_Hook::thunk);
-		logger::debug("[Hook] Hooked D3D11 Create at {:#x}", _create.address() + REL::VariantOffset(0x9, 0x275, 0x9).offset());
+		PrettyLog::Info("Hooked D3D11 Create at {:#x}", _create.address() + REL::VariantOffset(0x9, 0x275, 0x9).offset());
 
 		SKSE::AllocTrampoline(14);
 		DXGIPresent_Hook::func = trampoline.write_call<5>(_present.address() + REL::VariantOffset(0x9, 0x9, 0x15).offset(), DXGIPresent_Hook::thunk);
-		logger::debug("[Hook] Hooked DXGI Present at {:#x}", _present.address() + REL::VariantOffset(0x9, 0x9, 0x15).offset());
+		PrettyLog::Info("Hooked DXGI Present at {:#x}", _present.address() + REL::VariantOffset(0x9, 0x9, 0x15).offset());
 	}
 }

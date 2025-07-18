@@ -16,7 +16,7 @@ namespace Modex
 		CSimpleIniA ini;
 
 		if (a_path.empty()) {
-			logger::critical("[Settings] Invalid Path provided to GetIni");
+			PrettyLog::Error("Unable to retrieve INI file, path is empty: {}", a_path.string());
 		}
 
 		// This is okay since we're interfacing with an external API
@@ -35,6 +35,7 @@ namespace Modex
 		(void)ini.SaveFile(wide_path.c_str());
 	}
 
+	// TODO: Some bug reports about ini serialization, might be theme related or ini related, not sure.
 	template <class T>
 	T GET_VALUE(const char* section, const char* key, T a_default, CSimpleIniA& a_ini)
 	{
@@ -48,7 +49,7 @@ namespace Modex
 		}
 
 		if (value.empty()) {
-			logger::warn("[Settings] Failed to parse value from .ini file! Ensure you're using the correct format!");
+			PrettyLog::Warn("Failed to parse value from .ini file! Ensure you're using the correct format!");
 			return a_default;
 		}
 
@@ -74,7 +75,7 @@ namespace Modex
 		} else if constexpr (std::is_same_v<T, Language::GlyphRanges>) {
 			return Language::GetGlyphRange(value);
 		} else {
-			logger::error("[Settings] Unhandled type passed to GET_VALUE in Menu.cpp!");
+			PrettyLog::Error("Unhandled type passed to GET_VALUE in Menu.cpp!");
 			return a_default;
 		}
 	}
@@ -86,6 +87,7 @@ namespace Modex
 	}
 
 	// Master ini has no defaults, they're established here. Theme defaults are derived from def class.
+	// TODO: Remove hardcoded paths.
 	void Settings::CreateDefaultMaster()
 	{
 		GetIni(L"Data/Interface/Modex/Modex.ini", [](CSimpleIniA& a_ini) {
@@ -122,31 +124,17 @@ namespace Modex
 	// Execute ini value assignment where necessary.
 	void Settings::LoadSettings(const std::filesystem::path& a_path)
 	{
-		// If master ini doesn't exist this will default it to "Default"
 		if (!std::filesystem::exists(a_path)) {
-			logger::warn("[Settings] Master ini not found! Creating default master ini...");
-
+			PrettyLog::Info("Could not resolve {}. Creating a new copy in it's place.", a_path.string());
 			CreateDefaultMaster();
 		}
 
-		// LogExpert won't show proper unicode support!
-		const std::u8string path_string = a_path.u8string();
-
-		if (path_string.c_str()) {
-			logger::info("[Settings] Loading settings from: {}", std::string(path_string.begin(), path_string.end()));
-		} else {
-			logger::error("[Settings] Critical Error: Failed to convert path to wide string! Please report this immediately");
-		}
-
-		// Master
 		GetIni(a_path, [](CSimpleIniA& a_ini) {
 			Settings::GetSingleton()->LoadMasterIni(a_ini);
 		});
 
-		// Language
 		Translate::GetSingleton()->LoadLanguage(user.config.language);
-
-		logger::info("[Settings] Settings loaded successfully.");
+		PrettyLog::Info("Settings from Modex.ini have been loaded successfully!");
 	}
 
 	// Load font separately to allow GraphicManager to read language config first.
@@ -157,7 +145,7 @@ namespace Modex
 			Settings::GetSingleton()->user.config.globalFont = GET_VALUE<std::string>(rSections[Main], "GlobalFont", Settings::GetSingleton()->def.config.globalFont, a_ini);
 		});
 
-		logger::info("[Settings] Loaded user font settings: {}", user.config.globalFont);
+		PrettyLog::Debug("User Font Setting specified in Modex.ini: \"{}\"", user.config.globalFont);
 	}
 
 	void Settings::SaveSettings()

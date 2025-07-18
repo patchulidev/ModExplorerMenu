@@ -84,6 +84,7 @@ namespace stl
 
 namespace logger = SKSE::log;
 
+
 // #include "Plugin.h"
 
 // #include <ClibUtil/distribution.hpp>
@@ -97,6 +98,7 @@ using json = nlohmann::json;
 
 #include "SimpleIni.h"
 #include <fmt/core.h>
+#include <include/P/PrettyLog.h>
 
 #include "SimpleMath.h"
 #include <codecvt>

@@ -159,7 +159,7 @@ namespace Modex
 	void Data::MergeNPCRefIds(std::shared_ptr<std::unordered_map<RE::FormID, RE::FormID>> npc_ref_map)
 	{
 		if (npc_ref_map->empty()) {
-			logger::warn("[Data] No NPC references found.");
+			PrettyLog::Debug("No NPC references found.");
 		} else {
 			for (auto& npc : _npcCache) {
 				auto it = npc_ref_map->find(npc.GetBaseForm());
@@ -206,7 +206,7 @@ namespace Modex
 				RE::FormID ref = actor->GetFormID();
 
 				if (npc_ref_map->find(base) != npc_ref_map->end()) {
-					logger::warn("[Data] Duplicate NPC reference found (middleLow): {}", actor->GetName());
+					PrettyLog::Debug("Duplicate NPC reference found (middleLow): {}", actor->GetName());
 				} else {
 					npc_ref_map->insert_or_assign(base, ref);
 				}
@@ -223,7 +223,7 @@ namespace Modex
 				RE::FormID ref = actor->GetFormID();
 
 				if (npc_ref_map->find(base) != npc_ref_map->end()) {
-					logger::warn("[Data] Duplicate NPC reference found (highActorHandle): {}", actor->GetName());
+					PrettyLog::Debug("Duplicate NPC reference found (highActorHandle): {}", actor->GetName());
 				} else {
 					npc_ref_map->insert_or_assign(base, ref);
 				}
@@ -285,7 +285,7 @@ namespace Modex
 	void Data::CacheCells(RE::TESFile* a_file, std::map<std::tuple<std::uint32_t, const std::string, const std::string>, std::string_view>& out_map)
 	{
 		if (!a_file->OpenTES(RE::NiFile::OpenMode::kReadOnly, false)) {
-			logger::warn("[Data] failed to open file: {:s}", a_file->fileName);
+			PrettyLog::Warn("Failed to open file: {:s}", a_file->fileName);
 			return;
 		}
 
@@ -314,7 +314,7 @@ namespace Modex
 		} while (a_file->SeekNextForm(true));
 
 		if (!a_file->CloseTES(false)) {
-			logger::error("[Data] failed to close file: {:s}", a_file->fileName);
+			PrettyLog::Error("Failed to close file: {:s}", a_file->fileName);
 		}
 	}
 
@@ -416,7 +416,7 @@ namespace Modex
 			}
 
 			if (rawCellMap.empty()) {
-				logger::warn("[Data] No cells found in loaded worldspaces.");
+				PrettyLog::Debug("No cells found in loaded worldspaces.");
 			} else {
 				for (const auto& [key, value] : rawCellMap) {
 					const std::string& editorID = std::get<1>(key);
@@ -454,7 +454,7 @@ namespace Modex
 			"MODEX_ERR",
 			a_editorid,
 			nullptr);
-		logger::error("[Data] Cell with editor ID '{}' not found.", a_editorid);
+		PrettyLog::Debug("Cell with editor ID '{}' not found.", a_editorid);
 		return emptyCell;
 	}
 

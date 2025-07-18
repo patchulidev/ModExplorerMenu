@@ -13,7 +13,7 @@ namespace Modex
 
 		auto* render_manager = RE::BSGraphics::Renderer::GetSingleton();
 		if (!render_manager) {
-			logger::error("[GraphicManager] Cannot find render manager. Initialization failed."sv);
+			PrettyLog::Error("Cannot find RE::BSGraphics::Renderer singleton. Uh oh!");
 			return false;
 		}
 
@@ -21,8 +21,9 @@ namespace Modex
 		int image_width = 0;
 		int image_height = 0;
 		unsigned char* image_data = stbi_load(filename, &image_width, &image_height, NULL, 4);
+
 		if (image_data == NULL) {
-			logger::error("[GraphicManager] Failed to load image: {}", filename);
+			PrettyLog::Error("Failed to load image: {}", filename);
 			return false;
 		}
 
@@ -98,7 +99,7 @@ namespace Modex
 	void GraphicManager::LoadImagesFromFilepath(const std::filesystem::path& a_path, std::map<std::string, Image>& out_struct)
 	{
 		if (std::filesystem::exists(a_path) == false) {
-			logger::error("[GraphicManager] Font and/or Graphic asset directory not found. This is because Modex cannot locate the path '{}'. Check your installation.", a_path.string());
+			PrettyLog::Error("Could not locate Image directory, expected at: {}", a_path.string());
 			return;
 		}
 
@@ -115,11 +116,11 @@ namespace Modex
 				out_struct[index].height);
 
 			if (!success) {
-				logger::error("[GraphicManager] Failed to load image: {}", entry.path().string());
+				PrettyLog::Error("Failed to load image: {}", entry.path().string());
 			}
 		}
 
-		logger::info("[GraphicManager] Successfully loaded {} images from '{}'", out_struct.size(), a_path.string());
+		PrettyLog::Info("Successfully loaded {} images from \"{}\"", out_struct.size(), a_path.string());
 	}
 
 	void GraphicManager::Init()
@@ -131,7 +132,7 @@ namespace Modex
 		if (std::filesystem::exists(GraphicManager::imgui_path)) {
 			GraphicManager::LoadImagesFromFilepath(GraphicManager::imgui_path, GraphicManager::imgui_library);
 		} else {
-			logger::info("[GraphicManager] ImGui Icon Library directory not found. Skipping Custom ImGui loading.");
+			PrettyLog::Info("ImGui Icon Library mod/directory not found. Skipping Custom ImGui Library loading.");
 		}
 	}
 }

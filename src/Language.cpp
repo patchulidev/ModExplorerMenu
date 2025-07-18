@@ -7,7 +7,7 @@ namespace Modex
 	{
 		// Note to self: do not remove this fucking warning.
 		if (std::filesystem::exists(font_path) == false) {
-			stl::report_and_fail("FATAL ERROR: Font and/or Graphic asset directory not found. This is because Modex cannot locate the path 'Data/Interface/Modex/Fonts/'. Check your installation.");
+			PrettyLog::Error("Font directory does not exist: {}", font_path.string());
 			return;
 		}
 
@@ -53,7 +53,7 @@ namespace Modex
 		static const std::filesystem::path icons(icon_font_path / "lucide.ttf");
 
 		if (!std::filesystem::exists(icons)) {
-			logger::error("[FontManager] Icon font file not found: {}", icons.string());
+			PrettyLog::Error("Unable to locate icon font file: {}", icons.string());
 		} else {
 			io.Fonts->AddFontFromFileTTF(icons.string().c_str(), a_size + 3.0f, &config, icon_ranges);
 		}
@@ -95,10 +95,11 @@ namespace Modex
 		const auto fontPath = GetSystemFontPath(language);
 
 		if (std::filesystem::exists(fontPath)) {
+			PrettyLog::Info("Using system font: \"{}\" at path: \"{}\"", fontPath.filename().string(), fontPath.string());
 			io.Fonts->AddFontFromFileTTF(fontPath.string().c_str(), size, NULL, glyphRange);
 			MergeIconFont(io, size);
 		} else {
-			logger::error("[FontManager] System font not found: {}. Using ImGui default.", fontPath.string());
+			PrettyLog::Warn("System font not found: {}. Using ImGui proggy-font default. This is unexpected, but not critical.", fontPath.string());
 			io.Fonts->AddFontDefault();
 			MergeIconFont(io, size);
 		}
@@ -131,10 +132,10 @@ namespace Modex
 		}
 
 		if (std::filesystem::exists(data.fullPath) == true) {
-			logger::info("[Font Manager] Loading custom font: {}", data.name);
+			PrettyLog::Info("Successfully detected custom font: \"{}\" at path: \"{}\"", data.name, data.fullPath.string());
 			LoadCustomFont(data);
 		} else {
-			logger::info("[Font Manager] No Custom font specified. Loading default font.");
+			PrettyLog::Info("No custom font usage detected, defaulting to system font.");
 			AddDefaultFont();
 		}
 	}

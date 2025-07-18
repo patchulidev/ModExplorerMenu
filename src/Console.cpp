@@ -141,14 +141,14 @@ namespace Modex
 				RE::TESForm* form = RE::TESForm::LookupByID(lastID);
 
 				if (form == nullptr) {
-					logger::debug("Form not found for <read_last> command: {}", lastID);
+					PrettyLog::Debug("Form not found for <read_last> command: {}", lastID);
 					return;
 				}
 
 				RE::TESObjectBOOK* book = form->As<RE::TESObjectBOOK>();
 
 				if (book == nullptr) {
-					logger::debug("Form is not a book for <read_last> command: {}", lastID);
+					PrettyLog::Debug("Form is not a book for <read_last> command: {}", lastID);
 					return;
 				}
 
@@ -174,9 +174,9 @@ namespace Modex
 
 				if (equipObject) {
 					RE::BookMenu::OpenBookMenu(buf, extraData, bookRef, book, defaultPos, defaultPos, 1.0f, true);
-					logger::debug("Opened book menu for <read_last> command: {}", lastID);
+					PrettyLog::Debug("Opened book menu for <read_last> command: {}", lastID);
 				} else {
-					logger::debug("Failed to open book menu for <read_last> command: {}", lastID);
+					PrettyLog::Debug("Failed to open book menu for <read_last> command: {}", lastID);
 				}
 			});
 

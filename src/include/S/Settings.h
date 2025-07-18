@@ -157,8 +157,7 @@ namespace Modex
 				}
 			}
 
-			logger::error("[Settings] Failed to parse color from .ini file! Ensure you're using the correct format!");
-			logger::error("[Settings] ImVec4 input: {}", a_str);
+			PrettyLog::Error("Failed to parse color from .ini file! Expected format: {{R,G,B,A}} or #RRGGBBAA | Input: {}", a_str);
 			return { T(), false };
 		}
 
@@ -174,8 +173,7 @@ namespace Modex
 				return { ImVec2(x, y), true };
 			}
 
-			logger::error("[Settings] Failed to parse ImVec2 from .ini file! Ensure you're using the correct format!");
-			logger::error("[Settings] ImVec2 input: {}", a_str);
+			PrettyLog::Error("Failed to parse ImVec2 from .ini file! Expected format: {x,y} | Input: {}", a_str);
 			return { ImVec2(), false };
 		}
 

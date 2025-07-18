@@ -32,12 +32,11 @@ namespace Modex
 			file >> JSON;
 			file.close();
 		} catch (const nlohmann::json::parse_error& e) {
+			PrettyLog::Warn("Error parsing JSON file: {}", e.what());
 			file.close();
-			logger::error("[PersistentData] Error parsing JSON file: {}", e.what());
-			logger::error("[PersistentData] Did you modify it manually?");
 		} catch (const nlohmann::json::exception& e) {
+			PrettyLog::Warn("Error reading JSON file: {}", e.what());
 			file.close();
-			logger::error("[PersistentData] Error reading JSON file: {}", e.what());
 		}
 
 		return JSON;
@@ -58,7 +57,7 @@ namespace Modex
 		try {
 			file << a_json.dump(4);
 		} catch (const std::exception& e) {
-			logger::warn("[PersistentData] Failed to save JSON file: {}", e.what());
+			PrettyLog::Warn("Failed to save JSON file: {} | {}", a_path, e.what());
 			return false;
 		}
 
@@ -139,8 +138,8 @@ namespace Modex
 			} else if (value.type() == typeid(float)) {
 				JSON["Userdata"][key] = std::any_cast<float>(value);
 			} else {
-				logger::warn("[PersistentData] Unsupported type for userdata key: {}", key);
-				continue;  // Skip unsupported types
+				PrettyLog::Error("Unsupported type for userdata key, please report this as a bug: {}", key);
+				continue;
 			}
 		}
 
@@ -170,9 +169,9 @@ namespace Modex
 		}
 
 		if (!SaveJSONFile(json_user_path + "userdata.json", JSON)) {
-			logger::warn("[PersistentData] Failed to save userdata.json.");
+			PrettyLog::Warn("Failed to save userdata.json.");
 		} else {
-			logger::debug("[PersistentData] Userdata saved successfully.");
+			PrettyLog::Info("Userdata saved successfully.");
 		}
 	}
 
@@ -202,7 +201,7 @@ namespace Modex
 		}
 
 		if (!SaveJSONFile(json_user_path + "blacklist.json", JSON)) {
-			logger::warn("[PersistentData] Failed to save changes to blacklist.json.");
+			PrettyLog::Warn("Failed to add plugin to blacklist.json during save.");
 		}
 	}
 
@@ -220,7 +219,7 @@ namespace Modex
 		}
 
 		if (!SaveJSONFile(json_user_path + "blacklist.json", JSON)) {
-			logger::warn("[PersistentData] Failed to save changes to blacklist.json.");
+			PrettyLog::Warn("Failed to remove plugin from blacklist.json during save.");
 		}
 	}
 
@@ -229,7 +228,7 @@ namespace Modex
 		std::filesystem::path path(json_user_path + "/kits");
 
 		if (!std::filesystem::exists(path)) {
-			logger::info("[PersistentData] Kits directory does not exist, creating it.");
+			PrettyLog::Info("\"{}\": directory does not exist, creating it in overwrite for future use.", path.string());
 			std::filesystem::create_directories(path);
 			return;
 		}
@@ -265,8 +264,8 @@ namespace Modex
 			if (std::filesystem::exists(json_user_path + "/kits/" + old_name + ".json")) {
 				std::filesystem::remove(json_user_path + "/kits/" + old_name + ".json");
 			}
-		} catch (const std::exception& e) {
-			logger::warn("[PersistentData] Failed to rename kit: {}", e.what());
+		} catch (...) {
+			PrettyLog::Warn("Failed to rename kit: {} to: {}", old_name, a_new_name);
 			return a_kit;
 		}
 
@@ -288,11 +287,12 @@ namespace Modex
 				std::filesystem::remove(json_user_path + "/kits/" + a_name + ".json");
 			}
 
-		} catch (const std::exception& e) {
-			logger::warn("[PersistentData] Failed to delete kit JSON file: {}", e.what());
+		} catch (...) {
+			PrettyLog::Warn("Failed to delete kit JSON file: {}", a_name);
 			return;
 		}
 
+		PrettyLog::Debug("Deleted kit: {}", a_name);
 		m_kits.erase(a_name);
 	}
 
@@ -307,7 +307,7 @@ namespace Modex
 		auto& collection = GetLoadedKits();
 
 		if (JSON.empty()) {
-			logger::warn("Failed to load kit JSON file: {}", a_name);
+			PrettyLog::Warn("Tried to load an empty kit JSON file: {}", a_name);
 			return;
 		}
 
@@ -350,19 +350,19 @@ namespace Modex
 					item->equipped = data["Equipped"].get<bool>();
 
 					if (kit.items.contains(item)) {
-						logger::info("[PersistentData] Duplicate item found in kit {}. (EditorID: {})", kit_name, item_eid);
+						PrettyLog::Debug("Duplicate item found in kit {}. (EditorID: {})", kit_name, item_eid);
 						continue;
 					}
 
 					kit.items.emplace(item);
 				}
 			} catch (const nlohmann::json::exception& e) {
-				logger::warn("[PersistentData] Failed to load items from kit {}. (ERROR:  {})", kit_name, e.what());
-				logger::warn("[PersistentData] If you manually edited the JSON file, please ensure the format is correct!");
+				PrettyLog::Warn("Failed to load items from kit {}. (ERROR:  {})", kit_name, e.what());
 				break;
 			}
 
 			collection.emplace(kit_name, kit);
+			PrettyLog::Debug("Loaded kit: {}", kit_name);
 		}
 	}
 
@@ -396,11 +396,11 @@ namespace Modex
 
 		if (a_kit.collection.empty()) {
 			if (!SaveJSONFile(json_user_path + "/kits/" + a_kit.name + ".json", JSON)) {
-				logger::warn("[PersistentData] Failed to save changes to kit JSON file. {}", a_kit.name);
+				PrettyLog::Error("Failed to save Kit changes to JSON file: {}", a_kit.name);
 			}
 		} else {
 			if (!SaveJSONFile(json_user_path + "/kits/" + a_kit.collection + ".json", JSON)) {
-				logger::warn("[PersistentData] Failed to save changes to kit with collection name {}.", a_kit.collection);
+				PrettyLog::Error("Failed to save changes to kit with collection name {}.", a_kit.collection);
 			}
 		}
 	}

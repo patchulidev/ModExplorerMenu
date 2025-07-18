@@ -60,7 +60,7 @@ namespace Modex
 		case PLUGIN_TYPE::ALL:
 			return _modList;
 		default:
-			logger::warn("[PluginList] Invalid PLUGIN_TYPE argument passed to GetModulePluginList");
+			PrettyLog::Error("Invalid PLUGIN_TYPE argument passed to GetModulePluginList");
 			return _modList;
 		}
 	}
@@ -99,7 +99,7 @@ namespace Modex
 			safeCopy(_modList);
 			break;
 		default:
-			logger::error("[PluginList] Invalid PLUGIN_TYPE argument passed to GetModulePluginListSorted");
+			PrettyLog::Error("Invalid PLUGIN_TYPE argument passed to GetModulePluginListSorted");
 			safeCopy(_modList);
 			break;
 		}
@@ -111,7 +111,7 @@ namespace Modex
 		} else if (a_sortType == SORT_TYPE::COMPILEINDEX_DESC) {
 			std::sort(copy.begin(), copy.end(), CompileIndexCompareTESFileDesc);
 		} else {
-			logger::error("[PluginList] Invalid SORT_TYPE argument passed to GetModulePluginListSorted");
+			PrettyLog::Error("Invalid SORT_TYPE argument passed to GetModulePluginListSorted");
 		}
 
 		return copy;
@@ -177,7 +177,7 @@ namespace Modex
 		case RE::FormType::Cell:
 			return _itemListModFormTypeMap[a_plugin].cell;
 		default:
-			logger::error("[PluginList] Invalid FormType argument passed to IsFormTypeInPlugin");
+			PrettyLog::Error("Invalid FormType argument passed to IsFormTypeInPlugin");
 			return false;
 		}
 	}
@@ -298,7 +298,7 @@ namespace Modex
 					}
 					break;
 				default:
-					logger::error("[PluginList] Invalid FormType argument passed to GetFilteredListOfPluginNames");
+					PrettyLog::Error("Invalid FormType argument passed to GetFilteredListOfPluginNames");
 					modList.push_back(modName);
 					break;
 				}

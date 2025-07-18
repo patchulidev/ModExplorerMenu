@@ -19,24 +19,30 @@ namespace
 			Modex::PersistentData::GetSingleton()->LoadAllKits();
 			Modex::PersistentData::GetSingleton()->LoadBlacklist();
 			Modex::PersistentData::GetSingleton()->LoadUserdata();
-			logger::info("[kDataLoaded] Loaded Persistent Data");
+			PrettyLog::Info("Finished Loading Persistent Userdata!");
 
 			Modex::Language::GetSingleton()->BuildLanguageList();
 			Modex::FontManager::GetSingleton()->BuildFontLibrary();
-			logger::info("[kDataLoaded] Finished Building Language & Font List");
+			PrettyLog::Info("Finished Loading Language & Font Libraries!");
 
 			Modex::Settings::GetSingleton()->LoadSettings(Modex::Settings::ini_main_path);
 			Modex::Settings::GetSingleton()->LoadUserFontSetting();
 			Modex::Menu::GetSingleton()->RefreshFont();
-			logger::info("[kDataLoaded] Loaded User Settings from ini");
+			PrettyLog::Info("Finished Loading User Font Settings!");
 
 			Modex::GraphicManager::Init();
+			PrettyLog::Info("Finished GraphicManager Initialization!");
+
 			Modex::Data::GetSingleton()->Run();
-			logger::info("[kDataLoaded] Finished Graphic Manager & Data Initialization");
+			PrettyLog::Info("Finished Data Initialization!");
 
 			Modex::InputManager::GetSingleton()->Init();
+			PrettyLog::Info("Finished Setting Up InputManager!");
+			
 			Modex::Frame::GetSingleton()->Install();
-			logger::info("[kDataLoaded] Modex has been successfully loaded");
+			PrettyLog::Info("Done!");
+
+			PrettyLog::ReportSummary();
 			break;
 		case SKSE::MessagingInterface::kPostLoad:
 			break;
@@ -54,22 +60,13 @@ namespace
 		if (!logsFolder) {
 			SKSE::stl::report_and_fail("SKSE log_directory not provided, logs disabled.");
 		}
+
 		auto pluginName = SKSE::PluginDeclaration::GetSingleton()->GetName();
 		auto logFilePath = *logsFolder / std::format("{}.log", pluginName);
 
-#ifdef DEBUG
-		auto fileLoggerPtr = std::make_shared<spdlog::sinks::msvc_sink_mt>();
-		auto loggerPtr = std::make_shared<spdlog::logger>("log", std::move(fileLoggerPtr));
-		spdlog::set_default_logger(std::move(loggerPtr));
-		spdlog::set_level(spdlog::level::trace);
-		spdlog::flush_on(spdlog::level::trace);
-#else
 		auto fileLoggerPtr = std::make_shared<spdlog::sinks::basic_file_sink_mt>(logFilePath.string(), true);
 		auto loggerPtr = std::make_shared<spdlog::logger>("log", std::move(fileLoggerPtr));
 		spdlog::set_default_logger(std::move(loggerPtr));
-		spdlog::set_level(spdlog::level::info);
-		spdlog::flush_on(spdlog::level::info);
-#endif
 	}
 }
 

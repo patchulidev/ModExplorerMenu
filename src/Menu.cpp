@@ -200,7 +200,7 @@ namespace Modex
 		this->device = a_device;
 		this->context = a_context;
 		this->swapchain = a_swapchain;
-		
-		logger::debug("ImGui initialized with swap chain display size: {}x{}", desc.BufferDesc.Width, desc.BufferDesc.Height);
+
+		PrettyLog::Debug("ImGui initialized with swap chain display size: {}x{}", desc.BufferDesc.Width, desc.BufferDesc.Height);
 	}
 }
