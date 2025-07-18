@@ -6,16 +6,10 @@ namespace IniHelper
 	{
 		MasterPresetHeader,
 		PresetMainModules,
-		ThemeConfigHeader,
-		ThemeImageHeader,
-		ThemeTextHeader,
-		ThemeTableHeader,
-		ThemeWidgetsHeader,
 	};
 
 	enum class iComment
 	{
-		ConfigTheme,
 		ConfigShowMenuKey,
 		ConfigShowMenuModifier,
 		ConfigModListSort,
@@ -38,13 +32,6 @@ namespace IniHelper
 	};
 
 	std::map<iComment, const char*> comment_map = {
-		{ iComment::ConfigTheme,
-			"# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #\n"
-			"# Theme = <filename> (without extention)\n"
-			"#\n"
-			"# - Themes can be found in the 'Data/Interface/Modex/themes' directory.\n"
-			"# - If you're using Mod Organizer 2, custom themes are saved to your overwrite directory.\n"
-			"# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #" },
 		{ iComment::ConfigShowMenuKey,
 			"# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #\n"
 			"# ShowMenuKey = <int> (Uses Skyrim Input Codes: https://ck.uesp.net/wiki/Input_Script\n"
@@ -142,39 +129,7 @@ namespace IniHelper
 			"# This file is used to store variables across sessions\n"
 			"# You should not have to change anything in here. Most of it is handled in-game.\n"
 			"#\n"
-			"#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#\n" },
-		{ iHeader::ThemeConfigHeader,
-			"#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#\n"
-			"# # Theme configuration\n"
-			"#\n"
-			"# Supported Color formats:\n"
-			"# - Hexadecimal: #RRGGBBAA\n"
-			"# - RGB: {R,G,B,A} (e.g. {127,127,127,255}) [Do not use decimals]\n"
-			"#\n"
-			"#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#\n" },
-		{ iHeader::ThemeTextHeader,
-			"#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#\n"
-			"# # Text configuration\n"
-			"#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#\n" },
-		{ iHeader::ThemeTableHeader,
-			"#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#\n"
-			"# # Table & Column configuration\n"
-			"#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#\n" },
-		{ iHeader::ThemeWidgetsHeader,
-			"#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#\n"
-			"# # Buttons, Sliders, & Widgets configuration\n"
-			"#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#\n" },
-		{ iHeader::ThemeImageHeader,
-			"#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#\n"
-			"# # Image configuration\n"
-			"#\n"
-			"# Supported Image formats:\n"
-			"# - PNG\n"
-			"#\n"
-			"# - Images are loaded from the 'Data/Interface/Modex/images' directory.\n"
-			"# - Simply use the filename without the extension to reference the image.\n"
 			"#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#\n" }
-
 	};
 
 	[[nodiscard]] const char* GetComment(iComment a_type)

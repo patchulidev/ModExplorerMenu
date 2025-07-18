@@ -486,23 +486,7 @@ namespace ImGui
 
 		return pressed;
 	}
-
-	// inline static bool m_Selectable(
-	// 	const char* label,
-	// 	bool& selected,
-	// 	Modex::Settings::Style& style,
-	// 	ImGuiSelectableFlags flag = ImGuiSelectableFlags_None,
-	// 	const ImVec2& size = ImVec2(0, 0))
-	// {
-	// 	auto innerPadding = style.widgetPadding.y;
-	// 	auto newSize = ImVec2(size.x, size.y + innerPadding);
-
-	// 	// ImGui::PushFont(style.buttonFont.normal);
-	// 	auto result = ImGui::Selectable(label, &selected, flag, newSize);
-	// 	// ImGui::PopFont();
-	// 	return result;
-	// }
-
+	
 	//
 	// End of ImGui Replacements.
 	//

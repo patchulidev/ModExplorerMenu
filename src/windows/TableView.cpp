@@ -1116,16 +1116,17 @@ namespace Modex
 	template <typename DataType>
 	void TableView<DataType>::UpdateLayout(float a_width, int overrideLayout)
 	{
-		const auto& style = Settings::GetSingleton()->GetStyle();
 		const auto& config = Settings::GetSingleton()->GetConfig();
 
 		// Since the font size is variable, we need to recalculate height based on font size.
-		const float row_height = style.tableRowHeight + (config.globalFontSize * 2.0f);
+		// const float row_height = style.tableRowHeight + (config.globalFontSize * 2.0f);
+		const float row_height = 8.0f + (config.globalFontSize * 2.0f);
 
 		ItemSize = ImVec2(a_width, row_height);
 		LayoutItemSize = ImVec2(floorf(ItemSize.x), floorf(ItemSize.y));
 
-		LayoutRowSpacing = style.tableRowSpacing + style.tableRowThickness;
+		// LayoutRowSpacing = style.tableRowSpacing + style.tableRowThickness;
+		LayoutRowSpacing = 5.0f;  // TODO: Needs tested.
 		LayoutHitSpacing = 0.0f;  // TODO: Needs tested.
 
 		LayoutColumnCount = 1;
@@ -1954,7 +1955,7 @@ namespace Modex
 	{
 		(void)a_selected;  // If we want to handle selection visuals manually.
 
-		const auto& style = Settings::GetSingleton()->GetStyle();
+		const auto& style = ImGui::GetStyle().Colors;
 		const auto& config = Settings::GetSingleton()->GetConfig();
 		const float fontSize = config.globalFontSize;
 
@@ -1964,24 +1965,25 @@ namespace Modex
 		ImRect bb(box_min, box_max);
 
 		// Outline & Background
-		const ImU32 bg_color = ImGui::ColorConvertFloat4ToU32(style.tableRowBg);
-		const ImU32 bg_color_alt = ImGui::ColorConvertFloat4ToU32(style.tableAltRowBg);
-		const ImU32 outline_color = ImGui::ColorConvertFloat4ToU32(style.tableRowOutlineColor);
+		const ImU32 bg_color = ImGui::ColorConvertFloat4ToU32(style[ImGuiCol_TableRowBg]);
+		const ImU32 bg_color_alt = ImGui::ColorConvertFloat4ToU32(style[ImGuiCol_TableRowBgAlt]);
+		const ImU32 outline_color = ImGui::ColorConvertFloat4ToU32(style[ImGuiCol_TableBorderLight]);
 		const ImU32 text_color = ImGui::GetColorU32(ImGuiCol_Text);
 
 		// Background
-		if (style.showTableRowBG) {
+		if (true) {
 			if (a_kit.TableID % 2 == 0) {
 				DrawList->AddRectFilled(bb.Min, bb.Max, bg_color);
 			} else {
 				DrawList->AddRectFilled(bb.Min, bb.Max, bg_color_alt);
 			}
-		} else {
-			DrawList->AddRectFilled(bb.Min, bb.Max, bg_color);
 		}
+		// } else {
+		// 	DrawList->AddRectFilled(bb.Min, bb.Max, bg_color);
+		// }
 
 		// Outline
-		DrawList->AddRect(bb.Min, bb.Max, outline_color, style.tableRowRounding, 0, style.tableRowThickness);
+		DrawList->AddRect(bb.Min, bb.Max, outline_color, 0.0f, 0, 1.0f);
 
 		const float spacing = LayoutItemSize.x / 3.0f;
 		const float top_align = bb.Min.y + LayoutOuterPadding;
@@ -2224,12 +2226,12 @@ namespace Modex
 	{
 		(void)a_selected;  // If we want to handle selection visuals manually.
 
-		const auto& style = Settings::GetSingleton()->GetStyle();
+		const auto& colors = ImGui::GetStyle().Colors;
 		const auto& config = Settings::GetSingleton()->GetConfig();
 		const float fontSize = config.globalFontSize;
 
 		auto test_compactView = this->compactView;
-		auto test_tableRowBG = style.showTableRowBG;
+		auto test_tableRowBG = true;
 
 		if (overrideLayout == 1) {
 			test_compactView = true;
@@ -2242,9 +2244,9 @@ namespace Modex
 		ImRect bb(box_min, box_max);
 
 		// Outline & Background
-		const ImU32 bg_color = ImGui::ColorConvertFloat4ToU32(style.tableRowBg);
-		const ImU32 bg_color_alt = ImGui::ColorConvertFloat4ToU32(style.tableAltRowBg);
-		const ImU32 outline_color = ImGui::ColorConvertFloat4ToU32(style.tableRowOutlineColor);
+		const ImU32 bg_color = ImGui::ColorConvertFloat4ToU32(colors[ImGuiCol_TableRowBg]);
+		const ImU32 bg_color_alt = ImGui::ColorConvertFloat4ToU32(colors[ImGuiCol_TableRowBgAlt]);
+		const ImU32 outline_color = ImGui::ColorConvertFloat4ToU32(colors[ImGuiCol_TableBorderLight]);
 		const ImU32 text_color = ImGui::GetColorU32(ImGuiCol_Text);
 
 		// Background
@@ -2259,7 +2261,7 @@ namespace Modex
 		}
 
 		// Outline
-		DrawList->AddRect(bb.Min, bb.Max, outline_color, style.tableRowRounding, 0, style.tableRowThickness);
+		DrawList->AddRect(bb.Min, bb.Max, outline_color, 0.0f, 0, 1.0f);
 
 		// Type Color Identifier
 		const float type_pillar_width = 5.0f;

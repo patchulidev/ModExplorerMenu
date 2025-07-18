@@ -88,11 +88,10 @@ namespace Modex
 	void AddKeybind(const char* a_text, uint32_t& a_keybind, uint32_t defaultKey, bool a_modifierOnly, ImVec4& a_hover)
 	{
 		Settings::Config& config = Settings::GetSingleton()->GetConfig();
-		Settings::Style& style = Settings::GetSingleton()->GetStyle();
 
 		auto id = "##Keybind" + std::string(a_text);
 		ImGui::Spacing();
-		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + style.itemSpacing.y / 2 + ImGui::GetFontSize() / 2);
+		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().ItemSpacing.y / 2 + ImGui::GetFontSize() / 2);
 		ImGui::Text(_T(a_text));
 
 		if (GraphicManager::imgui_library.empty()) {
@@ -256,19 +255,6 @@ namespace Modex
 		return result;
 	}
 
-	void SaveThemeToFile(std::string a_path, Settings::Style& a_style)
-	{
-		// Add the .ini extension if it doesn't exist
-		if (a_path.rfind(".ini") != a_path.length() - 4) {
-			a_path += ".ini";
-		}
-
-		std::filesystem::path full_path = Settings::ini_theme_path / a_path;
-
-		Settings::GetSingleton()->ExportThemeToIni(full_path, a_style);
-		Settings::GetSingleton()->SaveSettings();
-	}
-
 	void AddSubCategoryHeader(const char* a_text)
 	{
 		ImGui::Unindent();
@@ -281,22 +267,6 @@ namespace Modex
 	// # End Helpers
 	//
 
-	void SettingsWindow::DrawPopped()
-	{
-		constexpr auto window_flags = ImGuiWindowFlags_NoCollapse;
-		if (ImGui::Begin(_T("THEME_POPUP_TITLE"), nullptr, window_flags)) {
-			DrawThemeSelector();
-
-			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.1f, 0.1f, 1.0f));
-			if (ImGui::Button(_T("THEME_POPUP_CLOSE"), ImVec2(ImGui::GetContentRegionAvail().x, 25.0f))) {
-				Menu::GetSingleton()->showSettingWindow = false;
-			}
-			ImGui::PopStyleColor(1);
-		}
-
-		ImGui::End();
-	}
-
 	static inline ImVec4 keyHoverTintColor = ImVec4(0.9f, 0.9f, 0.9f, 0.9f);
 	static inline ImVec4 modifierHoverTint = ImVec4(0.9f, 0.9f, 0.9f, 0.9f);
 	void SettingsWindow::DrawGeneralSettings()
@@ -305,7 +275,6 @@ namespace Modex
 		Settings::Config& config = Settings::GetSingleton()->GetConfig();
 
 		if (changes.load()) {
-			Menu::GetSingleton()->RefreshStyle();
 			changes.store(false);
 		}
 
@@ -363,7 +332,6 @@ namespace Modex
 		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 
 		if (AddToggleButton("SETTING_FULLSCREEN", config.fullscreen)) {
-			Frame::GetSingleton()->RefreshStyle();
 			Settings::GetSingleton()->SaveSettings();
 		}
 
@@ -532,225 +500,6 @@ namespace Modex
 		}
 	}
 
-	void SettingsWindow::DrawThemeSelector()
-	{
-		Settings::Style& style = Settings::GetSingleton()->GetStyle();
-		Settings::Config& config = Settings::GetSingleton()->GetConfig();
-
-		if (changes.load()) {
-			Menu::GetSingleton()->RefreshStyle();
-			changes.store(false);
-		}
-
-		ImGui::SubCategoryHeader("WARNING: v1.2.0 broke a lot of functionality in here. Colors may work. Work In Progress! Sorry :(", ImVec4(1.0f, 0.3f, 0.2f, 1.0f));
-		AddSubCategoryHeader(_T("THEME_PRESET_SELECT"));
-
-		constexpr auto combo_flags = ImGuiComboFlags_HeightLarge;
-		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - p_padding - ImGui::GetStyle().IndentSpacing);
-		if (ImGui::BeginCombo("##Settings::PresetDropdown", config.theme.c_str(), combo_flags)) {
-			std::vector<std::string> themes = Settings::GetListOfThemes();
-
-			for (const auto& theme : themes) {
-				if (ImGui::Selectable(theme.c_str())) {
-					config.theme = theme;
-					Settings::GetSingleton()->SetThemeFromIni(config.theme);
-					Settings::GetSingleton()->SaveSettings();
-					changes.store(true);
-				}
-			}
-
-			ImGui::EndCombo();
-		}
-
-		if (ImGui::Button(_T("THEME_PRESET_CREATE"), ImVec2(ImGui::GetContentRegionAvail().x - p_padding - ImGui::GetStyle().IndentSpacing, ImGui::GetFontSize() * 1.5f))) {
-			ImGui::OpenPopup("new_theme");
-		}
-
-		if (ImGui::BeginPopup("new_theme")) {
-			constexpr auto input_flags = ImGuiInputTextFlags_EnterReturnsTrue;
-			char newTheme[128] = { 0 };
-			if (ImGui::InputTextWithHint("##InputThemeName", _T("THEME_NAME_INPUT"), newTheme, IM_ARRAYSIZE(newTheme), input_flags)) {
-				if (strcmp(newTheme, "Default") == 0) {
-					ImGui::EndPopup();
-					return;
-				}
-				SaveThemeToFile(newTheme, style);
-				config.theme = newTheme;
-				changes.store(true);
-				ImGui::CloseCurrentPopup();
-			}
-			ImGui::EndPopup();
-		}
-
-		if (config.theme == "Default") {
-			AddSubCategoryHeader(_T("Note"));
-
-			float cx = ImGui::GetCenterTextPosX(_T("THEME_NOTE_1"));
-			ImGui::SetCursorPosX(cx);
-			ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.2f, 1.0f), _T("THEME_NOTE_1"));
-			ImGui::NewLine();
-
-			cx = ImGui::GetCenterTextPosX(_T("THEME_NOTE_2"));
-			ImGui::SetCursorPosX(cx);
-			ImGui::Text(_T("THEME_NOTE_2"));
-			ImGui::NewLine();
-
-			cx = ImGui::GetCenterTextPosX(_T("THEME_NOTE_3"));
-			ImGui::SetCursorPosX(cx);
-			ImGui::Text(_T("THEME_NOTE_3"));
-			ImGui::NewLine();
-			return;
-		}
-
-		// ImGui::SeparatorText(_TFM("THEME_CHANGES", +":"));
-		ImGui::Spacing();
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		ImGui::Spacing();
-
-		if (ImGui::Button(_T("THEME_RESET"), ImVec2(ImGui::GetContentRegionAvail().x - p_padding - ImGui::GetStyle().IndentSpacing, ImGui::GetFontSize() * 1.5f))) {
-			std::string _default = "Default";
-			Settings::SetThemeFromIni(_default);
-			changes.store(true);
-		}
-
-		if (ImGui::Button(_T("THEME_EXPORT"), ImVec2(ImGui::GetContentRegionAvail().x - p_padding - ImGui::GetStyle().IndentSpacing, ImGui::GetFontSize() * 1.5f))) {
-			ImGui::OpenPopup("save_to_file");
-		}
-
-		if (ImGui::BeginPopup("save_to_file")) {
-			ImGui::Text(_T("THEME_SAVE"));
-			constexpr auto input_flags = ImGuiInputTextFlags_EnterReturnsTrue;
-			if (ImGui::InputTextWithHint("##InputFilename", _T("THEME_NAME_INPUT"),
-					savePath,
-					IM_ARRAYSIZE(savePath),
-					input_flags)) {
-				SaveThemeToFile(savePath, style);
-				ImGui::CloseCurrentPopup();
-			}
-			if (ImGui::Button("Save")) {
-				SaveThemeToFile(savePath, style);
-				ImGui::CloseCurrentPopup();
-			}
-			ImGui::EndPopup();
-		}
-
-		if (ImGui::Button(_T("THEME_POPUP"), ImVec2(ImGui::GetContentRegionAvail().x - p_padding - ImGui::GetStyle().IndentSpacing, ImGui::GetFontSize() * 1.5f))) {
-			Menu::GetSingleton()->showSettingWindow = !Menu::GetSingleton()->showSettingWindow;
-		}
-
-		if (config.theme == "Default") {
-			return;
-		};
-
-		AddSubCategoryHeader(_T("THEME_WINDOW_STYLE"));
-
-		AddColorPicker("THEME_WINDOW_COLOR", style.windowBg);
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		AddDualSlider("THEME_WINDOW_PADDING", style.windowPadding.x, style.windowPadding.y, 0.1f, 25.0f);
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		AddColorPicker("THEME_BORDER_COLOR", style.border);
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		AddSliderPicker("THEME_WINDOW_ROUNDING", style.windowRounding, 0.1f, 15.0f);
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		AddSliderPicker("THEME_WINDOW_BORDER_SIZE", style.windowBorderSize, 0.1f, 15.0f);
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		AddSliderPicker("THEME_SIDEBAR_SPACING", style.sidebarSpacing, 0.1f, 100.0f);
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		AddColorPicker("THEME_HEADER_COLOR", style.header);
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		AddColorPicker("THEME_HEADER_HOVER_COLOR", style.headerHovered);
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		AddColorPicker("THEME_HEADER_ACTIVE_COLOR", style.headerActive);
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		AddDualSlider("THEME_ITEM_SPACING", style.itemSpacing.x, style.itemSpacing.y, 0.1f, 20.0f);
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		AddDualSlider("THEME_ITEM_INNER_SPACING", style.itemInnerSpacing.x, style.itemInnerSpacing.y, 0.1f, 20.0f);
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		AddSliderPicker("THEME_INDENT_SPACING", style.indentSpacing, 0.1f, 35.0f);
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		AddImageDropdown("THEME_SPLASH_IMAGE", &style.splashImage);
-
-		AddSubCategoryHeader(_T("THEME_TEXT_FONTS"));
-
-		AddColorPicker("THEME_TEXT_COLOR", style.text);
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		AddColorPicker("THEME_TEXT_DISABLED_COLOR", style.textDisabled);
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		AddColorPicker("THEME_TEXT_SELECTED_BG_COLOR", style.textSelectedBg);
-		// ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		// AddToggleButton("THEME_DISABLE_ICON_TEXT", style.noIconText);
-
-		AddSubCategoryHeader(_T("THEME_TABLE_COLUMN_STYLE"));
-
-		AddDualSlider("THEME_CELL_PADDING", style.cellPadding.x, style.cellPadding.y, 0.1f, 20.0f);
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		AddSliderPicker("THEME_COLUMNS_MIN_SPACING", style.columnsMinSpacing, 0.1f, 20.0f);
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		AddColorPicker("THEME_TABLE_HEADER_BG_COLOR", style.tableHeaderBg);
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		AddColorPicker("THEME_TABLE_BORDER_STRONG_COLOR", style.tableBorderStrong);
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		AddColorPicker("THEME_TABLE_BORDER_LIGHT_COLOR", style.tableBorderLight);
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		AddColorPicker("THEME_TABLE_ROW_BG_COLOR", style.tableRowBg);
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		AddColorPicker("THEME_TABLE_ALT_ROW_BG_COLOR", style.tableAltRowBg);
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		AddToggleButton("THEME_TABLE_ROW_ALTERNATING_BG", style.showTableRowBG);
-
-		AddSubCategoryHeader(_T("THEME_BUTTONS_WIDGET_STYLE"));
-
-		AddColorPicker("THEME_WIDGET_BG_COLOR", style.widgetBg);
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		AddColorPicker("THEME_WIDGET_HOVER_COLOR", style.widgetHovered);
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		AddColorPicker("THEME_WIDGET_ACTIVE_COLOR", style.widgetActive);
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		AddSliderPicker("THEME_WIDGET_ROUNDING", style.widgetRounding, 0.0f, 15.0f);
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		AddSliderPicker("THEME_WIDGET_BORDER_SIZE", style.widgetBorderSize, 0.0f, 15.0f);
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		AddDualSlider("THEME_WIDGET_PADDING", style.widgetPadding.x, style.widgetPadding.y, 0.0f, 25.0f);
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		AddColorPicker("THEME_CHECKMARK_COLOR", style.checkMark);
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		AddColorPicker("THEME_BUTTON_COLOR", style.button);
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		AddColorPicker("THEME_BUTTON_HOVER_COLOR", style.buttonHovered);
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		AddColorPicker("THEME_BUTTON_ACTIVE_COLOR", style.buttonActive);
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		AddColorPicker("THEME_SECONDARY_BUTTON_COLOR", style.secondaryButton);
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		AddColorPicker("THEME_SECONDARY_BUTTON_HOVER_COLOR", style.secondaryButtonHovered);
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		AddColorPicker("THEME_SECONDARY_BUTTON_ACTIVE_COLOR", style.secondaryButtonActive);
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		AddColorPicker("THEME_SCROLLBAR_BG_COLOR", style.scrollbarBg);
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		AddColorPicker("THEME_SCROLLBAR_GRAB_COLOR", style.scrollbarGrab);
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		AddColorPicker("THEME_SCROLLBAR_GRAB_HOVER_COLOR", style.scrollbarGrabHovered);
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		AddColorPicker("THEME_SCROLLBAR_GRAB_ACTIVE_COLOR", style.scrollbarGrabActive);
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		AddSliderPicker("THEME_SCROLLBAR_ROUNDING", style.scrollbarRounding, 0.1f, 35.0f);
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		AddSliderPicker("THEME_SCROLLBAR_SIZE", style.scrollbarSize, 0.1f, 50.0f);
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		AddSliderPicker("THEME_GRABBER_MIN_SIZE", style.grabMinSize, 0.1f, 20.0f);
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		AddSliderPicker("THEME_GRABBER_ROUNDING", style.grabRounding, 0.1f, 20.0f);
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		AddColorPicker("THEME_SLIDER_GRAB_COLOR", style.sliderGrab);
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		AddColorPicker("THEME_SLIDER_GRAB_ACTIVE_COLOR", style.sliderGrabActive);
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		AddColorPicker("THEME_SEPARATOR_COLOR", style.separator);
-
-		ImGui::NewLine();
-	}
-
 	void SettingsWindow::Draw()
 	{
 		const float button_width = ImGui::GetContentRegionAvail().x / static_cast<int>(Viewport::Count);
@@ -768,12 +517,6 @@ namespace Modex
 				activeViewport = Viewport::UserSettings;
 			}
 
-			ImGui::SameLine();
-
-			if (ImGui::Selectable(_T("SETTING_THEME"), activeViewport == Viewport::ThemeSettings, 0, ImVec2(button_width, 0.0f))) {
-				activeViewport = Viewport::ThemeSettings;
-			}
-
 			ImGui::PopStyleVar();
 		}
 		ImGui::EndChild();
@@ -786,25 +529,10 @@ namespace Modex
 			ImGui::Indent();
 			if (activeViewport == Viewport::UserSettings) {
 				DrawGeneralSettings();
-			} else if (activeViewport == Viewport::ThemeSettings) {
-				DrawThemeSelector();
 			}
 			ImGui::Unindent();
 		}
 		ImGui::EndChild();
-
-		auto& config = Settings::GetSingleton()->GetConfig();
-		auto& style = Settings::GetSingleton()->GetStyle();
-
-		if (SettingsWindow::file_changes.load()) {
-			const float alpha = 1.0f;
-			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.1f, 0.7f, 0.2f, alpha));
-			if (ImGui::Button(_T("THEME_SAVE_CHANGES"), ImVec2(ImGui::GetContentRegionAvail().x - 20.0f, 0))) {
-				SaveThemeToFile(config.theme, style);
-				SettingsWindow::file_changes.store(false);
-			}
-			ImGui::PopStyleColor(1);
-		}
 	}
 
 	// Called from XSEPlugin -> Frame::Install() -> Modules::Init()

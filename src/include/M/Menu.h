@@ -13,11 +13,9 @@ namespace Modex
 		void 					Toggle();
 		bool					AllowMenuOpen();
 
-		void 					RefreshStyle();
 		void 					RefreshFont();
 
 		void 					Init();
-		void 					SyncUserStyleToImGui(Settings::Style user);
 
 		// constructor destructor
 		static inline Menu* GetSingleton()

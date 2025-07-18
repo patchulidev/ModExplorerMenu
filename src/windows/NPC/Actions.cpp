@@ -6,8 +6,6 @@ namespace Modex
 {
 	void NPCWindow::ShowActions()
 	{
-		auto a_style = Settings::GetSingleton()->GetStyle();
-
 		ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5f, 0.5f));
 		ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.5f, 0.5f));
 
@@ -32,15 +30,9 @@ namespace Modex
 		ImGui::Spacing();
 		ImGui::SubCategoryHeader(_T("Actions"));
 
-		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(a_style.secondaryButton.x, a_style.secondaryButton.y, a_style.secondaryButton.z, a_style.secondaryButton.w));
-		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(a_style.secondaryButtonActive.x, a_style.secondaryButtonActive.y, a_style.secondaryButtonActive.z, a_style.secondaryButtonActive.w));
-		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(a_style.secondaryButtonHovered.x, a_style.secondaryButtonHovered.y, a_style.secondaryButtonHovered.z, a_style.secondaryButtonHovered.w));
-
 		if (ImGui::GradientButton(_T("NPC_PLACE_SELECTED"), ImVec2(button_width, 0))) {
 			this->tableView.PlaceSelectionOnGround(clickToPlaceCount);
 		}
-
-		ImGui::PopStyleColor(3);  // End of Green Buttons
 
 		if (ImGui::GradientButton(_T("NPC_UPDATE_REFERENCES"), ImVec2(button_width, 0))) {
 			Data::GetSingleton()->CacheNPCRefIds();
@@ -54,13 +46,13 @@ namespace Modex
 		const auto& selectedNPC = this->GetTableView().GetItemPreview();
 
 		if (selectedNPC != nullptr) {
-			if (selectedNPC->refID != 0) {
-				ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(a_style.button.x, a_style.button.y, a_style.button.z, a_style.button.w));
-				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(a_style.buttonHovered.x, a_style.buttonHovered.y, a_style.buttonHovered.z, a_style.buttonHovered.w));
-			} else {
-				ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(a_style.button.x, a_style.button.y, a_style.button.z, a_style.button.w - 0.35f));
-				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(a_style.button.x, a_style.button.y, a_style.button.z, a_style.button.w - 0.35f));
-			}
+			// if (selectedNPC->refID != 0) {
+			// 	ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(a_style.button.x, a_style.button.y, a_style.button.z, a_style.button.w));
+			// 	ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(a_style.buttonHovered.x, a_style.buttonHovered.y, a_style.buttonHovered.z, a_style.buttonHovered.w));
+			// } else {
+			// 	ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(a_style.button.x, a_style.button.y, a_style.button.z, a_style.button.w - 0.35f));
+			// 	ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(a_style.button.x, a_style.button.y, a_style.button.z, a_style.button.w - 0.35f));
+			// }
 
 			if (ImGui::GradientButton(_T("NPC_GOTO_REFERENCE"), ImVec2(button_width, 0))) {
 				if (selectedNPC->refID != 0) {
@@ -84,7 +76,7 @@ namespace Modex
 				}
 			}
 
-			ImGui::PopStyleColor(2);
+			// ImGui::PopStyleColor(2);
 		}
 
 		if (selectedNPC == nullptr) {

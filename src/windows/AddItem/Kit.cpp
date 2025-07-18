@@ -517,8 +517,6 @@ namespace Modex
 
 				ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 
-				const auto& style = Settings::GetSingleton()->GetStyle();
-				ImGui::PushStyleColor(ImGuiCol_Button, style.secondaryButton);
 				if (ImGui::GradientButton(_T("AIM_ADD"), ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
 					AddKitToInventory(kit);
 				}
@@ -526,8 +524,6 @@ namespace Modex
 				if (ImGui::GradientButton(_T("AIM_PLACE"), ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
 					PlaceKitAtMe(kit);
 				}
-
-				ImGui::PopStyleColor();
 
 				ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 

@@ -67,8 +67,6 @@ namespace Modex
 
 	void TeleportWindow::ShowActions()
 	{
-		auto a_style = Settings::GetSingleton()->GetStyle();
-
 		ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5f, 0.5f));
 		ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.5f, 0.5f));
 

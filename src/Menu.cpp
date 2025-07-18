@@ -145,7 +145,7 @@ namespace Modex
 
 		ImGui::NewFrame();
 		
-		Frame::GetSingleton()->Draw(showSettingWindow);
+		Frame::GetSingleton()->Draw();
 		UIManager::GetSingleton()->Draw();
 
 		ImGui::EndFrame();
@@ -202,69 +202,5 @@ namespace Modex
 		this->swapchain = a_swapchain;
 		
 		logger::debug("ImGui initialized with swap chain display size: {}x{}", desc.BufferDesc.Width, desc.BufferDesc.Height);
-	}
-
-	void Menu::RefreshStyle()
-	{
-		auto& style = Settings::GetSingleton()->GetStyle();
-
-		SyncUserStyleToImGui(style);
-
-		Frame::GetSingleton()->RefreshStyle();
-	}
-
-	void Menu::SyncUserStyleToImGui(Settings::Style user)
-	{
-		auto& style = ImGui::GetStyle();
-		auto& colors = style.Colors;
-
-		colors[ImGuiCol_Text] = user.text;
-		colors[ImGuiCol_TextDisabled] = user.textDisabled;
-		colors[ImGuiCol_WindowBg] = user.windowBg;
-		colors[ImGuiCol_Border] = user.border;
-		colors[ImGuiCol_FrameBg] = user.widgetBg;
-		colors[ImGuiCol_FrameBgHovered] = user.widgetHovered;
-		colors[ImGuiCol_FrameBgActive] = user.widgetHovered;
-		colors[ImGuiCol_ScrollbarBg] = user.scrollbarBg;
-		colors[ImGuiCol_ScrollbarGrab] = user.scrollbarGrab;
-		colors[ImGuiCol_ScrollbarGrabHovered] = user.scrollbarGrab;
-		colors[ImGuiCol_ScrollbarGrabActive] = user.scrollbarGrab;
-		colors[ImGuiCol_CheckMark] = user.checkMark;
-		colors[ImGuiCol_SliderGrab] = user.sliderGrab;
-		colors[ImGuiCol_SliderGrabActive] = user.sliderGrab;
-		colors[ImGuiCol_Button] = user.button;
-		colors[ImGuiCol_ButtonHovered] = user.buttonHovered;
-		colors[ImGuiCol_ButtonActive] = user.buttonActive;
-		colors[ImGuiCol_Header] = user.header;
-		colors[ImGuiCol_HeaderHovered] = user.headerHovered;
-		colors[ImGuiCol_HeaderActive] = user.headerActive;
-		colors[ImGuiCol_Separator] = user.separator;
-		colors[ImGuiCol_SeparatorHovered] = user.separatorHovered;
-		colors[ImGuiCol_SeparatorActive] = user.separatorActive;
-		colors[ImGuiCol_ResizeGrip] = user.resizeGrip;
-		colors[ImGuiCol_ResizeGripHovered] = user.resizeGripHovered;
-		colors[ImGuiCol_ResizeGripActive] = user.resizeGripActive;
-		colors[ImGuiCol_TableHeaderBg] = user.tableHeaderBg;
-		colors[ImGuiCol_TableBorderStrong] = user.tableBorderStrong;
-		colors[ImGuiCol_TableBorderLight] = user.tableBorderLight;
-		colors[ImGuiCol_TableRowBg] = user.tableRowBg;
-		colors[ImGuiCol_TextSelectedBg] = user.textSelectedBg;
-
-		style.WindowPadding = user.windowPadding;
-		style.FramePadding = user.widgetPadding;
-		style.CellPadding = user.cellPadding;
-		style.ItemSpacing = user.itemSpacing;
-		style.ItemInnerSpacing = user.itemInnerSpacing;
-
-		style.WindowRounding = user.windowRounding;
-		style.WindowBorderSize = user.windowBorderSize;
-		style.FrameBorderSize = user.widgetBorderSize;
-		style.FrameRounding = user.widgetRounding;
-		style.IndentSpacing = user.indentSpacing;
-		style.ColumnsMinSpacing = user.columnsMinSpacing;
-		style.ScrollbarRounding = user.scrollbarRounding;
-		style.ScrollbarSize = user.scrollbarSize;
-		style.GrabMinSize = user.grabMinSize;
-		style.GrabRounding = user.scrollbarRounding;
 	}
 }

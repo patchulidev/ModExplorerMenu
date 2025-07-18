@@ -2,12 +2,6 @@
 
 #include "include/G/Graphic.h"
 
-// Current process of loading settings::
-// Start by loading the user Config and getting the Theme string.
-// Look for the theme string in the themes directory for a matching ini.
-// (If it doesn't exist, load the default theme from def values in Style struct)
-// Load the theme ini and apply the values to the user Style struct.
-
 namespace Modex
 {
 
@@ -21,13 +15,9 @@ namespace Modex
 		void LoadUserFontSetting();
 		void SaveSettings();
 		void LoadMasterIni(CSimpleIniA& a_ini);
-		void LoadThemeFromIni(CSimpleIniA& a_ini);
-
-		void LoadStyleTheme(ImGuiStyle a_theme);
 
 		void CreateDefaultMaster();
 		static void FormatMasterIni(CSimpleIniA& a_ini);
-		static void FormatThemeIni(CSimpleIniA& a_ini);
 
 		static inline Settings* GetSingleton()
 		{
@@ -101,88 +91,13 @@ namespace Modex
 			ImVec2 screenScaleRatio;
 		};
 
-		ImGuiStyle test;
-
-		struct Style  // should extend ImGuiStyle (?)
-		{
-			ImVec4 text = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
-			ImVec4 textDisabled = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
-			ImVec4 windowBg = ImVec4(0.06f, 0.06f, 0.06f, 1.00f);
-			ImVec4 border = ImVec4(0.43f, 0.43f, 0.50f, 1.00f);
-			ImVec4 scrollbarBg = ImVec4(0.02f, 0.02f, 0.02f, 0.53f);
-			ImVec4 scrollbarGrab = ImVec4(0.31f, 0.31f, 0.31f, 1.00f);
-			ImVec4 scrollbarGrabHovered = ImVec4(0.41f, 0.41f, 0.41f, 1.00f);
-			ImVec4 scrollbarGrabActive = ImVec4(0.51f, 0.51f, 0.51f, 1.00f);
-			ImVec4 checkMark = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-			ImVec4 sliderGrab = ImVec4(0.24f, 0.52f, 0.88f, 1.00f);
-			ImVec4 sliderGrabActive = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-			ImVec4 widgetBg = ImVec4(0.16f, 0.29f, 0.48f, 1.00f);
-			ImVec4 widgetHovered = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-			ImVec4 widgetActive = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-			ImVec4 button = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-			ImVec4 buttonHovered = ImVec4(0.06f, 0.53f, 0.98f, 1.00f);
-			ImVec4 buttonActive = ImVec4(0.06f, 0.53f, 0.98f, 1.00f);
-			ImVec4 secondaryButton = ImVec4(0.07f, 0.71f, 0.36f, 0.75f);
-			ImVec4 secondaryButtonHovered = ImVec4(0.39f, 0.75f, 0.48f, 1.0f);
-			ImVec4 secondaryButtonActive = ImVec4(0.39f, 0.75f, 0.48f, 1.0f);
-			ImVec4 header = ImVec4(0.22f, 0.22f, 0.22f, 1.00f);
-			ImVec4 headerHovered = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-			ImVec4 headerActive = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-			ImVec4 separator = ImVec4(0.43f, 0.43f, 0.50f, 1.00f);
-			ImVec4 separatorHovered = ImVec4(0.10f, 0.40f, 0.75f, 0.78f);
-			ImVec4 separatorActive = ImVec4(0.10f, 0.40f, 0.75f, 1.00f);
-			ImVec4 resizeGrip = ImVec4(0.26f, 0.59f, 0.98f, 0.25f);
-			ImVec4 resizeGripHovered = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
-			ImVec4 resizeGripActive = ImVec4(0.26f, 0.59f, 0.98f, 0.95f);
-			ImVec4 tableHeaderBg = ImVec4(0.19f, 0.19f, 0.20f, 1.00f);
-			ImVec4 tableBorderStrong = ImVec4(0.31f, 0.31f, 0.31f, 1.00f);
-			ImVec4 tableBorderLight = ImVec4(0.23f, 0.23f, 0.23f, 1.00f);
-			ImVec4 textSelectedBg = ImVec4(0.26f, 0.59f, 0.98f, 0.35f);
-
-			ImVec2 windowPadding = ImVec2(8.00f, 8.00f);
-			ImVec2 widgetPadding = ImVec2(4.00f, 3.00f);
-			ImVec2 cellPadding = ImVec2(6.00f, 6.00f);
-			ImVec2 itemSpacing = ImVec2(6.00f, 6.00f);
-			ImVec2 itemInnerSpacing = ImVec2(6.00f, 6.00f);
-
-			float sidebarSpacing = 0;
-			float windowRounding = 9;
-			float windowBorderSize = 1;
-			float widgetBorderSize = 1;
-			float widgetRounding = 3;
-			float indentSpacing = 21;
-			float columnsMinSpacing = 50;
-			float scrollbarRounding = 9;
-			float scrollbarSize = 14;
-			float grabMinSize = 10;
-			float grabRounding = 3;
-
-			// New Table Specific Settings:
-			float tableRowHeight = 26.0f;  // minimum
-			float tableRowSpacing = 5.0f;  // minimum
-			float tableRowRounding = 0;
-			float tableRowThickness = 1.0f;
-			ImVec4 tableRowBg = ImVec4(0.0f, 0.0f, 0.0f, 0.25f);
-			ImVec4 tableAltRowBg = ImVec4(0.15f, 0.15f, 0.15f, 0.25f);
-			ImVec4 tableRowOutlineColor = ImVec4(0.43f, 0.43f, 0.50f, 1.00f);
-
-			bool showTableRowBG = true;
-			bool noIconText = false;
-
-			GraphicManager::Image splashImage;
-		};
-
 		struct Setting
 		{
 			Config config;
-			Style style;
 		};
 
 		Setting def;
 		Setting user;
-
-		void ExportThemeToIni(const std::filesystem::path& a_path, Style user);
-		void InstantiateDefaultTheme(Style& a_out);
 
 		// https://github.com/powerof3/PhotoMode | License: MIT
 		template <class T>
@@ -264,54 +179,6 @@ namespace Modex
 			return { ImVec2(), false };
 		}
 
-		static std::vector<std::string> GetListOfThemes()
-		{
-			std::vector<std::string> themes;
-
-			if (std::filesystem::exists(ini_theme_path) == false) {
-				logger::error("[Settings] Themes directory not found: {}", ini_theme_path.string());
-				return themes;
-			}
-
-			for (const auto& entry : std::filesystem::directory_iterator(ini_theme_path)) {
-				auto ext = entry.path().extension().string();
-
-				if (ext != ".ini") {
-					continue;
-				}
-
-				themes.push_back(entry.path().stem().string());
-			}
-
-			return themes;
-		}
-
-		static std::pair<std::string, bool> SetThemeFromIni(std::string a_theme)
-		{
-			std::vector<std::string> themes = GetListOfThemes();
-
-			// Case-insensitive comparison for Steamdeck support, and common sense.
-			std::transform(a_theme.begin(), a_theme.end(), a_theme.begin(), ::tolower);
-			const std::filesystem::path path = ini_theme_path / (a_theme + ".ini");
-
-			for (auto entry : themes) {
-				std::transform(entry.begin(), entry.end(), entry.begin(), ::tolower);
-
-				if (entry == a_theme) {
-					Settings::GetSingleton()->GetIni(path, [](CSimpleIniA& a_ini) {
-						Settings::GetSingleton()->LoadThemeFromIni(a_ini);
-					});
-
-					return { a_theme, true };
-				}
-			}
-
-			Settings::GetSingleton()->ExportThemeToIni(path, Settings::GetSingleton()->def.style);
-			SetThemeFromIni(a_theme);
-
-			return { a_theme, false };
-		}
-
 		// Horrendous de-serialization.
 		[[nodiscard]] static inline float 		GetFloat(std::string& a_str) { return std::stof(a_str); };
 		[[nodiscard]] static inline int 		GetInt(std::string& a_str) { return std::stoi(a_str); };
@@ -319,7 +186,6 @@ namespace Modex
 		[[nodiscard]] static inline bool 		GetBool(std::string& a_str) { return a_str == "true"; };
 		[[nodiscard]] static inline std::string GetString(std::string& a_str) { return a_str; };  // lol
 
-		[[nodiscard]] inline Style& GetStyle() { return user.style; };
 		[[nodiscard]] inline Config& GetConfig() { return user.config; };
 
 	private:

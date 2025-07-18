@@ -227,6 +227,13 @@ namespace Modex
 	void PersistentData::LoadAllKits()
 	{
 		std::filesystem::path path(json_user_path + "/kits");
+
+		if (!std::filesystem::exists(path)) {
+			logger::info("[PersistentData] Kits directory does not exist, creating it.");
+			std::filesystem::create_directories(path);
+			return;
+		}
+
 		for (auto& entry : std::filesystem::directory_iterator(path)) {
 			if (entry.is_regular_file() && entry.path().extension() == ".json") {
 				LoadKit(entry.path().filename().string());

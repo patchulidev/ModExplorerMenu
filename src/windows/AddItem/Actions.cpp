@@ -9,8 +9,6 @@ namespace Modex
 
 	void AddItemWindow::ShowActions()
 	{
-		auto a_style = Settings::GetSingleton()->GetStyle();
-
 		ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5f, 0.5f));
 		ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.5f, 0.5f));
 
@@ -43,9 +41,10 @@ namespace Modex
 		ImGui::Spacing();
 		ImGui::SubCategoryHeader(_T("Actions"));
 
-		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(a_style.secondaryButton.x, a_style.secondaryButton.y, a_style.secondaryButton.z, a_style.secondaryButton.w));
-		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(a_style.secondaryButtonActive.x, a_style.secondaryButtonActive.y, a_style.secondaryButtonActive.z, a_style.secondaryButtonActive.w));
-		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(a_style.secondaryButtonHovered.x, a_style.secondaryButtonHovered.y, a_style.secondaryButtonHovered.z, a_style.secondaryButtonHovered.w));
+		// ImVec4 buttonColor = ImGui::GetStyle().Colors[ImGuiCol_Button];
+		// ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(buttonColor.x, buttonColor.y, buttonColor.z, buttonColor.w));
+		// ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(buttonColor.x, buttonColor.y, buttonColor.z, buttonColor.w));
+		// ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(buttonColor.x, buttonColor.y, buttonColor.z, buttonColor.w));
 
 		// Add Selection To Inventory
 		if (ImGui::GradientButton(_T("GENERAL_ADD_TO_INVENTORY"), ImVec2(button_split_width, 0))) {
@@ -82,7 +81,7 @@ namespace Modex
 			}
 		}
 
-		ImGui::PopStyleColor(3);  // End of Secondary Buttons
+		// ImGui::PopStyleColor(3);  // End of Secondary Buttons
 
 		// Clear Inventory Shortcut
 		if (ImGui::GradientButton(_T("GENERAL_CLEAR_INVENTORY"), ImVec2(button_width, 0))) {

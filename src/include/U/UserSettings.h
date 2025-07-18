@@ -9,10 +9,8 @@ namespace Modex
 		static void Draw();
 		static void DrawGeneralSettings();
 		static void DrawBlacklistSettings();
-		static void DrawThemeSelector();
 		static void DrawTeleportSettings();
 		static void DrawAddItemSettings();
-		static void DrawPopped();
 		static void Init();
 
 		static inline std::atomic_bool changes = false;
@@ -26,7 +24,6 @@ namespace Modex
 		enum class Viewport
 		{
 			UserSettings = 0,
-			ThemeSettings,
 			Count
 		};
 

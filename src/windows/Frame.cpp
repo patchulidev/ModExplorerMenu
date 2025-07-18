@@ -12,14 +12,10 @@
 namespace Modex
 {
 
-	void Frame::Draw(bool is_settings_popped)
+	void Frame::Draw()
 	{
 		const auto& io = ImGui::GetIO();
 		const auto& config = Settings::GetSingleton()->GetConfig();
-
-		if (is_settings_popped) {
-			SettingsWindow::DrawPopped();
-		}
 
 		// Set the window size based on the display size and the user's scale settings.
 		const auto displaySize = io.DisplaySize;
@@ -259,12 +255,6 @@ namespace Modex
 
 		HomeWindow::Init();
 		SettingsWindow::Init();
-
-		RefreshStyle();
 	}
-
-	void Frame::RefreshStyle()
-	{
-
-	}
+	
 }  // namespace Modex

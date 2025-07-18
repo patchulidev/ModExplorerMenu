@@ -31,9 +31,8 @@ namespace Modex
 		Frame() = default;
 		~Frame() = default;
 
-		void 			Draw(bool is_settings_popped = false);
+		void 			Draw();
 		void 			Install();
-		void 			RefreshStyle();
 
 		static const ImGuiWindowFlags	WINDOW_FLAGS =
 			ImGuiWindowFlags_NoCollapse  			|
