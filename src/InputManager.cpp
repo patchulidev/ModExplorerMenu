@@ -21,7 +21,6 @@ namespace Modex
 		auto& io = ImGui::GetIO();
 		io.ClearInputKeys();
 		io.ClearEventsQueue();
-		io.AddFocusEvent(a_focus);
 
 		shiftDown = false;
 		ctrlDown = false;
@@ -133,7 +132,7 @@ namespace Modex
 								if (!ImGui::GetIO().WantCaptureKeyboard) {
 									Menu::GetSingleton()->Close();
 								} else {
-									ImGui::SetWindowFocus(NULL);
+									ImGui::SetWindowFocus("##ModexMenu");
 								}
 
 								break;
@@ -154,6 +153,7 @@ namespace Modex
 							}
 						}
 
+						// IsPressed() seems to perform better than IsDown()
 						io.AddKeyEvent(imGuiKey, buttonEvent->IsPressed());
 						
 						break;

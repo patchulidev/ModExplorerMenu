@@ -86,7 +86,7 @@ namespace Modex
 			io.ClearInputKeys();
 
 			// TODO: Revisit when assigning default focus on open/close.
-			ImGui::SetWindowFocus(NULL);
+			ImGui::SetWindowFocus("##ModexMenu");
 		}
 
 		isEnabled = true;

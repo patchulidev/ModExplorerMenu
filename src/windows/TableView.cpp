@@ -845,6 +845,14 @@ namespace Modex
 			this->Refresh();
 		}
 
+		if (ImGui::Shortcut(ImGuiKey_Space, ImGuiInputFlags_RouteFromRootWindow)) {
+			ImGui::SetKeyboardFocusHere(-1);
+		}
+
+		if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_F, ImGuiInputFlags_RouteFromRootWindow)) {
+			ImGui::SetKeyboardFocusHere(-1);
+		}
+
 		ImGui::SameLine();
 
 		// Compare string drop-down filter.
@@ -2614,11 +2622,10 @@ namespace Modex
 			}
 		}
 
-		const auto& io = ImGui::GetIO();
-
-		// Should this be routed through the input manager?s
-		if (!io.WantTextInput) {
-			if (ImGui::IsKeyPressed(ImGuiKey_A, false) && io.KeyCtrl) {
+		if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_A, ImGuiInputFlags_RouteFromRootWindow)) {
+			if (selectionStorage.Size > 0) {
+				selectionStorage.Clear();
+			} else {
 				for (auto& item : _tableList) {
 					if (item) {
 						selectionStorage.SetItemSelected(item->TableID, true);
