@@ -10,6 +10,14 @@ namespace Modex
 			return;
 		}
 
+		// Source: https://github.com/doodlum/skyrim-community-shaders/commit/8323dc521160c1d61ca9b9a872b7fb0e42078408 | License: GPL-3.0
+		// Solves the alt+tab stuck issue, but disables tab after tabbing back in.
+		if (const auto& inputMgr = RE::BSInputDeviceManager::GetSingleton()) {
+			if (const auto& device = inputMgr->GetKeyboard()) {
+				device->Reset();
+			}
+		}
+
 		auto& io = ImGui::GetIO();
 		io.ClearInputKeys();
 		io.ClearEventsQueue();
@@ -115,22 +123,39 @@ namespace Modex
 						}
 						break;
 					case RE::INPUT_DEVICE::kKeyboard:
-						if (!Menu::IsEnabled() && buttonEvent->IsDown()) {
-							bool isMenuKey = showMenuModifier != 0 ? (showMenuKey == scanCode && IsBoundModifierDown()) : (showMenuKey == scanCode);
-							if (isMenuKey) {
-								Menu::GetSingleton()->Toggle();
-								break;
-							}
-						}
-
-						if (Menu::IsEnabled()) {
-							if (scanCode == 0x01 && buttonEvent->IsDown()) { // esc
-								Menu::GetSingleton()->Close();
+						if (buttonEvent->IsDown()) {
+							if (UIManager::GetSingleton()->InputHandler(imGuiKey)) {
+								io.ClearInputKeys();
 								break;
 							}
 
-							io.AddKeyEvent(imGuiKey, buttonEvent->IsDown());
+							if (scanCode == 0x01) {
+								if (!ImGui::GetIO().WantCaptureKeyboard) {
+									Menu::GetSingleton()->Close();
+								} else {
+									ImGui::SetWindowFocus(NULL);
+								}
+
+								break;
+							}
+
+							bool isToggleKey = showMenuModifier != 0 ? (showMenuKey == scanCode && IsBoundModifierDown()) : (showMenuKey == scanCode);
+							
+							if (!Menu::IsEnabled() && isToggleKey) {
+								Menu::GetSingleton()->Open();
+								break;
+							}
+
+							if (Menu::IsEnabled() && isToggleKey) {
+								if (!ImGui::GetIO().WantCaptureKeyboard) {
+									Menu::GetSingleton()->Close();
+									break;
+								}
+							}
 						}
+
+						io.AddKeyEvent(imGuiKey, buttonEvent->IsPressed());
+						
 						break;
 					}
 					break;
