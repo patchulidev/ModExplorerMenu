@@ -24,6 +24,10 @@ namespace Modex
 		ImGui::SetNextItemWidth(a_width - arrowSize);
 		result = ImGui::InputTextWithHint(a_label, a_preview.c_str(), a_buffer, a_size, ImGuiInputTextFlags_EnterReturnsTrue);
 
+		if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_F, ImGuiInputFlags_RouteAlways)) {
+			ImGui::SetKeyboardFocusHere(-1);
+		}
+
 		auto suffix = std::string("##InputTextCombo::");
 		auto prevItemRectMax = ImGui::GetItemRectMax();
 		auto prevItemRectMin = ImGui::GetItemRectMin();
