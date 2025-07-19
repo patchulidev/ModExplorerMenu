@@ -69,9 +69,9 @@ namespace Modex
             this->lastSearchBuffer[0] = '\0';
             this->generalSearchDirty = false;
 
-            this->selectedPlugin = _T("SHOW_ALL_PLUGINS");
+            this->selectedPlugin = Translate("SHOW_ALL_PLUGINS");
             this->primaryFilter = RE::FormType::None;
-            this->secondaryFilter = _T("All");
+            this->secondaryFilter = Translate("All");
 
             this->hideEnchanted = false;
             this->hideNonPlayable = true;

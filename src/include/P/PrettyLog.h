@@ -49,6 +49,16 @@ namespace PrettyLog
         }
     }
 
+    template <typename... Args>
+    void Trace(std::string_view a_msg, Args&&... a_args)
+    {
+        if constexpr (sizeof...(a_args) > 0) {
+            SKSE::log::trace("TRC: {}", std::vformat(a_msg, std::make_format_args(a_args...)));
+        } else {
+            SKSE::log::trace("TRC: {}", a_msg);
+        }
+    }
+
     static void ReportSummary()
     {
         if (error_count > 0) {

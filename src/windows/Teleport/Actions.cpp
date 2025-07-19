@@ -73,15 +73,15 @@ namespace Modex
 		const float button_height = ImGui::GetFontSize() * 1.5f;
 		const float button_width = ImGui::GetContentRegionAvail().x;
 
-		ImGui::SubCategoryHeader(_T("GENERAL_DOUBLE_CLICK_BEHAVIOR"));
+		ImGui::SubCategoryHeader(Translate("GENERAL_DOUBLE_CLICK_BEHAVIOR"));
 
-		if (ImGui::GradientSelectableEX(_TICON(ICON_LC_MAP_PIN_PLUS, "TELE_CLICK_TO_TELEPORT"), b_ClickToTeleport, ImVec2(button_width, button_height))) {
+		if (ImGui::GradientSelectableEX(TranslateIcon(ICON_LC_MAP_PIN_PLUS, "TELE_CLICK_TO_TELEPORT"), b_ClickToTeleport, ImVec2(button_width, button_height))) {
 			b_ClickToTeleport = true;
 		}
 
 		ImGui::PopStyleVar(2);
 
-		ImGui::SubCategoryHeader(_T("Favorite"));
+		ImGui::SubCategoryHeader(Translate("Favorite"));
 
 		auto constexpr flags = ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoDecoration |
 		                       ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing;
@@ -149,7 +149,7 @@ namespace Modex
 			}
 		}
 
-		ImGui::SubCategoryHeader(_T("Recent"));
+		ImGui::SubCategoryHeader(Translate("Recent"));
 
 		showScrollArrow = false;
 		if (ImGui::BeginChild("##TeleportRecentScroll", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y), false, flags)) {

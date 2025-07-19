@@ -26,9 +26,9 @@ namespace Modex
         TeleportColumns()
         {
             // columns.push_back({ ICON_RPG_HEART, ImGuiTableColumnFlags_WidthFixed, 15.0f, false, BaseColumn::ID::Favorite });
-            columns.push_back({ _T("Plugin"), flag, 0.0f, false, BaseColumn::ID::Plugin });
-            columns.push_back({ _T("Cell"), flag, 0.0f, false, BaseColumn::ID::CellName });
-            columns.push_back({ _T("Editor ID"), flag, 0.0f, false, BaseColumn::ID::EditorID });
+            columns.push_back({ Translate("Plugin"), flag, 0.0f, false, BaseColumn::ID::Plugin });
+            columns.push_back({ Translate("Cell"), flag, 0.0f, false, BaseColumn::ID::CellName });
+            columns.push_back({ Translate("Editor ID"), flag, 0.0f, false, BaseColumn::ID::EditorID });
         }
     };
 	

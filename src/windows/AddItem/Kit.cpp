@@ -106,13 +106,13 @@ namespace Modex
 
 	void AddItemWindow::ShowKitBar()
 	{
-		ImGui::SubCategoryHeader(_T("KIT_SELECTION"));
+		ImGui::SubCategoryHeader(Translate("KIT_SELECTION"));
 
 		constexpr auto popup_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar;
 
 		auto kits = PersistentData::GetLoadedKitNames();
 		if (InputTextComboBox("##KitBar::Search", kitSearchBuffer, selectedKit, IM_ARRAYSIZE(kitSearchBuffer), kits, ImGui::GetContentRegionAvail().x)) {
-			selectedKit = _T("None");
+			selectedKit = Translate("None");
 
 			if (selectedKit.find(kitSearchBuffer) != std::string::npos) {
 				ImFormatString(kitSearchBuffer, IM_ARRAYSIZE(kitSearchBuffer), "");
@@ -133,21 +133,21 @@ namespace Modex
 
 		const float button_width = ((ImGui::GetContentRegionAvail().x - ImGui::GetStyle().ItemSpacing.x) / 2.0f);
 
-		if (ImGui::GradientButton(_T("Create"), ImVec2(button_width, 0))) {
-			ImGui::OpenPopup(_T("##Create"));
+		if (ImGui::GradientButton(Translate("Create"), ImVec2(button_width, 0))) {
+			ImGui::OpenPopup(Translate("##Create"));
 		}
 
 		ImGui::SetNextWindowSize(ImVec2(button_width * 2.0f, 0));
 		ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-		if (ImGui::BeginPopupModal(_T("##Create"), nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar)) {
-			ImGui::SubCategoryHeader(_T("Create"));
+		if (ImGui::BeginPopupModal(Translate("##Create"), nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar)) {
+			ImGui::SubCategoryHeader(Translate("Create"));
 			ImGui::Separator();
 
 			ImGui::NewLine();
 
 			ImGui::PushID("##CreateNewKit");
 
-			const std::string instruction = _T("KIT_CREATE_INSTRUCTION");
+			const std::string instruction = Translate("KIT_CREATE_INSTRUCTION");
 			float center_text = ImGui::GetCenterTextPosX(instruction.c_str());
 			ImGui::SetCursorPosX(center_text);
 			ImGui::Text(instruction.c_str());
@@ -172,7 +172,7 @@ namespace Modex
 
 			ImGui::NewLine();
 
-			if (ImGui::Button(_T("Create"), ImVec2(button_width, 0))) {
+			if (ImGui::Button(Translate("Create"), ImVec2(button_width, 0))) {
 				const std::string _name = std::string(newKitName);
 
 				if (std::string(_name).empty()) {
@@ -190,7 +190,7 @@ namespace Modex
 
 			ImGui::SameLine();
 
-			if (ImGui::Button(_T("Cancel"), ImVec2(button_width, 0))) {
+			if (ImGui::Button(Translate("Cancel"), ImVec2(button_width, 0))) {
 				ImGui::CloseCurrentPopup();
 			}
 
@@ -201,14 +201,14 @@ namespace Modex
 
 		ImGui::SameLine();
 
-		if (ImGui::GradientButton(_T("Delete"), ImVec2(button_width, 0))) {
+		if (ImGui::GradientButton(Translate("Delete"), ImVec2(button_width, 0))) {
 			if (selectedKit != "None") {
-				ImGui::OpenPopup(_T("Delete"));
+				ImGui::OpenPopup(Translate("Delete"));
 			}
 		}
 
-		if (ImGui::BeginPopupModal(_T("Delete"), nullptr, popup_flags)) {
-			ImGui::SubCategoryHeader(_T("KIT_DELETE_CONFIRMATION"));
+		if (ImGui::BeginPopupModal(Translate("Delete"), nullptr, popup_flags)) {
+			ImGui::SubCategoryHeader(Translate("KIT_DELETE_CONFIRMATION"));
 			ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 
 			ImGui::NewLine();
@@ -221,7 +221,7 @@ namespace Modex
 
 			if (ImGui::IsKeyPressed(ImGuiKey_Y, false)) {
 				PersistentData::GetSingleton()->DeleteKit(selectedKit);
-				selectedKit = _T("None");
+				selectedKit = Translate("None");
 				kitTableView.Refresh();
 				ImFormatString(kitSearchBuffer, IM_ARRAYSIZE(kitSearchBuffer), "");
 				ImGui::CloseCurrentPopup();
@@ -233,7 +233,7 @@ namespace Modex
 
 			if (ImGui::Button("(Y)es", ImVec2(button_width, 0))) {
 				PersistentData::GetSingleton()->DeleteKit(selectedKit);
-				selectedKit = _T("None");
+				selectedKit = Translate("None");
 				kitTableView.Refresh();
 				ImFormatString(kitSearchBuffer, IM_ARRAYSIZE(kitSearchBuffer), "");
 				ImGui::CloseCurrentPopup();
@@ -269,19 +269,19 @@ namespace Modex
 				auto kit = collection.at(selectedKit);
 
 				// Display Kit Actions
-				ImGui::SubCategoryHeader(_T("KIT_ACTIONS"));
+				ImGui::SubCategoryHeader(Translate("KIT_ACTIONS"));
 
-				if (ImGui::GradientButton(_T("GENERAL_CLEAR_INVENTORY"), ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
+				if (ImGui::GradientButton(Translate("GENERAL_CLEAR_INVENTORY"), ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
 					ImGui::OpenPopup("##Kit::ClearInventory::Confirmation");
 				}
 
-				if (ImGui::BeginPopupModal(_T("##Kit::ClearInventory::Confirmation"), nullptr, popup_flags)) {
-					ImGui::SubCategoryHeader(_T("GENERAL_CLEAR_INVENTORY"));
+				if (ImGui::BeginPopupModal(Translate("##Kit::ClearInventory::Confirmation"), nullptr, popup_flags)) {
+					ImGui::SubCategoryHeader(Translate("GENERAL_CLEAR_INVENTORY"));
 					ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 
 					ImGui::NewLine();
 
-					const std::string instruction = _T("GENERAL_CLEAR_INVENTORY_INSTRUCTION");
+					const std::string instruction = Translate("GENERAL_CLEAR_INVENTORY_INSTRUCTION");
 					float center_text = ImGui::GetCenterTextPosX(instruction.c_str());
 					ImGui::SetCursorPosX(center_text);
 					ImGui::Text(instruction.c_str());
@@ -320,7 +320,7 @@ namespace Modex
 					ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImGuiCol_TextDisabled));
 				}
 
-				if (ImGui::GradientButton(_T("KIT_ADD_EQUIPPED"), ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
+				if (ImGui::GradientButton(Translate("KIT_ADD_EQUIPPED"), ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
 					if (!kit.readOnly) {
 						CreateKitFromEquipped();
 					}
@@ -332,15 +332,15 @@ namespace Modex
 
 				if (ImGui::IsItemHovered()) {
 					if (!kit.readOnly) {
-						ImGui::SetTooltip(_T("KIT_ADD_EQUIPPED"));
+						ImGui::SetTooltip(Translate("KIT_ADD_EQUIPPED"));
 					} else {
-						ImGui::SetTooltip(_T("KIT_IS_READ_ONLY"));
+						ImGui::SetTooltip(Translate("KIT_IS_READ_ONLY"));
 					}
 				}
 
 				ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 
-				if (ImGui::GradientButton(_T("Copy"), ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
+				if (ImGui::GradientButton(Translate("Copy"), ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
 					auto new_kit = PersistentData::GetSingleton()->CopyKit(kit);
 					selectedKit = new_kit.name;
 					kitTableView.Refresh();
@@ -349,7 +349,7 @@ namespace Modex
 				}
 
 				if (ImGui::IsItemHovered(ImGuiHoveredFlags_Stationary)) {
-					ImGui::SetTooltip(_T("TOOLTIP_KIT_COPY"));
+					ImGui::SetTooltip(Translate("TOOLTIP_KIT_COPY"));
 				}
 
 				if (kit.readOnly) {
@@ -357,10 +357,10 @@ namespace Modex
 					ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImGuiCol_TextDisabled));
 				}
 
-				if (ImGui::GradientButton(_T("Rename"), ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
+				if (ImGui::GradientButton(Translate("Rename"), ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
 					if (!kit.readOnly) {
 						ImFormatString(kitSearchBuffer, IM_ARRAYSIZE(kitSearchBuffer), selectedKit.c_str());
-						ImGui::OpenPopup(_T("Rename"));
+						ImGui::OpenPopup(Translate("Rename"));
 					}
 				}
 
@@ -370,23 +370,23 @@ namespace Modex
 
 				if (ImGui::IsItemHovered(ImGuiHoveredFlags_Stationary)) {
 					if (!kit.readOnly) {
-						ImGui::SetTooltip(_T("TOOLTIP_KIT_RENAME"));
+						ImGui::SetTooltip(Translate("TOOLTIP_KIT_RENAME"));
 					} else {
-						ImGui::SetTooltip(_T("KIT_IS_READ_ONLY"));
+						ImGui::SetTooltip(Translate("KIT_IS_READ_ONLY"));
 					}
 				}
 
 				ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
 				ImGui::SetNextWindowSize(ImVec2(button_width * 2.0f, 0));
-				if (ImGui::BeginPopupModal(_T("Rename"), nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar)) {
-					ImGui::SubCategoryHeader(_T("Rename"));
+				if (ImGui::BeginPopupModal(Translate("Rename"), nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar)) {
+					ImGui::SubCategoryHeader(Translate("Rename"));
 
 					ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
 					ImGui::InputText("##KitRename", kitSearchBuffer, IM_ARRAYSIZE(kitSearchBuffer), ImGuiInputTextFlags_EnterReturnsTrue);
 
 					ImGui::NewLine();
 
-					if (ImGui::GradientButton(_T("Accept"), ImVec2(ImGui::GetContentRegionAvail().x / 2, 0))) {
+					if (ImGui::GradientButton(Translate("Accept"), ImVec2(ImGui::GetContentRegionAvail().x / 2, 0))) {
 						const std::string _name = std::string(kitSearchBuffer);
 
 						if (std::string(_name).empty()) {
@@ -404,7 +404,7 @@ namespace Modex
 
 					ImGui::SameLine();
 
-					if (ImGui::GradientButton(_T("Cancel"), ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
+					if (ImGui::GradientButton(Translate("Cancel"), ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
 						ImGui::CloseCurrentPopup();
 					}
 
@@ -415,9 +415,9 @@ namespace Modex
 					ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetColorU32(ImGuiCol_Button, 0.25f));
 					ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImGuiCol_TextDisabled));
 				}
-				if (ImGui::GradientButton(_T("Clear"), ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
+				if (ImGui::GradientButton(Translate("Clear"), ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
 					if (!kit.readOnly) {
-						ImGui::OpenPopup(_T("Clear"));
+						ImGui::OpenPopup(Translate("Clear"));
 					}
 				}
 
@@ -427,14 +427,14 @@ namespace Modex
 
 				if (ImGui::IsItemHovered(ImGuiHoveredFlags_Stationary)) {
 					if (!kit.readOnly) {
-						ImGui::SetTooltip(_T("TOOLTIP_KIT_CLEAR"));
+						ImGui::SetTooltip(Translate("TOOLTIP_KIT_CLEAR"));
 					} else {
-						ImGui::SetTooltip(_T("KIT_IS_READ_ONLY"));
+						ImGui::SetTooltip(Translate("KIT_IS_READ_ONLY"));
 					}
 				}
 
-				if (ImGui::BeginPopupModal(_T("Clear"), nullptr, popup_flags)) {
-					ImGui::SubCategoryHeader(_T("KIT_CLEAR_CONFIRMATION"));
+				if (ImGui::BeginPopupModal(Translate("Clear"), nullptr, popup_flags)) {
+					ImGui::SubCategoryHeader(Translate("KIT_CLEAR_CONFIRMATION"));
 					ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 
 					ImGui::NewLine();
@@ -475,14 +475,14 @@ namespace Modex
 					ImGui::EndPopup();
 				}
 
-				if (ImGui::GradientButton(_T("Dependencies"), ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
-					ImGui::OpenPopup(_T("Dependencies"));
+				if (ImGui::GradientButton(Translate("Dependencies"), ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
+					ImGui::OpenPopup(Translate("Dependencies"));
 				}
 
 				ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
 				ImGui::SetNextWindowSize(ImVec2(400, 0));
-				if (ImGui::BeginPopupModal(_T("Dependencies"), nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar)) {
-					ImGui::SubCategoryHeader(_T("Dependencies"));
+				if (ImGui::BeginPopupModal(Translate("Dependencies"), nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar)) {
+					ImGui::SubCategoryHeader(Translate("Dependencies"));
 
 					std::unordered_set<std::string> dependencies;
 
@@ -517,11 +517,11 @@ namespace Modex
 
 				ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 
-				if (ImGui::GradientButton(_T("AIM_ADD"), ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
+				if (ImGui::GradientButton(Translate("AIM_ADD"), ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
 					AddKitToInventory(kit);
 				}
 
-				if (ImGui::GradientButton(_T("AIM_PLACE"), ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
+				if (ImGui::GradientButton(Translate("AIM_PLACE"), ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
 					PlaceKitAtMe(kit);
 				}
 
@@ -530,7 +530,7 @@ namespace Modex
 				{
 					auto& kit_ref = collection.at(selectedKit);
 					const float width = 100.0f;
-					ImGui::Text(_T("KIT_CLEAR_EQUIPPED"));
+					ImGui::Text(Translate("KIT_CLEAR_EQUIPPED"));
 					ImGui::SameLine(ImGui::GetContentRegionMax().x - width);
 					if (!kit.readOnly) {
 						if (ImGui::ToggleButton("##ToggleClearEquip", &kit_ref.clearEquipped, width)) {
@@ -544,7 +544,7 @@ namespace Modex
 						ImGui::PopStyleColor(2);
 					}
 
-					ImGui::Text(_T("KIT_READ_ONLY"));
+					ImGui::Text(Translate("KIT_READ_ONLY"));
 					ImGui::SameLine(ImGui::GetContentRegionMax().x - width);
 					if (ImGui::ToggleButton("##ToggleReadOnly", &kit_ref.readOnly, width)) {
 						PersistentData::GetSingleton()->SaveKitToJSON(kit_ref);

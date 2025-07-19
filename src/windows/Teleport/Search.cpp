@@ -48,7 +48,7 @@ namespace Modex
 				continue;
 			}
 
-			if (selectedMod != _T("Show All Plugins") && item.GetPluginName() != selectedMod) {
+			if (selectedMod != Translate("Show All Plugins") && item.GetPluginName() != selectedMod) {
 				continue;
 			}
 
@@ -75,9 +75,9 @@ namespace Modex
 		auto totalWidth = inputTextWidth + filterWidth + 2.0f;
 
 		// Search bar for compare string.
-		ImGui::Text(_TFM("GENERAL_SEARCH_RESULTS", ":"));
+		ImGui::Text(TranslateFormat("GENERAL_SEARCH_RESULTS", ":"));
 		ImGui::SetNextItemWidth(inputTextWidth);
-		if (ImGui::InputTextWithHint("##TeleportWindow::InputField", _T("GENERAL_CLICK_TO_TYPE"), inputBuffer,
+		if (ImGui::InputTextWithHint("##TeleportWindow::InputField", Translate("GENERAL_CLICK_TO_TYPE"), inputBuffer,
 				IM_ARRAYSIZE(inputBuffer),
 				ImGuiInputTextFlags_EscapeClearsAll)) {
 			Refresh();
@@ -89,13 +89,13 @@ namespace Modex
 		auto combo_flags = ImGuiComboFlags_None;
 		ImGui::SetNextItemWidth(filterWidth);
 		ImGui::SetCursorPosX(ImGui::GetCursorPosX() - 5.0f);
-		if (ImGui::BeginCombo("##TeleportWindow::InputFilter", _T(searchByValue), combo_flags)) {
+		if (ImGui::BeginCombo("##TeleportWindow::InputFilter", Translate(searchByValue), combo_flags)) {
 			for (auto& item : InputSearchMap) {
 				auto searchBy = item.first;
 				auto _searchByValue = item.second;
 				bool is_selected = (searchKey == searchBy);
 
-				if (ImGui::Selectable(_T(_searchByValue), is_selected)) {
+				if (ImGui::Selectable(Translate(_searchByValue), is_selected)) {
 					searchKey = searchBy;
 					Refresh();
 				}
@@ -113,11 +113,11 @@ namespace Modex
 		// Mod List sort and filter.
 		const auto& config = Settings::GetSingleton()->GetConfig();
 		auto modListVector = Data::GetSingleton()->GetFilteredListOfPluginNames(Data::PLUGIN_TYPE::CELL, (Data::SORT_TYPE)config.modListSort, RE::FormType::None);
-		modListVector.insert(modListVector.begin(), _T("Show All Plugins"));
-		ImGui::Text(_TFM("GENERAL_FILTER_PLUGINS", ":"));
+		modListVector.insert(modListVector.begin(), Translate("Show All Plugins"));
+		ImGui::Text(TranslateFormat("GENERAL_FILTER_PLUGINS", ":"));
 		if (InputTextComboBox("##TeleportWindow::PluginField", modSearchBuffer, selectedMod, IM_ARRAYSIZE(modSearchBuffer), modListVector, totalWidth)) {
 			auto modList = Data::GetSingleton()->GetModulePluginList(Data::PLUGIN_TYPE::CELL);
-			selectedMod = _T("Show All Plugins");
+			selectedMod = Translate("Show All Plugins");
 
 			if (selectedMod.find(modSearchBuffer) != std::string::npos) {
 				ImFormatString(modSearchBuffer, IM_ARRAYSIZE(modSearchBuffer), "");
@@ -129,7 +129,7 @@ namespace Modex
 
 					std::string modName = ValidateTESFileName(mod);
 
-					if (modName == _T("Show All Plugins")) {
+					if (modName == Translate("Show All Plugins")) {
 						ImFormatString(modSearchBuffer, IM_ARRAYSIZE(modSearchBuffer), "");
 						break;
 					}

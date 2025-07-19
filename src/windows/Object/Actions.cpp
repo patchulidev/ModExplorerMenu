@@ -11,10 +11,10 @@ namespace Modex
 		const float button_height = ImGui::GetFontSize() * 1.5f;
 		const float button_width = ImGui::GetContentRegionAvail().x;
 
-		ImGui::SubCategoryHeader(_T("GENERAL_DOUBLE_CLICK_BEHAVIOR"));
+		ImGui::SubCategoryHeader(Translate("GENERAL_DOUBLE_CLICK_BEHAVIOR"));
 
 		// Click To Place Toggle
-		if (ImGui::GradientSelectableEX(_TICON(ICON_LC_MAP_PIN_PLUS, "GENERAL_CLICK_TO_PLACE"), b_ClickToPlace, ImVec2(button_width, button_height))) {
+		if (ImGui::GradientSelectableEX(TranslateIcon(ICON_LC_MAP_PIN_PLUS, "GENERAL_CLICK_TO_PLACE"), b_ClickToPlace, ImVec2(button_width, button_height))) {
 			b_ClickToPlace = true;
 		}
 
@@ -27,12 +27,12 @@ namespace Modex
 		}
 
 		ImGui::Spacing();
-		ImGui::SubCategoryHeader(_T("Actions"));
+		ImGui::SubCategoryHeader(Translate("Actions"));
 		// ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(a_style.secondaryButton.x, a_style.secondaryButton.y, a_style.secondaryButton.z, a_style.secondaryButton.w));
 		// ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(a_style.secondaryButtonActive.x, a_style.secondaryButtonActive.y, a_style.secondaryButtonActive.z, a_style.secondaryButtonActive.w));
 		// ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(a_style.secondaryButtonHovered.x, a_style.secondaryButtonHovered.y, a_style.secondaryButtonHovered.z, a_style.secondaryButtonHovered.w));
 
-		if (ImGui::GradientButton(_T("OBJECT_PLACE_SELECTED"), ImVec2(button_width, 0))) {
+		if (ImGui::GradientButton(Translate("OBJECT_PLACE_SELECTED"), ImVec2(button_width, 0))) {
 			this->tableView.PlaceSelectionOnGround(this->clickToPlaceCount);
 		}
 
@@ -46,7 +46,7 @@ namespace Modex
 		}
 
 		ImGui::Spacing();
-		ImGui::SubCategoryHeader(_T("Info"));
+		ImGui::SubCategoryHeader(Translate("Info"));
 
 		ObjectData* obj = selectedObject.get();
 
@@ -83,8 +83,8 @@ namespace Modex
 		// Load Order Info Pane
 		// See ItemPreview.h for other implementation.
 		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		ImGui::SetCursorPosX(ImGui::GetCenterTextPosX(_T("Load Order")));
-		ImGui::Text(_T("Load Order"));
+		ImGui::SetCursorPosX(ImGui::GetCenterTextPosX(Translate("Load Order")));
+		ImGui::Text(Translate("Load Order"));
 		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 		const auto sourceFiles = obj->GetForm()->sourceFiles.array;
 
@@ -136,7 +136,7 @@ namespace Modex
 
 			std::vector<std::string> modelPath = SplitString(modelFullPath, "\\");
 
-			if (ImGui::TreeNodeEx(_TFM("Model Path", ":"), ImGuiTreeNodeFlags_DefaultOpen)) {
+			if (ImGui::TreeNodeEx(TranslateFormat("Model Path", ":"), ImGuiTreeNodeFlags_DefaultOpen)) {
 				for (size_t i = 0; i < modelPath.size(); ++i) {
 					if (i < modelPath.size() - 1) {
 						ImGui::Text("%s/", modelPath[i].c_str());

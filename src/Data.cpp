@@ -51,6 +51,18 @@ namespace Modex
 		return a_object->GetName();
 	}
 
+	void Data::AddModToIndex(const RE::TESFile* a_mod, std::unordered_set<const RE::TESFile*>& a_out)
+	{
+		if (a_mod == nullptr) {
+			return;
+		}
+
+		if (a_out.find(a_mod) == a_out.end()) {
+			a_out.insert(a_mod);
+			_modList.insert(a_mod);
+		}
+	}
+
 	// Helper method to assigning form flags to mod files when caching forms.
 	// Allows us to track and filter what form types a mod file contains.
 	void Data::ApplyModFileItemFlags(const RE::TESFile* a_mod, RE::FormType a_formType)
@@ -144,13 +156,8 @@ namespace Modex
 			}
 
 			_npcCache.push_back(NPCData{ form });
-
-			if (!_npcModList.contains(mod)) {
-				_npcModList.insert(mod);
-				_modList.insert(mod);
-
-				ApplyModFileItemFlags(mod, form->GetFormType());
-			}
+			AddModToIndex(mod, _npcModList);
+			ApplyModFileItemFlags(mod, form->GetFormType());
 		}
 	}
 
@@ -205,9 +212,7 @@ namespace Modex
 				RE::FormID base = actor->GetBaseObject()->GetFormID();
 				RE::FormID ref = actor->GetFormID();
 
-				if (npc_ref_map->find(base) != npc_ref_map->end()) {
-					PrettyLog::Debug("Duplicate NPC reference found (middleLow): {}", actor->GetName());
-				} else {
+				if (npc_ref_map->find(base) == npc_ref_map->end()) {
 					npc_ref_map->insert_or_assign(base, ref);
 				}
 			}
@@ -222,9 +227,7 @@ namespace Modex
 				RE::FormID base = actor->GetBaseObject()->GetFormID();
 				RE::FormID ref = actor->GetFormID();
 
-				if (npc_ref_map->find(base) != npc_ref_map->end()) {
-					PrettyLog::Debug("Duplicate NPC reference found (highActorHandle): {}", actor->GetName());
-				} else {
+				if (npc_ref_map->find(base) == npc_ref_map->end()) {
 					npc_ref_map->insert_or_assign(base, ref);
 				}
 			}
@@ -237,6 +240,8 @@ namespace Modex
 	template <class T>
 	void Data::CacheItems(RE::TESDataHandler* a_data)
 	{
+		int count = 0;
+
 		for (RE::TESForm* form : a_data->GetFormArray<T>()) {
 			if (!form)
 				continue;
@@ -247,14 +252,13 @@ namespace Modex
 				continue;
 
 			_cache.push_back(ItemData{ form });
+			AddModToIndex(mod, _itemModList);
+			ApplyModFileItemFlags(mod, form->GetFormType());
 
-			if (!_itemModList.contains(mod)) {
-				_itemModList.insert(mod);
-				_modList.insert(mod);
-
-				ApplyModFileItemFlags(mod, form->GetFormType());
-			}
+			count++;
 		}
+
+		PrettyLog::Trace("Finished caching {} items of type: {}", count, RE::FormTypeToString(T::FORMTYPE).data());
 	}
 
 	template <class T>
@@ -270,13 +274,8 @@ namespace Modex
 				continue;
 
 			_staticCache.push_back(ObjectData{ form });
-
-			if (!_staticModList.contains(mod)) {
-				_staticModList.insert(mod);
-				_modList.insert(mod);
-
-				ApplyModFileItemFlags(mod, form->GetFormType());
-			}
+			AddModToIndex(mod, _staticModList);
+			ApplyModFileItemFlags(mod, form->GetFormType());
 		}
 	}
 
@@ -288,6 +287,8 @@ namespace Modex
 			PrettyLog::Warn("Failed to open file: {:s}", a_file->fileName);
 			return;
 		}
+
+		int count = 0;
 
 		do {
 			if (a_file->currentform.form == 'LLEC') {
@@ -303,7 +304,9 @@ namespace Modex
 					case 'DIDE':
 						gotEDID = a_file->ReadData(edid, a_file->actualChunkSize);
 						if (gotEDID) {
+							count++;
 							out_map.insert_or_assign(std::make_tuple(cidx, edid, "First Pass"), a_file->fileName);
+							PrettyLog::Trace(" - {:s} -> {:s}", a_file->fileName, edid);
 						}
 						break;
 					default:
@@ -313,6 +316,9 @@ namespace Modex
 			}
 		} while (a_file->SeekNextForm(true));
 
+		// TODO: Bug, survivalmode has a single cell that isn't being loaded for some reason.
+		PrettyLog::Debug("Found {} cells in mod: {:s}", count, a_file->fileName);
+
 		if (!a_file->CloseTES(false)) {
 			PrettyLog::Error("Failed to close file: {:s}", a_file->fileName);
 		}
@@ -321,6 +327,8 @@ namespace Modex
 	void Data::GenerateItemList()
 	{
 		_cache.clear();
+
+		PrettyLog::Debug("Generating Item List...");
 
 		if (auto dataHandler = RE::TESDataHandler::GetSingleton()) {
 			CacheItems<RE::TESObjectARMO>(dataHandler);
@@ -340,6 +348,8 @@ namespace Modex
 	{
 		_npcCache.clear();
 
+		PrettyLog::Debug("Generating NPC List...");
+
 		if (auto dataHandler = RE::TESDataHandler::GetSingleton()) {
 			CacheNPCs<RE::TESNPC>(dataHandler);
 			CacheNPCRefIds();
@@ -349,6 +359,8 @@ namespace Modex
 	void Data::GenerateNPCClassList()
 	{
 		_npcClassList.clear();
+
+		PrettyLog::Debug("Populating NPCClassList for {} NPCs.", _npcCache.size());
 
 		for (auto& npc : _npcCache) {
 			auto className = npc.GetClass();
@@ -360,6 +372,8 @@ namespace Modex
 	{
 		_npcRaceList.clear();
 
+		PrettyLog::Debug("Populating NPCRaceList for {} NPCs.", _npcCache.size());
+
 		for (auto& npc : _npcCache) {
 			auto raceName = npc.GetRace();
 			_npcRaceList.insert(raceName);
@@ -369,6 +383,8 @@ namespace Modex
 	void Data::GenerateNPCFactionList()
 	{
 		_npcFactionList.clear();
+
+		PrettyLog::Debug("Populating NPCFactionList for {} NPCs.", _npcCache.size());
 
 		for (auto& npc : _npcCache) {
 			auto factionNames = npc.GetFactions();
@@ -382,6 +398,8 @@ namespace Modex
 	void Data::GenerateObjectList()
 	{
 		_staticCache.clear();
+
+		PrettyLog::Debug("Generating Object List...");
 
 		if (auto dataHandler = RE::TESDataHandler::GetSingleton()) {
 			CacheStaticObjects<RE::TESObjectTREE>(dataHandler);
@@ -399,6 +417,8 @@ namespace Modex
 	{
 		_cellCache.clear();
 
+		PrettyLog::Debug("Generating Cell List...");
+
 		std::map<std::tuple<std::uint32_t, const std::string, const std::string>, std::string_view> rawCellMap;
 		if (auto dataHandler = RE::TESDataHandler::GetSingleton()) {
 			auto [forms, lock] = RE::TESForm::GetAllForms();
@@ -414,6 +434,8 @@ namespace Modex
 					_cellModList.insert(file);
 				}
 			}
+
+			PrettyLog::Debug("Found a total of {} mods containing CELL records", _cellModList.size());
 
 			if (rawCellMap.empty()) {
 				PrettyLog::Debug("No cells found in loaded worldspaces.");
@@ -454,7 +476,8 @@ namespace Modex
 			"MODEX_ERR",
 			a_editorid,
 			nullptr);
-		PrettyLog::Debug("Cell with editor ID '{}' not found.", a_editorid);
+
+		// PrettyLog::Debug("Cell with editor ID '{}' not found.", a_editorid);
 		return emptyCell;
 	}
 
@@ -468,7 +491,6 @@ namespace Modex
 
 		if (config.showNPCMenu) {
 			GenerateNPCList();
-
 			GenerateNPCClassList();
 			GenerateNPCRaceList();
 			GenerateNPCFactionList();
@@ -482,10 +504,12 @@ namespace Modex
 			GenerateCellList();
 		}
 
+		PrettyLog::Info("Successfully registered data from {} mods.", _modList.size());
 		for (auto& file : _modList) {
 			_modListSorted.insert(ValidateTESFileName(file));
+			PrettyLog::Trace(" - \"{}\"", ValidateTESFileName(file));
 		}
-
+		
 		Utils::SetDescriptionFrameworkInterface(DescriptionFrameworkAPI::GetDescriptionFrameworkInterface001());
 	}
 }

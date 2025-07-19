@@ -12,10 +12,10 @@ namespace Modex
 		const float button_height = ImGui::GetFontSize() * 1.5f;
 		const float button_width = ImGui::GetContentRegionAvail().x;
 
-		ImGui::SubCategoryHeader(_T("GENERAL_DOUBLE_CLICK_BEHAVIOR"));
+		ImGui::SubCategoryHeader(Translate("GENERAL_DOUBLE_CLICK_BEHAVIOR"));
 
 		// Click To Place Toggle
-		if (ImGui::GradientSelectableEX(_TICON(ICON_LC_MAP_PIN_PLUS, "GENERAL_CLICK_TO_PLACE"), b_ClickToPlace, ImVec2(button_width, button_height))) {
+		if (ImGui::GradientSelectableEX(TranslateIcon(ICON_LC_MAP_PIN_PLUS, "GENERAL_CLICK_TO_PLACE"), b_ClickToPlace, ImVec2(button_width, button_height))) {
 			b_ClickToPlace = true;
 		}
 
@@ -28,19 +28,19 @@ namespace Modex
 		}
 
 		ImGui::Spacing();
-		ImGui::SubCategoryHeader(_T("Actions"));
+		ImGui::SubCategoryHeader(Translate("Actions"));
 
-		if (ImGui::GradientButton(_T("NPC_PLACE_SELECTED"), ImVec2(button_width, 0))) {
+		if (ImGui::GradientButton(Translate("NPC_PLACE_SELECTED"), ImVec2(button_width, 0))) {
 			this->tableView.PlaceSelectionOnGround(clickToPlaceCount);
 		}
 
-		if (ImGui::GradientButton(_T("NPC_UPDATE_REFERENCES"), ImVec2(button_width, 0))) {
+		if (ImGui::GradientButton(Translate("NPC_UPDATE_REFERENCES"), ImVec2(button_width, 0))) {
 			Data::GetSingleton()->CacheNPCRefIds();
 			this->tableView.Refresh();
 		}
 
 		if (ImGui::IsItemHovered()) {
-			ImGui::SetTooltip(_T("TOOLTIP_NPC_UPDATE"));
+			ImGui::SetTooltip(Translate("TOOLTIP_NPC_UPDATE"));
 		}
 
 		const auto& selectedNPC = this->GetTableView().GetItemPreview();
@@ -54,7 +54,7 @@ namespace Modex
 			// 	ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(a_style.button.x, a_style.button.y, a_style.button.z, a_style.button.w - 0.35f));
 			// }
 
-			if (ImGui::GradientButton(_T("NPC_GOTO_REFERENCE"), ImVec2(button_width, 0))) {
+			if (ImGui::GradientButton(Translate("NPC_GOTO_REFERENCE"), ImVec2(button_width, 0))) {
 				if (selectedNPC->refID != 0) {
 					if (auto playerREF = RE::PlayerCharacter::GetSingleton()->AsReference()) {
 						if (auto ref = RE::TESForm::LookupByID<RE::TESObjectREFR>(selectedNPC->refID)) {
@@ -65,7 +65,7 @@ namespace Modex
 				}
 			}
 
-			if (ImGui::GradientButton(_T("NPC_BRING_REFERENCE"), ImVec2(button_width, 0))) {
+			if (ImGui::GradientButton(Translate("NPC_BRING_REFERENCE"), ImVec2(button_width, 0))) {
 				if (selectedNPC->refID != 0) {
 					if (auto playerREF = RE::PlayerCharacter::GetSingleton()->AsReference()) {
 						if (auto ref = RE::TESForm::LookupByID<RE::TESObjectREFR>(selectedNPC->refID)) {
@@ -85,7 +85,7 @@ namespace Modex
 		}
 
 		ImGui::Spacing();
-		ImGui::SubCategoryHeader(_T("Preview"));
+		ImGui::SubCategoryHeader(Translate("Preview"));
 
 		ImVec2 barSize = ImVec2(100.0f, ImGui::GetFontSize());
 
@@ -163,25 +163,25 @@ namespace Modex
 		                       ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing;
 
 		if (ImGui::BeginChild("##NPCInfoScroll", ImVec2(ImGui::GetContentRegionAvail().x, 0), false, flags)) {
-			if (ImGui::TreeNode(_TICON(Utils::IconMap["INFO"], "Info"))) {
+			if (ImGui::TreeNode(TranslateIcon(Utils::IconMap["INFO"], "Info"))) {
 				ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 
-				InlineText(_TICONM(Utils::GetFormTypeIcon(RE::FormType::Class), "Class", ":"), npc->GetClass().data());
-				InlineText(_TICONM(Utils::GetFormTypeIcon(RE::FormType::Race), "Race", ":"), npc->GetRace().data());
-				InlineText(_TICONM(Utils::IconMap["GENDER"], "Gender", ":"), npc->GetGender().data());
-				InlineBar(_TICONM(Utils::IconMap["LEVEL"], "Level", ":"), npc->GetLevel(), 100.0f);
+				InlineText(TranslateIconFormat(Utils::GetFormTypeIcon(RE::FormType::Class), "Class", ":"), npc->GetClass().data());
+				InlineText(TranslateIconFormat(Utils::GetFormTypeIcon(RE::FormType::Race), "Race", ":"), npc->GetRace().data());
+				InlineText(TranslateIconFormat(Utils::IconMap["GENDER"], "Gender", ":"), npc->GetGender().data());
+				InlineBar(TranslateIconFormat(Utils::IconMap["LEVEL"], "Level", ":"), npc->GetLevel(), 100.0f);
 
 				ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 
-				InlineBar(_TICONM(Utils::IconMap["HEALTH"], "Health", ":"), npc->GetHealth(), 100.0f);
-				InlineBar(_TICONM(Utils::IconMap["MAGICKA"], "Magicka", ":"), npc->GetMagicka(), 100.0f);
-				InlineBar(_TICONM(Utils::IconMap["STAMINA"], "Stamina", ":"), npc->GetStamina(), 100.0f);
+				InlineBar(TranslateIconFormat(Utils::IconMap["HEALTH"], "Health", ":"), npc->GetHealth(), 100.0f);
+				InlineBar(TranslateIconFormat(Utils::IconMap["MAGICKA"], "Magicka", ":"), npc->GetMagicka(), 100.0f);
+				InlineBar(TranslateIconFormat(Utils::IconMap["STAMINA"], "Stamina", ":"), npc->GetStamina(), 100.0f);
 
 				// Load Order Info Pane
 				// See ItemPreview.h for other implementation.
 				ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-				ImGui::SetCursorPosX(ImGui::GetCenterTextPosX(_T("Load Order")));
-				ImGui::Text(_T("Load Order"));
+				ImGui::SetCursorPosX(ImGui::GetCenterTextPosX(Translate("Load Order")));
+				ImGui::Text(Translate("Load Order"));
 				ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 				const auto sourceFiles = npc->GetForm()->sourceFiles.array;
 
@@ -207,7 +207,7 @@ namespace Modex
 			}
 
 			// Faction
-			if (ImGui::TreeNode(_TICON(Utils::GetFormTypeIcon(RE::FormType::Faction), "Faction"))) {
+			if (ImGui::TreeNode(TranslateIcon(Utils::GetFormTypeIcon(RE::FormType::Faction), "Faction"))) {
 				auto factions = npc->GetFactions();
 
 				if (factions.size() > 0) {
@@ -231,7 +231,7 @@ namespace Modex
 				ImGui::TreePop();
 			}
 
-			if (ImGui::TreeNode(_TICON(Utils::IconMap["SKILL"], "NPC_SKILLS"))) {
+			if (ImGui::TreeNode(TranslateIcon(Utils::IconMap["SKILL"], "NPC_SKILLS"))) {
 				ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 
 				RE::TESNPC::Skills skills = selectedNPC->GetSkills();
@@ -248,7 +248,7 @@ namespace Modex
 				ImGui::TreePop();
 			}
 
-			if (ImGui::TreeNode(_TICON(Utils::IconMap["SPELL"], "NPC_SPELLS"))) {
+			if (ImGui::TreeNode(TranslateIcon(Utils::IconMap["SPELL"], "NPC_SPELLS"))) {
 				auto spellData = npc->GetTESNPC()->GetSpellList();
 
 				if (spellData != nullptr && spellData->numSpells > 0) {
@@ -273,11 +273,11 @@ namespace Modex
 								float costPercent = cost / npc->GetMagicka() * 100.0f;
 								std::string costPercentStr = std::format("{:.0f}", costPercent) + std::string("%%");
 
-								InlineText(_TICONM(Utils::IconMap["SKILL"], "NPC_CAST_TYPE", ":"), castType);
-								InlineText(_TICONM(Utils::IconMap["SKILL"], "NPC_SPELL_TYPE", ":"), spellType);
-								InlineText(_TICONM(Utils::IconMap["SPELL"], "NPC_DELIVERY_TYPE", ":"), delType);
-								InlineText(_TICONM(Utils::IconMap["MAGICKA"], "Cost", ":"), std::format("{:.0f}", cost).c_str());
-								InlineText((std::string(_TICON(Utils::IconMap["MAGICKA"], "Cost")) + "%%" + ":").c_str(), costPercentStr.c_str());  // https://github.com/ocornut/imgui/issues/7679
+								InlineText(TranslateIconFormat(Utils::IconMap["SKILL"], "NPC_CAST_TYPE", ":"), castType);
+								InlineText(TranslateIconFormat(Utils::IconMap["SKILL"], "NPC_SPELL_TYPE", ":"), spellType);
+								InlineText(TranslateIconFormat(Utils::IconMap["SPELL"], "NPC_DELIVERY_TYPE", ":"), delType);
+								InlineText(TranslateIconFormat(Utils::IconMap["MAGICKA"], "Cost", ":"), std::format("{:.0f}", cost).c_str());
+								InlineText((std::string(TranslateIcon(Utils::IconMap["MAGICKA"], "Cost")) + "%%" + ":").c_str(), costPercentStr.c_str());  // https://github.com/ocornut/imgui/issues/7679
 
 								ImGui::TreePop();
 							}

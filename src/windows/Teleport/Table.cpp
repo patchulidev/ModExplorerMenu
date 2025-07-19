@@ -16,18 +16,18 @@ namespace Modex
 		bool is_favorite = PersistentData::IsCellFavorite(a_cell.editorid);
 
 		if (is_favorite) {
-			if (ImGui::Selectable(_T("FAVORITE_REMOVE"), false, flags)) {
+			if (ImGui::Selectable(Translate("FAVORITE_REMOVE"), false, flags)) {
 				this->RemoveCellFromFavorite(a_cell.editorid);
 				ImGui::CloseCurrentPopup();
 			}
 		} else {
-			if (ImGui::Selectable(_T("FAVORITE_ADD"), false, flags)) {
+			if (ImGui::Selectable(Translate("FAVORITE_ADD"), false, flags)) {
 				this->AddCellToFavorite(a_cell.editorid);
 				ImGui::CloseCurrentPopup();
 			}
 		}
 
-		if (ImGui::Selectable(_T("Teleport"), false, flags)) {
+		if (ImGui::Selectable(Translate("Teleport"), false, flags)) {
 			Console::Teleport(a_cell.editorid);
 			Console::StartProcessThread();
 			this->AddCellToRecent(a_cell.editorid);
@@ -36,14 +36,14 @@ namespace Modex
 
 		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 
-		if (ImGui::Selectable(_T("GENERAL_COPY_CELL_NAME"), false, flags)) {
+		if (ImGui::Selectable(Translate("GENERAL_COPY_CELL_NAME"), false, flags)) {
 			ImGui::LogToClipboard();
 			ImGui::LogText(a_cell.cellName.c_str());
 			ImGui::LogFinish();
 			ImGui::CloseCurrentPopup();
 		}
 
-		if (ImGui::Selectable(_T("GENERAL_COPY_EDITOR_ID"), false, flags)) {
+		if (ImGui::Selectable(Translate("GENERAL_COPY_EDITOR_ID"), false, flags)) {
 			ImGui::LogToClipboard();
 			ImGui::LogText(a_cell.editorid.c_str());
 			ImGui::LogFinish();
@@ -57,7 +57,7 @@ namespace Modex
 	void TeleportWindow::ShowFormTable()
 	{
 
-		auto results = std::string(_T("Results")) + std::string(" (") + std::to_string(cellList.size()) + std::string(")");
+		auto results = std::string(Translate("Results")) + std::string(" (") + std::to_string(cellList.size()) + std::string(")");
 		ImGui::SeparatorText(results.c_str());
 
 		// auto rowBG = ImGui::GetStyle().TableRowBg/ ? ImGuiTableFlags_RowBg : 0;

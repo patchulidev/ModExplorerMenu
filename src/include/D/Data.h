@@ -68,7 +68,8 @@ namespace Modex
 		void 											GenerateNPCClassList();
 		void 											GenerateNPCRaceList();
 		void 											GenerateNPCFactionList();
-		
+		void 											AddModToIndex(const RE::TESFile* a_mod, std::unordered_set<const RE::TESFile*>& a_out);
+
 		[[nodiscard]] inline std::vector<ItemData>& 	GetAddItemList() 	{ return _cache; 			}
 		[[nodiscard]] inline std::vector<CellData>& 	GetTeleportList() 	{ return _cellCache; 		}
 		[[nodiscard]] inline std::vector<NPCData>& 		GetNPCList() 		{ return _npcCache; 		}

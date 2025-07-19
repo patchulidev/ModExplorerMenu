@@ -20,9 +20,16 @@ namespace Modex
 		void LoadBlacklist();
 		void AddPluginToBlacklist(const RE::TESFile* mod);
 		void RemovePluginFromBlacklist(const RE::TESFile* mod);
-
+		
 		void LoadUserdata();
 		void SaveUserdata();
+
+		void RefreshTranslation(const std::string& a_language);
+		void LoadTranslation(std::string a_path);
+		const char* GetTranslation(const char* fallback_text) const;
+
+		template<size_t N>
+		const char* GetTranslation(const char (&fallback_text)[N]) const;
 
 		void LoadKit(const std::string& a_name);
 		void LoadAllKits();
@@ -235,6 +242,8 @@ namespace Modex
 		}
 
 	private:
+		std::unordered_map<size_t, std::string> hash;
+
 		std::unordered_set<const RE::TESFile*> m_blacklist;
 		Collection m_kits;
 		std::unordered_map<std::string, std::any> m_userdata;
@@ -246,5 +255,10 @@ namespace Modex
 
 		const std::string json_user_path = "Data/Interface/Modex/User/";
 	};
+
+	#define Translate(text) PersistentData::GetSingleton()->GetTranslation(text)
+    #define TranslateFormat(text, suffix) (std::string(Translate(text)) + suffix).c_str()
+    #define TranslateIcon(icon, text) ((std::string(icon) + Translate(text)).c_str())
+    #define TranslateIconFormat(icon, text, suffix) ((std::string(icon) + Translate(text) + suffix).c_str())
 
 }

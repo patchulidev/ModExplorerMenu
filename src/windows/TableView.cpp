@@ -518,8 +518,8 @@ namespace Modex
 		this->tableList.clear();
 		this->itemPreview = nullptr;
 		this->primaryFilter = RE::FormType::None;
-		this->secondaryFilter = _T("All");
-		this->selectedPlugin = _T("SHOW_ALL_PLUGINS");
+		this->secondaryFilter = Translate("All");
+		this->selectedPlugin = Translate("SHOW_ALL_PLUGINS");
 		ImFormatString(this->generalSearchBuffer, IM_ARRAYSIZE(this->generalSearchBuffer), "");
 		ImFormatString(this->pluginSearchBuffer, IM_ARRAYSIZE(this->pluginSearchBuffer), "");
 		ImFormatString(this->secondaryFilterBuffer, IM_ARRAYSIZE(this->secondaryFilterBuffer), "");
@@ -582,12 +582,12 @@ namespace Modex
 			}
 
 			// All Mods vs Selected Mod
-			if (this->selectedPlugin != _T("SHOW_ALL_PLUGINS") && item.GetPluginName() != this->selectedPlugin) {
+			if (this->selectedPlugin != Translate("SHOW_ALL_PLUGINS") && item.GetPluginName() != this->selectedPlugin) {
 				continue;
 			}
 
 			// Blacklist
-			if (this->selectedPlugin == _T("SHOW_ALL_PLUGINS")) {
+			if (this->selectedPlugin == Translate("SHOW_ALL_PLUGINS")) {
 				if (PersistentData::GetBlacklist().contains(item.GetPlugin())) {
 					continue;
 				}
@@ -647,7 +647,7 @@ namespace Modex
 			}
 
 			// Secondary Filter
-			if (this->primaryFilter != RE::FormType::None && this->secondaryFilter != _T("All")) {
+			if (this->primaryFilter != RE::FormType::None && this->secondaryFilter != Translate("All")) {
 				if constexpr (std::is_same_v<DataType, ItemData>) {
 					if (this->primaryFilter == RE::FormType::Armor && item.GetFormType() == RE::FormType::Armor) {
 						auto armorSlots = Utils::GetArmorSlots(item.GetForm()->As<RE::TESObjectARMO>());
@@ -730,10 +730,10 @@ namespace Modex
 	void TableView<DataType>::SecondaryNPCFilter(const std::set<std::string>& a_data, const float& a_width)
 	{
 		std::vector<std::string> list(a_data.begin(), a_data.end());
-		list.insert(list.begin(), _T("All"));
+		list.insert(list.begin(), Translate("All"));
 
 		if (InputTextComboBox("##Search::Filter::SecondaryFilter", this->secondaryFilterBuffer, this->secondaryFilter, IM_ARRAYSIZE(this->secondaryFilterBuffer), list, a_width)) {
-			this->secondaryFilter = _T("All");
+			this->secondaryFilter = Translate("All");
 
 			if (this->secondaryFilter.find(this->secondaryFilterBuffer) != std::string::npos) {
 				ImFormatString(this->secondaryFilterBuffer, IM_ARRAYSIZE(this->secondaryFilterBuffer), "");
@@ -774,7 +774,7 @@ namespace Modex
 		const auto& config = Settings::GetSingleton()->GetConfig();
 		this->pluginList = Data::GetSingleton()->GetFilteredListOfPluginNames(this->pluginType, (Data::SORT_TYPE)config.modListSort, this->primaryFilter);
 		this->pluginSet = Data::GetSingleton()->GetModulePluginList(this->pluginType);
-		pluginList.insert(pluginList.begin(), _T("SHOW_ALL_PLUGINS"));
+		pluginList.insert(pluginList.begin(), Translate("SHOW_ALL_PLUGINS"));
 	}
 
 	template <class DataType>
@@ -783,7 +783,7 @@ namespace Modex
 		(void)a_height;  // Unused parameter, but required for the function signature.
 
 		ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5f, 0.5f));
-		if (ImGui::Selectable(_T("GENERAL_RECENT_ITEMS"), false, ImGuiSelectableFlags_SpanAllColumns)) {
+		if (ImGui::Selectable(Translate("GENERAL_RECENT_ITEMS"), false, ImGuiSelectableFlags_SpanAllColumns)) {
 			std::reverse(this->recentList.begin(), this->recentList.end());
 		}
 		ImGui::PopStyleVar();
@@ -795,7 +795,7 @@ namespace Modex
 		}
 
 		if (ImGui::BeginPopup("RecentViewContextMenu")) {
-			if (ImGui::MenuItem(_T("Clear"))) {
+			if (ImGui::MenuItem(Translate("Clear"))) {
 				PersistentData::ClearRecentItems<DataType>();
 				this->LoadRecentList();
 				this->refreshRecentList = true;
@@ -805,10 +805,10 @@ namespace Modex
 		}
 
 		if (this->recentList.empty()) {
-			const float center_y = ImGui::GetCenterTextPosY(_T("GENERAL_NO_RECENT_ITEMS"));
-			const float center_x = ImGui::GetCenterTextPosX(_T("GENERAL_NO_RECENT_ITEMS"));
+			const float center_y = ImGui::GetCenterTextPosY(Translate("GENERAL_NO_RECENT_ITEMS"));
+			const float center_x = ImGui::GetCenterTextPosX(Translate("GENERAL_NO_RECENT_ITEMS"));
 			ImGui::SetCursorPos(ImVec2(center_x, center_y));
-			ImGui::TextDisabled(_T("GENERAL_NO_RECENT_ITEMS"));
+			ImGui::TextDisabled(Translate("GENERAL_NO_RECENT_ITEMS"));
 			return;
 		}
 
@@ -837,9 +837,9 @@ namespace Modex
 		}
 
 		// Search bar for compare string.
-		ImGui::Text(_TFM("GENERAL_SEARCH_RESULTS", ":"));
+		ImGui::Text(TranslateFormat("GENERAL_SEARCH_RESULTS", ":"));
 		ImGui::SetNextItemWidth(input_width);
-		if (ImGui::InputTextWithHint("##Search::Input::CompareField", _T("GENERAL_CLICK_TO_TYPE"), this->generalSearchBuffer,
+		if (ImGui::InputTextWithHint("##Search::Input::CompareField", Translate("GENERAL_CLICK_TO_TYPE"), this->generalSearchBuffer,
 				IM_ARRAYSIZE(this->generalSearchBuffer),
 				Frame::INPUT_FLAGS)) {
 			this->Refresh();
@@ -851,13 +851,13 @@ namespace Modex
 		const auto currentFilter = this->inputSearchMap.at(searchKey);
 		ImGui::SetNextItemWidth(key_width);
 		ImGui::SetCursorPosX(ImGui::GetCursorPosX() - 5.0f);
-		if (ImGui::BeginCombo("##Search::Input::CompareFilter", _T(currentFilter))) {
+		if (ImGui::BeginCombo("##Search::Input::CompareFilter", Translate(currentFilter))) {
 			for (auto& compare : this->inputSearchMap) {
 				auto searchID = compare.first;
 				const char* searchValue = compare.second;
 				const bool is_selected = (searchKey == searchID);
 
-				if (ImGui::Selectable(_T(searchValue), is_selected)) {
+				if (ImGui::Selectable(Translate(searchValue), is_selected)) {
 					searchKey = searchID;
 				}
 
@@ -870,7 +870,7 @@ namespace Modex
 		}
 
 		// Primary RE::FormType filter.
-		ImGui::Text(_TFM("GENERAL_FILTER_ITEM_TYPE", ":"));
+		ImGui::Text(TranslateFormat("GENERAL_FILTER_ITEM_TYPE", ":"));
 
 		if (!secondaryFilterExpanded) {
 			ImGui::SetNextItemWidth(total_width);
@@ -880,10 +880,10 @@ namespace Modex
 
 		const std::string filter_name = RE::FormTypeToString(this->primaryFilter).data();  // Localize?
 		if (ImGui::BeginCombo("##Search::Filter::PrimaryFilter", filter_name.c_str(), ImGuiComboFlags_HeightLarge)) {
-			if (ImGui::Selectable(_T("None"), this->primaryFilter == RE::FormType::None)) {
+			if (ImGui::Selectable(Translate("None"), this->primaryFilter == RE::FormType::None)) {
 				ImGui::SetItemDefaultFocus();
 				this->primaryFilter = RE::FormType::None;
-				this->secondaryFilter = _T("All");
+				this->secondaryFilter = Translate("All");
 				this->Refresh();
 			}
 
@@ -893,7 +893,7 @@ namespace Modex
 
 				if (ImGui::Selectable(option.c_str(), is_selected)) {
 					this->primaryFilter = filter;
-					this->secondaryFilter = _T("All");
+					this->secondaryFilter = Translate("All");
 					this->Refresh();
 				}
 
@@ -912,9 +912,9 @@ namespace Modex
 			ImGui::SetNextItemWidth((total_width / 2.0f));
 
 			if (ImGui::BeginCombo("##Search::Filter::SecondaryFilter", this->secondaryFilter.c_str(), ImGuiComboFlags_HeightLarge)) {
-				if (ImGui::Selectable(_T("All"), this->secondaryFilter == _T("All"))) {
+				if (ImGui::Selectable(Translate("All"), this->secondaryFilter == Translate("All"))) {
 					ImGui::SetItemDefaultFocus();
-					this->secondaryFilter = _T("All");
+					this->secondaryFilter = Translate("All");
 					this->Refresh();
 				}
 
@@ -925,7 +925,7 @@ namespace Modex
 				for (auto& slot : armor_slots) {
 					bool is_selected = (slot == secondaryFilter);
 
-					if (ImGui::Selectable(_T(slot), is_selected)) {
+					if (ImGui::Selectable(Translate(slot.c_str()), is_selected)) {
 						this->secondaryFilter = slot;
 						this->Refresh();
 					}
@@ -944,9 +944,9 @@ namespace Modex
 			ImGui::SetNextItemWidth(total_width / 2.0f);
 
 			if (ImGui::BeginCombo("##Search::Filter::SecondaryFilter", this->secondaryFilter.c_str(), ImGuiComboFlags_HeightLarge)) {
-				if (ImGui::Selectable(_T("All"), this->secondaryFilter == _T("All"))) {
+				if (ImGui::Selectable(Translate("All"), this->secondaryFilter == Translate("All"))) {
 					ImGui::SetItemDefaultFocus();
-					this->secondaryFilter = _T("All");
+					this->secondaryFilter = Translate("All");
 					this->Refresh();
 				}
 
@@ -968,7 +968,7 @@ namespace Modex
 				for (auto& type : weapon_types) {
 					bool is_selected = (type == secondaryFilter);
 
-					if (ImGui::Selectable(_T(type), is_selected)) {
+					if (ImGui::Selectable(Translate(type), is_selected)) {
 						this->secondaryFilter = type;
 						this->Refresh();
 					}
@@ -1006,14 +1006,14 @@ namespace Modex
 			ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().ItemSpacing.y);
 		}
 
-		ImGui::Text(_TFM("GENERAL_FILTER_PLUGINS", ":"));
+		ImGui::Text(TranslateFormat("GENERAL_FILTER_PLUGINS", ":"));
 
 		if (ImGui::IsItemHovered()) {
-			ImGui::SetTooltip(_T("TOOLTIP_FILTER_PLUGINS"));
+			ImGui::SetTooltip(Translate("TOOLTIP_FILTER_PLUGINS"));
 		}
 
 		if (InputTextComboBox("##Search::Filter::PluginField", this->pluginSearchBuffer, this->selectedPlugin, IM_ARRAYSIZE(this->pluginSearchBuffer), this->pluginList, total_width)) {
-			this->selectedPlugin = _T("SHOW_ALL_PLUGINS");
+			this->selectedPlugin = Translate("SHOW_ALL_PLUGINS");
 
 			if (this->selectedPlugin.find(this->pluginSearchBuffer) != std::string::npos) {
 				ImFormatString(this->pluginSearchBuffer, IM_ARRAYSIZE(this->pluginSearchBuffer), "");
@@ -1025,7 +1025,7 @@ namespace Modex
 
 					std::string pluginName = Modex::ValidateTESFileName(plugin);
 
-					if (pluginName == _T("SHOW_ALL_PLUGINS")) {
+					if (pluginName == Translate("SHOW_ALL_PLUGINS")) {
 						ImFormatString(this->pluginSearchBuffer, IM_ARRAYSIZE(this->pluginSearchBuffer), "");
 						break;
 					}
@@ -1075,39 +1075,39 @@ namespace Modex
 
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 4.0f));
 		InlineText(
-			_TICONM(ICON_LC_PACKAGE_PLUS, "GENERAL_TOTAL_PLUGINS", ":"),
+			TranslateIconFormat(ICON_LC_PACKAGE_PLUS, "GENERAL_TOTAL_PLUGINS", ":"),
 			std::to_string(total_plugins).c_str(),
-			_T("TOOLTIP_TOTAL_PLUGIN"));
+			Translate("TOOLTIP_TOTAL_PLUGIN"));
 
 		InlineText(
-			_TICONM(ICON_LC_PACKAGE_SEARCH, "GENERAL_TOTAL_BLACKLIST", ":"),
+			TranslateIconFormat(ICON_LC_PACKAGE_SEARCH, "GENERAL_TOTAL_BLACKLIST", ":"),
 			std::to_string(total_blacklist).c_str(),
-			_T("TOOLTIP_BLACKLIST_PLUGIN"));
+			Translate("TOOLTIP_BLACKLIST_PLUGIN"));
 
 		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 
 		InlineText(
-			_TICONM(ICON_LC_SEARCH, "Search Results", ":"),
+			TranslateIconFormat(ICON_LC_SEARCH, "Search Results", ":"),
 			std::to_string(total_items).c_str(),
-			_T("TOOLTIP_TOTAL_SEARCH"));
+			Translate("TOOLTIP_TOTAL_SEARCH"));
 
 		InlineText(
-			_TICONM(ICON_LC_EYE_OFF, "GENERAL_TOTAL_HIDDEN", ":"),
+			TranslateIconFormat(ICON_LC_EYE_OFF, "GENERAL_TOTAL_HIDDEN", ":"),
 			std::to_string(hidden_items).c_str(),
-			_T("TOOLTIP_TOTAL_FILTERED"));
+			Translate("TOOLTIP_TOTAL_FILTERED"));
 
 		if (this->HasFlag(ModexTableFlag_EnablePluginKitView)) {
 			ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 
 			InlineText(
-				_TICONM(ICON_LC_PACKAGE, "GENERAL_KITS_TOTAL", ":"),
+				TranslateIconFormat(ICON_LC_PACKAGE, "GENERAL_KITS_TOTAL", ":"),
 				std::to_string(total_kits).c_str(),
-				_T("TOOLTIP_TOTAL_KITS"));
+				Translate("TOOLTIP_TOTAL_KITS"));
 
 			InlineText(
-				_TICONM(ICON_LC_PACKAGE_OPEN, "GENERAL_KITS_IN_PLUGIN", ":"),
+				TranslateIconFormat(ICON_LC_PACKAGE_OPEN, "GENERAL_KITS_IN_PLUGIN", ":"),
 				std::to_string(total_kits_in_plugin).c_str(),
-				_T("TOOLTIP_TOTAL_KITS_IN_PLUGIN"));
+				Translate("TOOLTIP_TOTAL_KITS_IN_PLUGIN"));
 		}
 
 		ImGui::PopStyleVar();
@@ -1894,7 +1894,7 @@ namespace Modex
 			kitList.clear();
 
 			// // We don't need to correlate kits to All Plugins since it's not a valid plugin.
-			// if (selectedPlugin == _T("SHOW_ALL_PLUGINS")) {
+			// if (selectedPlugin == Translate("SHOW_ALL_PLUGINS")) {
 			// 	return;
 			// }
 
@@ -1918,7 +1918,7 @@ namespace Modex
 					// over the entire kit twice. We use one to match, then the other to build.
 
 					for (auto& item : kit.items) {
-						if (selectedPlugin == _T("SHOW_ALL_PLUGINS") || item->plugin == selectedPlugin) {
+						if (selectedPlugin == Translate("SHOW_ALL_PLUGINS") || item->plugin == selectedPlugin) {
 							kit.TableID = table_id;
 
 							kit.weaponCount = 0;
@@ -2007,9 +2007,9 @@ namespace Modex
 			DrawList->AddText(center_left_align, text_color, name_string.c_str());
 		}
 
-		const std::string weaponCount = a_kit.weaponCount == 0 ? _T("None") : std::to_string(a_kit.weaponCount);
-		const std::string armorCount = a_kit.armorCount == 0 ? _T("None") : std::to_string(a_kit.armorCount);
-		const std::string miscCount = a_kit.miscCount == 0 ? _T("None") : std::to_string(a_kit.miscCount);
+		const std::string weaponCount = a_kit.weaponCount == 0 ? Translate("None") : std::to_string(a_kit.weaponCount);
+		const std::string armorCount = a_kit.armorCount == 0 ? Translate("None") : std::to_string(a_kit.armorCount);
+		const std::string miscCount = a_kit.miscCount == 0 ? Translate("None") : std::to_string(a_kit.miscCount);
 		const std::string totalCount = std::to_string(a_kit.weaponCount + a_kit.armorCount + a_kit.miscCount);
 
 		// Draw the kit meta data
@@ -2161,7 +2161,7 @@ namespace Modex
 
 						if (confirmDeleteKit) {
 							if (ImGui::BeginPopupModal("##KitPluginView::Delete::Confirmation", nullptr, popup_flags)) {
-								ImGui::SubCategoryHeader(_T("KIT_DELETE_CONFIRMATION"));
+								ImGui::SubCategoryHeader(Translate("KIT_DELETE_CONFIRMATION"));
 								ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 
 								ImGui::NewLine();
@@ -2174,7 +2174,7 @@ namespace Modex
 
 								if (ImGui::IsKeyPressed(ImGuiKey_Y, false)) {
 									PersistentData::GetSingleton()->DeleteKit(confirmDeleteKit->name);
-									// selectedKit = _T("None");
+									// selectedKit = Translate("None");
 									this->LoadKitsFromSelectedPlugin();
 									this->SortListBySpecs();
 									this->UpdateImGuiTableIDs();
@@ -2373,21 +2373,21 @@ namespace Modex
 							}
 
 							if (ImGui::IsMouseHoveringRect(disabled_pos, ImVec2(disabled_pos.x + fontSize, disabled_pos.y + fontSize))) {
-								ImGui::SetTooltip(_T("TOOLTIP_DISABLED"));
+								ImGui::SetTooltip(Translate("TOOLTIP_DISABLED"));
 							}
 						}
 
 						if (ImGui::IsMouseHoveringRect(unique_pos, ImVec2(unique_pos.x + fontSize, unique_pos.y + fontSize))) {
 							if (npc->IsUnique()) {
-								ImGui::SetTooltip(_T("TOOLTIP_UNIQUE"));
+								ImGui::SetTooltip(Translate("TOOLTIP_UNIQUE"));
 							} else if (npc->IsEssential()) {
-								ImGui::SetTooltip(_T("TOOLTIP_ESSENTIAL"));
+								ImGui::SetTooltip(Translate("TOOLTIP_ESSENTIAL"));
 							}
 						}
 
 						if (ImGui::IsMouseHoveringRect(essential_pos, ImVec2(essential_pos.x + fontSize, essential_pos.y + fontSize))) {
 							if (npc->IsEssential()) {
-								ImGui::SetTooltip(_T("TOOLTIP_ESSENTIAL"));
+								ImGui::SetTooltip(Translate("TOOLTIP_ESSENTIAL"));
 							}
 						}
 					}
@@ -2432,7 +2432,7 @@ namespace Modex
 						const auto equipSlots = Utils::GetArmorSlots(armor);
 
 						const std::string rating_string = ICON_LC_SHIELD + std::to_string(static_cast<int>(armorRating));
-						const std::string type_string = _TICON(ICON_LC_PUZZLE, armorType);
+						const std::string type_string = TranslateIcon(ICON_LC_PUZZLE, armorType);
 						// const std::string slot_string = ICON_LC_BETWEEN_HORIZONTAL_START + equipSlots[0];
 
 						if (!test_compactView) {
@@ -2519,7 +2519,7 @@ namespace Modex
 
 						const std::string damage_string = ICON_LC_SWORD + std::to_string(damage);
 						const std::string skill_string = ICON_LC_BRAIN + std::to_string(static_cast<int>(skill));
-						const std::string type_string = _TICON(ICON_LC_PUZZLE, type);
+						const std::string type_string = TranslateIcon(ICON_LC_PUZZLE, type);
 
 						if (!test_compactView) {
 							const ImVec2 damage_pos = ImVec2(bb.Min.x + (spacing * 1.5f) + spacing * 1.5f, top_align);
@@ -2842,7 +2842,7 @@ namespace Modex
 								ImGui::SetCursorScreenPos(equippable_pos);
 
 								const auto alpha = item_data->kitEquipped ? 1.0f : 0.25f;
-								const auto text = item_data->kitEquipped ? _T("Equip") : _T("Equip");
+								const auto text = item_data->kitEquipped ? Translate("Equip") : Translate("Equip");
 								const auto icon = item_data->kitEquipped ? ICON_LC_CHECK : ICON_LC_X;
 								const auto equip_size = ImVec2(LayoutItemSize.x / 7.0f, LayoutItemSize.y);
 								const auto color = ImGui::GetColorU32(ImGuiCol_Button, alpha);
@@ -2883,14 +2883,14 @@ namespace Modex
 								}
 
 								if (ImGui::IsItemHovered(ImGuiHoveredFlags_Stationary)) {
-									ImGui::SetTooltip(_T("TOOLTIP_AMOUNT_ADD"));
+									ImGui::SetTooltip(Translate("TOOLTIP_AMOUNT_ADD"));
 								}
 							}
 						}
 
 						if (ImGui::BeginPopup("TableViewContextMenu")) {
 							if (const ObjectData* objectData = dynamic_cast<const ObjectData*>(item_data.get())) {
-								if (ImGui::MenuItem(_T("AIM_PLACE"))) {
+								if (ImGui::MenuItem(Translate("AIM_PLACE"))) {
 									if (selectionStorage.Size == 0) {
 										Console::PlaceAtMe(objectData->GetFormID().c_str(), click_amount);
 										this->AddItemToRecent(item_data);
@@ -2909,7 +2909,7 @@ namespace Modex
 							}
 
 							if (const ItemData* itemData = dynamic_cast<const ItemData*>(item_data.get())) {
-								if (ImGui::MenuItem(_T("AIM_ADD"))) {
+								if (ImGui::MenuItem(Translate("AIM_ADD"))) {
 									if (selectionStorage.Size == 0) {
 										Console::AddItem(item_data->GetFormID().c_str(), click_amount);
 										this->AddItemToRecent(item_data);
@@ -2927,7 +2927,7 @@ namespace Modex
 								}
 
 								if (itemData->GetFormType() == RE::FormType::Armor || itemData->GetFormType() == RE::FormType::Weapon) {
-									if (ImGui::MenuItem(_T("AIM_EQUIP"))) {
+									if (ImGui::MenuItem(Translate("AIM_EQUIP"))) {
 										if (selectionStorage.Size == 0) {
 											Console::AddItemEx(item_data->GetBaseForm(), click_amount, true);
 											this->AddItemToRecent(item_data);
@@ -2956,7 +2956,7 @@ namespace Modex
 									}
 								}
 
-								if (ImGui::MenuItem(_T("AIM_PLACE"))) {
+								if (ImGui::MenuItem(Translate("AIM_PLACE"))) {
 									if (selectionStorage.Size == 0) {
 										Console::PlaceAtMe(item_data->GetFormID().c_str(), click_amount);
 										this->AddItemToRecent(item_data);
@@ -2976,7 +2976,7 @@ namespace Modex
 								if (itemData->GetFormType() == RE::FormType::Book) {
 									ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 
-									if (ImGui::MenuItem(_T("GENERAL_READ_ME"))) {
+									if (ImGui::MenuItem(Translate("GENERAL_READ_ME"))) {
 										Console::ReadBook(itemData->GetFormID());
 										Console::StartProcessThread();
 										Menu::GetSingleton()->Close();
@@ -2989,9 +2989,9 @@ namespace Modex
 								if (this->selectedKit) {
 									const std::string selected_kit = *this->selectedKit;
 
-									if (!selected_kit.empty() && selected_kit != _T("None")) {
+									if (!selected_kit.empty() && selected_kit != Translate("None")) {
 										ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-										if (ImGui::MenuItem(_T("KIT_REMOVE"))) {
+										if (ImGui::MenuItem(Translate("KIT_REMOVE"))) {
 											if (selectionStorage.Size == 0) {
 												this->RemovePayloadItemFromKit(item_data);
 											} else {
@@ -3022,9 +3022,9 @@ namespace Modex
 									if (dragDropSourceTable->selectedKit) {
 										const std::string selected_kit = *dragDropSourceTable->selectedKit;
 
-										if (!selected_kit.empty() && selected_kit != _T("None")) {
+										if (!selected_kit.empty() && selected_kit != Translate("None")) {
 											ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-											if (ImGui::MenuItem(_T("KIT_ADD"))) {
+											if (ImGui::MenuItem(Translate("KIT_ADD"))) {
 												if (selectionStorage.Size == 0) {
 													dragDropSourceTable->AddPayloadItemToKit(item_data);
 												} else {
@@ -3047,7 +3047,7 @@ namespace Modex
 							}
 
 							if (const NPCData* npc_data = dynamic_cast<const NPCData*>(item_data.get())) {
-								if (ImGui::MenuItem(_T("AIM_PLACE"))) {
+								if (ImGui::MenuItem(Translate("AIM_PLACE"))) {
 									if (selectionStorage.Size == 0) {
 										Console::PlaceAtMe(npc_data->GetFormID().c_str(), click_amount);
 										this->AddItemToRecent(item_data);
@@ -3075,7 +3075,7 @@ namespace Modex
 								}
 
 								// if (RE::TESObjectREFR* refr = npc_data->GetForm()->As<RE::TESObjectREFR>()) {
-								// 	if (ImGui::MenuItem(_T("NPC_DISABLE"))) {
+								// 	if (ImGui::MenuItem(Translate("NPC_DISABLE"))) {
 								// 		if (selectionStorage.Size == 0) {
 								// 			refr->Disable();
 								// 		} else {
@@ -3104,7 +3104,7 @@ namespace Modex
 								// time of the context window. It will work regardless of the above case.
 
 								if (npc_data->refID != 0) {
-									if (ImGui::MenuItem(_T("NPC_BRING_REFERENCE"))) {
+									if (ImGui::MenuItem(Translate("NPC_BRING_REFERENCE"))) {
 										if (selectionStorage.Size == 0) {
 											Console::BringNPC(npc_data->refID, true);
 											this->AddItemToRecent(item_data);
@@ -3131,7 +3131,7 @@ namespace Modex
 								}
 
 								if (npc_data->refID != 0) {
-									if (ImGui::MenuItem(_T("NPC_GOTO_REFERENCE"))) {
+									if (ImGui::MenuItem(Translate("NPC_GOTO_REFERENCE"))) {
 										if (selectionStorage.Size == 0) {
 											Console::GotoNPC(npc_data->refID, true);
 											this->AddItemToRecent(item_data);
@@ -3161,7 +3161,7 @@ namespace Modex
 								if (npc_data->refID != 0) {
 									if (auto ref = RE::TESForm::LookupByID<RE::TESObjectREFR>(npc_data->refID)) {
 										if (ref->IsDisabled()) {
-											if (ImGui::MenuItem(_T("Enable"))) {
+											if (ImGui::MenuItem(Translate("Enable"))) {
 												if (selectionStorage.Size == 0) {
 													ref->Enable(false);
 												} else {
@@ -3186,7 +3186,7 @@ namespace Modex
 												}
 											}
 										} else {
-											if (ImGui::MenuItem(_T("Disable"))) {
+											if (ImGui::MenuItem(Translate("Disable"))) {
 												if (selectionStorage.Size == 0) {
 													ref->Disable();
 												} else {
@@ -3217,7 +3217,7 @@ namespace Modex
 
 							ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 
-							if (ImGui::BeginMenu(_T("Copy"))) {
+							if (ImGui::BeginMenu(Translate("Copy"))) {
 								if (ImGui::MenuItem("Copy FormID")) {
 									ImGui::SetClipboardText(item_data->GetFormID().c_str());
 								}
@@ -3307,7 +3307,7 @@ namespace Modex
 				if (this->selectedKit) {
 					const std::string selected_kit = *this->selectedKit;
 
-					if (!selected_kit.empty() && selected_kit != _T("None")) {
+					if (!selected_kit.empty() && selected_kit != Translate("None")) {
 						if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FROM_TABLE", ImGuiDragDropFlags_AcceptBeforeDelivery)) {
 							if (payload->IsDelivery()) {
 								const auto dragDropSourceTable = this->dragDropSourceList.at("FROM_TABLE");

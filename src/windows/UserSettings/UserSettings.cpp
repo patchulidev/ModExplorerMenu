@@ -26,10 +26,10 @@ namespace Modex
 	void AddColorPicker(const char* a_text, ImVec4& a_colRef)
 	{
 		constexpr ImGuiColorEditFlags flags = ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_AlphaBar;
-		auto id = "##ColorPicker" + std::string(_T(a_text));
+		auto id = "##ColorPicker" + std::string(Translate(a_text));
 		auto popup = id + "-Popup";
 		ImGui::Spacing();
-		ImGui::Text(_T(a_text));
+		ImGui::Text(Translate(a_text));
 		ImGui::SameLine(ImGui::GetContentRegionMax().x - p_fixedWidth - p_padding - ImGui::GetStyle().IndentSpacing);
 
 		if (ImGui::ColorButton(id.c_str(), a_colRef, flags, ImVec2(p_fixedWidth, 0))) {
@@ -58,7 +58,7 @@ namespace Modex
 	{
 		auto id = "##SliderPicker" + std::string(a_text);
 		ImGui::Spacing();
-		ImGui::Text(_T(a_text));
+		ImGui::Text(Translate(a_text));
 		ImGui::SameLine(ImGui::GetContentRegionMax().x - p_fixedWidth - p_padding - ImGui::GetStyle().IndentSpacing);
 		ImGui::SetNextItemWidth(p_fixedWidth);
 		if (ImGui::SliderFloat(id.c_str(), &a_valRef, a_min, a_max)) {
@@ -73,7 +73,7 @@ namespace Modex
 		auto id = "##DualSlider" + std::string(a_text);
 		float new_size[] = { a_valRef_a, a_valRef_b };
 		ImGui::Spacing();
-		ImGui::Text(_T(a_text));
+		ImGui::Text(Translate(a_text));
 		ImGui::SameLine(ImGui::GetContentRegionMax().x - p_fixedWidth - p_padding - ImGui::GetStyle().IndentSpacing);
 		ImGui::SetNextItemWidth(p_fixedWidth);
 		if (ImGui::SliderFloat2(id.c_str(), new_size, a_min, a_max, "%.1f")) {
@@ -92,7 +92,7 @@ namespace Modex
 		auto id = "##Keybind" + std::string(a_text);
 		ImGui::Spacing();
 		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().ItemSpacing.y / 2 + ImGui::GetFontSize() / 2);
-		ImGui::Text(_T(a_text));
+		ImGui::Text(Translate(a_text));
 
 		if (GraphicManager::imgui_library.empty()) {
 			const float height = ((config.uiScaleVertical / 100) * 20.0f) + 10.0f;
@@ -157,7 +157,7 @@ namespace Modex
 		bool result = false;
 
 		ImGui::Spacing();
-		ImGui::Text(_T(a_text));
+		ImGui::Text(Translate(a_text));
 		ImGui::SameLine(ImGui::GetContentRegionMax().x - p_fixedWidth - p_padding - ImGui::GetStyle().IndentSpacing);
 		if (ImGui::ToggleButton(a_text, &a_boolRef, p_fixedWidth)) {
 			result = true;
@@ -172,12 +172,12 @@ namespace Modex
 		bool result = false;
 		auto id = "##SelectionDropdown" + std::string(a_text);
 		ImGui::Spacing();
-		ImGui::Text(_T(a_text));
+		ImGui::Text(Translate(a_text));
 		ImGui::SameLine(ImGui::GetContentRegionMax().x - p_fixedWidth - p_padding - ImGui::GetStyle().IndentSpacing);
 		ImGui::PushItemWidth(p_fixedWidth);
-		if (ImGui::BeginCombo(id.c_str(), _T(a_items[a_selection]))) {
+		if (ImGui::BeginCombo(id.c_str(), Translate(a_items[a_selection].c_str()))) {
 			for (int i = 0; i < a_items.size(); ++i) {
-				if (ImGui::Selectable(_T(a_items[i]))) {
+				if (ImGui::Selectable(Translate(a_items[i].c_str()))) {
 					a_selection = i;
 					// SettingsWindow::changes.store(true);
 					// SettingsWindow::file_changes.store(true);
@@ -200,7 +200,7 @@ namespace Modex
 		constexpr auto flags = ImGuiComboFlags_None;
 
 		ImGui::Spacing();
-		ImGui::Text(_T(a_text));
+		ImGui::Text(Translate(a_text));
 		ImGui::SameLine(ImGui::GetContentRegionMax().x - p_fixedWidth - p_padding - ImGui::GetStyle().IndentSpacing);
 		ImGui::PushItemWidth(p_fixedWidth);
 		if (ImGui::BeginCombo(id.c_str(), imageName.c_str(), flags)) {
@@ -229,7 +229,7 @@ namespace Modex
 		bool result = false;
 
 		ImGui::Spacing();
-		ImGui::Text(_T(a_text));
+		ImGui::Text(Translate(a_text));
 		ImGui::SameLine(ImGui::GetContentRegionMax().x - p_fixedWidth - p_padding - ImGui::GetStyle().IndentSpacing);
 		ImGui::PushItemWidth(p_fixedWidth);
 		if (ImGui::BeginCombo(id.c_str(), a_font->c_str())) {
@@ -258,7 +258,7 @@ namespace Modex
 	void AddSubCategoryHeader(const char* a_text)
 	{
 		ImGui::Unindent();
-		ImGui::SubCategoryHeader(_T(a_text));
+		ImGui::SubCategoryHeader(Translate(a_text));
 		ImGui::Indent();
 		ImGui::Spacing();
 	}
@@ -278,7 +278,7 @@ namespace Modex
 			changes.store(false);
 		}
 
-		AddSubCategoryHeader(_T("SETTING_GENERAL"));
+		AddSubCategoryHeader(Translate("SETTING_GENERAL"));
 
 		AddKeybind("SETTING_MENU_KEYBIND", config.showMenuKey, 211, false, keyHoverTintColor);
 
@@ -297,7 +297,7 @@ namespace Modex
 
 		// UI Scale Setting
 		ImGui::Spacing();
-		ImGui::Text(_T("SETTINGS_UI_SCALE_VERTICAL"));
+		ImGui::Text(Translate("SETTINGS_UI_SCALE_VERTICAL"));
 		ImGui::SameLine(ImGui::GetContentRegionMax().x - p_fixedWidth - p_padding - ImGui::GetStyle().IndentSpacing);
 		ImGui::PushItemWidth(p_fixedWidth);
 		ImGui::SliderInt("##UIVerticalScaleSelection", &_uiScaleVertical, 50, 150, "%d%%");
@@ -313,7 +313,7 @@ namespace Modex
 		ImGui::PopItemWidth();
 
 		ImGui::Spacing();
-		ImGui::Text(_T("SETTINGS_UI_SCALE_HORIZONTAL"));
+		ImGui::Text(Translate("SETTINGS_UI_SCALE_HORIZONTAL"));
 		ImGui::SameLine(ImGui::GetContentRegionMax().x - p_fixedWidth - p_padding - ImGui::GetStyle().IndentSpacing);
 		ImGui::PushItemWidth(p_fixedWidth);
 		ImGui::SliderInt("##UIHorizontalScaleSelection", &_uiScaleHorizontal, 50, 150, "%d%%");
@@ -352,12 +352,12 @@ namespace Modex
 		std::vector<std::string> levels = { "trace", "debug", "info", "warn", "error", "critical" };
 
 		ImGui::Spacing();
-		ImGui::Text(_T("SETTING_LOG_LEVEL"));
+		ImGui::Text(Translate("SETTING_LOG_LEVEL"));
 		ImGui::SameLine(ImGui::GetContentRegionMax().x - p_fixedWidth - p_padding - ImGui::GetStyle().IndentSpacing);
 		ImGui::PushItemWidth(p_fixedWidth);
-		if (ImGui::BeginCombo("##LogLevelSelection", _T(levels[config.logLevel]))) {
+		if (ImGui::BeginCombo("##LogLevelSelection", Translate(levels[config.logLevel].c_str()))) {
 			for (int i = 0; i < levels.size(); ++i) {
-				if (ImGui::Selectable(_T(levels[i]))) {
+				if (ImGui::Selectable(Translate(levels[i].c_str()))) {
 					config.logLevel = static_cast<spdlog::level::level_enum>(i);
 					Settings::GetSingleton()->SaveSettings();
 				}
@@ -367,11 +367,11 @@ namespace Modex
 		ImGui::Spacing();
 		ImGui::PopItemWidth();
 
-		AddSubCategoryHeader(_T("SETTING_FONT_AND_LANGUAGE"));
+		AddSubCategoryHeader(Translate("SETTING_FONT_AND_LANGUAGE"));
 
 		// Language Dropdown
 		ImGui::Spacing();
-		ImGui::Text(_T("Language"));
+		ImGui::Text(Translate("Language"));
 		ImGui::SameLine(ImGui::GetContentRegionMax().x - p_fixedWidth - p_padding - ImGui::GetStyle().IndentSpacing);
 		ImGui::PushItemWidth(p_fixedWidth);
 
@@ -385,7 +385,7 @@ namespace Modex
 					// SettingsWindow::changes.store(true);
 					// SettingsWindow::file_changes.store(true);
 
-					Translate::GetSingleton()->RefreshLanguage(config.language);
+					PersistentData::GetSingleton()->RefreshTranslation(config.language);
 					Settings::GetSingleton()->SaveSettings();
 				}
 			}
@@ -398,7 +398,7 @@ namespace Modex
 
 		// Glpyh Dropdown
 		ImGui::Spacing();
-		ImGui::Text(_T("SETTING_GLYPH_RANGE"));
+		ImGui::Text(Translate("SETTING_GLYPH_RANGE"));
 		ImGui::SameLine(ImGui::GetContentRegionMax().x - p_fixedWidth - p_padding - ImGui::GetStyle().IndentSpacing);
 		ImGui::PushItemWidth(p_fixedWidth);
 
@@ -432,7 +432,7 @@ namespace Modex
 
 		// Font Size Setting
 		ImGui::Spacing();
-		ImGui::Text(_T("SETTING_FONT_SIZE"));
+		ImGui::Text(Translate("SETTING_FONT_SIZE"));
 		ImGui::SameLine(ImGui::GetContentRegionMax().x - p_fixedWidth - p_padding - ImGui::GetStyle().IndentSpacing);
 		ImGui::PushItemWidth(p_fixedWidth);
 
@@ -453,7 +453,7 @@ namespace Modex
 		// End of Text & Font Settings
 		// Begin of Module settings
 
-		AddSubCategoryHeader(_T("SETTING_MODULE"));
+		AddSubCategoryHeader(Translate("SETTING_MODULE"));
 
 		if (AddSelectionDropdown("SETTING_DEFAULT_SHOW", config.defaultShow, { "Home", "Add Item", "Object", "NPC", "Teleport", "Settings" })) {
 			Settings::GetSingleton()->SaveSettings();
@@ -533,7 +533,7 @@ namespace Modex
 		const ImVec2 backup_pos = ImGui::GetCursorPos();
 		if (ImGui::BeginChild("##Settings::TabBar", ImVec2(0.0f, button_height), 0, ImGuiWindowFlags_NoFocusOnAppearing)) {
 			ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5f, 0.5f));
-			if (ImGui::Selectable(_T("SETTING_USER"), activeViewport == Viewport::UserSettings, 0, ImVec2(button_width, 0.0f))) {
+			if (ImGui::Selectable(Translate("SETTING_USER"), activeViewport == Viewport::UserSettings, 0, ImVec2(button_width, 0.0f))) {
 				activeViewport = Viewport::UserSettings;
 			}
 

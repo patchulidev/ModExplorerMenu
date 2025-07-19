@@ -191,7 +191,7 @@ namespace Modex
 
 		activeViewport = Viewport::TableView;
 
-		selectedKit = _T("None");
+		selectedKit = Translate("None");
 
 		tableView.SetGenerator([]() { return Data::GetSingleton()->GetAddItemList(); });
 		tableView.SetupSearch(Data::PLUGIN_TYPE::ITEM);

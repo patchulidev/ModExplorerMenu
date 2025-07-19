@@ -9,88 +9,6 @@ namespace Modex
 	const static inline std::filesystem::path imgui_font_path = "Data/Interface/ImGuiIcons/Fonts/";
 	const static inline std::filesystem::path icon_font_path = "Data/Interface/Modex/Icons/";
 
-	class Translate
-	{
-	public:
-		std::unordered_map<std::string, std::string> lang;
-
-		static inline Translate* GetSingleton()
-		{
-			static Translate singleton;
-			return &singleton;
-		}
-
-		void RefreshLanguage(std::string a_language)
-		{
-			lang.clear();
-			LoadLanguage(a_language);
-		}
-
-		// TODO: Marked as duplicate, can be refactored in with PersistentData
-		void LoadLanguage(std::string a_path)
-		{
-			if (!lang.empty()) {
-				lang.clear();
-			}
-
-			std::filesystem::path full_path = lang_path / (a_path + ".json");
-
-			std::ifstream file(full_path);
-			if (!file.is_open()) {
-				return;
-			}
-
-			file.seekg(0, std::ios::end);
-			if (file.tellg() == 0) {
-				file.close();
-				return;
-			}
-
-			file.seekg(0, std::ios::beg);
-
-			try {
-				nlohmann::json json;
-				file >> json;
-				file.close();
-
-				for (auto& [key, value] : json.items()) {
-					lang[key] = value;
-				}
-
-				PrettyLog::Info("Successfully loaded language from file: \"{}\"", a_path);
-			} catch (const nlohmann::json::parse_error& e) {
-				PrettyLog::Warn("Error parsing language file: {}", e.what());
-				file.close();
-			} catch (const nlohmann::json::exception& e) {
-				PrettyLog::Error("Error Exception reading language file: {}", e.what());
-				file.close();
-			}
-		}
-
-		// Accessor func for translations. Intentionally return the translation key
-		// if not found to offer a fallback for incorrect or missing translations.
-		const char* GetTranslation(const std::string& key) const
-		{
-			auto it = lang.find(key);
-			if (it != lang.end()) {
-				return it->second.c_str();
-			} else {
-				return key.c_str();
-			}
-		}
-
-	private:
-		Translate() = default;
-		~Translate() = default;
-		Translate(const Translate&) = delete;
-		Translate& operator=(const Translate&) = delete;
-	};
-
-#define _T(key) Translate::GetSingleton()->GetTranslation(key)
-#define _TFM(key, suffix) (std::string(_T(key)) + suffix).c_str()
-#define _TICON(icon, key) ((std::string(icon) + _T(key)).c_str())
-#define _TICONM(icon, key, suffix) ((std::string(icon) + _T(key) + suffix).c_str())
-
 	class Language
 	{
 	private:
@@ -124,7 +42,7 @@ namespace Modex
 		static inline std::set<std::string> GetLanguages()
 		{
 			if (languages.empty()) {
-				PrettyLog::Error("No Language files found in the Language directory. Please ensure you have the necessary language file(s) in: {}", lang_path.string());
+				// PrettyLog::Error("No Language files found in the Language directory. Please ensure you have the necessary language file(s) in: {}", lang_path.string());
 				return {};
 			}
 

@@ -76,7 +76,7 @@ namespace Modex
 	{
 		cellList.clear();
 		selectedCell = nullptr;
-		selectedMod = _T("Show All Plugins");
+		selectedMod = Translate("Show All Plugins");
 	}
 
 	void TeleportWindow::Load()
@@ -96,7 +96,7 @@ namespace Modex
 		searchKey = BaseColumn::ID::CellName;
 		dirty = true;
 
-		selectedMod = _T("Show All Plugins");
+		selectedMod = Translate("Show All Plugins");
 
 		if (is_default) {
 			this->Refresh();

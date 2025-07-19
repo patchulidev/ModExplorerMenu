@@ -4,6 +4,7 @@
 #include "include/I/InputManager.h"
 #include "include/M/Menu.h"
 #include "include/U/Util.h"
+#include "include/P/Persistent.h"
 #include <format>
 
 using namespace IniHelper;
@@ -151,7 +152,11 @@ namespace Modex
 			Settings::GetSingleton()->LoadMasterIni(a_ini);
 		});
 
-		Translate::GetSingleton()->LoadLanguage(user.config.language);
+		PersistentData::GetSingleton()->LoadTranslation(user.config.language);
+
+		spdlog::set_level(user.config.logLevel);
+		spdlog::flush_on(user.config.logLevel);
+
 		PrettyLog::Info("Settings from Modex.ini have been loaded successfully!");
 	}
 

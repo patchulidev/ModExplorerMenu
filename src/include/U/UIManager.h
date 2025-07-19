@@ -3,6 +3,7 @@
 #include "include/K/Keycode.h"
 #include "include/S/Settings.h"
 #include "include/U/Util.h"
+#include "include/P/Persistent.h"
 #include <PCH.h>
 
 namespace Modex
@@ -192,19 +193,19 @@ namespace Modex
 
 				ImGui::NewLine();
 
-				ImGui::SetCursorPosX(ImGui::GetCenterTextPosX(_T("CONFIG_HOTKEY_SET")));
-				ImGui::Text(_T("CONFIG_HOTKEY_SET"));
+				ImGui::SetCursorPosX(ImGui::GetCenterTextPosX(Translate("CONFIG_HOTKEY_SET")));
+				ImGui::Text(Translate("CONFIG_HOTKEY_SET"));
 				ImGui::NewLine();
 
-				ImGui::SetCursorPosX(ImGui::GetCenterTextPosX(_T("CONFIG_HOTKEY_RESET")));
-				ImGui::Text(_T("CONFIG_KEY_RESET"));
+				ImGui::SetCursorPosX(ImGui::GetCenterTextPosX(Translate("CONFIG_HOTKEY_RESET")));
+				ImGui::Text(Translate("CONFIG_HOTKEY_RESET"));
 				ImGui::NewLine();
 
-				ImGui::SetCursorPosX(ImGui::GetCenterTextPosX(_T("CONFIG_KEY_CANCEL")));
-				ImGui::Text(_T("CONFIG_KEY_CANCEL"));
+				ImGui::SetCursorPosX(ImGui::GetCenterTextPosX(Translate("CONFIG_KEY_CANCEL")));
+				ImGui::Text(Translate("CONFIG_KEY_CANCEL"));
 
 				ImGui::SetCursorPosY(ImGui::GetWindowSize().y - ImGui::GetFrameHeightWithSpacing() - ImGui::GetStyle().WindowPadding.y);
-				if (ImGui::GradientButton(_T("Close"), ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetFrameHeightWithSpacing()))) {
+				if (ImGui::GradientButton(Translate("Close"), ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetFrameHeightWithSpacing()))) {
 					DeclineHotkey();
 					ImGui::CloseCurrentPopup();
 				}

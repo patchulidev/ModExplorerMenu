@@ -127,10 +127,10 @@ namespace Modex
 				return;
 			}
 
-			InlineBar(_T("Health") + ":", a_object->GetHealth(), 100);
-			InlineBar(_T("Magicka") + ":", a_object->GetMagicka(), 100);
-			InlineBar(_T("Stamina") + ":", a_object->GetStamina(), 100);
-			InlineBar(_T("Weight") + ":", a_object->GetCarryWeight(), 100);
+			InlineBar(Translate("Health") + ":", a_object->GetHealth(), 100);
+			InlineBar(Translate("Magicka") + ":", a_object->GetMagicka(), 100);
+			InlineBar(Translate("Stamina") + ":", a_object->GetStamina(), 100);
+			InlineBar(Translate("Weight") + ":", a_object->GetCarryWeight(), 100);
 
 			ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 		}
@@ -152,14 +152,14 @@ namespace Modex
 
 				if (armorRating == 0) {
 					// InlineText("Armor Rating:", "None");
-					InlineText(_TICONM(ICON_LC_SHIELD, "Rating", ":"), _T("None"));
+					InlineText(TranslateIconFormat(ICON_LC_SHIELD, "Rating", ":"), Translate("None"));
 				} else {
 					// InlineBar("Armor Rating:", armorRating, armorRatingMax);
-					InlineBar(_TICONM(ICON_LC_SHIELD, "Rating", ":"), armorRating, armorRatingMax);
+					InlineBar(TranslateIconFormat(ICON_LC_SHIELD, "Rating", ":"), armorRating, armorRatingMax);
 				}
 
-				InlineText(_TICONM(ICON_LC_PUZZLE, "Type", ":"), _T(armorType));
-				InlineTextMulti(_TICONM(ICON_LC_BETWEEN_HORIZONTAL_START, "Slot", ":"), equipSlots);
+				InlineText(TranslateIconFormat(ICON_LC_PUZZLE, "Type", ":"), Translate(armorType));
+				InlineTextMulti(TranslateIconFormat(ICON_LC_BETWEEN_HORIZONTAL_START, "Slot", ":"), equipSlots);
 			}
 
 			if (a_object->GetFormType() == RE::FormType::Weapon) {
@@ -195,36 +195,36 @@ namespace Modex
 					// InlineText("Base Damage:", "N/A");
 					InlineText(ICON_LC_SWORD, "N/A");
 				} else if (weapon->IsBow() || weapon->IsCrossbow()) {
-					InlineBar(_TICONM(ICON_LC_SWORD, "DMG", ":"), damage, max_damage);
-					InlineBar(_TICONM(ICON_LC_SWORD, "Speed", ":"), speed, 1.5f);
-					InlineInt(_TICONM(ICON_LC_SWORD, "DPS", ":"), dps);
+					InlineBar(TranslateIconFormat(ICON_LC_SWORD, "DMG", ":"), damage, max_damage);
+					InlineBar(TranslateIconFormat(ICON_LC_SWORD, "Speed", ":"), speed, 1.5f);
+					InlineInt(TranslateIconFormat(ICON_LC_SWORD, "DPS", ":"), dps);
 					ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-					InlineInt(_TICONM(ICON_LC_SWORD, "DMG", ":"), critDamage);
-					InlineText(_TICONM(ICON_LC_SWORDS, "Skill", ":"), _T(GetSkillName(skill).c_str()));
+					InlineInt(TranslateIconFormat(ICON_LC_SWORD, "DMG", ":"), critDamage);
+					InlineText(TranslateIconFormat(ICON_LC_SWORDS, "Skill", ":"), Translate(GetSkillName(skill).c_str()));
 				} else {
 					const float reach = (float)(weapon->weaponData.reach);
 					const float stagger = weapon->weaponData.staggerValue;
-					InlineBar(_TICONM(ICON_LC_SWORD, "DMG", ":"), damage, max_damage);
-					InlineBar(_TICONM(ICON_LC_SWORD, "Speed", ":"), speed, 1.5f);
-					InlineInt(_TICONM(ICON_LC_SWORD, "DPS", ":"), dps);
+					InlineBar(TranslateIconFormat(ICON_LC_SWORD, "DMG", ":"), damage, max_damage);
+					InlineBar(TranslateIconFormat(ICON_LC_SWORD, "Speed", ":"), speed, 1.5f);
+					InlineInt(TranslateIconFormat(ICON_LC_SWORD, "DPS", ":"), dps);
 					ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-					InlineInt(_TICONM(ICON_LC_SWORD, "DMG", ":"), critDamage);
-					InlineText(_TICONM(ICON_LC_BOOK_USER, "Skill", ":"), _T(GetSkillName(skill).c_str()));
-					InlineBar(_TICONM(ICON_LC_CHEVRONS_LEFT_RIGHT, "Reach", ":"), reach, 1.5f);
-					InlineBar(_TICONM(ICON_LC_SCALE, "Stagger", ":"), stagger, 2.0f);
+					InlineInt(TranslateIconFormat(ICON_LC_SWORD, "DMG", ":"), critDamage);
+					InlineText(TranslateIconFormat(ICON_LC_BOOK_USER, "Skill", ":"), Translate(GetSkillName(skill).c_str()));
+					InlineBar(TranslateIconFormat(ICON_LC_CHEVRONS_LEFT_RIGHT, "Reach", ":"), reach, 1.5f);
+					InlineBar(TranslateIconFormat(ICON_LC_SCALE, "Stagger", ":"), stagger, 2.0f);
 				}
 
 				ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-				InlineText(_TICONM(ICON_LC_BOOK_USER, "Type", ":"), _T(type));
+				InlineText(TranslateIconFormat(ICON_LC_BOOK_USER, "Type", ":"), Translate(type));
 			}
 
 			InlineInt(ICON_LC_WEIGHT "WT:", (int)a_object->GetWeight());
-			InlineInt(_TICONM(ICON_LC_COINS, "Value", ":"), a_object->GetValue());
+			InlineInt(TranslateIconFormat(ICON_LC_COINS, "Value", ":"), a_object->GetValue());
 
 			// Load Order Info Pane
 			ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-			ImGui::SetCursorPosX(ImGui::GetCenterTextPosX(_T("Load Order")));
-			ImGui::Text(_T("Load Order"));
+			ImGui::SetCursorPosX(ImGui::GetCenterTextPosX(Translate("Load Order")));
+			ImGui::Text(Translate("Load Order"));
 			ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 			const auto sourceFiles = a_object->GetForm()->sourceFiles.array;
 
@@ -248,12 +248,12 @@ namespace Modex
 
 			if (!desc.empty()) {
 				ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-				ImGui::SetCursorPosX(ImGui::GetCenterTextPosX(_T("Description")));
-				ImGui::Text(_T("Description"));
+				ImGui::SetCursorPosX(ImGui::GetCenterTextPosX(Translate("Description")));
+				ImGui::Text(Translate("Description"));
 				ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 				if (a_object->GetFormType() == RE::FormType::Book) {
-					ImGui::SetCursorPosX(ImGui::GetCenterTextPosX(_T("Read Me!")));
-					ImGui::Text(_T("Read Me!"));
+					ImGui::SetCursorPosX(ImGui::GetCenterTextPosX(Translate("Read Me!")));
+					ImGui::Text(Translate("Read Me!"));
 				} else {
 					ImGui::PushTextWrapPos(maxWidth);
 					ImGui::TextWrapped(desc.c_str());  // Archmage Robe Crash
