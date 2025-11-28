@@ -16,7 +16,11 @@ This is a CommonlibSSE-NG Plugin for Skyrim SE/AE Game versions 1.5.97 - 1.6.117
 
 ### Information
 
-This project is natively maintained and built on Windows 10 using Visual Studio Code. Mileage may vary.
+This project is natively maintained and built on Windows 11 using Visual Studio Code. Mileage may vary.
+
+This project is setup for a local download of Commonlib in the project folder. Will require reconfiguration if you have a global instance of it.
+
+P.S. You may have include path issues with my xmake configuration - sorry.
 
 ## Getting Started
 ```bat
@@ -31,6 +35,7 @@ xmake build
 ```
 
 > ***Note:*** *This will generate a `build/windows/` directory in the **project's root directory** with the build output.*
+> ***Note:*** *Project packages are installed locally in the .xmake directory in your workspace folder. This can be turned off*
 
 ### Build Output (Optional) (Untested)
 If you want to redirect the build output, set one of or both of the following environment variables:
@@ -48,7 +53,7 @@ xmake project -k vsxmake
 > ***Note:*** *This will generate a `vsxmakeXXXX/` directory in the **project's root directory** using the latest version of Visual Studio installed on the system.*
 
 ### Upgrading Packages (Optional)
-If you want to upgrade the project's dependencies, run the following commands:
+If you want to upgrade/modify the project's dependencies, run the following commands:
 ```bat
 xmake repo --update
 xmake require --upgrade
