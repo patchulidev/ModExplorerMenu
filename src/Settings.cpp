@@ -130,14 +130,6 @@ namespace Modex
 			a_ini.SetValue(rSections[Main], "GlyphRange", Language::GetGlyphName(_default.glyphRange).c_str(), GetComment(iComment::ConfigGlyphRange));
 			a_ini.SetValue(rSections[Main], "GlobalFont", _default.globalFont.c_str(), GetComment(iComment::ConfigGlobalFont));
 			a_ini.SetValue(rSections[Main], "GlobalFontSize", std::to_string(_default.globalFontSize).c_str(), GetComment(iComment::ConfigGlobalFontSize));
-
-			// Modules
-			a_ini.SetValue(rSections[Modules], "DefaultShow", std::to_string(_default.defaultShow).c_str(), GetComment(iComment::ConfigDefaultShow));
-			a_ini.SetValue(rSections[Modules], "ShowHomeMenu", ToString(_default.showHomeMenu).c_str(), GetComment(iComment::ConfigShowHomeMenu));
-			a_ini.SetValue(rSections[Modules], "ShowAddItemMenu", ToString(_default.showAddItemMenu).c_str(), GetComment(iComment::ConfigShowAddItemMenu));
-			a_ini.SetValue(rSections[Modules], "ShowObjectMenu", ToString(_default.showObjectMenu).c_str(), GetComment(iComment::ConfigShowObjectMenu));
-			a_ini.SetValue(rSections[Modules], "ShowNPCMenu", ToString(_default.showNPCMenu).c_str(), GetComment(iComment::ConfigShowNPCMenu));
-			a_ini.SetValue(rSections[Modules], "ShowTeleportMenu", ToString(_default.showTeleportMenu).c_str(), GetComment(iComment::ConfigShowTeleportMenu));
 		});
 	}
 
@@ -194,14 +186,6 @@ namespace Modex
 			a_ini.SetValue(rSections[Main], "GlyphRange", Language::GetGlyphName(Settings::GetSingleton()->user.config.glyphRange).c_str());
 			a_ini.SetValue(rSections[Main], "GlobalFont", Settings::GetSingleton()->user.config.globalFont.c_str());
 			a_ini.SetValue(rSections[Main], "GlobalFontSize", std::to_string(Settings::GetSingleton()->user.config.globalFontSize).c_str());
-
-			// Modules
-			a_ini.SetValue(rSections[Modules], "DefaultShow", std::to_string(Settings::GetSingleton()->user.config.defaultShow).c_str());
-			a_ini.SetValue(rSections[Modules], "ShowHomeMenu", ToString(Settings::GetSingleton()->user.config.showHomeMenu).c_str());
-			a_ini.SetValue(rSections[Modules], "ShowAddItemMenu", ToString(Settings::GetSingleton()->user.config.showAddItemMenu).c_str());
-			a_ini.SetValue(rSections[Modules], "ShowObjectMenu", ToString(Settings::GetSingleton()->user.config.showObjectMenu).c_str());
-			a_ini.SetValue(rSections[Modules], "ShowNPCMenu", ToString(Settings::GetSingleton()->user.config.showNPCMenu).c_str());
-			a_ini.SetValue(rSections[Modules], "ShowTeleportMenu", ToString(Settings::GetSingleton()->user.config.showTeleportMenu).c_str());
 		});
 
 		// This function body is called when a change is made, so send updates out:
@@ -230,12 +214,5 @@ namespace Modex
 		user.config.glyphRange = GET_VALUE<Language::GlyphRanges>(rSections[Main], "GlyphRange", _default.glyphRange, a_ini);
 		user.config.globalFont = GET_VALUE<std::string>(rSections[Main], "GlobalFont", _default.globalFont, a_ini);
 		user.config.globalFontSize = GET_VALUE<float>(rSections[Main], "GlobalFontSize", _default.globalFontSize, a_ini);
-
-		user.config.defaultShow = GET_VALUE<int>(rSections[Modules], "DefaultShow", _default.defaultShow, a_ini);
-		user.config.showHomeMenu = GET_VALUE<bool>(rSections[Modules], "ShowHomeMenu", _default.showHomeMenu, a_ini);
-		user.config.showAddItemMenu = GET_VALUE<bool>(rSections[Modules], "ShowAddItemMenu", _default.showAddItemMenu, a_ini);
-		user.config.showObjectMenu = GET_VALUE<bool>(rSections[Modules], "ShowObjectMenu", _default.showObjectMenu, a_ini);
-		user.config.showNPCMenu = GET_VALUE<bool>(rSections[Modules], "ShowNPCMenu", _default.showNPCMenu, a_ini);
-		user.config.showTeleportMenu = GET_VALUE<bool>(rSections[Modules], "ShowTeleportMenu", _default.showTeleportMenu, a_ini);
 	}
 }

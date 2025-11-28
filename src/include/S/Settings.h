@@ -81,14 +81,6 @@ namespace Modex
 			std::string globalFont = "Default";
 			float globalFontSize = 16.0f;
 
-			// Modules
-			int defaultShow = 1;  // 0 = Home, 1 = AddItem, 2 = Object, 3 = NPC, 4 = Teleport, 5 = Settings
-			bool showHomeMenu = false;
-			bool showAddItemMenu = true;
-			bool showObjectMenu = true;
-			bool showNPCMenu = true;
-			bool showTeleportMenu = true;
-
 			// Hiden from User
 			ImVec2 screenScaleRatio;
 		};

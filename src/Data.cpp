@@ -481,28 +481,17 @@ namespace Modex
 		return emptyCell;
 	}
 
+	// Todo: Better compartmentalize this call for performance.
 	void Data::Run()
 	{
-		Settings::Config& config = Settings::GetSingleton()->GetConfig();
-
-		if (config.showAddItemMenu == true) {
-			GenerateItemList();
-		}
-
-		if (config.showNPCMenu) {
-			GenerateNPCList();
-			GenerateNPCClassList();
-			GenerateNPCRaceList();
-			GenerateNPCFactionList();
-		}
-
-		if (config.showObjectMenu) {
-			GenerateObjectList();
-		}
-
-		if (config.showTeleportMenu) {
-			GenerateCellList();
-		}
+		GenerateItemList();
+		GenerateNPCList();
+		GenerateNPCClassList();
+		GenerateNPCRaceList();
+		GenerateNPCFactionList();
+		GenerateObjectList();
+		GenerateCellList();
+		
 
 		PrettyLog::Info("Successfully registered data from {} mods.", _modList.size());
 		for (auto& file : _modList) {

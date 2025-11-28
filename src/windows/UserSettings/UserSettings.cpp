@@ -242,7 +242,7 @@ namespace Modex
 					// SettingsWindow::changes.store(true);
 					// SettingsWindow::file_changes.store(true);
 
-					Menu::GetSingleton()->RefreshFont();
+					UIManager::GetSingleton()->RefreshFont();
 					result = true;
 				}
 			}
@@ -419,7 +419,7 @@ namespace Modex
 					// SettingsWindow::changes.store(true);
 					// SettingsWindow::file_changes.store(true);
 
-					Menu::GetSingleton()->RefreshFont();
+					UIManager::GetSingleton()->RefreshFont();
 					Settings::GetSingleton()->SaveSettings();
 				}
 			}
@@ -450,80 +450,13 @@ namespace Modex
 			// SettingsWindow::changes.store(true);
 			// SettingsWindow::file_changes.store(true);
 
-			Menu::GetSingleton()->RefreshFont();
+			UIManager::GetSingleton()->RefreshFont();
 			Settings::GetSingleton()->SaveSettings();
 		}
 		ImGui::Spacing();
 		ImGui::PopItemWidth();
 
 		// End of Text & Font Settings
-		// Begin of Module settings
-
-		AddSubCategoryHeader(Translate("SETTING_MODULE"));
-
-		if (AddSelectionDropdown("SETTING_DEFAULT_SHOW", config.defaultShow, { "Home", "Add Item", "Object", "NPC", "Teleport", "Settings" })) {
-			Settings::GetSingleton()->SaveSettings();
-		}
-
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-
-		if (AddToggleButton("SETTING_SHOW_HOME", config.showHomeMenu)) {
-			Settings::GetSingleton()->SaveSettings();
-		}
-
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-
-		if (AddToggleButton("SETTING_SHOW_ADDITEM", config.showAddItemMenu)) {
-			Settings::GetSingleton()->SaveSettings();
-
-			if (config.showAddItemMenu) {
-				Data::GetSingleton()->GenerateItemList();
-				AddItemWindow::GetSingleton()->Load();
-			} else {
-				AddItemWindow::GetSingleton()->Unload();
-			}
-		}
-
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-
-		if (AddToggleButton("SETTING_SHOW_OBJECT", config.showObjectMenu)) {
-			Settings::GetSingleton()->SaveSettings();
-
-			if (config.showObjectMenu) {
-				Data::GetSingleton()->GenerateObjectList();
-				ObjectWindow::GetSingleton()->Load();
-			} else {
-				ObjectWindow::GetSingleton()->Unload();
-			}
-		}
-
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-
-		if (AddToggleButton("SETTING_SHOW_NPC", config.showNPCMenu)) {
-			Settings::GetSingleton()->SaveSettings();
-
-			if (config.showNPCMenu) {
-				Data::GetSingleton()->GenerateNPCList();
-				Data::GetSingleton()->GenerateNPCClassList();
-				Data::GetSingleton()->GenerateNPCFactionList();
-				Data::GetSingleton()->GenerateNPCRaceList();
-				NPCWindow::GetSingleton()->Load();
-			} else {
-				NPCWindow::GetSingleton()->Unload();
-			}
-		}
-
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-
-		if (AddToggleButton("SETTING_SHOW_TELEPORT", config.showTeleportMenu)) {
-			Settings::GetSingleton()->SaveSettings();
-
-			if (config.showTeleportMenu) {
-				TeleportWindow::GetSingleton()->Load();
-			} else {
-				TeleportWindow::GetSingleton()->Unload();
-			}
-		}
 	}
 
 	void SettingsWindow::Draw()
