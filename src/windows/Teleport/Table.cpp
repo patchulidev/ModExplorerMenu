@@ -2,6 +2,7 @@
 #include "include/M/Menu.h"
 #include "include/P/Persistent.h"
 #include "include/T/Teleport.h"
+#include "include/U/UIManager.h"
 
 namespace Modex
 {
@@ -64,7 +65,7 @@ namespace Modex
 		auto rowBG = ImGuiTableFlags_RowBg;
 
 		ImVec2 table_size = ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y);
-		if (ImGui::BeginTable("##TeleportWindow::Table", columnList.GetTotalColumns(), Frame::TELEPORT_FLAGS | rowBG, table_size)) {
+		if (ImGui::BeginTable("##TeleportWindow::Table", columnList.GetTotalColumns(), Menu::TELEPORT_FLAGS | rowBG, table_size)) {
 			ImGui::TableSetupScrollFreeze(1, 1);
 			for (auto& column : columnList.columns) {
 				ImGui::TableSetupColumn(column.name.c_str(), column.flags, column.width, column.key);
@@ -154,7 +155,7 @@ namespace Modex
 								Console::Teleport(selectedCell->editorid);
 								Console::StartProcessThread();
 								this->AddCellToRecent(selectedCell->editorid);
-								Menu::GetSingleton()->Close();
+								UIManager::GetSingleton()->Close();
 							}
 						}
 					}

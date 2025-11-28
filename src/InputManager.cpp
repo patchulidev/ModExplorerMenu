@@ -103,11 +103,12 @@ namespace Modex
 		}
 
 		auto& io = ImGui::GetIO();
+		UIManager* manager = UIManager::GetSingleton();
 
 		for (const auto& event : inputQueue) {
 			switch (event->GetEventType()) {
 			case RE::INPUT_EVENT_TYPE::kChar:
-				if (Menu::IsEnabled()) {
+				if (manager->IsEnabled()) {
 					io.AddInputCharacter(static_cast<const RE::CharEvent*>(event)->keyCode);
 				}
 				break;
@@ -128,7 +129,7 @@ namespace Modex
 
 				modifierDown = shiftDown || ctrlDown || altDown;
 
-				if (Menu::IsEnabled()) {
+				if (manager->IsEnabled()) {
 					io.AddKeyEvent(ImGuiKey_ModShift, shiftDown);
 					io.AddKeyEvent(ImGuiKey_ModCtrl, ctrlDown);
 					io.AddKeyEvent(ImGuiKey_ModAlt, altDown);
@@ -136,7 +137,7 @@ namespace Modex
 
 				switch (buttonEvent->device.get()) {
 					case RE::INPUT_DEVICE::kMouse:
-						if (Menu::IsEnabled()) {
+						if (manager->IsEnabled()) {
 							if (scanCode > 7)  // Middle Scroll
 								io.AddMouseWheelEvent(0, buttonEvent->Value() * (scanCode == 8 ? 1 : -1));
 							else {
@@ -150,14 +151,14 @@ namespace Modex
 						break;
 					case RE::INPUT_DEVICE::kKeyboard:
 						if (buttonEvent->IsDown()) {
-							if (UIManager::GetSingleton()->InputHandler(imGuiKey)) {
+							if (manager->InputHandler(imGuiKey)) {
 								io.ClearInputKeys();
 								break;
 							}
 
 							if (scanCode == 0x01) {
 								if (!ImGui::GetIO().WantCaptureKeyboard) {
-									Menu::GetSingleton()->Close();
+									manager->Close();
 								} else {
 									ImGui::SetWindowFocus("##ModexMenu");
 								}
@@ -167,14 +168,14 @@ namespace Modex
 
 							bool isToggleKey = showMenuModifier != 0 ? (showMenuKey == scanCode && IsBoundModifierDown()) : (showMenuKey == scanCode);
 							
-							if (!Menu::IsEnabled() && isToggleKey) {
-								Menu::GetSingleton()->Open();
+							if (!manager->IsEnabled() && isToggleKey) {
+								manager->Open();
 								break;
 							}
 
-							if (Menu::IsEnabled() && isToggleKey) {
+							if (manager->IsEnabled() && isToggleKey) {
 								if (!ImGui::GetIO().WantCaptureKeyboard) {
-									Menu::GetSingleton()->Close();
+									manager->Close();
 									break;
 								}
 							}

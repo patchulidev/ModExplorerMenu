@@ -85,7 +85,7 @@ namespace Modex
 		this->Refresh();
 	}
 
-	void TeleportWindow::Init(bool is_default)
+	void TeleportWindow::Init()
 	{
 		b_ClickToTeleport = true;
 		// b_ClickToFavorite = false;
@@ -98,9 +98,9 @@ namespace Modex
 
 		selectedMod = Translate("Show All Plugins");
 
-		if (is_default) {
-			this->Refresh();
-		}
+		// if (is_default) {
+		// 	this->Refresh();
+		// }
 
 		this->refreshRecentList = false;
 		this->refreshFavoriteList = false;

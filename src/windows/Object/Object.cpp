@@ -136,7 +136,7 @@ namespace Modex
 		tableView.Load();
 	}
 
-	void ObjectWindow::Init(bool is_default)
+	void ObjectWindow::Init()
 	{
 		b_ClickToPlace = true;
 		clickToPlaceCount = 1;
@@ -153,9 +153,9 @@ namespace Modex
 		tableView.SetSortBy(static_cast<SortType>(PersistentData::GetUserdata<int>("Object::SortBy", 3)));
 		tableView.SetSortAscending(PersistentData::GetUserdata<bool>("Object::SortAscending", true));
 
-		if (is_default) {
-			tableView.Refresh();
-			tableView.BuildPluginList();
-		}
+		// if (is_default) {
+		// 	tableView.Refresh();
+		// 	tableView.BuildPluginList();
+		// }
 	}
 }

@@ -2,6 +2,7 @@
 #include "include/M/Menu.h"
 #include "include/T/Teleport.h"
 #include "include/U/Util.h"
+#include "include/U/UIManager.h"
 
 namespace Modex
 {
@@ -99,7 +100,7 @@ namespace Modex
 					Console::StartProcessThread();
 					this->AddCellToRecent(cell->editorid);
 
-					Menu::GetSingleton()->Close();
+					UIManager::GetSingleton()->Close();
 				}
 
 				ImGui::PopStyleColor(1);
@@ -165,7 +166,7 @@ namespace Modex
 					Console::StartProcessThread();
 					this->AddCellToRecent(editorid);
 
-					Menu::GetSingleton()->Close();
+					UIManager::GetSingleton()->Close();
 				}
 
 				ImGui::PopStyleColor(1);

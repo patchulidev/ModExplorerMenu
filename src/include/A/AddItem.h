@@ -2,7 +2,6 @@
 
 #include "extern/DescriptionFrameworkAPI.h"
 #include "include/C/Columns.h"
-#include "include/F/Frame.h"
 #include "include/G/Graphic.h"
 #include "include/I/ISearch.h"
 #include "include/I/ISortable.h"
@@ -32,7 +31,7 @@ namespace Modex
 
 		void 					Draw(float a_offset);
 		void					Refresh() { tableView.Refresh(); }
-		void 					Init(bool is_default);
+		void 					Init();
 		void					Unload();
 		void					Load();
 		TableView<ItemData>&	GetTableView() { return tableView; }

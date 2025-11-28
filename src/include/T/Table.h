@@ -1,7 +1,6 @@
 #pragma once
 
 #include "include/C/Columns.h"
-#include "include/F/Frame.h"
 #include "include/G/Graphic.h"
 #include "include/I/ISearch.h"
 #include "include/I/ISortable.h"
@@ -65,6 +64,7 @@ namespace Modex
             this->generalSearchBuffer[0] = '\0';
             this->pluginSearchBuffer[0] = '\0';
             this->data_id = "TableView::EMPTY_ID";
+            this->built = false;
 
             this->lastSearchBuffer[0] = '\0';
             this->generalSearchDirty = false;
@@ -146,6 +146,7 @@ namespace Modex
         std::vector<DataType>   GetSelection();
         uint32_t                GetSelectionCount() const;
         TableItem&              GetItemPreview() { return itemPreview; }
+        bool                    IsBuilt() const { return built; }
 
         // Recently Used
         void                    AddItemToRecent(const std::unique_ptr<DataType>& a_item);
@@ -172,6 +173,7 @@ namespace Modex
         GeneratorList           generator;
         Data::PLUGIN_TYPE       pluginType;
         std::string             data_id; // used for persistent data reference
+        bool                    built;
 
         TableItem               itemPreview;
 

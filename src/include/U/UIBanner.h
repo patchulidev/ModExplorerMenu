@@ -1,4 +1,5 @@
 #pragma once
+#include "include/U/UIManager.h"
 #include <PCH.h>
 
 // Source: ersh1
@@ -6,15 +7,9 @@
 
 namespace Modex
 {
-    class UIBanner
+    class UIBanner : public UIWindow
     {
     public:
-    	static inline UIBanner* GetSingleton()
-		{
-			static UIBanner singleton;
-			return std::addressof(singleton);
-		}
-
         inline static constexpr float DISPLAY_TIME = 8.0f;
 
         void Display();

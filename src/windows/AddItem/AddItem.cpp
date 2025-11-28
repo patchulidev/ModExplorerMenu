@@ -183,7 +183,7 @@ namespace Modex
 		kitTableView.Load();
 	}
 
-	void AddItemWindow::Init(bool is_default)
+	void AddItemWindow::Init()
 	{
 		b_AddToInventory = true;
 		b_PlaceOnGround = false;
@@ -211,11 +211,9 @@ namespace Modex
 		tableView.SetSortBy(static_cast<SortType>(PersistentData::GetUserdata<int>("AddItem::SortBy", 3)));
 		tableView.SetSortAscending(PersistentData::GetUserdata<bool>("AddItem::SortAscending", true));
 
-		if (is_default) {
-			tableView.Refresh();
-			tableView.BuildPluginList();
-		}
-
+		tableView.Refresh();
+		tableView.BuildPluginList();
+		
 		kitTableView.SetGenerator([this]() { return PersistentData::GetKitItems(selectedKit); });
 		kitTableView.SetKitPointer(&selectedKit);
 		kitTableView.SetDragDropID("FROM_KIT");

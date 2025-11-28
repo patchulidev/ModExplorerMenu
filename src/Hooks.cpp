@@ -1,6 +1,7 @@
 #include "include/H/Hooks.h"
 #include "include/I/InputManager.h"
-#include "include/M/Menu.h"
+#include "include/C/Console.h"
+#include "include/U/UIManager.h"
 
 // Addresses for hooks, in large part, derived from Open Animation Replacer by Ersh
 // https://github.com/ersh1/OpenAnimationReplacer/blob/786b286ffc0f680d9cbe3e70f59c5cf2387d3017/src/Hooks.h
@@ -16,7 +17,7 @@ namespace Hooks
 				Modex::InputManager::GetSingleton()->AddEventToQueue(a_events);
 			}
 			
-			if (Modex::Menu::IsEnabled()) {
+			if (Modex::UIManager::GetSingleton()->IsEnabled()) {
 				static RE::InputEvent* dummy[] = { nullptr };
 				func(a_dispatcher, dummy);
 			} else {
@@ -34,7 +35,7 @@ namespace Hooks
 		{
 			func();
 
-			Modex::Menu::GetSingleton()->Init();
+			Modex::UIManager::GetSingleton()->Init();
 		}
 
 		static inline REL::Relocation<decltype(thunk)> func;
@@ -80,7 +81,9 @@ namespace Hooks
 		{
 			func(a_p1);
 
-			Modex::Menu::GetSingleton()->Draw();
+			Modex::Console::ProcessMainThreadTasks();
+			Modex::InputManager::ProcessInput();
+			Modex::UIManager::GetSingleton()->Render();
 		}
 
 		static inline REL::Relocation<decltype(thunk)> func;

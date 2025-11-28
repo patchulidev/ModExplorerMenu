@@ -136,7 +136,7 @@ namespace Modex
 		tableView.Load();
 	}
 
-	void NPCWindow::Init(bool is_default)
+	void NPCWindow::Init()
 	{
 		// g_DescriptionFrameworkInterface = DescriptionFrameworkAPI::GetDescriptionFrameworkInterface001();
 
@@ -161,9 +161,9 @@ namespace Modex
 		tableView.SetHideNonEssential(PersistentData::GetUserdata<bool>("NPC::HideNonEssential", false));
 		tableView.SetHideDisabled(PersistentData::GetUserdata<bool>("NPC::HideDisabled", false));
 
-		if (is_default) {
-			tableView.Refresh();
-			tableView.BuildPluginList();
-		}
+		// if (is_default) {
+		// 	tableView.Refresh();
+		// 	tableView.BuildPluginList();
+		// }
 	}
 }

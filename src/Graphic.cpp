@@ -1,14 +1,14 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "include/G/Graphic.h"
 #include "extern/stb_image.h"
-#include "include/M/Menu.h"
+#include "include/U/UIManager.h"
 
 namespace Modex
 {
 	bool GraphicManager::GetD3D11Texture(const char* filename, ID3D11ShaderResourceView** out_srv, int& out_width,
 		int& out_height)
 	{
-		auto menu = Menu::GetSingleton();
+		auto menu = UIManager::GetSingleton();
 		auto device = menu->GetDevice();
 
 		auto* render_manager = RE::BSGraphics::Renderer::GetSingleton();

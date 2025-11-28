@@ -1,7 +1,6 @@
 #pragma once
 
 #include "include/C/Columns.h"
-#include "include/F/Frame.h"
 #include "include/I/ISearch.h"
 #include "include/I/ISortable.h"
 
@@ -45,7 +44,7 @@ namespace Modex
 		~TeleportWindow() = default;
 
 		void 			Draw(float a_offset);
-		void 			Init(bool is_default);
+		void 			Init();
 		void			Unload();
 		void			Load();
 		void 			Refresh();

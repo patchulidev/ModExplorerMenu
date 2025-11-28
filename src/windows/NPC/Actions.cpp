@@ -1,5 +1,5 @@
 #include "include/C/Console.h"
-#include "include/M/Menu.h"
+#include "include/U/UIManager.h"
 #include "include/N/NPC.h"
 
 namespace Modex
@@ -59,7 +59,7 @@ namespace Modex
 					if (auto playerREF = RE::PlayerCharacter::GetSingleton()->AsReference()) {
 						if (auto ref = RE::TESForm::LookupByID<RE::TESObjectREFR>(selectedNPC->refID)) {
 							playerREF->MoveTo(ref);
-							Menu::GetSingleton()->Close();
+							UIManager::GetSingleton()->Close();
 						}
 					}
 				}
@@ -70,7 +70,7 @@ namespace Modex
 					if (auto playerREF = RE::PlayerCharacter::GetSingleton()->AsReference()) {
 						if (auto ref = RE::TESForm::LookupByID<RE::TESObjectREFR>(selectedNPC->refID)) {
 							ref->MoveTo(playerREF);
-							Menu::GetSingleton()->Close();
+							UIManager::GetSingleton()->Close();
 						}
 					}
 				}

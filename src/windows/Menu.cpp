@@ -1,4 +1,3 @@
-#include "include/F/Frame.h"
 #include "include/A/AddItem.h"
 #include "include/B/Blacklist.h"
 #include "include/H/Home.h"
@@ -8,11 +7,12 @@
 #include "include/S/Settings.h"
 #include "include/T/Teleport.h"
 #include "include/U/UserSettings.h"
+#include "include/U/UIManager.h"
 
 namespace Modex
 {
 
-	void Frame::Draw()
+	void Menu::Draw()
 	{
 		const auto& io = ImGui::GetIO();
 		const auto& config = Settings::GetSingleton()->GetConfig();
@@ -118,61 +118,49 @@ namespace Modex
 					}
 				};
 
-				if (config.showHomeMenu) {
-					if (ImGui::SidebarButton("Home", activeWindow == ActiveWindow::Home, home_image.texture, home_image.size, ImVec2(button_width, button_height), home_w)) {
-						activeWindow = ActiveWindow::Home;
+				if (ImGui::SidebarButton("Home", activeWindow == ActiveWindow::Home, home_image.texture, home_image.size, ImVec2(button_width, button_height), home_w)) {
+					activeWindow = ActiveWindow::Home;
+				}
+				ExpandButton();
+			
+
+				if (ImGui::SidebarButton("Item", activeWindow == ActiveWindow::AddItem, additem_image.texture, additem_image.size, ImVec2(button_width, button_height), additem_w)) {
+					activeWindow = ActiveWindow::AddItem;
+					if (AddItemWindow::GetSingleton()->GetTableView().GetTableList().empty()) {
+						AddItemWindow::GetSingleton()->GetTableView().Load();
 					}
-					ExpandButton();
 				}
 
-				if (config.showAddItemMenu) {
-					if (ImGui::SidebarButton("Item", activeWindow == ActiveWindow::AddItem, additem_image.texture, additem_image.size, ImVec2(button_width, button_height), additem_w)) {
-						activeWindow = ActiveWindow::AddItem;
-						if (AddItemWindow::GetSingleton()->GetTableView().GetTableList().empty()) {
-							AddItemWindow::GetSingleton()->Refresh();
-						}
+				ExpandButton();
+			
 
-						AddItemWindow::GetSingleton()->GetTableView().BuildPluginList();
+				if (ImGui::SidebarButton("Object", activeWindow == ActiveWindow::Object, object_image.texture, object_image.size, ImVec2(button_width, button_height), object_w)) {
+					activeWindow = ActiveWindow::Object;
+					if (ObjectWindow::GetSingleton()->GetTableView().GetTableList().empty()) {
+						ObjectWindow::GetSingleton()->GetTableView().Load();
 					}
-
-					ExpandButton();
 				}
 
-				if (config.showObjectMenu) {
-					if (ImGui::SidebarButton("Object", activeWindow == ActiveWindow::Object, object_image.texture, object_image.size, ImVec2(button_width, button_height), object_w)) {
-						activeWindow = ActiveWindow::Object;
-						if (ObjectWindow::GetSingleton()->GetTableView().GetTableList().empty()) {
-							ObjectWindow::GetSingleton()->Refresh();
-						}
+				ExpandButton();
+				
 
-						NPCWindow::GetSingleton()->GetTableView().BuildPluginList();
+				if (ImGui::SidebarButton("NPC", activeWindow == ActiveWindow::NPC, npc_image.texture, npc_image.size, ImVec2(button_width, button_height), npc_w)) {
+					activeWindow = ActiveWindow::NPC;
+					if (NPCWindow::GetSingleton()->GetTableView().GetTableList().empty()) {
+						NPCWindow::GetSingleton()->GetTableView().Load();
 					}
-
-					ExpandButton();
 				}
 
-				if (config.showNPCMenu) {
-					if (ImGui::SidebarButton("NPC", activeWindow == ActiveWindow::NPC, npc_image.texture, npc_image.size, ImVec2(button_width, button_height), npc_w)) {
-						activeWindow = ActiveWindow::NPC;
-						if (NPCWindow::GetSingleton()->GetTableView().GetTableList().empty()) {
-							NPCWindow::GetSingleton()->Refresh();
-						}
+				ExpandButton();
+				
 
-						NPCWindow::GetSingleton()->GetTableView().BuildPluginList();
-					}
-
-					ExpandButton();
+				if (ImGui::SidebarButton("Teleport", activeWindow == ActiveWindow::Teleport, teleport_image.texture, teleport_image.size, ImVec2(button_width, button_height), teleport_w)) {
+					activeWindow = ActiveWindow::Teleport;
+					TeleportWindow::GetSingleton()->Refresh();
 				}
 
-				if (config.showTeleportMenu) {
-					if (ImGui::SidebarButton("Teleport", activeWindow == ActiveWindow::Teleport, teleport_image.texture, teleport_image.size, ImVec2(button_width, button_height), teleport_w)) {
-						activeWindow = ActiveWindow::Teleport;
-
-						TeleportWindow::GetSingleton()->Refresh();
-					}
-
-					ExpandButton();
-				}
+				ExpandButton();
+			
 
 				if (ImGui::SidebarButton("Settings", activeWindow == ActiveWindow::Settings, settings_image.texture, settings_image.size, ImVec2(button_width, button_height), settings_w)) {
 					activeWindow = ActiveWindow::Settings;
@@ -181,7 +169,7 @@ namespace Modex
 				ExpandButton();
 
 				if (ImGui::SidebarButton("Exit", false, exit_image.texture, exit_image.size, ImVec2(button_width, button_height), exit_w)) {
-					Menu::GetSingleton()->Close();
+					UIManager::GetSingleton()->Close();
 				}
 
 				ExpandButton();
@@ -237,24 +225,6 @@ namespace Modex
 
 			ImGui::End();
 		}
-	}
-
-	void Frame::Install()
-	{
-		Frame::activeWindow = static_cast<ActiveWindow>(Settings::GetSingleton()->GetConfig().defaultShow);
-		this->expand_sidebar = false;
-		ResetSelectable();
-
-		// Initalize elements
-		AddItemWindow::GetSingleton()->Init(Frame::activeWindow == ActiveWindow::AddItem);
-		NPCWindow::GetSingleton()->Init(Frame::activeWindow == ActiveWindow::NPC);
-		TeleportWindow::GetSingleton()->Init(Frame::activeWindow == ActiveWindow::Teleport);
-		ObjectWindow::GetSingleton()->Init(Frame::activeWindow == ActiveWindow::Object);
-
-		Blacklist::GetSingleton()->Init();
-
-		HomeWindow::Init();
-		SettingsWindow::Init();
 	}
 	
 }  // namespace Modex

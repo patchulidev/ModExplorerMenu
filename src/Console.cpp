@@ -1,5 +1,5 @@
 #include "include/C/Console.h"
-#include "include/M/Menu.h"
+#include "include/U/UIManager.h"
 
 namespace Modex
 {
@@ -447,7 +447,7 @@ namespace Modex
 						ref->MoveTo(playerREF);
 
 						if (a_closeMenu) {
-							Menu::GetSingleton()->Close();
+							UIManager::GetSingleton()->Close();
 						}
 					}
 				}
@@ -466,7 +466,7 @@ namespace Modex
 						playerREF->MoveTo(ref);
 
 						if (a_closeMenu) {
-							Menu::GetSingleton()->Close();
+							UIManager::GetSingleton()->Close();
 						}
 					}
 				}

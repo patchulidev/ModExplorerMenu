@@ -2,12 +2,13 @@
 
 #include "include/C/Console.h"
 #include "include/D/Data.h"
-#include "include/F/Frame.h"
+#include "include/M/Menu.h"
 #include "include/H/Hooks.h"
 #include "include/I/InputManager.h"
 #include "include/L/Language.h"
 #include "include/P/Persistent.h"
 #include "include/S/Settings.h"
+#include "include/U/UIManager.h"
 #include <spdlog/sinks/basic_file_sink.h>
 
 namespace
@@ -27,7 +28,7 @@ namespace
 
 			Modex::Settings::GetSingleton()->LoadSettings(Modex::Settings::ini_main_path);
 			Modex::Settings::GetSingleton()->LoadUserFontSetting();
-			Modex::Menu::GetSingleton()->RefreshFont();
+			Modex::UIManager::GetSingleton()->RefreshFont();
 			PrettyLog::Info("Finished Loading User Font Settings!");
 
 			Modex::GraphicManager::Init();
@@ -39,12 +40,13 @@ namespace
 			Modex::InputManager::GetSingleton()->Init();
 			PrettyLog::Info("Finished Setting Up InputManager!");
 			
-			Modex::Frame::GetSingleton()->Install();
+			// Modex::Menu::GetSingleton()->Install(); need to call Load() somewhere
+			Modex::UIManager::GetSingleton()->ShowBanner();
 			PrettyLog::Info("Done!");
 
 			PrettyLog::ReportSummary();
 
-			Modex::UIBanner::GetSingleton()->Display();
+			// Modex::UIBanner::GetSingleton()->Display();
 			break;
 		case SKSE::MessagingInterface::kPostLoad:
 			break;

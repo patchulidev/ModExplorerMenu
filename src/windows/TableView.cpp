@@ -2,6 +2,7 @@
 #include "include/I/ItemPreview.h"
 #include "include/M/Menu.h"
 #include "include/T/Table.h"
+#include "include/U/UIManager.h"
 #include <execution>
 
 namespace Modex
@@ -525,6 +526,7 @@ namespace Modex
 		ImFormatString(this->secondaryFilterBuffer, IM_ARRAYSIZE(this->secondaryFilterBuffer), "");
 		this->BuildPluginList();
 		this->Refresh();
+		this->LoadRecentList();
 	}
 
 	template <typename DataType>
@@ -841,7 +843,7 @@ namespace Modex
 		ImGui::SetNextItemWidth(input_width);
 		if (ImGui::InputTextWithHint("##Search::Input::CompareField", Translate("GENERAL_CLICK_TO_TYPE"), this->generalSearchBuffer,
 				IM_ARRAYSIZE(this->generalSearchBuffer),
-				Frame::INPUT_FLAGS)) {
+				Menu::INPUT_FLAGS)) {
 			this->Refresh();
 		}
 
@@ -2986,7 +2988,7 @@ namespace Modex
 									if (ImGui::MenuItem(Translate("GENERAL_READ_ME"))) {
 										Console::ReadBook(itemData->GetFormID());
 										Console::StartProcessThread();
-										Menu::GetSingleton()->Close();
+										UIManager::GetSingleton()->Close();
 										this->AddItemToRecent(item_data);
 									}
 								}
