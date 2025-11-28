@@ -15,6 +15,7 @@ set_warnings("allextra")
 
 -- set policies
 set_policy("package.requires_lock", true)
+set_policy("package.install_locally", true)
 
 -- add rules
 add_rules("mode.debug", "mode.releasedbg")
