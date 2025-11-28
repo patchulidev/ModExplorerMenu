@@ -20,12 +20,14 @@ namespace Modex
         InputManager(const InputManager&) = delete;
         InputManager& operator=(const InputManager&) = delete;
 
-        void        Init();
-        void        OnFocusChange(bool a_focus);
-        void        UpdateSettings();
-        void        AddEventToQueue(RE::InputEvent** a_event);
-        void        ProcessInputEvents();
-        bool        IsBoundModifierDown();
+        void                        Init();
+        void                        OnFocusChange(bool a_focus);
+        void                        UpdateSettings();
+        void                        AddEventToQueue(RE::InputEvent** a_event);
+        void                        ProcessInputEvents();
+        bool                        IsBoundModifierDown();
+        std::array<uint32_t, 2>     GetShowMenuKey() const;
+        std::string                 GetShowMenuKeyAsText() const;
 
         static inline void ProcessInput() 
         {

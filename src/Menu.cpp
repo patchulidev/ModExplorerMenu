@@ -6,6 +6,7 @@
 #include "include/P/Persistent.h"
 #include "include/U/UIManager.h"
 #include "include/U/UserSettings.h"
+#include "include/B/Banner.h"
 
 #include "imgui_impl_win32.h"
 #include "imgui_impl_dx11.h"
@@ -124,6 +125,21 @@ namespace Modex
 		Console::ProcessMainThreadTasks();
 		InputManager::ProcessInput();
 
+		if (welcomeBannerPtr != nullptr) {
+			if (welcomeBannerPtr->ShouldDisplay()) {
+				ImGui_ImplWin32_NewFrame();
+				ImGui_ImplDX11_NewFrame();
+
+				ImGui::NewFrame();
+				welcomeBannerPtr->Draw();
+				ImGui::EndFrame();
+				
+				ImGui::Render();
+				ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+				return;
+			}
+		}
+
 		if (!isEnabled) {
 			return;
 		}
@@ -200,6 +216,8 @@ namespace Modex
 		this->device = a_device;
 		this->context = a_context;
 		this->swapchain = a_swapchain;
+
+		this->welcomeBannerPtr = UIBanner::GetSingleton();
 
 		PrettyLog::Debug("ImGui initialized with swap chain display size: {}x{}", desc.BufferDesc.Width, desc.BufferDesc.Height);
 	}

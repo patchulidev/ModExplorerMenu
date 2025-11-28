@@ -18,6 +18,7 @@ namespace IniHelper
 		ConfigFullscreen,
 		ConfigPauseGame,
 		ConfigDisableInMenu,
+		ConfigWelcomeBanner,
 		ConfigLanguage,
 		ConfigGlyphRange,
 		ConfigGlobalFont,
@@ -63,6 +64,10 @@ namespace IniHelper
 		{ iComment::ConfigDisableInMenu,
 			"# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #\n"
 			"# DisableInMenu = <bool> (true, false) (Determines if Modex is disabled while in-game menus)\n"
+			"# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #" },
+		{ iComment::ConfigWelcomeBanner,
+			"# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #\n"
+			"# WelcomeBanner = <bool> (true, false) (Determines if the welcome banner is shown on game start)\n"
 			"# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #" },
 		{ iComment::ConfigLanguage,
 			"# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #\n"

@@ -73,6 +73,7 @@ namespace Modex
 			bool pauseGame = false;
 			bool disableInMenu = false;
 			spdlog::level::level_enum logLevel = spdlog::level::info;
+			bool welcomeBanner = true;
 
 			// Font Stuff
 			std::string language = "English";

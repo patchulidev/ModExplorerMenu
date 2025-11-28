@@ -1,5 +1,6 @@
 #pragma once
 #include "include/S/Settings.h"
+#include "include/B/Banner.h"
 
 // clang-format off
 namespace Modex
@@ -48,6 +49,7 @@ namespace Modex
 		ID3D11Device* 			device;
 		ID3D11DeviceContext* 	context;
 		IDXGISwapChain* 		swapchain;
+		UIBanner*				welcomeBannerPtr;
 		
 		void 					RebuildFontAtlas();
 	};

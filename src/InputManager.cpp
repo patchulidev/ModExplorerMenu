@@ -28,6 +28,33 @@ namespace Modex
 		modifierDown = false;
 	}
 
+	std::array<uint32_t, 2> InputManager::GetShowMenuKey() const
+	{
+		return { showMenuModifier, showMenuKey };
+	}
+
+	std::string InputManager::GetShowMenuKeyAsText() const
+	{
+		uint32_t scanCode = showMenuKey;
+		uint32_t modifierScanCode = showMenuModifier;
+
+		ImGuiKey imGuiKey = ImGui::ScanCodeToImGuiKey(scanCode);
+		ImGuiKey modifierImGuiKey = ImGui::ScanCodeToImGuiKey(modifierScanCode);
+
+		const char* keyName = ImGui::GetKeyName(imGuiKey);
+		const char* modifierKeyName = ImGui::GetKeyName(modifierImGuiKey);
+
+		if (modifierScanCode != 0) {
+			return std::format("{} + {}", modifierKeyName, keyName);
+		}
+		
+		if (scanCode != 0) {
+			return std::string(keyName);
+		}
+
+		return "Unknown?";
+	}
+
 	void InputManager::UpdateSettings()
 	{
 		auto& config = Settings::GetSingleton()->GetConfig();

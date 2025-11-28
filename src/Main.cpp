@@ -43,6 +43,8 @@ namespace
 			PrettyLog::Info("Done!");
 
 			PrettyLog::ReportSummary();
+
+			Modex::UIBanner::GetSingleton()->Display();
 			break;
 		case SKSE::MessagingInterface::kPostLoad:
 			break;

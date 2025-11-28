@@ -5,9 +5,6 @@ void* operator new[](size_t size, const char* pName, int flags, unsigned debugFl
 void* operator new[](size_t size, size_t alignment, size_t alignmentOffset, const char* pName, int flags,
 	unsigned debugFlags, const char* file, int line);
 
-// #define WIN32_LEAN_AND_MEAN
-// #include <Windows.h>
-
 #pragma warning(push)
 #include "RE/Skyrim.h"
 #include "SKSE/SKSE.h"

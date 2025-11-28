@@ -367,6 +367,12 @@ namespace Modex
 		ImGui::Spacing();
 		ImGui::PopItemWidth();
 
+		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
+
+		if (AddToggleButton("SETTING_WELCOME_BANNER", config.welcomeBanner)) {
+			Settings::GetSingleton()->SaveSettings();
+		}
+
 		AddSubCategoryHeader(Translate("SETTING_FONT_AND_LANGUAGE"));
 
 		// Language Dropdown
