@@ -6,14 +6,14 @@ namespace Modex
 {
     void UIBanner::Display()
     {
-        this->lingerTime = DISPLAY_TIME;
+        this->lingerTime = DISPLAY_TIME + 1.0f;
         this->firstFrame = true;
     }
 
     bool UIBanner::ShouldDisplay() const
     {
 		if (Settings::GetSingleton()->GetConfig().welcomeBanner == true) {
-			return this->lingerTime > 0.f;
+			return this->lingerTime > 0.0f;
 		}
 
 		return false;
@@ -25,14 +25,22 @@ namespace Modex
 		auto height = ImGui::GetIO().DisplaySize.y * 0.30f;
 
 		ImGui::SetNextWindowPos(ImVec2(width, height), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
-
         constexpr ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoMove;
 
-        float alpha = 1.0f;
-		if (lingerTime < DISPLAY_TIME) {
-			alpha = std::lerp(0.f, 1.f, lingerTime / DISPLAY_TIME);
-		} else if (lingerTime > 0.0f) {
-			alpha = std::lerp(0.f, 1.f, (DISPLAY_TIME - lingerTime) / DISPLAY_TIME);
+		float alpha = 1.0f;
+		if (this->lingerTime > DISPLAY_TIME - 1.0f) {
+			float t = (DISPLAY_TIME - this->lingerTime);
+			t = std::clamp(t, 0.0f, 1.0f);
+			alpha = std::lerp(0.0f, 1.0f, t);
+		} else if (this->lingerTime < 1.0f) {
+			float t = this->lingerTime;
+			t = std::clamp(t, 0.0f, 1.0f);
+			alpha = std::lerp(0.0f, 1.0f, t);
+		}
+
+		if (alpha <= 0.0f && lingerTime <= 0.0f) {
+			manager->CloseWindow(this);
+			return;
 		}
 
 		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, alpha);

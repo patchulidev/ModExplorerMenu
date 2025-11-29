@@ -17,7 +17,7 @@ namespace Modex
         void Draw();
     
     private:
-        float   lingerTime = 0.0f;
+        float   lingerTime = 8.0f;
         bool    firstFrame = false;
     };
 }

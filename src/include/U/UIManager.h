@@ -4,14 +4,28 @@
 #include "include/S/Settings.h"
 #include "include/U/Util.h"
 #include "include/P/Persistent.h"
+// #include "include/U/UIPopup.h"
 #include <PCH.h>
 
 namespace Modex
 {
+	class UIManager;
 	class UIWindow
 	{
 	public:
+		virtual ~UIWindow() = default;
 		virtual void Draw() = 0;
+		virtual void Close() { m_close = true; }
+
+		inline static constexpr float FADE_IN = 0.3f;
+		inline static constexpr float FADE_OUT = 0.3f;
+
+		UIManager* manager = nullptr;
+
+	protected:
+		float m_alpha = 0.0f;
+		bool  m_close = false;
+
 	};
 
 	class UIManager
@@ -31,14 +45,15 @@ namespace Modex
 		bool AllowMenuOpen();
 		void ShowBanner();
 
+		bool IsMenuOpen() const;
+		void CloseWindow(UIWindow* a_window);
+		void SetActiveModule(uint8_t a_module) { m_lastActiveWindow = a_module; }
 		void ShowWarning(const std::string& message, std::function<void()> onConfirmCallback = nullptr);
 		void ShowHotkey(uint32_t* a_hotkey, const uint32_t& a_default, bool a_modifierOnly, std::function<void()> onConfirmHotkeyCallback = nullptr);
-		bool IsWarningPending() const;
-		bool IsHotkeyPending() const;
-		void AcceptWarning();
-		void DeclineWarning();
-		void AcceptHotkey();
-		void DeclineHotkey();
+
+		UIWindow* GetHotkeyPopup() const;
+		UIWindow* GetWarningPopup() const;
+
 		bool InputHandler(ImGuiKey a_key);
 		void RebuildFontAtlas();
 
@@ -50,31 +65,21 @@ namespace Modex
 		UIManager() = default;
 		~UIManager() = default;
 
-		bool nav_accept = true;
+		// bool nav_accept = true;
 
-		void 		_warning();
-		void 		_hotkey();
+		// void 		_warning();
+		// void 		_hotkey();
 
 		bool 									m_isEnabled;
 		bool									m_pendingFontChange;
 		bool 									m_prevFreezeState;
 		bool									m_showSettingWindow;
 
-		std::string 							m_pendingWarningMessage;
-		std::function<void()> 					m_onConfirmCallback;
-
 		std::vector<std::unique_ptr<UIWindow>> 	m_windowStack;
 		uint8_t									m_lastActiveWindow;
 
-		bool 									m_modifierOnly;
-		uint32_t 								m_hotkeyDefault;
-		uint32_t* 								m_hotkeyCurrent = nullptr;
-		std::function<void()> 					m_onConfirmHotkeyCallback;
-
 		ImVec2 									m_screenSize;
 		ID3D11Device* 							device;
-		// ID3D11DeviceContext* 					context;
-		// IDXGISwapChain* 						swapchain;
 		
 	};
 }

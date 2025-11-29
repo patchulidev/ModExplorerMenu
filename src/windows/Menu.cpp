@@ -11,9 +11,14 @@
 
 namespace Modex
 {
-
 	void Menu::Draw()
 	{
+		if (m_close && m_alpha <= 0.0f) {
+			manager->SetActiveModule(static_cast<uint8_t>(activeWindow));
+			manager->CloseWindow(this);
+			return;
+		}
+
 		const auto& io = ImGui::GetIO();
 		const auto& config = Settings::GetSingleton()->GetConfig();
 
@@ -28,6 +33,27 @@ namespace Modex
 		// Calculate window positions post scaling.
 		const float center_x = (displaySize.x * 0.5f) - (window_w * 0.5f);
 		const float center_y = (displaySize.y * 0.5f) - (window_h * 0.5f);
+
+		if ((sidebar_w == 0.0f || sidebar_h == 0.0f)) {
+			sidebar_w = min_sidebar_width;
+			sidebar_h = -1;
+		}
+
+		if (m_alpha < 1.0f && !m_close) {
+			m_alpha += ImGui::GetIO().DeltaTime / FADE_IN;
+			if (m_alpha > 1.0f) {
+				m_alpha = 1.0f;
+			}
+		}
+
+		if (m_alpha > 0.0f && m_close) {
+			m_alpha -= ImGui::GetIO().DeltaTime / FADE_OUT;
+			if (m_alpha < 0.0f) {
+				m_alpha = 0.0f;
+			}
+		}
+		
+		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, m_alpha);
 
 		// Draw a transparent black background.
 		ImGui::SetNextWindowPos(ImVec2(0, 0));
@@ -44,12 +70,6 @@ namespace Modex
 
 		// If we're fullscreen, override manual positioning and sizing of the menu.
 		ImGui::SetNextWindowSize(ImVec2(window_w, window_h));
-
-		if ((sidebar_w == 0.0f || sidebar_h == 0.0f)) {
-			sidebar_w = min_sidebar_width;
-			sidebar_h = -1;
-		}
-
 		ImGui::SetNextWindowPos(ImVec2(center_x, center_y));
 		if (ImGui::Begin("##ModexMenu", nullptr, WINDOW_FLAGS)) {
 			ImGui::SetCursorPos(ImVec2(0, 0));
@@ -223,8 +243,9 @@ namespace Modex
 
 			ImGui::PopClipRect();
 
-			ImGui::End();
 		}
+		ImGui::End();
+		ImGui::PopStyleVar();
 	}
 	
 }  // namespace Modex
