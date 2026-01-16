@@ -1,0 +1,88 @@
+{
+    "[Skyrim] Glass Armor Kit": {
+        "ClearEquipped": true,
+        "Collection": "[Skyrim] Glass Armor Kit",
+        "Description": "",
+        "Items": {
+            "ArmorGlassBoots": {
+                "Amount": 1,
+                "Equipped": true,
+                "Name": "Glass Boots",
+                "Plugin": "Skyrim.esm"
+            },
+            "ArmorGlassCuirass": {
+                "Amount": 1,
+                "Equipped": true,
+                "Name": "Glass Armor",
+                "Plugin": "Skyrim.esm"
+            },
+            "ArmorGlassGauntlets": {
+                "Amount": 1,
+                "Equipped": true,
+                "Name": "Glass Gauntlets",
+                "Plugin": "Skyrim.esm"
+            },
+            "ArmorGlassHelmet": {
+                "Amount": 1,
+                "Equipped": true,
+                "Name": "Glass Helmet",
+                "Plugin": "Skyrim.esm"
+            },
+            "ArmorGlassShield": {
+                "Amount": 1,
+                "Equipped": false,
+                "Name": "Glass Shield",
+                "Plugin": "Skyrim.esm"
+            },
+            "GlassBattleaxe": {
+                "Amount": 1,
+                "Equipped": false,
+                "Name": "Glass Battleaxe",
+                "Plugin": "Skyrim.esm"
+            },
+            "GlassBow": {
+                "Amount": 1,
+                "Equipped": false,
+                "Name": "Glass Bow",
+                "Plugin": "Skyrim.esm"
+            },
+            "GlassDagger": {
+                "Amount": 2,
+                "Equipped": false,
+                "Name": "Glass Dagger",
+                "Plugin": "Skyrim.esm"
+            },
+            "GlassGreatsword": {
+                "Amount": 1,
+                "Equipped": false,
+                "Name": "Glass Greatsword",
+                "Plugin": "Skyrim.esm"
+            },
+            "GlassMace": {
+                "Amount": 2,
+                "Equipped": false,
+                "Name": "Glass Mace",
+                "Plugin": "Skyrim.esm"
+            },
+            "GlassSword": {
+                "Amount": 2,
+                "Equipped": false,
+                "Name": "Glass Sword",
+                "Plugin": "Skyrim.esm"
+            },
+            "GlassWarAxe": {
+                "Amount": 2,
+                "Equipped": false,
+                "Name": "Glass War Axe",
+                "Plugin": "Skyrim.esm"
+            },
+            "GlassWarhammer": {
+                "Amount": 1,
+                "Equipped": false,
+                "Name": "Glass Warhammer",
+                "Plugin": "Skyrim.esm"
+            }
+        },
+        "ReadOnly": true
+    }
+}
