@@ -1,0 +1,23 @@
+{
+    "Custom Splash Path": "Data/Interface/splash.png",
+    "Modex Theme": "default",
+    "Open Menu Keybind": 211,
+    "Open Menu Modifier": 0,
+    "Disable Opening In Menu": false,
+    "Fullscreen": false,
+    "Pause Game While Open": false,
+    "Plugin List Sorting": 0,
+    "Smooth Scroll": true,
+    "UI Scale Horizontal": 100,
+    "UI Scale Vertical": 100,
+    "Welcome Banner": true,
+    "Global Font": "Default",
+    "Global Font Size": 16.0,
+    "Language": "English",
+    "Glyph Range": 0,
+    "Log Level": "info",
+    "Screen Scale Ratio": [
+        1.0,
+        1.0
+    ]
+}

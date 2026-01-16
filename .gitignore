@@ -1,10 +1,16 @@
-# build
+# dot folders
+.cache/
+.idea/
+.vs/
+.vscode/
+.xmake/
+
+# folders
 build/
-[Bb][Uu][Il][Ll][Dd]/
-.vs*/
-CMakeFiles/
-CMakeCache.txt
-/.idea/
-/cmake-build-all
-/cmake-build-debug
-/cmake-build-debug-visual-studio
+vs*/
+
+# files
+*.zip
+compile_commands.json
+dist/SKSE/Plugins/Modex - A Mod Explorer Menu.pdb
+dist/SKSE/Plugins/Modex - A Mod Explorer Menu.dll

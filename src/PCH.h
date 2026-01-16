@@ -1,38 +1,68 @@
 #pragma once
 
-#include <new>
-void* operator new[](size_t size, const char* pName, int flags, unsigned debugFlags, const char* file, int line);
-void* operator new[](size_t size, size_t alignment, size_t alignmentOffset, const char* pName, int flags,
-	unsigned debugFlags, const char* file, int line);
+// NOLINT
 
-#pragma warning(push)
-#include "RE/Skyrim.h"
-#include "SKSE/SKSE.h"
-#include <xbyak/xbyak.h>
+#include "nlohmann/json_fwd.hpp"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-W"
+#pragma clang diagnostic ignored "-Werror"
+#include <RE/Skyrim.h>
+#include <SKSE/SKSE.h>
 
-#define IMGUI_USER_CONFIG "imgui_user_config.h"
-#include "extern/imgui_freetype.h"
+#define IMGUI_USER_CONFIG "external/imgui/imgui_user_config.h"
+#define MODEX_DEBUG
 
-#include <imgui_impl_dx11.h>
-#include <imgui_impl_win32.h>
+#include <imgui.h>
+#include <imgui_internal.h>
+#include <external/imgui/imgui_freetype.h>
 
-#include "imgui.h"
-#include "imgui_internal.h"
+#include <SimpleIni.h>
+#include <nlohmann/json.hpp>
+#include <shared_mutex>
+#include <core/PrettyLog.h>
+#include <external/magic_enum.hpp>
+#include <unordered_set> // for std::unordered_set
 
-#ifdef DEBUG
-#	include <spdlog/sinks/msvc_sink.h>
-#else
-#	include <spdlog/sinks/basic_file_sink.h>
-#endif
+#include <spdlog/sinks/basic_file_sink.h>
+#pragma clang diagnostic pop
 
-#pragma warning(pop)
+using namespace Modex::PrettyLog;
+using namespace std::literals;
 
-#pragma warning(disable: 4996)  // CRT Deprecation
+using ExclusiveLock = std::mutex;
+using Locker = std::lock_guard<ExclusiveLock>;
 
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
+using SharedLock = std::shared_mutex;
+using ReadLocker = std::shared_lock<SharedLock>;
+using WriteLocker = std::unique_lock<SharedLock>;
 
 using namespace std::literals;
+
+namespace Modex
+{
+	// Helper functions for UTF-8/UTF-16 conversion
+    inline std::string WideToUTF8(const std::wstring& wstr)
+    {
+        if (wstr.empty()) return std::string();
+        
+        int size_needed = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), (int)wstr.size(), nullptr, 0, nullptr, nullptr);
+        std::string result(size_needed, 0);
+        WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), (int)wstr.size(), &result[0], size_needed, nullptr, nullptr);
+        
+        return result;
+    }
+
+    inline std::wstring UTF8ToWide(const std::string& str)
+    {
+        if (str.empty()) return std::wstring();
+        
+        int size_needed = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), (int)str.size(), nullptr, 0);
+        std::wstring result(size_needed, 0);
+        MultiByteToWideChar(CP_UTF8, 0, str.c_str(), (int)str.size(), &result[0], size_needed);
+        
+        return result;
+    }
+}
 
 namespace stl
 {
@@ -82,36 +112,3 @@ namespace stl
 		write_vfunc<F, 0, T>();
 	}
 }
-
-namespace logger = SKSE::log;
-
-#include "Plugin.h"
-
-#include <ClibUtil/distribution.hpp>
-#include <ClibUtil/editorID.hpp>
-#include <ClibUtil/numeric.hpp>
-#include <ClibUtil/rng.hpp>
-#include <ClibUtil/simpleINI.hpp>
-
-#include <nlohmann/json.hpp>
-using json = nlohmann::json;
-
-#include "SimpleMath.h"
-#include <codecvt>
-#include <cstring>
-#include <fstream>
-#include <nlohmann/json.hpp>
-#include <shared_mutex>
-#include <unordered_set>
-
-// I believe this implementation can be attributed to Ersh:
-using ExclusiveLock = std::mutex;
-using Locker = std::lock_guard<ExclusiveLock>;
-
-using SharedLock = std::shared_mutex;
-using ReadLocker = std::shared_lock<SharedLock>;
-using WriteLocker = std::unique_lock<SharedLock>;
-
-using uint = uint32_t;
-
-#define RELOCATION_OFFSET(SE, AE) REL::VariantOffset(SE, AE, 0).offset()
