@@ -1,6 +1,11 @@
-# Modex - A Mod Explorer Menu
+![](https://capsule-render.vercel.app/api?type=waving&height=300&color=gradient&text=Modex&desc=A%20Mod%20Explorer%20Menu&descSize=20&section=header)
+
+![GitHub last commit](https://img.shields.io/github/last-commit/patchulidev/modexplorermenu?style=for-the-badge) ![GitHub License](https://img.shields.io/github/license/patchulidev/modexplorermenu?style=for-the-badge) ![GitHub Issues or Pull Requests](https://img.shields.io/github/issues/patchulidev/modexplorermenu?style=for-the-badge) ![GitHub Release](https://img.shields.io/github/v/release/patchulidev/modexplorermenu?include_prereleases&display_name=release&style=for-the-badge) ![Static Badge](https://img.shields.io/badge/nexus-page-gray?style=for-the-badge&labelColor=orange&link=https%3A%2F%2Fwww.nexusmods.com%2Fskyrimspecialedition%2Fmods%2F137877)
 
 This is a CommonlibSSE-NG Plugin for Skyrim SE/AE Game versions 1.5.97 - 1.6.1170. This project utilizes xmake, following the outline of the template [commonlibsse-ng-template](https://github.com/libxse/commonlibsse-ng-template/tree/main). Build instructions can be found below.
+
+![Static Badge](https://img.shields.io/badge/Skyrim-1.5.97+-gray?style=for-the-badge&labelColor=blue) ![Static Badge](https://img.shields.io/badge/Skyrim-1.6.1170-gray?style=for-the-badge&labelColor=blue)
+
 
 ### Requirements
 * [XMake](https://xmake.io) [2.8.2+]
@@ -9,14 +14,14 @@ This is a CommonlibSSE-NG Plugin for Skyrim SE/AE Game versions 1.5.97 - 1.6.117
 ### Dependencies (Managed)
 * [imgui](https://github.com/ocornut/imgui) [v1.91.5]
 * [freetype](https://github.com/freetype/freetype) [Latest]
-* [fmt}](https://github.com/fmtlib/fmt) [Latest]
+* [fmt](https://github.com/fmtlib/fmt) [Latest]
 * [nlohmann-json](https://github.com/nlohmann/json) [v.3.12.0]
 * [simpleini](https://github.com/brofield/simpleini) [Latest]
 * [commonlibsse-ng](https://github.com/alandtse/CommonLibVR/) [Latest]
 
 ### Information
 
-This project is natively maintained and built on Windows 11 using Visual Studio Code. Mileage may vary.
+This project is natively maintained and built on Windows 11 using Visual Studio Code 2026. Mileage may vary.
 
 This project is setup for a local download of Commonlib in the project folder. Will require reconfiguration if you have a global instance of it.
 
@@ -24,7 +29,7 @@ P.S. You may have include path issues with my xmake configuration - sorry.
 
 ## Getting Started
 ```bat
-git clone --recurse-submodules https://github.com/Patchu1i/ModExplorerMenu
+git clone --recurse-submodules https://github.com/patchulidev/ModExplorerMenu
 cd commonlibsse-ng-template
 ```
 
