@@ -5,8 +5,8 @@ set_xmakever("2.8.2")
 includes("lib/commonlibsse-ng")
 
 -- set project
-set_project("modex")
-set_version("1.2.3")
+set_project("Modex - A Mod Explorer Menu")
+set_version("2.0.0")
 set_license("GPL-3.0")
 
 -- set defaults
@@ -15,30 +15,38 @@ set_warnings("allextra")
 
 -- set policies
 set_policy("package.requires_lock", true)
-set_policy("package.install_locally", true)
 
 -- add rules
 add_rules("mode.debug", "mode.releasedbg")
 add_rules("plugin.vsxmake.autoupdate")
-add_rules("plugin.compile_commands.autoupdate", {outputdir = ".vscode/"})
+add_rules("plugin.compile_commands.autoupdate")
 
--- require packagess
-add_requires("freetype", "nlohmann_json v3.12.0", "simpleini", "fmt")
-add_requires("imgui v1.91.5", {configs = {dx11 = true, win32 = true}})
+add_requires("freetype")
+add_requires("nlohmann_json v3.12.0")
+add_requires("simpleini")
+add_requires("imm32")
+add_requires("imgui v1.91.5", {configs = {win32 = true, dx11 = true}})
+
+-- explicitly define macros
+add_defines("ENABLE_SKYRIM_SE=1")
+add_defines("ENABLE_SKYRIM_AE=1")
+add_undefines("ENABLE_SKYRIM_VR=1")
 
 -- targets
-target("modex")
-    -- add dependencies to target
+target("Modex - A Mod Explorer Menu")
     add_deps("commonlibsse-ng")
 
-    -- add packages to target
-    add_packages("freetype", "nlohmann_json", "simpleini", "fmt")
-    add_packages("imgui", {configs = {dx11 = true, win32 = true}})
-
+    -- additional packages
+    add_packages("freetype")
+    add_packages("nlohmann_json")
+    add_packages("simpleini")
+    add_packages("imgui")
+    add_packages("imm32")
+    
     -- add commonlibsse-ng plugin
     add_rules("commonlibsse-ng.plugin", {
-        name = "modex",
-        author = "patchuli",
+        name = "Modex - A Mod Explorer Menu",
+        author = "Patchuli",
         description = "SKSE64 plugin template using CommonLibSSE-NG"
     })
 
@@ -48,13 +56,23 @@ target("modex")
     add_includedirs("src")
     set_pcxxheader("src/pch.h")
 
+    -- distribute
     after_build(function (target)
-        -- Create distribution directory using environment variable
-        local dist_dir = os.getenv("XSE_TES5_MODS_PATH") or path.join(os.projectdir(), "dist")
-        os.mkdir(dist_dir)
+        local project_name = target:name()
+        local mods_path = os.getenv("MO2_MODS_FOLDER")
+        local dist_path = os.projectdir() .. "/dist/"
 
-        -- Copy the built DLL to the distribution directory
-        os.cp(target:targetfile(), dist_dir)
+        -- create plugin directory structure
+        os.mkdir(path.join(dist_path, "SKSE", "Plugins"))
+        os.mkdir(path.join(dist_path, "Interface", "Modex", "language"))
+        os.mkdir(path.join(dist_path, "Interface", "Modex", "user"))
 
-        print("Built DLL copied to: " .. dist_dir)
+        -- copy plugin to project distributable folder
+        os.cp(target:targetfile(), path.join(dist_path, "SKSE", "Plugins"))
+
+        -- copy pdb to project distributable folder
+        os.cp(target:targetfile():gsub("%.dll$", ".pdb"), path.join(dist_path, "SKSE", "Plugins"))
+
+        -- copy folders and files from dist to MO2 mods folder if it exists
+        os.cp(dist_path .. "/*", path.join(mods_path, project_name))
     end)

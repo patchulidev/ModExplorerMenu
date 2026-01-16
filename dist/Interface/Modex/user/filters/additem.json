@@ -1,0 +1,620 @@
+{
+    "SearchProperty": [
+        "kName",
+        "kEditorID",
+        "kFormID",
+        "kReferenceID",
+        "kPlugin"
+    ],
+    
+    "SortProperty": [
+        "kNone",
+        "kFormType",
+        "kFormID",
+        "kEditorID",
+        "kCarryWeight",
+        "<separator>",
+        "kWeaponDamage",
+        "kWeaponType",
+        "kWeaponSpeed",
+        "kWeaponSkill",
+        "kWeaponCriticalDamage",
+        "kWeaponDamagePerSecond",
+        "kWeaponRange",
+        "kWeaponStagger",
+        "<separator>",
+        "kArmorRating",
+        "kArmorSlot",
+        "kArmorType",
+        "<separator>",
+        "kPlayable",
+        "kTomeSpell",
+        "kTomeSkill"
+    ],
+
+    "FilterProperty": [
+    {
+        "id": "armor",
+        "displayName": "Armor",
+        "behavior": "multi_select",
+        "rule": {
+            "property": "kFormType",
+            "operator": "equals",
+            "value": "ARMO"
+        },
+        "children": [
+            {
+                "id": "armor_slot",
+                "displayName": "Slots",
+                "behavior": "multi_select",
+                "children": [
+                    {
+                        "id": "armor_slot_30",
+                        "displayName": "Head",
+                        "rule": {
+                            "property": "kArmorSlot",
+                            "operator": "equals",
+                            "value": "Head"
+                        }
+                    },
+                    {
+                        "id": "armor_slot_31",
+                        "displayName": "Hair",
+                        "rule": {
+                            "property": "kArmorSlot",
+                            "operator": "equals",
+                            "value": "Hair"
+                        }
+                    },
+                    {
+                        "id": "armor_slot_32",
+                        "displayName": "Body",
+                        "rule": {
+                            "property": "kArmorSlot",
+                            "operator": "equals",
+                            "value": "Body"
+                        }
+                    },
+                    {
+                        "id": "armor_slot_33",
+                        "displayName": "Hands",
+                        "rule": {
+                            "property": "kArmorSlot",
+                            "operator": "equals",
+                            "value": "Hands"
+                        }
+                    },
+                    {
+                        "id": "armor_slot_34",
+                        "displayName": "Forearms",
+                        "rule": {
+                            "property": "kArmorSlot",
+                            "operator": "equals",
+                            "value": "Forearms"
+                        }
+                    },
+                    {
+                        "id": "armor_slot_35",
+                        "displayName": "Amulet",
+                        "rule": {
+                            "property": "kArmorSlot",
+                            "operator": "equals",
+                            "value": "Amulet"
+                        }
+                    },
+                    {
+                        "id": "armor_slot_36",
+                        "displayName": "Ring",
+                        "rule": {
+                            "property": "kArmorSlot",
+                            "operator": "equals",
+                            "value": "Ring"
+                        }
+                    },
+                    {
+                        "id": "armor_slot_37",
+                        "displayName": "Feet",
+                        "rule": {
+                            "property": "kArmorSlot",
+                            "operator": "equals",
+                            "value": "Feet"
+                        }
+                    },
+                    {
+                        "id": "armor_slot_38",
+                        "displayName": "Calves",
+                        "rule": {
+                            "property": "kArmorSlot",
+                            "operator": "equals",
+                            "value": "Calves"
+                        }
+                    },
+                    {
+                        "id": "armor_slot_39",
+                        "displayName": "Shield",
+                        "rule": {
+                            "property": "kArmorSlot",
+                            "operator": "equals",
+                            "value": "Shield"
+                        }
+                    },
+                    {
+                        "id": "armor_slot_40",
+                        "displayName": "Tail",
+                        "rule": {
+                            "property": "kArmorSlot",
+                            "operator": "equals",
+                            "value": "Tail"
+                        }
+                    },
+                    {
+                        "id": "armor_slot_41",
+                        "displayName": "Long Hair",
+                        "rule": {
+                            "property": "kArmorSlot",
+                            "operator": "equals",
+                            "value": "Long Hair"
+                        }
+                    },
+                    {
+                        "id": "armor_slot_42",
+                        "displayName": "Circlet",
+                        "rule": {
+                            "property": "kArmorSlot",
+                            "operator": "equals",
+                            "value": "Circlet"
+                        }
+                    },
+                    {
+                        "id": "armor_slot_43",
+                        "displayName": "Ears",
+                        "rule": {
+                            "property": "kArmorSlot",
+                            "operator": "equals",
+                            "value": "Ears"
+                        }
+                    },
+                    {
+                        "id": "armor_slot_44",
+                        "displayName": "Mod Mouth",
+                        "rule": {
+                            "property": "kArmorSlot",
+                            "operator": "equals",
+                            "value": "Mod Mouth"
+                        }
+                    },
+                    {
+                        "id": "armor_slot_45",
+                        "displayName": "Mod Neck",
+                        "rule": {
+                            "property": "kArmorSlot",
+                            "operator": "equals",
+                            "value": "Mod Neck"
+                        }
+                    },
+                    {
+                        "id": "armor_slot_46",
+                        "displayName": "Mod Chest Primary",
+                        "rule": {
+                            "property": "kArmorSlot",
+                            "operator": "equals",
+                            "value": "Mod Chest Primary"
+                        }
+                    },
+                    {
+                        "id": "armor_slot_47",
+                        "displayName": "Mod Back",
+                        "rule": {
+                            "property": "kArmorSlot",
+                            "operator": "equals",
+                            "value": "Mod Back"
+                        }
+                    },
+                    {
+                        "id": "armor_slot_48",
+                        "displayName": "Mod Misc",
+                        "rule": {
+                            "property": "kArmorSlot",
+                            "operator": "equals",
+                            "value": "Mod Misc"
+                        }
+                    },
+                    {
+                        "id": "armor_slot_49",
+                        "displayName": "Mod Pelvis",
+                        "rule": {
+                            "property": "kArmorSlot",
+                            "operator": "equals",
+                            "value": "Mod Pelvis"
+                        }
+                    },
+                    {
+                        "id": "armor_slot_50",
+                        "displayName": "Decapitate Head",
+                        "rule": {
+                            "property": "kArmorSlot",
+                            "operator": "equals",
+                            "value": "Decapitate Head"
+                        }
+                    },
+                    {
+                        "id": "armor_slot_51",
+                        "displayName": "Decapitate",
+                        "rule": {
+                            "property": "kArmorSlot",
+                            "operator": "equals",
+                            "value": "Decapitate"
+                        }
+                    },
+                    {
+                        "id": "armor_slot_52",
+                        "displayName": "Mod Pelvis 2",
+                        "rule": {
+                            "property": "kArmorSlot",
+                            "operator": "equals",
+                            "value": "Mod Pelvis 2"
+                        }
+                    },
+                    {
+                        "id": "armor_slot_53",
+                        "displayName": "Mod Leg Right",
+                        "rule": {
+                            "property": "kArmorSlot",
+                            "operator": "equals",
+                            "value": "Mod Leg Right"
+                        }
+                    },
+                    {
+                        "id": "armor_slot_54",
+                        "displayName": "Mod Leg Left",
+                        "rule": {
+                            "property": "kArmorSlot",
+                            "operator": "equals",
+                            "value": "Mod Leg Left"
+                        }
+                    },
+                    {
+                        "id": "armor_slot_55",
+                        "displayName": "Mod Face Jewelry",
+                        "rule": {
+                            "property": "kArmorSlot",
+                            "operator": "equals",
+                            "value": "Mod Face Jewelry"
+                        }
+                    },
+                    {
+                        "id": "armor_slot_56",
+                        "displayName": "Mod Chest 2",
+                        "rule": {
+                            "property": "kArmorSlot",
+                            "operator": "equals",
+                            "value": "Mod Chest 2"
+                        }
+                    },
+                    {
+                        "id": "armor_slot_57",
+                        "displayName": "Mod Shoulder",
+                        "rule": {
+                            "property": "kArmorSlot",
+                            "operator": "equals",
+                            "value": "Mod Shoulder"
+                        }
+                    },
+                    {
+                        "id": "armor_slot_58",
+                        "displayName": "Mod Arm Left",
+                        "rule": {
+                            "property": "kArmorSlot",
+                            "operator": "equals",
+                            "value": "Mod Arm Left"
+                        }
+                    },
+                    {
+                        "id": "armor_slot_59",
+                        "displayName": "Mod Arm Right",
+                        "rule": {
+                            "property": "kArmorSlot",
+                            "operator": "equals",
+                            "value": "Mod Arm Right"
+                        }
+                    },
+                    {
+                        "id": "armor_slot_60",
+                        "displayName": "Mod Misc 2",
+                        "rule": {
+                            "property": "kArmorSLot",
+                            "operator": "equals",
+                            "value": "Mod Misc 2"
+                        }
+                    },
+                    {
+                        "id": "armor_slot_61",
+                        "displayName": "FX01",
+                        "rule": {
+                            "property": "kArmorSLot",
+                            "operator": "equals",
+                            "value": "FX01"
+                        }
+                    }
+                ]
+            },
+            {
+                "id": "armor_playable",
+                "displayName": "Playable",
+                "rule": {
+                    "property": "kPlayable",
+                    "operator": "equals",
+                    "value": true
+                }
+            },
+            {
+                "id": "armor_enchanted",
+                "displayName": "Enchanted",
+                "rule": {
+                    "property": "kEnchanted",
+                    "operator": "equals",
+                    "value": true
+                }
+            },
+            {
+                "id": "armor_not_enchanted",
+                "displayName": "Not Enchanted",
+                "rule": {
+                    "property": "kEnchanted",
+                    "operator": "equals",
+                    "value": false
+                }
+            },
+            {
+                "id": "armor_type",
+                "displayName": "Type",
+                "behavior": "multi_select",
+                "children": [
+                    {
+                        "id": "armor_type_clothing",
+                        "displayName": "Clothing",
+                        "rule": {
+                            "property": "kArmorType",
+                            "operator": "equals",
+                            "value": "clothing"
+                        }
+                    },
+                    {
+                        "id": "armor_type_light",
+                        "displayName": "Light Armor",
+                        "rule": {
+                            "property": "kArmorType",
+                            "operator": "equals",
+                            "value": "light"
+                        }
+                    },
+                    {
+                        "id": "armor_type_medium",
+                        "displayName": "Medium Armor",
+                        "rule": {
+                            "property": "kArmorType",
+                            "operator": "equals",
+                            "value": "medium"
+                        }
+                    },
+                    {
+                        "id": "armor_type_heavy",
+                        "displayName": "Heavy Armor",
+                        "rule": {
+                            "property": "kArmorType",
+                            "operator": "equals",
+                            "value": "heavy"
+                        }
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": "alchemy",
+        "displayName": "Alchemy",
+        "behavior": "single_select",
+        "rule": {
+            "property": "kFormType",
+            "operator": "equals",
+            "value": "ALCH"
+        }
+    },
+    {
+        "id": "ammo",
+        "displayName": "Ammo",
+        "behavior": "single_select",
+        "rule": {
+            "property": "kFormType",
+            "operator": "equals",
+            "value": "AMMO"
+        }
+    },
+    {
+        "id": "book",
+        "displayName": "Book",
+        "behavior": "single_select",
+        "rule": {
+            "property": "kFormType",
+            "operator": "equals",
+            "value": "BOOK"
+        }
+    },
+    {
+        "id": "ingredient",
+        "displayName": "Ingredient",
+        "behavior": "single_select",
+        "rule": {
+            "property": "kFormType",
+            "operator": "equals",
+            "value": "INGR"
+        }
+    },
+    {
+        "id": "keymaster",
+        "displayName": "Keys",
+        "behavior": "single_select",
+        "rule": {
+            "property": "kFormType",
+            "operator": "equals",
+            "value": "KEYM"
+        }
+    },
+    {
+        "id": "misc",
+        "displayName": "Misc",
+        "behavior": "single_select",
+        "rule": {
+            "property": "kFormType",
+            "operator": "equals",
+            "value": "MISC"
+        }
+    },
+    {
+        "id": "scroll",
+        "displayName": "Scroll",
+        "behavior": "single_select",
+        "rule": {
+            "property": "kFormType",
+            "operator": "equals",
+            "value": "SCRL"
+        }
+    },
+    {
+        "id": "weapons",
+        "displayName": "Weapon",
+        "behavior": "multi_select",
+        "rule": {
+            "property": "kFormType",
+            "operator": "equals",
+            "value": "WEAP"
+        },
+        "children": [
+            {
+                "id": "weapon_type",
+                "displayName": "Type",
+                "behavior": "multi_select",
+                "children": [
+                    {
+                        "id": "weapon_hand",
+                        "displayName": "Hand to Hand",
+                        "rule": {
+                            "property": "kWeaponType",
+                            "operator": "equals",
+                            "value": "handtohand"
+                        }
+                    },
+                    {
+                        "id": "weapon_sword",
+                        "displayName": "Sword",
+                        "rule": {
+                            "property": "kWeaponType",
+                            "operator": "equals",
+                            "value": "sword"
+                        }
+                    },
+                    {
+                        "id": "weapon_dagger",
+                        "displayName": "Dagger",
+                        "rule": {
+                            "property": "kWeaponType",
+                            "operator": "equals",
+                            "value": "dagger"
+                        }
+                    },
+                    {
+                        "id": "weapon_axe",
+                        "displayName": "Axe",
+                        "rule": {
+                            "property": "kWeaponType",
+                            "operator": "equals",
+                            "value": "axe"
+                        }
+                    },
+                    {
+                        "id": "weapon_mace",
+                        "displayName": "Mace",
+                        "rule": {
+                            "property": "kWeaponType",
+                            "operator": "equals",
+                            "value": "mace"
+                        }
+                    },
+                    {
+                        "id": "weapon_greatsword",
+                        "displayName": "Greatsword",
+                        "rule": {
+                            "property": "kWeaponType",
+                            "operator": "equals",
+                            "value": "greatsword"
+                        }
+                    },
+                    {
+                        "id": "weapon_greataxe",
+                        "displayName": "Greataxe",
+                        "rule": {
+                            "property": "kWeaponType",
+                            "operator": "equals",
+                            "value": "greataxe"
+                        }
+                    },
+                    {
+                        "id": "weapon_bow",
+                        "displayName": "Bow",
+                        "rule": {
+                            "property": "kWeaponType",
+                            "operator": "equals",
+                            "value": "bow"
+                        }
+                    },
+                    {
+                        "id": "weapon_staff",
+                        "displayName": "Staff",
+                        "rule": {
+                            "property": "kWeaponType",
+                            "operator": "equals",
+                            "value": "staff"
+                        }
+                    },
+                    {
+                        "id": "weapon_crossbow",
+                        "displayName": "Crossbow",
+                        "rule": {
+                            "property": "kWeaponType",
+                            "operator": "equals",
+                            "value": "crossbow"
+                        }
+                    }
+                ]
+            },
+            {
+                "id": "weapon_playable",
+                "displayName": "Playable",
+                "rule": {
+                    "property": "kPlayable",
+                    "operator": "equals",
+                    "value": true
+                }
+            },
+            {
+                "id": "weapon_enchanted",
+                "displayName": "Enchanted",
+                "rule": {
+                    "property": "kEnchanted",
+                    "operator": "equals",
+                    "value": true
+                }
+            },
+            {
+                "id": "weapon_not_enchanted",
+                "displayName": "Not Enchanted",
+                "rule": {
+                    "property": "kEnchanted",
+                    "operator": "equals",
+                    "value": false
+                }
+            }
+        ]
+    }
+  ]
+}
