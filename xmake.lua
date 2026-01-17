@@ -25,7 +25,9 @@ add_requires("freetype")
 add_requires("nlohmann_json v3.12.0")
 add_requires("simpleini")
 add_requires("imm32")
-add_requires("imgui v1.91.5", {configs = {win32 = true, dx11 = true}})
+
+-- imgui package @ 21d329 (post 1.92.5 update).
+add_requires("imgui 21d3299e588b5c702dcca0f448b4f937af369b4a", {configs = {win32 = true, dx11 = true}})
 
 -- explicitly define macros
 add_defines("ENABLE_SKYRIM_SE=1")
