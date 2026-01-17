@@ -7,14 +7,13 @@ namespace Modex
 {
 	void ObjectModule::ShowActions()
 	{
-		const float button_height = ImGui::GetFontSize() * 1.5f;
 		const float button_width = ImGui::GetContentRegionAvail().x;
 
-		ImGui::SubCategoryHeader(Translate("GENERAL_DOUBLE_CLICK_BEHAVIOR"));
+		UICustom::SubCategoryHeader(Translate("GENERAL_DOUBLE_CLICK_BEHAVIOR"));
 
 		// Click To Place Toggle
 		bool _true_ = true;
-		if (ImGui::GradientSelectableEX(TranslateIcon(ICON_LC_MAP_PIN_PLUS, "GENERAL_CLICK_TO_PLACE"), _true_, ImVec2(button_width, button_height))) {
+		if (ImGui::Selectable(TranslateIcon(ICON_LC_MAP_PIN_PLUS, "GENERAL_CLICK_TO_PLACE"), _true_)) {
 			// nothing
 		}
 
@@ -27,12 +26,12 @@ namespace Modex
 		}
 
 		ImGui::Spacing();
-		ImGui::SubCategoryHeader(Translate("Actions"));
+		UICustom::SubCategoryHeader(Translate("Actions"));
 		// ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(a_style.secondaryButton.x, a_style.secondaryButton.y, a_style.secondaryButton.z, a_style.secondaryButton.w));
 		// ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(a_style.secondaryButtonActive.x, a_style.secondaryButtonActive.y, a_style.secondaryButtonActive.z, a_style.secondaryButtonActive.w));
 		// ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(a_style.secondaryButtonHovered.x, a_style.secondaryButtonHovered.y, a_style.secondaryButtonHovered.z, a_style.secondaryButtonHovered.w));
 
-		if (ImGui::GradientButton(Translate("OBJECT_PLACE_SELECTED"), ImVec2(button_width, 0))) {
+		if (ImGui::Button(Translate("OBJECT_PLACE_SELECTED"), ImVec2(button_width, 0))) {
 			m_tableView->PlaceSelectionOnGround(m_clickCount);
 		}
 
@@ -45,7 +44,7 @@ namespace Modex
 		}
 
 		ImGui::Spacing();
-		ImGui::SubCategoryHeader(Translate("Info"));
+		UICustom::SubCategoryHeader(Translate("Info"));
 
 		BaseObject* obj = selectedObject.get();
 
@@ -70,7 +69,7 @@ namespace Modex
 
 		ImGui::NewLine();
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
-		ImGui::SetCursorPosX(ImGui::GetCenterTextPosX(name.c_str()));
+		ImGui::SetCursorPosX(UICustom::GetCenterTextPosX(name.c_str()));
 		ImGui::SetCursorPosY(ImGui::GetCursorPosY() - ImGui::GetFontSize() / 2);
 		ImGui::Text("%s", name.c_str());
 		ImGui::NewLine();
@@ -80,7 +79,7 @@ namespace Modex
 		// Load Order Info Pane
 		// See ItemPreview.h for other implementation.
 		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		ImGui::SetCursorPosX(ImGui::GetCenterTextPosX(Translate("Load Order")));
+		ImGui::SetCursorPosX(UICustom::GetCenterTextPosX(Translate("Load Order")));
 		ImGui::Text("%s",Translate("Load Order"));
 		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 		

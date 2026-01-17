@@ -713,14 +713,14 @@ namespace Modex
 
 		// ImGui::SetItemTooltip(Translate("TABLE_KEY_TOOLTIP"));
 		if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal | ImGuiHoveredFlags_NoSharedDelay)) {
-			UICustom::AddFancyTooltip(Translate("TABLE_KEY_TOOLTIP"));
+			UICustom::FancyTooltip(Translate("TABLE_KEY_TOOLTIP"));
 		}
 		
 		ImGui::SameLine();
 		ImGui::AlignTextToFramePadding();
 		ImGui::Text(" " ICON_LC_ARROW_LEFT_RIGHT);
 		if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort | ImGuiHoveredFlags_NoSharedDelay)) {
-			UICustom::AddFancyTooltip("TABLE_SEARCH_TOOLTIP")	;
+			UICustom::FancyTooltip("TABLE_SEARCH_TOOLTIP")	;
 		}
 		ImGui::SameLine();
 		
@@ -903,7 +903,7 @@ namespace Modex
 			const std::string icon = ICON_LC_SIGNATURE;
 			const std::string tooltip = this->showEditorID ? Translate("EDITORID_DISABLE_TOOLTIP") : Translate("EDITORID_ENABLE_TOOLTIP");
 			ImGui::PushStyleColor(ImGuiCol_Text, this->showEditorID ? ThemeConfig::GetColor("TEXT") : ThemeConfig::GetColor("TEXT_DISABLED"));
-			if (UICustom::AddIconButton(icon.c_str(), tooltip.c_str(), this->showEditorID)) {
+			if (UICustom::IconButton(icon.c_str(), tooltip.c_str(), this->showEditorID)) {
 				UserData::User().Set<bool>(this->data_id + "::ShowEditorID", this->showEditorID);
 			}
 			ImGui::PopStyleColor();
@@ -925,7 +925,7 @@ namespace Modex
 				ImGui::PushStyleColor(ImGuiCol_Text, ThemeConfig::GetColor("TEXT_DISABLED"));
 			}
 
-			if (UICustom::AddIconButton(icon.c_str(), tooltip.c_str(), this->showPluginKitView)) {
+			if (UICustom::IconButton(icon.c_str(), tooltip.c_str(), this->showPluginKitView)) {
 				if (!pluginHasKits) {
 					this->showPluginKitView = false;
 				} else {
@@ -948,7 +948,7 @@ namespace Modex
 		ImGui::AlignTextToFramePadding();
 		ImGui::Text(" " ICON_LC_ARROW_RIGHT_TO_LINE);
 		if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort | ImGuiHoveredFlags_NoSharedDelay)) {
-			UICustom::AddFancyTooltip("TABLE_PLUGIN_TOOLTIP");
+			UICustom::FancyTooltip("TABLE_PLUGIN_TOOLTIP");
 		}
 		ImGui::SameLine();
 		
@@ -1158,7 +1158,7 @@ namespace Modex
 
 
 						ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.f, 0.f));
-						ImGui::GradientSelectableEX("", is_selected, ImVec2(LayoutItemSize.x - (button_area), LayoutItemSize.y));
+						ImGui::Selectable("", is_selected, 0, ImVec2(LayoutItemSize.x - (button_area), LayoutItemSize.y));
 						ImGui::PopStyleVar();
 
 						if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
@@ -1182,7 +1182,7 @@ namespace Modex
 							ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
 
 							ImGui::PushStyleColor(ImGuiCol_Button, use_color);
-							if (ImGui::GradientButton(ICON_LC_CHECK "Use", use_size)) {
+							if (ImGui::Button(ICON_LC_CHECK "Use", use_size)) {
 								this->AddKitItemsToInventory(*item_data);
 							}
 							ImGui::PopStyleColor();
@@ -1190,9 +1190,9 @@ namespace Modex
 							ImGui::SameLine();
 
 							bool _unused = false;
-							if (UICustom::AddIconButtonBg(ICON_LC_TRASH, Translate("KIT_DELETE_TOOLTIP"), _unused, del_size, del_color, 0.1f)) {
+							// if (UICustom::IconButtonBg(ICON_LC_TRASH, Translate("KIT_DELETE_TOOLTIP"), _unused, del_size, del_color, 0.1f)) {
 								// TODO: Implement delete kit popup.
-							}
+							// }
 
 							ImGui::PopStyleVar(2);
 						}
@@ -1764,7 +1764,7 @@ namespace Modex
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
 
 		if (a_item->GetFormType() == RE::FormType::Armor || a_item->GetFormType() == RE::FormType::Weapon) {
-			if (ImGui::GradientButton((std::string(icon) + text).c_str(), equip_size)) {
+			if (ImGui::Button((std::string(icon) + text).c_str(), equip_size)) {
 				a_item->kitEquipped = !a_item->kitEquipped;
 				this->SyncChangesToKit();
 			}
@@ -1773,7 +1773,7 @@ namespace Modex
 		} else {
 			const auto form_type_text = RE::FormTypeToString(a_item->GetFormType());
 			ImGui::BeginDisabled();
-			ImGui::GradientButton(form_type_text.data(), equip_size);
+			ImGui::Button(form_type_text.data(), equip_size);
 			ImGui::EndDisabled();
 			ImGui::SameLine(0.0f, padding);
 		}
@@ -1950,17 +1950,17 @@ namespace Modex
 						if (IsMouseHoveringRectDelayed(unique_pos, ImVec2(unique_pos.x + fontSize, unique_pos.y + fontSize))) {
 							if (npcData->IsUnique()) {
 								// ImGui::SetTooltip(Translate("TOOLTIP_UNIQUE"));
-								UICustom::AddFancyTooltip(Translate("TOOLTIP_UNIQUE"));
+								UICustom::FancyTooltip(Translate("TOOLTIP_UNIQUE"));
 							} else if (npcData->IsEssential()) {
 								// ImGui::SetTooltip(Translate("TOOLTIP_ESSENTIAL"));
-								UICustom::AddFancyTooltip(Translate("TOOLTIP_ESSENTIAL"));
+								UICustom::FancyTooltip(Translate("TOOLTIP_ESSENTIAL"));
 							}
 						}
 
 						if (IsMouseHoveringRectDelayed(essential_pos, ImVec2(essential_pos.x + fontSize, essential_pos.y + fontSize))) {
 							if (npcData->IsEssential()) {
 								// ImGui::SetTooltip(Translate("TOOLTIP_ESSENTIAL"));
-								UICustom::AddFancyTooltip(Translate("TOOLTIP_ESSENTIAL"));
+								UICustom::FancyTooltip(Translate("TOOLTIP_ESSENTIAL"));
 							}
 						}
 					}
@@ -1984,7 +1984,7 @@ namespace Modex
 
 			if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows)) {
 				if (IsMouseHoveringRectDelayed(value_pos, ImVec2(value_pos.x + value_width, value_pos.y + fontSize))) {
-					UICustom::AddFancyTooltip(FilterProperty::GetIconTooltipKey(PropertyType::kGoldValue).c_str());
+					UICustom::FancyTooltip(FilterProperty::GetIconTooltipKey(PropertyType::kGoldValue).c_str());
 				}
 			}
 
@@ -2003,7 +2003,7 @@ namespace Modex
 						DrawList->AddText(property_text_pos, text_color, rating_string.c_str());
 						if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows)) {
 							if (IsMouseHoveringRectDelayed(property_text_pos, ImVec2(property_text_pos.x + fontSize, property_text_pos.y + fontSize))) {
-								UICustom::AddFancyTooltip(FilterProperty::GetIconTooltipKey(PropertyType::kArmorRating).c_str());
+								UICustom::FancyTooltip(FilterProperty::GetIconTooltipKey(PropertyType::kArmorRating).c_str());
 							}
 						}
 					}
@@ -2030,9 +2030,9 @@ namespace Modex
 						if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows)) {
 							if (IsMouseHoveringRectDelayed(property_text_pos, ImVec2(property_text_pos.x + fontSize, property_text_pos.y + fontSize))) {
 								if (teaches_skill) {
-									UICustom::AddFancyTooltip(FilterProperty::GetIconTooltipKey(PropertyType::kTomeSkill).c_str());
+									UICustom::FancyTooltip(FilterProperty::GetIconTooltipKey(PropertyType::kTomeSkill).c_str());
 								} else if (teaches_spell) {
-									UICustom::AddFancyTooltip(FilterProperty::GetIconTooltipKey(PropertyType::kTomeSpell).c_str());
+									UICustom::FancyTooltip(FilterProperty::GetIconTooltipKey(PropertyType::kTomeSpell).c_str());
 								}
 							}
 						}
@@ -2056,7 +2056,7 @@ namespace Modex
 						DrawList->AddText(property_text_pos, text_color, damage_string.c_str());
 						if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows)) {
 							if (IsMouseHoveringRectDelayed(property_text_pos, ImVec2(property_text_pos.x + fontSize, property_text_pos.y + fontSize))) {
-								UICustom::AddFancyTooltip(FilterProperty::GetIconTooltipKey(PropertyType::kWeaponDamage).c_str());
+								UICustom::FancyTooltip(FilterProperty::GetIconTooltipKey(PropertyType::kWeaponDamage).c_str());
 							}
 						}
 					}
@@ -2092,7 +2092,7 @@ namespace Modex
 			
 			if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows)) {
 				if (IsMouseHoveringRectDelayed(sort_pos, ImVec2(sort_pos.x + ImGui::CalcTextSize(sort_text.c_str()).x, sort_pos.y + fontSize))) {
-					UICustom::AddFancyTooltip(Translate(FilterProperty::GetIconTooltipKey(sort_property).c_str()));
+					UICustom::FancyTooltip(Translate(FilterProperty::GetIconTooltipKey(sort_property).c_str()));
 				}
 			}
 		}
@@ -2131,7 +2131,7 @@ namespace Modex
 	void UITable::DrawTableSettingsPopup()
 	{
 		auto& user = UserData::User();
-		ImGui::SubCategoryHeader(Translate("SETTINGS"));
+		UICustom::SubCategoryHeader(Translate("SETTINGS"));
 		
 		ImGui::PushStyleVar(ImGuiStyleVar_SeparatorTextAlign, ImVec2(0.5f, 0.5f));
 
@@ -2166,18 +2166,18 @@ namespace Modex
 		const float distance = (ImGui::GetContentRegionAvail().x - button_size + window_padding); 
 
 		ImGui::SameLine(distance);
-		if (ImGui::ToggleButton("##Table::Settings::ShowProperty", &show_property, button_size)) {
-			user.Set<bool>("Modex::Table::ShowProperty", show_property);
-		}
+		// if (ImGui::ToggleButton("##Table::Settings::ShowProperty", &show_property, button_size)) {
+			// user.Set<bool>("Modex::Table::ShowProperty", show_property);
+		// }
 
 		ImGui::SeparatorText(Translate("TABLE_SETTING_SHOW_ICON"));
 		ImGui::AlignTextToFramePadding();
 		ImGui::Text("%s", Translate("TABLE_SETTING_SHOW_HIDE"));
 
 		ImGui::SameLine(distance);
-		if (ImGui::ToggleButton("##Table::Settings::PluginIcon", &show_icon, button_size)) {
-			user.Set<bool>("Modex::Table::ShowPluginIcon", show_icon);
-		}
+		// if (ImGui::ToggleButton("##Table::Settings::PluginIcon", &show_icon, button_size)) {
+			// user.Set<bool>("Modex::Table::ShowPluginIcon", show_icon);
+		// }
 
 		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 		const bool reset = ImGui::Selectable("Reset");
@@ -2251,14 +2251,14 @@ namespace Modex
 		ImGui::PopStyleColor(3);
 
 		if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort | ImGuiHoveredFlags_NoSharedDelay)) {
-			UICustom::AddFancyTooltip(Translate("STATUS_BAR_TABLE_TOOLTIP"));
+			UICustom::FancyTooltip(Translate("STATUS_BAR_TABLE_TOOLTIP"));
 		}
 		
 		ImGui::SameLine();
 		_user_clicked_ = ImGui::Button(user_text.c_str());
 
 		if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort | ImGuiHoveredFlags_NoSharedDelay)) {
-			UICustom::AddFancyTooltip(Translate("STATUS_BAR_TARGET_TOOLTIP"));
+			UICustom::FancyTooltip(Translate("STATUS_BAR_TARGET_TOOLTIP"));
 		}
 
 		if (!auxiliary_text.empty() && warn_text.empty()) {
@@ -2268,7 +2268,7 @@ namespace Modex
 			ImGui::PopStyleColor();
 
 			if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort | ImGuiHoveredFlags_NoSharedDelay)) {
-				UICustom::AddFancyTooltip(Translate("STATUS_BAR_AUX_TOOLTIP"));
+				UICustom::FancyTooltip(Translate("STATUS_BAR_AUX_TOOLTIP"));
 			}
 		} else {
 			ImGui::SameLine();
@@ -2278,7 +2278,7 @@ namespace Modex
 			ImGui::PopStyleColor();
 
 			if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort | ImGuiHoveredFlags_NoSharedDelay)) {
-				UICustom::AddFancyTooltip(Translate("STATUS_BAR_WARN_TOOLTIP"));
+				UICustom::FancyTooltip(Translate("STATUS_BAR_WARN_TOOLTIP"));
 			}
 		}
 		ImGui::PopStyleVar(3);
@@ -2743,15 +2743,15 @@ namespace Modex
 	void UITable::DrawDebugToolkit()
 	{
 		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		if (UICustom::AddToggleButton("Autotest Table Selection", test_table_selection)) {
+		// if (UICustom::AddToggleButton("Autotest Table Selection", test_table_selection)) {
 			// test_table_selection = !test_table_selection;
-		}
+		// }
 
 		ImGui::SameLine();
 
-		if (UICustom::AddToggleButton("Autotest Table Filters", test_table_filters)) {
+		// if (UICustom::AddToggleButton("Autotest Table Filters", test_table_filters)) {
 			// test_table_filters = !test_table_filters;
-		}
+		// }
 	}
 
 	// Use ImGuiIO delta to incrementally select table filter nodes one by one until completion

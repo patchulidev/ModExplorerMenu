@@ -17,7 +17,7 @@ namespace Modex
 		float search_width = UserData::User().Get<float>("Object::SearchWidth", ImGui::GetContentRegionAvail().x * 0.45f);
 		float recent_width = UserData::User().Get<float>("Object::RecentWidth", ImGui::GetContentRegionAvail().x * 0.35f);
 		float window_padding = ImGui::GetStyle().WindowPadding.y;
-		const float button_width = ImGui::GetContentRegionMax().x / 2.0f;
+		const float button_width = ImGui::GetContentRegionAvail().x / 2.0f;
 		const float button_height = ImGui::GetFontSize() * 1.5f;
 		const float tab_bar_height = button_height + (window_padding * 2);
 

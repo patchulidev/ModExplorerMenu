@@ -9,13 +9,11 @@ namespace Modex
 {
 	void ActorModule::ShowActions()
 	{
-		const float button_height = ImGui::GetFontSize() * 1.5f;
 		const float button_width = ImGui::GetContentRegionAvail().x;
-
-		ImGui::SubCategoryHeader(Translate("GENERAL_DOUBLE_CLICK_BEHAVIOR"));
+		UICustom::SubCategoryHeader(Translate("GENERAL_DOUBLE_CLICK_BEHAVIOR"));
 
 		bool _true_ = true;
-		if (ImGui::GradientSelectableEX(TranslateIcon(ICON_LC_MAP_PIN_PLUS, "GENERAL_CLICK_TO_PLACE"), _true_, ImVec2(button_width, button_height))) {
+		if (ImGui::Selectable(TranslateIcon(ICON_LC_MAP_PIN_PLUS, "GENERAL_CLICK_TO_PLACE"), _true_)) {
 			// Nothing
 		}
 
@@ -28,13 +26,13 @@ namespace Modex
 		}
 
 		ImGui::Spacing();
-		ImGui::SubCategoryHeader(Translate("Actions"));
+		UICustom::SubCategoryHeader(Translate("Actions"));
 
-		if (ImGui::GradientButton(Translate("NPC_PLACE_SELECTED"), ImVec2(button_width, 0))) {
+		if (ImGui::Button(Translate("NPC_PLACE_SELECTED"), ImVec2(button_width, 0))) {
 			m_tableView->PlaceSelectionOnGround(m_clickCount);
 		}
 
-		if (ImGui::GradientButton(Translate("NPC_UPDATE_REFERENCES"), ImVec2(button_width, 0))) {
+		if (ImGui::Button(Translate("NPC_UPDATE_REFERENCES"), ImVec2(button_width, 0))) {
 			Data::GetSingleton()->CacheNPCRefIds();
 			m_tableView->Refresh();
 		}
@@ -54,7 +52,7 @@ namespace Modex
 			// 	ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(a_style.button.x, a_style.button.y, a_style.button.z, a_style.button.w - 0.35f));
 			// }
 
-			if (ImGui::GradientButton(Translate("NPC_GOTO_REFERENCE"), ImVec2(button_width, 0))) {
+			if (ImGui::Button(Translate("NPC_GOTO_REFERENCE"), ImVec2(button_width, 0))) {
 				if (selectedNPC->m_refID != 0) {
 					if (auto playerREF = RE::PlayerCharacter::GetSingleton()->AsReference()) {
 						if (auto ref = RE::TESForm::LookupByID<RE::TESObjectREFR>(selectedNPC->m_refID)) {
@@ -65,7 +63,7 @@ namespace Modex
 				}
 			}
 
-			if (ImGui::GradientButton(Translate("NPC_BRING_REFERENCE"), ImVec2(button_width, 0))) {
+			if (ImGui::Button(Translate("NPC_BRING_REFERENCE"), ImVec2(button_width, 0))) {
 				if (selectedNPC->m_refID != 0) {
 					if (auto playerREF = RE::PlayerCharacter::GetSingleton()->AsReference()) {
 						if (auto ref = RE::TESForm::LookupByID<RE::TESObjectREFR>(selectedNPC->m_refID)) {
@@ -84,7 +82,7 @@ namespace Modex
 		}
 
 		ImGui::Spacing();
-		ImGui::SubCategoryHeader(Translate("HEADER_PREVIEW"));
+		UICustom::SubCategoryHeader(Translate("HEADER_PREVIEW"));
 		ShowItemPreview(m_tableView->GetItemPreview());
 	}
 }

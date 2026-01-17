@@ -12,7 +12,7 @@ namespace Modex
         (void)a_size;
         ImGui::SetCursorPos(a_pos);
         if (ImGui::BeginChild("##Modex::KitSelection", a_size, false)) {
-            ImGui::SubCategoryHeader(Translate("HEADER_KIT_TABLE"));
+            UICustom::SubCategoryHeader(Translate("HEADER_KIT_TABLE"));
 
             auto& searchSystem = GetSearchSystem();
             auto& kitTableView = GetKitTableView();

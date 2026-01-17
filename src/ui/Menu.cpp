@@ -187,7 +187,7 @@ namespace Modex
 						ImGui::SameLine();
 						ImGui::SetCursorPos(backup_pos);
 						ImGui::SetNextItemAllowOverlap();
-						ImGui::Image(overlay, ImVec2(image_width * (sidebar_w / image_width) - 15.0f, image_height), ImVec2(0, 0), ImVec2(uv_x, 1.0f), ImVec4(1, 1, 1, image_alpha));
+						ImGui::Image(overlay, ImVec2(image_width * (sidebar_w / image_width) - 15.0f, image_height)); 
 					}
 				}
 
@@ -202,35 +202,35 @@ namespace Modex
 				SideBarImage settings_image 	= { reinterpret_cast<ImTextureID>(GraphicManager::image_library["IconSettings"].texture), ImVec2(32.0f, 32.0f) };
 				SideBarImage exit_image 		= { reinterpret_cast<ImTextureID>(GraphicManager::image_library["IconExit"].texture), ImVec2(32.0f, 32.0f) };
 
-				if (UICustom::SidebarButton("Home", activeWindow == ActiveWindow::Home, home_image.texture, home_image.size, ImVec2(button_width, button_height), home_w)) {
+				if (UICustom::SidebarImageButton("Home", activeWindow == ActiveWindow::Home, home_image.texture, home_image.size, ImVec2(button_width, button_height), home_w)) {
 					activeWindow = ActiveWindow::Home;
 				}
 			
-				if (UICustom::SidebarButton("Item", activeWindow == ActiveWindow::AddItem, additem_image.texture, additem_image.size, ImVec2(button_width, button_height), additem_w)) {
+				if (UICustom::SidebarImageButton("Item", activeWindow == ActiveWindow::AddItem, additem_image.texture, additem_image.size, ImVec2(button_width, button_height), additem_w)) {
 					ReloadWindow(ActiveWindow::AddItem);
 				}
 
-				if (UICustom::SidebarButton("Equipment", activeWindow == ActiveWindow::Equipment, equipment_image.texture, equipment_image.size, ImVec2(button_width, button_height), equipment_w)) {
+				if (UICustom::SidebarImageButton("Equipment", activeWindow == ActiveWindow::Equipment, equipment_image.texture, equipment_image.size, ImVec2(button_width, button_height), equipment_w)) {
 					ReloadWindow(ActiveWindow::Equipment);
 				}
 
-				if (UICustom::SidebarButton("Object", activeWindow == ActiveWindow::Object, object_image.texture, object_image.size, ImVec2(button_width, button_height), object_w)) {
+				if (UICustom::SidebarImageButton("Object", activeWindow == ActiveWindow::Object, object_image.texture, object_image.size, ImVec2(button_width, button_height), object_w)) {
 					ReloadWindow(ActiveWindow::Object);
 				}				
 
-				if (UICustom::SidebarButton("NPC", activeWindow == ActiveWindow::NPC, npc_image.texture, npc_image.size, ImVec2(button_width, button_height), npc_w)) {
+				if (UICustom::SidebarImageButton("NPC", activeWindow == ActiveWindow::NPC, npc_image.texture, npc_image.size, ImVec2(button_width, button_height), npc_w)) {
 					ReloadWindow(ActiveWindow::NPC);
 				}				
 
-				if (UICustom::SidebarButton("Teleport", activeWindow == ActiveWindow::Teleport, teleport_image.texture, teleport_image.size, ImVec2(button_width, button_height), teleport_w)) {
+				if (UICustom::SidebarImageButton("Teleport", activeWindow == ActiveWindow::Teleport, teleport_image.texture, teleport_image.size, ImVec2(button_width, button_height), teleport_w)) {
 					ReloadWindow(ActiveWindow::Teleport);
 				}			
 
-				if (UICustom::SidebarButton("Settings", activeWindow == ActiveWindow::Settings, settings_image.texture, settings_image.size, ImVec2(button_width, button_height), settings_w)) {
+				if (UICustom::SidebarImageButton("Settings", activeWindow == ActiveWindow::Settings, settings_image.texture, settings_image.size, ImVec2(button_width, button_height), settings_w)) {
 					ReloadWindow(ActiveWindow::Settings);
 				}
 
-				if (UICustom::SidebarButton("Exit", false, exit_image.texture, exit_image.size, ImVec2(button_width, button_height), exit_w)) {
+				if (UICustom::SidebarImageButton("Exit", false, exit_image.texture, exit_image.size, ImVec2(button_width, button_height), exit_w)) {
 					UIManager::GetSingleton()->Close();
 				}
 

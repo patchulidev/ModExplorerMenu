@@ -7,6 +7,7 @@
 #include "imgui.h"
 #include "localization/Locale.h"
 #include "config/ThemeConfig.h"
+#include "ui/components/UICustom.h"
 
 
 namespace Modex
@@ -37,23 +38,23 @@ namespace Modex
                 ImGui::GetIO().ClearInputKeys();
             }
 
-            ImGui::SubCategoryHeader(Translate("HEADER_HOTKEY"), ImVec4(0.20f, 0.20f, 0.20f, 1.0f));
+            UICustom::SubCategoryHeader(Translate("HEADER_HOTKEY"), ImVec4(0.20f, 0.20f, 0.20f, 1.0f));
 
             ImGui::NewLine();
 
-            ImGui::SetCursorPosX(ImGui::GetCenterTextPosX(Translate("CONFIG_HOTKEY_SET")));
+            ImGui::SetCursorPosX(UICustom::GetCenterTextPosX(Translate("CONFIG_HOTKEY_SET")));
             ImGui::Text("%s", Translate("CONFIG_HOTKEY_SET"));
             ImGui::NewLine();
 
-            ImGui::SetCursorPosX(ImGui::GetCenterTextPosX(Translate("CONFIG_HOTKEY_RESET")));
+            ImGui::SetCursorPosX(UICustom::GetCenterTextPosX(Translate("CONFIG_HOTKEY_RESET")));
             ImGui::Text("%s",Translate("CONFIG_HOTKEY_RESET"));
             ImGui::NewLine();
 
-            ImGui::SetCursorPosX(ImGui::GetCenterTextPosX(Translate("CONFIG_KEY_CANCEL")));
+            ImGui::SetCursorPosX(UICustom::GetCenterTextPosX(Translate("CONFIG_KEY_CANCEL")));
             ImGui::Text("%s",Translate("CONFIG_KEY_CANCEL"));
 
             ImGui::SetCursorPosY(ImGui::GetWindowSize().y - ImGui::GetFrameHeightWithSpacing() - ImGui::GetStyle().WindowPadding.y);
-            if (ImGui::GradientButton(Translate("Close"), ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetFrameHeightWithSpacing()))) {
+            if (ImGui::Button(Translate("Close"), ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetFrameHeightWithSpacing()))) {
                 DeclineHotkey();
                 m_close = true;
             }
@@ -118,7 +119,7 @@ namespace Modex
                 ImGui::GetIO().ClearInputKeys();
             }
 
-            if (UICustom::AddPopupMenuHeader(m_pendingWarningTitle.c_str())) {
+            if (UICustom::Popup_MenuHeader(m_pendingWarningTitle.c_str())) {
                 ImGui::End();
                 ImGui::PopStyleVar();
                 DeclineWarning();
@@ -136,7 +137,7 @@ namespace Modex
             ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 
             bool _confirm, _cancel;
-            if (UICustom::AddConfirmationButtons(_confirm, _cancel, m_navAccept)) {
+            if (UICustom::Popup_ConfirmDeclineButtons(_confirm, _cancel, m_navAccept)) {
                 if (_confirm) {
                     AcceptWarning();
                 } else if (_cancel) {
@@ -213,7 +214,7 @@ namespace Modex
             }
 
             ImGui::SetNextItemWidth(500.0f);
-            if (UICustom::AddPopupMenuHeader(m_pendingInputTitle.c_str())) {
+            if (UICustom::Popup_MenuHeader(m_pendingInputTitle.c_str())) {
                 ImGui::End();
                 ImGui::PopStyleVar();
                 DeclineInput();
@@ -234,7 +235,7 @@ namespace Modex
             ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal, 2.0f);
 
             bool _confirm, _cancel;
-            if (UICustom::AddConfirmationButtons(_confirm, _cancel, m_navAccept)) {
+            if (UICustom::Popup_ConfirmDeclineButtons(_confirm, _cancel, m_navAccept)) {
                 if (_confirm) {
                     AcceptInput();
                 } else if (_cancel) {
@@ -305,7 +306,7 @@ namespace Modex
                 ImGui::GetIO().ClearInputKeys();
             }
 
-            if (UICustom::AddPopupMenuHeader(m_pendingInfoTitle.c_str())) {
+            if (UICustom::Popup_MenuHeader(m_pendingInfoTitle.c_str())) {
                 ImGui::End();
                 ImGui::PopStyleVar();
                 CloseInfo();
@@ -318,7 +319,7 @@ namespace Modex
             ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 
 	    ImGui::PushStyleColor(ImGuiCol_Button, ThemeConfig::GetColor("BUTTON_CONFIRM"));
-	    if (ImGui::GradientButton(Translate("CONFIRM"), ImVec2(ImGui::GetContentRegionAvail().x, 0.f))) {
+	    if (ImGui::Button(Translate("CONFIRM"), ImVec2(ImGui::GetContentRegionAvail().x, 0.f))) {
 		    CloseInfo();
 	    }
 	    ImGui::PopStyleColor();

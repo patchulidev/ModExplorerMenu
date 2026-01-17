@@ -15,7 +15,7 @@ namespace Modex
 	{
 		const std::string warning = "Missing Plugin: " + a_object->GetPluginName(); 
 		ImGui::NewLine();
-		ImGui::SetCursorPosX(ImGui::GetCenterTextPosX(warning.data()));
+		ImGui::SetCursorPosX(UICustom::GetCenterTextPosX(warning.data()));
 		ImGui::SetCursorPosY(ImGui::GetCursorPosY() - ImGui::GetFontSize() / 2);
 		ImGui::Text(warning.data());
 		ImGui::NewLine();
@@ -49,7 +49,7 @@ namespace Modex
 			ImGui::Text("%s", icon.c_str());
 
 			if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal | ImGuiHoveredFlags_NoSharedDelay)) {
-				UICustom::AddFancyTooltip(tooltip.c_str());
+				UICustom::FancyTooltip(tooltip.c_str());
 			}
 
 			ImGui::SameLine(maxWidth - barSize.x - 1.0f);
@@ -70,7 +70,7 @@ namespace Modex
 			ImGui::Text("%s",icon.c_str());
 
 			if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal | ImGuiHoveredFlags_NoSharedDelay)) {
-				UICustom::AddFancyTooltip(tooltip.c_str());
+				UICustom::FancyTooltip(tooltip.c_str());
 			}
 
 			ImGui::SameLine(width - 1.0f);
@@ -84,7 +84,7 @@ namespace Modex
 			ImGui::Text("%s", icon.c_str());
 
 			if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal | ImGuiHoveredFlags_NoSharedDelay)) {
-				UICustom::AddFancyTooltip(tooltip.c_str());
+				UICustom::FancyTooltip(tooltip.c_str());
 			}
 
 			ImGui::SameLine(width - 1.0f);
@@ -113,7 +113,7 @@ namespace Modex
 		draw_list->AddRect(cursor, ImVec2(cursor.x + size.x, cursor.y + ImGui::GetFontSize() * 2.5f), ImGui::ColorConvertFloat4ToU32(color));
 
 		ImGui::NewLine();
-		ImGui::SetCursorPosX(ImGui::GetCenterTextPosX(name.data()));
+		ImGui::SetCursorPosX(UICustom::GetCenterTextPosX(name.data()));
 		ImGui::SetCursorPosY(ImGui::GetCursorPosY() - ImGui::GetFontSize() / 2);
 		ImGui::Text("%s",name.data());
 		ImGui::NewLine();
@@ -318,7 +318,7 @@ namespace Modex
 
 			// Load Order Info Pane
 			ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-			ImGui::SetCursorPosX(ImGui::GetCenterTextPosX(Translate("ORDER")));
+			ImGui::SetCursorPosX(UICustom::GetCenterTextPosX(Translate("ORDER")));
 			ImGui::Text("%s", Translate("ORDER"));
 			ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 
@@ -347,7 +347,7 @@ namespace Modex
 				if (const std::string desc = DescriptionFramework_Impl::GetItemDescription(a_item->GetTESForm()); !desc.empty()) {
 					if (a_item->GetFormType() != RE::FormType::Book) {
 						ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-						ImGui::SetCursorPosX(ImGui::GetCenterTextPosX(Translate("DESCRIPTION")));
+						ImGui::SetCursorPosX(UICustom::GetCenterTextPosX(Translate("DESCRIPTION")));
 						ImGui::Text("%s", Translate("DESCRIPTION"));
 						ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 						ImGui::PushTextWrapPos(maxWidth);

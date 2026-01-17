@@ -33,11 +33,11 @@ namespace Modex
 
         if (a_condition) {
             ImGui::PushStyleColor(ImGuiCol_Button, active_color);
-            success = ImGui::GradientButton(a_label, a_size);
+            success = ImGui::Button(a_label, a_size);
             ImGui::PopStyleColor();
         } else {
             ImGui::PushStyleColor(ImGuiCol_Button, inactive_color);
-            success = ImGui::GradientButton(a_label, a_size);
+            success = ImGui::Button(a_label, a_size);
             ImGui::PopStyleColor();
         }
 
@@ -53,16 +53,16 @@ namespace Modex
         bool success = false;
         ImGui::PushStyleColor(ImGuiCol_Button, ImGui::ColorConvertFloat4ToU32(a_color));
         if (a_condition) {
-            success = ImGui::GradientButton(Translate(a_translate), a_size);
+            success = ImGui::Button(Translate(a_translate), a_size);
         } else {
             ImGui::BeginDisabled();
-            ImGui::GradientButton(Translate(a_translate), a_size);
+            ImGui::Button(Translate(a_translate), a_size);
             ImGui::EndDisabled();
         }
         ImGui::PopStyleColor();
 
         if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal | ImGuiHoveredFlags_NoSharedDelay | ImGuiHoveredFlags_AllowWhenDisabled)) {
-            UICustom::AddFancyTooltip(Translate((std::string(a_translate) + "_TOOLTIP").c_str()));
+            UICustom::FancyTooltip(Translate((std::string(a_translate) + "_TOOLTIP").c_str()));
         }
 
         return success;
@@ -87,7 +87,7 @@ namespace Modex
             const float max_width = ImGui::GetContentRegionAvail().x;
             const float half_width = (max_width - ImGui::GetStyle().ItemSpacing.x) / 2.0f;
 
-            ImGui::SubCategoryHeader(Translate("HEADER_KIT_ACTIONS"));
+            UICustom::SubCategoryHeader(Translate("HEADER_KIT_ACTIONS"));
 
             ImGui::SetNextItemWidth(max_width);
 			ImGui::InputInt("##KitActions::Count", a_mainView->GetClickAmount(), 1, 100, ImGuiInputTextFlags_CharsDecimal);
@@ -168,7 +168,7 @@ namespace Modex
         ImGui::SameLine();
         ImGui::SetCursorPos(a_pos);
         if (ImGui::BeginChild("##Modex::InventoryTable", a_size, false)) {
-            ImGui::SubCategoryHeader(Translate("HEADER_INVENTORY_TABLE"));
+            UICustom::SubCategoryHeader(Translate("HEADER_INVENTORY_TABLE"));
             // a_view->ShowSort();
             ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
             a_view->Draw(a_view->GetTableList());

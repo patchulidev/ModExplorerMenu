@@ -240,11 +240,11 @@ namespace Modex
                 
                 if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal)) {
                     if (child->id == "show_all") {
-                        UICustom::AddFancyTooltip(Translate("SHOW_ALL_TOOLTIP"));
+                        UICustom::FancyTooltip(Translate("SHOW_ALL_TOOLTIP"));
                     }
                     
                     if (child->id == "show_recent") {
-                        UICustom::AddFancyTooltip(Translate("SHOW_RECENT_TOOLTIP"));
+                        UICustom::FancyTooltip(Translate("SHOW_RECENT_TOOLTIP"));
                     }
                 }
                 

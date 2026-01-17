@@ -13,7 +13,7 @@
 #include "config/ThemeConfig.h"
 #include "imgui_internal.h"
 #include "ui/components/UICustom.h"
-#include "localization/Language.h"
+#include "localization/FontConfig.h"
 #include "localization/Locale.h"
 #include "ui/core/UIManager.h"
 
@@ -117,15 +117,15 @@ namespace Modex
 	{
 		auto& config = UserConfig::Get();
 
-		ImGui::SubCategoryHeader(Translate("SETTING_GENERAL"));
+		UICustom::SubCategoryHeader(Translate("SETTING_GENERAL"));
 
-		if (UICustom::AddKeybind("SETTING_MENU_KEYBIND", config.showMenuKey, 211, keyHoverTintColor)) {
+		if (UICustom::Settings_Keybind("SETTING_MENU_KEYBIND", config.showMenuKey, 211, keyHoverTintColor)) {
 			UserConfig::GetSingleton()->SaveSettings();
 		}
 
 		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 
-		if (UICustom::AddKeybind("SETTING_MENU_MODIFIER", config.showMenuModifier, 0, modifierHoverTint)) {
+		if (UICustom::Settings_Keybind("SETTING_MENU_MODIFIER", config.showMenuModifier, 0, modifierHoverTint)) {
 			UserConfig::GetSingleton()->SaveSettings();
 		}
 
@@ -133,8 +133,8 @@ namespace Modex
 
 		std::vector<ModexTheme> themes = ThemeConfig::GetAvailableThemes();
 		ImGui::Spacing();
-		ImGui::Text(Translate("SETTINGS_THEME"));
-		ImGui::SameLine(ImGui::GetContentRegionMax().x - p_fixedWidth - ImGui::GetStyle().IndentSpacing);
+		ImGui::Text("%s", Translate("SETTINGS_THEME"));
+		ImGui::SameLine(ImGui::GetContentRegionAvail().x - p_fixedWidth - ImGui::GetStyle().IndentSpacing);
 		ImGui::PushItemWidth(p_fixedWidth);
 		if (ImGui::BeginCombo("##ThemeSelection", config.theme.c_str())) {
 			for (size_t i = 0; i < themes.size(); ++i) {
@@ -152,7 +152,7 @@ namespace Modex
 		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 
 		std::vector<std::string> sorts = { "SETTING_SORT_ALPHA", "SETTING_SORT_LOAD_ASC", "SETTING_SORT_LOAD_DESC" };
-		if (UICustom::AddSelectionDropdown("SETTING_SORT", config.modListSort, sorts)) {
+		if (UICustom::Settings_Dropdown("SETTING_SORT", config.modListSort, sorts)) {
 			UserConfig::GetSingleton()->SaveSettings();
 		}
 
@@ -160,8 +160,8 @@ namespace Modex
 
 		// UI Scale Setting
 		ImGui::Spacing();
-		ImGui::Text(Translate("SETTINGS_UI_SCALE_VERTICAL"));
-		ImGui::SameLine(ImGui::GetContentRegionMax().x - p_fixedWidth - ImGui::GetStyle().IndentSpacing);
+		ImGui::Text("%s", Translate("SETTINGS_UI_SCALE_VERTICAL"));
+		ImGui::SameLine(ImGui::GetContentRegionAvail().x - p_fixedWidth - ImGui::GetStyle().IndentSpacing);
 		ImGui::PushItemWidth(p_fixedWidth);
 		ImGui::SliderInt("##UIVerticalScaleSelection", &s_uiScaleVertical, 50, 150, "%d%%");
 
@@ -174,8 +174,8 @@ namespace Modex
 		ImGui::PopItemWidth();
 
 		ImGui::Spacing();
-		ImGui::Text(Translate("SETTINGS_UI_SCALE_HORIZONTAL"));
-		ImGui::SameLine(ImGui::GetContentRegionMax().x - p_fixedWidth - ImGui::GetStyle().IndentSpacing);
+		ImGui::Text("%s", Translate("SETTINGS_UI_SCALE_HORIZONTAL"));
+		ImGui::SameLine(ImGui::GetContentRegionAvail().x - p_fixedWidth - ImGui::GetStyle().IndentSpacing);
 		ImGui::PushItemWidth(p_fixedWidth);
 		ImGui::SliderInt("##UIHorizontalScaleSelection", &s_uiScaleHorizontal, 50, 150, "%d%%");
 
@@ -190,35 +190,35 @@ namespace Modex
 
 		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 
-		if (UICustom::AddToggleButton("SETTING_FULLSCREEN", config.fullscreen)) {
-			UserConfig::GetSingleton()->SaveSettings();
-		}
+		// if (UICustom::AddToggleButton("SETTING_FULLSCREEN", config.fullscreen)) {
+			// UserConfig::GetSingleton()->SaveSettings();
+		// }
 
 		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 
-		if (UICustom::AddToggleButton("SETTINGS_PAUSE_GAME", config.pauseGame)) {
-			UserConfig::GetSingleton()->SaveSettings();
-		}
+		// if (UICustom::AddToggleButton("SETTINGS_PAUSE_GAME", config.pauseGame)) {
+			// UserConfig::GetSingleton()->SaveSettings();
+		// }
 
 		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 
-		if (UICustom::AddToggleButton("SETTINGS_DISABLE_IN_MENU", config.disableInMenu)) {
-			UserConfig::GetSingleton()->SaveSettings();
-		}
+		// if (UICustom::AddToggleButton("SETTINGS_DISABLE_IN_MENU", config.disableInMenu)) {
+			// UserConfig::GetSingleton()->SaveSettings();
+		// }
 
 		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 
-		if (UICustom::AddToggleButton("SETTINGS_SMOOTH_SCROLL", config.smoothScroll)) {
-			UserConfig::GetSingleton()->SaveSettings();
-		}
+		// if (UICustom::AddToggleButton("SETTINGS_SMOOTH_SCROLL", config.smoothScroll)) {
+			// UserConfig::GetSingleton()->SaveSettings();
+		// }
 
 		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 
 		std::vector<std::string> levels = { "trace", "debug", "info", "warn", "error", "critical" };
 
 		ImGui::Spacing();
-		ImGui::Text(Translate("SETTING_LOG_LEVEL"));
-		ImGui::SameLine(ImGui::GetContentRegionMax().x - p_fixedWidth - ImGui::GetStyle().IndentSpacing);
+		ImGui::Text("%s", Translate("SETTING_LOG_LEVEL"));
+		ImGui::SameLine(ImGui::GetContentRegionAvail().x - p_fixedWidth - ImGui::GetStyle().IndentSpacing);
 		ImGui::PushItemWidth(p_fixedWidth);
 		if (ImGui::BeginCombo("##LogLevelSelection", Translate(config.logLevel.c_str()))) {
 			for (size_t i = 0; i < levels.size(); ++i) {
@@ -234,65 +234,38 @@ namespace Modex
 
 		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 
-		if (UICustom::AddToggleButton("SETTING_WELCOME_BANNER", config.welcomeBanner)) {
-			UserConfig::GetSingleton()->SaveSettings();
-		}
+		// if (UICustom::AddToggleButton("SETTING_WELCOME_BANNER", config.welcomeBanner)) {
+			// UserConfig::GetSingleton()->SaveSettings();
+		// }
 
-		ImGui::SubCategoryHeader(Translate("SETTING_FONT_AND_LANGUAGE"));
+		UICustom::SubCategoryHeader(Translate("SETTING_FONT_AND_LANGUAGE"));
 
 		// Language Dropdown
-		ImGui::Spacing();
-		ImGui::Text(Translate("Language"));
-		ImGui::SameLine(ImGui::GetContentRegionMax().x - p_fixedWidth - ImGui::GetStyle().IndentSpacing);
-		ImGui::PushItemWidth(p_fixedWidth);
-
-		auto languages = Language::GetLanguages();
-
-		if (ImGui::BeginCombo("##LanguageSelection", config.language.c_str())) {
-			for (auto& language : languages) {
-				if (ImGui::Selectable(language.c_str())) {
-					config.language = language;
-
-					Locale::GetSingleton()->SetFilePath(LOCALE_JSON_DIR / (config.language + ".json"));
-					Locale::GetSingleton()->Load(false);
-					UserConfig::GetSingleton()->SaveSettings();
-				}
-			}
-			ImGui::EndCombo();
-		}
-		ImGui::Spacing();
-		ImGui::PopItemWidth();
-
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-
-		// Glyph Dropdown
-		ImGui::Spacing();
-		ImGui::Text(Translate("SETTING_GLYPH_RANGE"));
-		ImGui::SameLine(ImGui::GetContentRegionMax().x - p_fixedWidth - ImGui::GetStyle().IndentSpacing);
-		ImGui::PushItemWidth(p_fixedWidth);
-
-		auto glyphs = Language::GetListOfGlyphNames();
-		// TODO: REFACTOR: GetGlyphName to Int instead of Glyph Range type.
-		auto currentGlyph = Language::GetGlyphName(config.glyphRange);
-		// auto currentGlyph = Language::GetGlyphName(Language::GlyphRanges::English); // TEMPORARY FIX
-
-		if (ImGui::BeginCombo("##GlyphSelection", currentGlyph.data())) {
-			for (auto& glyph : glyphs) {
-				if (ImGui::Selectable(glyph.data())) {
-					config.glyphRange = Language::GetGlyphRange(glyph);
-
-					UIManager::GetSingleton()->RefreshFont();
-					UserConfig::GetSingleton()->SaveSettings();
-				}
-			}
-			ImGui::EndCombo();
-		}
-		ImGui::Spacing();
-		ImGui::PopItemWidth();
+		// ImGui::Spacing();
+		// ImGui::Text(Translate("Language"));
+		// ImGui::SameLine(ImGui::GetContentRegionAvail().x - p_fixedWidth - ImGui::GetStyle().IndentSpacing);
+		// ImGui::PushItemWidth(p_fixedWidth);
+		//
+		// auto languages = Language::GetLanguages();
+		//
+		// if (ImGui::BeginCombo("##LanguageSelection", config.language.c_str())) {
+		// 	for (auto& language : languages) {
+		// 		if (ImGui::Selectable(language.c_str())) {
+		// 			config.language = language;
+		//
+		// 			Locale::GetSingleton()->SetFilePath(LOCALE_JSON_DIR / (config.language + ".json"));
+		// 			Locale::GetSingleton()->Load(false);
+		// 			UserConfig::GetSingleton()->SaveSettings();
+		// 		}
+		// 	}
+		// 	ImGui::EndCombo();
+		// }
+		// ImGui::Spacing();
+		// ImGui::PopItemWidth();
 
 		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 
-		if (UICustom::AddFontDropdown("SETTING_FONT", &config.globalFont)) {
+		if (UICustom::Settings_FontDropdown("SETTING_FONT", &config.globalFont)) {
 			UserConfig::GetSingleton()->SaveSettings();
 		}
 
@@ -300,8 +273,8 @@ namespace Modex
 
 		// Font Size Setting
 		ImGui::Spacing();
-		ImGui::Text(Translate("SETTING_FONT_SIZE"));
-		ImGui::SameLine(ImGui::GetContentRegionMax().x - p_fixedWidth - ImGui::GetStyle().IndentSpacing);
+		ImGui::Text("%s", Translate("SETTING_FONT_SIZE"));
+		ImGui::SameLine(ImGui::GetContentRegionAvail().x - p_fixedWidth - ImGui::GetStyle().IndentSpacing);
 		ImGui::PushItemWidth(p_fixedWidth);
 
 		ImGui::SliderInt("##FontSizeSelection", &s_fontSize, 8, 28, "%d");

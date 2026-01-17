@@ -37,7 +37,7 @@ namespace Modex
 			const float max_width = ImGui::GetContentRegionAvail().x;
 			const float button_half_width = (max_width / 2.0f) - (ImGui::GetStyle().WindowPadding.x / 2.0f);
 
-			ImGui::SubCategoryHeader(Translate("HEADER_ACTIONS"));
+			UICustom::SubCategoryHeader(Translate("HEADER_ACTIONS"));
 
 			// TODO: Port over from equipment
 			// if (ImGui::Selectable(Translate("PLAYER"), playerToggle, 0, ImVec2(button_half_width, button_height))) {
@@ -160,7 +160,7 @@ namespace Modex
 			ImGui::Spacing();
 			ImGui::Spacing();
 
-			ImGui::SubCategoryHeader(Translate("HEADER_PREVIEW"));
+			UICustom::SubCategoryHeader(Translate("HEADER_PREVIEW"));
 
 			ShowItemPreview(a_view->GetItemPreview());
 		}

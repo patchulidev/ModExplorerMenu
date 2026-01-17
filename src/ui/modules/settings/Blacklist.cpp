@@ -19,13 +19,13 @@ namespace Modex
 
 		m_totalBlacklisted = static_cast<int>(blacklist.size());
 
-		ImGui::SubCategoryHeader(Translate("SETTING_BLACKLIST"));
+		UICustom::SubCategoryHeader(Translate("SETTING_BLACKLIST"));
 		ImGui::NewLine();
 		ImGui::BeginColumns("##Blacklist::Columns", 2, ImGuiOldColumnFlags_NoBorder);
 		ImGui::Indent();
 
 		// FormType Filter Box.
-		ImGui::Text(TranslateFormat("GENERAL_FILTER_FORMTYPE", ":"));
+		ImGui::Text("%s", TranslateFormat("GENERAL_FILTER_FORMTYPE", ":"));
 		const auto primary_filter_text = RE::FormTypeToString(m_primaryFilter);
 		if (ImGui::BeginCombo("##Blacklist::PluginType", primary_filter_text.data())) {
 			if (ImGui::Selectable(Translate("None"), m_primaryFilter == RE::FormType::None)) {
@@ -64,7 +64,7 @@ namespace Modex
 		ImGui::NewLine();
 
 		// Plugin Name Fuzzy Search
-		ImGui::Text(TranslateFormat("GENERAL_FILTER_FUZZY", ":"));
+		ImGui::Text("%s", TranslateFormat("GENERAL_FILTER_FUZZY", ":"));
 		if (ImGui::InputTextWithHint("##Blacklist::ModSearch", Translate("GENERAL_CLICK_TO_TYPE"), m_modSearchBuffer, IM_ARRAYSIZE(m_modSearchBuffer))) {
 			m_updateHidden = true;
 			m_totalHidden = 0;
@@ -85,7 +85,7 @@ namespace Modex
 
 		if (m_totalHidden > 0) {
 			ImGui::TextColored(ImVec4(0.9f, 0.1f, 0.1f, 1.0f), TranslateFormat("GENERAL_TOTAL_HIDDEN", ": %d"), m_totalHidden);
-			ImGui::TextColored(ImVec4(0.9f, 0.1f, 0.1f, 1.0f), Translate("GENERAL_TOTAL_HIDDEN_MESSAGE"));
+			ImGui::TextColored(ImVec4(0.9f, 0.1f, 0.1f, 1.0f), "%s", Translate("GENERAL_TOTAL_HIDDEN_MESSAGE"));
 		} else {
 			ImGui::Text(TranslateFormat("GENERAL_TOTAL_HIDDEN", ": %d"), m_totalHidden);
 		}
@@ -97,7 +97,7 @@ namespace Modex
 		// Left and Right Sections
 		ImGui::BeginChild("##Blacklist::LeftBox", ImVec2(ImGui::GetContentRegionAvail().x / 2, 0), true, ImGuiWindowFlags_NoFocusOnAppearing);
 		{
-			ImGui::SubCategoryHeader(Translate("Whitelist"));
+			UICustom::SubCategoryHeader(Translate("Whitelist"));
 
 			ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 			ImGui::NewLine();
@@ -139,7 +139,7 @@ namespace Modex
 
 		ImGui::BeginChild("##Blacklist::RightBox", ImVec2(ImGui::GetContentRegionAvail().x, 0.0f), true, ImGuiWindowFlags_NoFocusOnAppearing);
 		{
-			ImGui::SubCategoryHeader(Translate("Blacklist"));
+			UICustom::SubCategoryHeader(Translate("Blacklist"));
 			ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 			ImGui::NewLine();
 
