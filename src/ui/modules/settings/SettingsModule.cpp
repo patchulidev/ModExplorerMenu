@@ -13,7 +13,7 @@
 #include "config/ThemeConfig.h"
 #include "imgui_internal.h"
 #include "ui/components/UICustom.h"
-#include "localization/FontConfig.h"
+#include "localization/FontManager.h"
 #include "localization/Locale.h"
 #include "ui/core/UIManager.h"
 
@@ -239,30 +239,7 @@ namespace Modex
 		// }
 
 		UICustom::SubCategoryHeader(Translate("SETTING_FONT_AND_LANGUAGE"));
-
-		// Language Dropdown
-		// ImGui::Spacing();
-		// ImGui::Text(Translate("Language"));
-		// ImGui::SameLine(ImGui::GetContentRegionAvail().x - p_fixedWidth - ImGui::GetStyle().IndentSpacing);
-		// ImGui::PushItemWidth(p_fixedWidth);
-		//
-		// auto languages = Language::GetLanguages();
-		//
-		// if (ImGui::BeginCombo("##LanguageSelection", config.language.c_str())) {
-		// 	for (auto& language : languages) {
-		// 		if (ImGui::Selectable(language.c_str())) {
-		// 			config.language = language;
-		//
-		// 			Locale::GetSingleton()->SetFilePath(LOCALE_JSON_DIR / (config.language + ".json"));
-		// 			Locale::GetSingleton()->Load(false);
-		// 			UserConfig::GetSingleton()->SaveSettings();
-		// 		}
-		// 	}
-		// 	ImGui::EndCombo();
-		// }
-		// ImGui::Spacing();
-		// ImGui::PopItemWidth();
-
+		
 		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 
 		if (UICustom::Settings_FontDropdown("SETTING_FONT", &config.globalFont)) {
@@ -283,8 +260,8 @@ namespace Modex
 			config.globalFontSize = static_cast<float>(s_fontSize);
 
 			UserConfig::GetSingleton()->SaveSettings();
-			UIManager::GetSingleton()->RefreshFont();
 		}
+
 		ImGui::Spacing();
 		ImGui::PopItemWidth();
 	}

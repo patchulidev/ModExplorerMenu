@@ -29,25 +29,25 @@ namespace Modex
 
 		struct UserSettings
 		{
-			// General
-			std::string theme 			= "default";
 			uint32_t showMenuKey 		= 211;
 			uint32_t showMenuModifier 	= 0;
-			int modListSort 			= 0;
+
+			int modListSort 		= 0;
 			int uiScaleVertical 		= 100;
 			int uiScaleHorizontal 		= 100;
-			bool fullscreen 			= false;
-			bool pauseGame 				= false;
-			bool disableInMenu 			= false;
-			std::string logLevel 		= "info";
-			bool welcomeBanner 			= true;
-			bool smoothScroll 			= true;
 
-			// Font Stuff
-			std::string language 		= "English";
-			int glyphRange 				= 0;
-			std::string globalFont 		= "Default";
+			bool fullscreen 		= false;
+			bool pauseGame 			= false;
+			bool disableInMenu 		= false;
+			bool welcomeBanner 		= true;
+			bool smoothScroll 		= true;
+
 			float globalFontSize 		= 16.0f;
+
+			std::string language 		= "English";
+			std::string theme 		= "default";
+			std::string globalFont 		= "Ubuntu-Regular";
+			std::string logLevel 		= "info";
 
 			ImVec2 screenScaleRatio		= ImVec2(1.0f, 1.0f);
 		};

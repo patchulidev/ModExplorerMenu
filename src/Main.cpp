@@ -5,7 +5,7 @@
 #include "data/Data.h"
 #include "ui/core/UIManager.h"
 
-#include "localization/Language.h"
+#include "localization/FontManager.h"
 #include "localization/Locale.h"
 
 #include "config/UserData.h"
@@ -39,15 +39,11 @@ namespace
 			Modex::EquipmentConfig::GetSingleton()->Load();
 			Modex::PrettyLog::Debug("EquipmentConfig Initialized.");
 
-			Modex::Language::GetSingleton()->BuildLanguageList();
-			Modex::FontManager::GetSingleton()->BuildFontLibrary();
+			Modex::FontManager::GetSingleton()->Load();
 			Modex::PrettyLog::Info("Language & FontManager Initialized.");
 			
 			Modex::GraphicManager::Init(); // move to open
 			Modex::PrettyLog::Info("GraphicManager Initialized.");
-
-			Modex::UIManager::GetSingleton()->RebuildFontAtlas();
-			Modex::PrettyLog::Info("UIManager Font Atlas Rebuilt.");
 
 			// TODO: Load elsewhere
 			Modex::Data::GetSingleton()->Run();

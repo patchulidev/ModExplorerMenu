@@ -25,7 +25,6 @@ namespace Modex
 		user.welcomeBanner 			= ConfigManager::Get<bool>("Welcome Banner", _default.welcomeBanner);
 		user.smoothScroll 			= ConfigManager::Get<bool>("Smooth Scroll", _default.smoothScroll);
 		user.language 				= ConfigManager::Get<std::string>("Language", _default.language);
-		user.glyphRange 			= ConfigManager::Get<int>("Glyph Range", _default.glyphRange);
 		user.globalFont 			= ConfigManager::Get<std::string>("Global Font", _default.globalFont);
 		user.globalFontSize 		= ConfigManager::Get<float>("Global Font Size", _default.globalFontSize);
 		user.screenScaleRatio 		= ConfigManager::Get<ImVec2>("Screen Scale Ratio", _default.screenScaleRatio);
@@ -50,7 +49,6 @@ namespace Modex
 		ConfigManager::Set<bool>("Welcome Banner", user.welcomeBanner);
 		ConfigManager::Set<bool>("Smooth Scroll", user.smoothScroll);
 		ConfigManager::Set<std::string>("Language", user.language);
-		ConfigManager::Set<int>("Glyph Range", user.glyphRange);
 		ConfigManager::Set<std::string>("Global Font", user.globalFont);
 		ConfigManager::Set<float>("Global Font Size", user.globalFontSize);
 		ConfigManager::Set<ImVec2>("Screen Scale Ratio", user.screenScaleRatio);

@@ -1,6 +1,7 @@
 #include "UIManager.h"
 
 #include "ui/Menu.h"
+#include "config/UserConfig.h"
 #include "config/UserData.h"
 #include "ui/components/UIBanner.h"
 #include "ui/components/UIPopup.h"
@@ -12,7 +13,7 @@
 #include "ui/modules/teleport/TeleportModule.h"
 #include "ui/modules/equipment/EquipmentModule.h"
 
-#include "localization/Language.h"
+#include "localization/FontManager.h"
 #include "imgui_impl_win32.h"
 #include "imgui_impl_dx11.h"
 
@@ -163,11 +164,6 @@ namespace Modex
 
     void UIManager::Render()
     {
-        if (m_pendingFontChange) {
-            RebuildFontAtlas();
-            return;
-        }
-
         ImGui_ImplDX11_NewFrame();
         ImGui_ImplWin32_NewFrame();
 
@@ -285,22 +281,6 @@ namespace Modex
         m_scrollEnergy.x += scroll_x;
         m_scrollEnergy.y += scroll_y;
     }
-
-    void UIManager::RebuildFontAtlas()
-	{
-		auto& io = ImGui::GetIO();
-		io.Fonts->Clear();
-
-		FontManager::GetSingleton()->SetStartupFont();
-
-		io.Fonts->FontBuilderIO = ImGuiFreeType::GetBuilderForFreeType();
-		io.Fonts->FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_ForceAutoHint;
-
-		io.Fonts->Build();
-		ImGui_ImplDX11_InvalidateDeviceObjects();
-
-		m_pendingFontChange = false;
-	}
 
     void UIManager::ShowBanner()
     {

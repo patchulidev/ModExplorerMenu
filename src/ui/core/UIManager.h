@@ -90,9 +90,6 @@ namespace Modex
 		int GetWindowCount() const { return static_cast<int>(m_windowStack.size()); }
 
 		bool InputHandler(ImGuiKey a_key);
-		void RebuildFontAtlas();
-
-		void RefreshFont() { m_pendingFontChange = true; }
 
 	private:
 		UIManager();
@@ -109,7 +106,6 @@ namespace Modex
 		std::unique_ptr<TeleportModule>			m_teleportWindow;
 		std::unique_ptr<ObjectModule>			m_objectWindow;
 		std::unique_ptr<HomeModule>				m_homeWindow;
-		bool									m_pendingFontChange;
 		bool									m_menuListener;
 
 		std::vector<std::unique_ptr<UIWindow>> 	m_windowStack;

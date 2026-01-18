@@ -6,7 +6,7 @@
 #include "ui/core/UIManager.h"
 #include "config/UserConfig.h"
 #include "config/ThemeConfig.h"
-#include "localization/FontConfig.h"
+#include "localization/FontManager.h"
 #include "localization/Locale.h"
 
 
@@ -232,28 +232,28 @@ namespace Modex::UICustom
 
 	bool Settings_FontDropdown(const char* a_text, std::string* a_font)
 	{
-		auto id = "##FontDropdown" + std::string(a_text);
+		auto id = "##Settings::FontDropdown" + std::string(a_text);
 		bool result = false;
 
 		ImGui::Spacing();
 		ImGui::Text("%s", Translate(a_text));
 		ImGui::SameLine(ImGui::GetContentRegionAvail().x - p_fixedWidth - ImGui::GetStyle().IndentSpacing);
 		ImGui::PushItemWidth(p_fixedWidth);
-		// if (ImGui::BeginCombo(id.c_str(), a_font->c_str())) {
-		// 	auto fontLibrary = FontManager::GetFontLibrary();
-		// 	ImGui::PushID("##FontSelectionPopup");
-		// 	for (const auto& font : fontLibrary) {
-		// 		if (ImGui::Selectable(font.c_str())) {
-		// 			*a_font = font;
-		//
-		// 			UIManager::GetSingleton()->RefreshFont();
-		// 			result = true;
-		// 		}
-		// 	}
-		// 	ImGui::PopID();
-		// 	ImGui::EndCombo();
-		// }
-		ImGui::Spacing();
+		
+		const auto fontLibrary = FontManager::GetSingleton()->GetFontLibrary();
+		if (ImGui::BeginCombo(id.c_str(), a_font->c_str())) {
+			ImGui::PushID("##Settings::FontDropdown::Combo");
+			for (const auto& font : fontLibrary) {
+				if (ImGui::Selectable(font.name.c_str())) {
+					*a_font = font.name;
+
+					FontManager::GetSingleton()->SetFont(font.filepath);
+					result = true;
+				}
+			}
+			ImGui::PopID();
+			ImGui::EndCombo();
+		}
 		ImGui::PopItemWidth();
 
 		return result;
