@@ -27,7 +27,7 @@ add_requires("simpleini")
 add_requires("imm32")
 
 -- imgui package @ 21d329 (post 1.92.5 update).
-add_requires("imgui 21d3299e588b5c702dcca0f448b4f937af369b4a", {configs = {win32 = true, dx11 = true}})
+add_requires("imgui 21d3299e588b5c702dcca0f448b4f937af369b4a", {configs = {freetype = true, win32 = true, dx11 = true}})
 
 -- explicitly define macros
 add_defines("ENABLE_SKYRIM_SE=1")

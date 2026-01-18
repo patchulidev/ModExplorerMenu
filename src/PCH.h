@@ -9,12 +9,12 @@
 #include <RE/Skyrim.h>
 #include <SKSE/SKSE.h>
 
-#define IMGUI_USER_CONFIG "external/imgui/imgui_user_config.h"
 #define MODEX_DEBUG
 
+#define IMGUI_USER_CONFIG "external/imgui/imconfig.h"
 #include <imgui.h>
 #include <imgui_internal.h>
-#include <external/imgui/imgui_freetype.h>
+#include <imgui_freetype.h>
 
 #include <SimpleIni.h>
 #include <nlohmann/json.hpp>

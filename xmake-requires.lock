@@ -35,7 +35,7 @@
             },
             version = "2.14.1"
         },
-        ["imgui 21d3299e588b5c702dcca0f448b4f937af369b4a#a26c9177"] = {
+        ["imgui 21d3299e588b5c702dcca0f448b4f937af369b4a#7cd658f8"] = {
             repo = {
                 branch = "master",
                 commit = "0f5ac6b9c50167f07d1b1641f7d7d771dcb908c1",
