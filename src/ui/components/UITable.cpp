@@ -718,7 +718,7 @@ namespace Modex
 		
 		ImGui::SameLine();
 		ImGui::AlignTextToFramePadding();
-		ImGui::Text(" " ICON_LC_ARROW_LEFT_RIGHT);
+		ImGui::Text(" " ICON_LC_ARROW_LEFT_RIGHT " ");
 		if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort | ImGuiHoveredFlags_NoSharedDelay)) {
 			UICustom::FancyTooltip("TABLE_SEARCH_TOOLTIP")	;
 		}
@@ -946,7 +946,7 @@ namespace Modex
 
 		ImGui::SameLine();
 		ImGui::AlignTextToFramePadding();
-		ImGui::Text(" " ICON_LC_ARROW_RIGHT_TO_LINE);
+		ImGui::Text(" " ICON_LC_ARROW_RIGHT_TO_LINE " ");
 		if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort | ImGuiHoveredFlags_NoSharedDelay)) {
 			UICustom::FancyTooltip("TABLE_PLUGIN_TOOLTIP");
 		}
@@ -1062,10 +1062,11 @@ namespace Modex
 		ImRect bb(box_min, box_max);
 
 		// Outline & Background
-		const ImU32 bg_color = ThemeConfig::GetColorU32("TABLE_ROW_BG");
-		const ImU32 bg_color_alt = ThemeConfig::GetColorU32("TABLE_ROW_BG_ALT");
-		const ImU32 outline_color = ThemeConfig::GetColorU32("TABLE_ROW_BORDER");
-		const ImU32 text_color = ThemeConfig::GetColorU32("TEXT");
+		const float global_alpha = ImGui::GetStyle().Alpha;
+		const ImU32 bg_color = ThemeConfig::GetColorU32("TABLE_ROW_BG", global_alpha);
+		const ImU32 bg_color_alt = ThemeConfig::GetColorU32("TABLE_ROW_BG_ALT", global_alpha);
+		const ImU32 outline_color = ThemeConfig::GetColorU32("TABLE_ROW_BORDER", global_alpha);
+		const ImU32 text_color = ThemeConfig::GetColorU32("TEXT", global_alpha);
 
 		// Background
 		if (a_kit.m_tableID % 2 == 0) {
@@ -1073,7 +1074,6 @@ namespace Modex
 		} else {
 			DrawList->AddRectFilled(bb.Min, bb.Max, bg_color_alt);
 		}
-	
 
 		// Outline
 		DrawList->AddRect(bb.Min, bb.Max, outline_color, 0.0f, 0, 1.0f);
@@ -1665,11 +1665,12 @@ namespace Modex
 		ImRect bb(box_min, box_max);
 
 		// Outline & Background
-		const ImU32 bg_color = ThemeConfig::GetColorU32("TABLE_ROW_BG");
-		const ImU32 bg_color_alt = ThemeConfig::GetColorU32("TABLE_ROW_BG_ALT");
-		const ImU32 outline_color = ThemeConfig::GetColorU32("TABLE_ROW_BORDER");
-		const ImU32 text_color = ThemeConfig::GetColorU32("TEXT");
-		const ImU32 err_color = ThemeConfig::GetColorU32("ERROR");
+		const float global_alpha = ImGui::GetStyle().Alpha;
+		const ImU32 bg_color = ThemeConfig::GetColorU32("TABLE_ROW_BG", global_alpha);
+		const ImU32 bg_color_alt = ThemeConfig::GetColorU32("TABLE_ROW_BG_ALT", global_alpha);
+		const ImU32 outline_color = ThemeConfig::GetColorU32("TABLE_ROW_BORDER", global_alpha);
+		const ImU32 text_color = ThemeConfig::GetColorU32("TEXT", global_alpha);
+		const ImU32 err_color = ThemeConfig::GetColorU32("ERROR", global_alpha);
 
 		if (a_item->m_tableID % 2 == 0) {
 			DrawList->AddRectFilled(bb.Min, bb.Max, bg_color);
@@ -1752,7 +1753,7 @@ namespace Modex
 
 		ImGui::SetCursorScreenPos(equippable_pos);
 
-		const auto alpha = a_item->kitEquipped ? 1.0f : 0.25f;
+		const auto alpha = a_item->kitEquipped ? global_alpha * 1.0f : global_alpha * 0.25f;
 		const auto text = a_item->kitEquipped ? Translate("EQUIPPED") : Translate("EQUIP");
 		const auto icon = a_item->kitEquipped ? ICON_LC_CHECK : ICON_LC_X;
 		const auto equip_size = ImVec2(LayoutItemSize.x / 7.0f, LayoutItemSize.y);
@@ -1815,11 +1816,12 @@ namespace Modex
 		ImRect bb(box_min, box_max);
 
 		// Outline & Background
-		const ImU32 bg_color = ThemeConfig::GetColorU32("TABLE_ROW_BG");
-		const ImU32 bg_color_alt = ThemeConfig::GetColorU32("TABLE_ROW_BG_ALT");
-		const ImU32 outline_color = ThemeConfig::GetColorU32("TABLE_ROW_BORDER");
-		const ImU32 text_color = ThemeConfig::GetColorU32("TEXT");
-		const ImU32 err_color = ThemeConfig::GetColorU32("ERROR");
+		const float global_alpha = ImGui::GetStyle().Alpha;
+		const ImU32 bg_color = ThemeConfig::GetColorU32("TABLE_ROW_BG", global_alpha);
+		const ImU32 bg_color_alt = ThemeConfig::GetColorU32("TABLE_ROW_BG_ALT", global_alpha);
+		const ImU32 outline_color = ThemeConfig::GetColorU32("TABLE_ROW_BORDER", global_alpha);
+		const ImU32 text_color = ThemeConfig::GetColorU32("TEXT", global_alpha);
+		const ImU32 err_color = ThemeConfig::GetColorU32("ERROR", global_alpha);
 		bool is_enchanted = false;
 
 		// Background
@@ -2194,9 +2196,9 @@ namespace Modex
 
 	void UITable::DrawWarningBar()
 	{
-		static const std::string auxiliary_icon = HasFlag(ModexTableFlag_Kit) ? ICON_LC_BOX : ICON_LC_SEARCH;
-		static constexpr std::string user_icon = ICON_LC_USER;
-		static constexpr std::string warn_icon = ICON_LC_TRIANGLE_ALERT;
+		static const std::string auxiliary_icon = HasFlag(ModexTableFlag_Kit) ? ICON_LC_BOX " " : ICON_LC_SEARCH " ";
+		static constexpr std::string user_icon = ICON_LC_USER " ";
+		static constexpr std::string warn_icon = ICON_LC_TRIANGLE_ALERT " ";
 
 		ImVec4 user_color = ThemeConfig::GetColor("BUTTON"); // TODO: Unique Color Keys?
 
