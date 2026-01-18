@@ -2,6 +2,7 @@
 
 #include "core/Graphic.h"
 #include "external/icons/IconsLucide.h"
+#include "imgui.h"
 #include "imgui_internal.h"
 #include "ui/core/UIManager.h"
 #include "config/UserConfig.h"
@@ -12,7 +13,7 @@
 
 namespace Modex::UICustom
 {
-	static inline float p_fixedWidth = 150.0f; // TODO: FUCK YOU
+	static inline float s_widgetWidth = 150.0f; // TODO: FUCK YOU
 
 	[[nodiscard]] float GetCenterTextPosX(const char* a_text)
 	{
@@ -84,12 +85,108 @@ namespace Modex::UICustom
 		return pressed;
 	}
 
+
 	// Exclusively used in the Frame Sidebar window.
-	bool SidebarImageButton(const char* a_text, bool a_selected, ImTextureID a_texture, ImVec2 a_imageSize, ImVec2 a_buttonSize, float& a_textMod)
+	bool SidebarImageButton(const std::string& a_text, const std::string& a_icon, bool a_selected, ImVec2 a_buttonSize, float& a_textMod, bool a_expanded)
 	{
-		bool pressed = ImGui::Selectable(a_text, a_selected, ImGuiSelectableFlags_None, a_buttonSize);
-		return pressed;
+		ImGui::PushID(a_text.c_str());
+		const ImVec2 pos = ImGui::GetCursorPos();
+		const ImVec2 glyph_offset = ImVec2(4.0f, 2.0f);
+		const float spacing = ImGui::GetFrameHeight();
+
+		ImGui::SetNextItemAllowOverlap();
+		bool pressed = ImGui::Selectable("", a_selected, 0, a_buttonSize);
+		bool hovered = ImGui::IsItemHovered();
+		bool held = ImGui::IsItemActive();
+
+		ImGui::SetCursorPos(pos);
+		ImGui::SetCursorPosY(pos.y + (a_buttonSize.y / 2.0f) - (ImGui::GetFontSize() / 2.0f) - glyph_offset.y);
+
+		if (!a_expanded)
+		{
+			ImGui::SetCursorPosX(UICustom::GetCenterTextPosX(a_icon) - glyph_offset.x);
+		}
+
+		ImGui::PushFont(NULL, ImGui::GetFontSize() + 8.0f);
+		ImGui::Text("%s", a_icon.c_str());
+		ImGui::PopFont();
+
+		const float anim_step = 0.05f;
+		if (hovered || held) {
+			if (a_textMod < 1.0f) {
+				a_textMod += anim_step;
+			} else {
+				a_textMod = 1.0f;
+			}
+		} else {
+			if (a_textMod > 0.0f) {
+				a_textMod -= anim_step;
+			} else {
+				a_textMod = 0.0f;
+			}
+		}
+
+		if (!a_expanded)
+		{
+			ImGui::PopID();
+			ImGui::Spacing();
+			return pressed;
+		}
+		else {
+			ImGui::SameLine();
+			ImGui::SetCursorPosY(ImGui::GetCursorPosY() + glyph_offset.y);
+			ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (spacing * a_textMod));
+
+			if (a_selected) ImGui::PushFontBold();
+			ImGui::Text("%s", a_text.c_str()); 
+			if (a_selected) ImGui::PopFont();
+
+			ImGui::PopID();
+			ImGui::Spacing();
+			return pressed;
+		}
 	};
+
+	bool Settings_ToggleButton(const char* a_localeString, bool& a_toggle)
+	{
+		auto id = "##Settings::ToggleButton::" + std::string(a_localeString);
+		
+		ImGui::PushID(id.c_str());
+		ImGui::Spacing();
+
+
+		const ImVec4 button_color = a_toggle == true ? ThemeConfig::GetColor("BUTTON_CONFIRM") : ThemeConfig::GetColor("BUTTON_CANCEL");
+		const std::string button_text = a_toggle == true ? Translate("ON") : Translate("OFF"); 
+
+		ImGui::Text("%s", Translate(a_localeString));
+		ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth - ImGui::GetStyle().IndentSpacing);
+		ImGui::PushStyleColor(ImGuiCol_Button, button_color);
+		bool pressed = ImGui::Button(button_text.c_str(), ImVec2(s_widgetWidth, 0.0f));
+		ImGui::PopStyleColor();
+
+		if (pressed) {
+			a_toggle = !a_toggle;
+		}
+
+		ImGui::Spacing();
+		ImGui::PopID();
+		return pressed;
+	}
+
+	bool Settings_SliderInt(const char* a_localeString, int& a_value, int a_min, int a_max)
+	{
+		auto id = "##Settings::SliderInt::" + std::string(a_localeString);
+
+		ImGui::Spacing();
+
+		ImGui::Text("%s", Translate(a_localeString));
+		ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth - ImGui::GetStyle().IndentSpacing);
+		ImGui::SetNextItemWidth(s_widgetWidth);
+		bool pressed = ImGui::SliderInt(id.c_str(), &a_value, a_min, a_max);
+
+		ImGui::Spacing();
+		return pressed;
+	}
 
 
 	bool Settings_ColorPicker(const char* a_text, ImVec4& a_colRef)
@@ -101,9 +198,9 @@ namespace Modex::UICustom
 
 		ImGui::Spacing();
 		ImGui::Text("%s", Translate(a_text));
-		ImGui::SameLine(ImGui::GetContentRegionAvail().x - p_fixedWidth - ImGui::GetStyle().IndentSpacing);
+		ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth - ImGui::GetStyle().IndentSpacing);
 
-		if (ImGui::ColorButton(id.c_str(), a_colRef, flags, ImVec2(p_fixedWidth, 0))) {
+		if (ImGui::ColorButton(id.c_str(), a_colRef, flags, ImVec2(s_widgetWidth, 0))) {
 			ImGui::OpenPopup(popup.c_str());
 		}
 
@@ -126,8 +223,8 @@ namespace Modex::UICustom
 
 		ImGui::Spacing();
 		ImGui::Text("%s", Translate(a_text));
-		ImGui::SameLine(ImGui::GetContentRegionAvail().x - p_fixedWidth - ImGui::GetStyle().IndentSpacing);
-		ImGui::SetNextItemWidth(p_fixedWidth);
+		ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth - ImGui::GetStyle().IndentSpacing);
+		ImGui::SetNextItemWidth(s_widgetWidth);
 
 		if (ImGui::SliderFloat(id.c_str(), &a_valRef, a_min, a_max)) {
 			changes = true;
@@ -152,10 +249,10 @@ namespace Modex::UICustom
 		if (GraphicManager::imgui_library.empty()) {
 			const float height = ((config.uiScaleVertical / 100) * 20.0f) + 10.0f;
 
-			ImGui::SameLine(ImGui::GetContentRegionAvail().x - p_fixedWidth - ImGui::GetStyle().IndentSpacing);  // Right Align
+			ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth - ImGui::GetStyle().IndentSpacing);  // Right Align
 			ImGui::SetCursorPosY(ImGui::GetCursorPosY() - (height / 2) + 5.0f);                                            // Center Align
 
-			if (ImGui::Button(ImGui::SkyrimKeymap.at(a_keybind), ImVec2(p_fixedWidth, height + 5.0f))) {
+			if (ImGui::Button(ImGui::SkyrimKeymap.at(a_keybind), ImVec2(s_widgetWidth, height + 5.0f))) {
 				UIManager::GetSingleton()->ShowHotkey(&a_keybind, defaultKey, [&]() {
 					changes = true;
 				});
@@ -173,7 +270,7 @@ namespace Modex::UICustom
 			const float imageHeight = ((float)img.height * 0.5f) * scale;
 			const ImVec2& size = ImVec2(imageWidth, imageHeight);
 
-			// ImGui::SameLine(ImGui::GetContentRegionAvail().x - (p_fixedWidth - p_padding) + imageWidth / scale);  // Right Align
+			// ImGui::SameLine(ImGui::GetContentRegionAvail().x - (s_widgetWidth - p_padding) + imageWidth / scale);  // Right Align
 			ImGui::SameLine(ImGui::GetContentRegionAvail().x - ImGui::GetStyle().IndentSpacing - imageWidth);
 			ImGui::SetCursorPosY(ImGui::GetCursorPosY() - (imageHeight / 2) + 5.0f);  // Center Align
 
@@ -206,19 +303,20 @@ namespace Modex::UICustom
 		return changes;
 	}
 
-	bool Settings_Dropdown(const char* a_text, int& a_value, const std::vector<std::string>& a_options)
+	bool Settings_Dropdown(const char* a_text, int& a_value, const std::vector<std::string>& a_options, bool a_localizeList)
 	{
 		bool result = false;
 		auto id = "##Settings::Dropdown" + std::string(a_text);
 
 		ImGui::Spacing();
 		ImGui::Text("%s", Translate(a_text));
-		ImGui::SameLine(ImGui::GetContentRegionAvail().x - p_fixedWidth - ImGui::GetStyle().IndentSpacing);
-		ImGui::PushItemWidth(p_fixedWidth);
+		ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth - ImGui::GetStyle().IndentSpacing);
+		ImGui::PushItemWidth(s_widgetWidth);
 		if (ImGui::BeginCombo(id.c_str(), Translate(a_options[a_value].c_str()))) {
 			for (size_t i = 0; i < a_options.size(); ++i) {
-				if (ImGui::Selectable(Translate(a_options[i].c_str()))) {
-					a_value = i;
+				const char* entry = a_localizeList ? Translate(a_options[i].c_str()) : a_options[i].c_str();
+				if (ImGui::Selectable(entry)) {
+					a_value = static_cast<int>(i);
 					result = true;
 				}
 			}
@@ -237,8 +335,8 @@ namespace Modex::UICustom
 
 		ImGui::Spacing();
 		ImGui::Text("%s", Translate(a_text));
-		ImGui::SameLine(ImGui::GetContentRegionAvail().x - p_fixedWidth - ImGui::GetStyle().IndentSpacing);
-		ImGui::PushItemWidth(p_fixedWidth);
+		ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth - ImGui::GetStyle().IndentSpacing);
+		ImGui::PushItemWidth(s_widgetWidth);
 		
 		const auto fontLibrary = FontManager::GetSingleton()->GetFontLibrary();
 		if (ImGui::BeginCombo(id.c_str(), a_font->c_str())) {
