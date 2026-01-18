@@ -120,29 +120,17 @@ namespace Modex
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
 		ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
-		ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.0f, 0.0f, 0.0f, 0.35f * m_alpha));
-		ImGui::Begin("##Background", nullptr, BACKGROUND_FLAGS);
+		ImGui::PushStyleColor(ImGuiCol_WindowBg, ThemeConfig::GetColor("SCREEN_BACKGROUND", m_alpha));
+		ImGui::Begin("##Modex::Background", nullptr, BACKGROUND_FLAGS);
 
-		// TODO: Splash configuration should be inside Theme settings, not User settings.
-		// 
-		// if (config.showSplash) {
-		// 	static GraphicManager::Image splash_image;
-		//
-		// 	if (ImGui::IsWindowAppearing() && splash_image.texture == nullptr) {
-		// 		GraphicManager::GetD3D11Texture(
-		// 			config.customSplashPath.c_str(),
-		// 			&splash_image.texture,
-		// 			splash_image.width,
-		// 			splash_image.height
-		// 		);
-		// 	}
-		//
-		// 	if (splash_image.texture) {
-		// 		ImGui::SetCursorPosX((displaySize.x / 2.0f) - (splash_image.width / 2.0f));
-		// 		ImGui::SetCursorPosY((displaySize.y / 2.0f) - (splash_image.height / 2.0f));
-		// 		ImGui::Image(reinterpret_cast<ImTextureID>(splash_image.texture), ImVec2(splash_image.width, splash_image.height));
-		// 	}
-		// }
+		// Render a splash logo if theme contains a valid path.
+		if (const auto splash_image = ThemeConfig::GetSplashLogo(); splash_image.has_value()) {
+			if (splash_image->texture != nullptr) {
+				ImGui::SetCursorPosX((displaySize.x / 2.0f) - (splash_image->width / 2.0f));
+				ImGui::SetCursorPosY((displaySize.y / 2.0f) - (splash_image->height / 2.0f));
+				ImGui::Image(reinterpret_cast<ImTextureID>(splash_image->texture), ImVec2(splash_image->width, splash_image->height));
+			}
+		}
 
 		ImGui::End();
 		ImGui::PopStyleVar(2);

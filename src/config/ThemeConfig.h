@@ -1,6 +1,7 @@
 #pragma once
 
 #include "config/ConfigManager.h"
+#include "core/Graphic.h"
 	
 
 namespace Modex
@@ -38,8 +39,11 @@ namespace Modex
 
 		ThemeConfig();
 
+		static std::optional<GraphicManager::Image> GetSplashLogo();
+
 		static ImVec4 GetColor(const std::string& a_key, float a_alphaMult = 1.0f);
 		static ImU32 GetColorU32(const std::string& a_key, float a_alphaMult = 1.0f);
+
 		static const std::vector<ModexTheme>& GetAvailableThemes() { return GetSingleton()->m_availableThemes; }
 	};
 }

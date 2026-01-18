@@ -25,6 +25,30 @@ namespace Modex
         return ImGui::ColorConvertFloat4ToU32(color);
     }
 
+    std::optional<GraphicManager::Image> ThemeConfig::GetSplashLogo()
+    {
+        auto& data = GetSingleton()->m_data;
+        auto it = data.find("SPLASH_FILE_PATH");
+
+        if (it != data.end()) {
+            std::string logo_path = it->get<std::string>();
+            static GraphicManager::Image splash_image;
+
+            if (splash_image.texture == nullptr) {
+                GraphicManager::GetD3D11Texture(
+                    logo_path.c_str(),
+                    &splash_image.texture,
+                    splash_image.width,
+                    splash_image.height
+                );
+            }
+
+            return splash_image;
+        }
+
+        return std::nullopt;
+    }
+
     bool ThemeConfig::Load(bool a_create)
     {
         (void)a_create;
