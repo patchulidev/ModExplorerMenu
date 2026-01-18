@@ -11,8 +11,10 @@
 
 #include "config/UserData.h"
 #include "config/UserConfig.h"
+#include "config/ThemeConfig.h"
 
 #include "core/Graphic.h"
+#include "localization/FontManager.h"
 
 namespace Modex
 {
@@ -35,6 +37,11 @@ namespace Modex
 
 	void Menu::ReloadWindow(ActiveWindow a_window)
 	{
+		if (a_window == ActiveWindow::kTotal) {
+			ReloadWindow(ActiveWindow::Home);
+			return;
+		}
+
 		this->activeWindow = a_window;
 
 		switch (a_window) {
@@ -54,7 +61,7 @@ namespace Modex
 			ActorModule::GetSingleton()->Load();
 			break;
 		case Teleport:
-			TeleportModule::GetSingleton()->Load();
+			// TeleportModule::GetSingleton()->Load();
 			break;
 		case Settings:
 			SettingsModule::GetSingleton()->Load();
@@ -66,14 +73,15 @@ namespace Modex
 
 	void Menu::NextWindow()
 	{
-		uint8_t next_window = (static_cast<uint8_t>(activeWindow) + 1) % static_cast<uint8_t>(ActiveWindow::kTotal);
+		uint8_t next_window = static_cast<uint8_t>(activeWindow) + 1;
 		ReloadWindow(static_cast<ActiveWindow>(next_window));
 	}
 
 	void Menu::Draw()
 	{
-		const auto& config = UserConfig::Get();
+		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, m_alpha);
 
+		const auto& config = UserConfig::Get();
 		const auto displaySize = ImGui::GetMainViewport()->Size;
 
 		// Predefined window size.
@@ -97,21 +105,10 @@ namespace Modex
 
 		const float center_x = (displaySize.x * 0.5f) - (window_w * 0.5f);
 		const float center_y = (displaySize.y * 0.5f) - (window_h * 0.5f);
-		
-		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, m_alpha);
-		ImGui::PushStyleColor(ImGuiCol_TableRowBg, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
-		ImGui::PushStyleColor(ImGuiCol_TableRowBgAlt, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
 
 		if (!sidebar_initialized) {
 			sidebar_w = expand_sidebar ? max_sidebar_w : min_sidebar_w;
 			sidebar_initialized = true;
-		}
-
-		// TODO: Optionally disable this shortcut for users who don't want it. I.e. SimpleIME users.
-		if (ImGui::IsKeyReleased(ImGuiMod_Alt)) {
-			if (!ImGui::GetIO().WantCaptureKeyboard) {
-				NextWindow();
-			}
 		}
 
 		// Draw a transparent black background.
@@ -137,16 +134,22 @@ namespace Modex
 		ImGui::PopStyleColor(2);
 		// End black background
 		
+
+		// Push style for Modex Menu window
+		ImGui::PushStyleColor(ImGuiCol_WindowBg, ThemeConfig::GetColor("WINDOW_BACKGROUND", m_alpha));
+		ImGui::PushStyleColor(ImGuiCol_TableRowBg, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+		ImGui::PushStyleColor(ImGuiCol_TableRowBgAlt, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+
 		ImGui::SetNextWindowSize(ImVec2(window_w, window_h));
 		ImGui::SetNextWindowPos(ImVec2(center_x, center_y));
 
-		if (ImGui::Begin("##ModexMenu", nullptr, WINDOW_FLAGS)) {
+		if (ImGui::Begin("##Modex::Menu", nullptr, WINDOW_FLAGS)) {
 			ImGui::SetCursorPos(ImVec2(0, 0));
 
 			ImGui::SetNextItemAllowOverlap();
-			if (ImGui::BeginChild("##SideBar", ImVec2(sidebar_w, ImGui::GetContentRegionAvail().y + ImGui::GetStyle().WindowPadding.y), ImGuiChildFlags_Borders, SIDEBAR_FLAGS)) {
+			if (ImGui::BeginChild("##Modex::Menu::SideBar", ImVec2(sidebar_w, ImGui::GetContentRegionAvail().y + ImGui::GetStyle().WindowPadding.y), ImGuiChildFlags_Borders, WINDOW_FLAGS)) {
 				const float button_width = ImGui::GetContentRegionAvail().x;
-				constexpr float button_height = 40.0f;
+				const float button_height = ImGui::GetFontSize() * 2.0f;
 
 				{
 					// This is ridiculous, but is required due to Skyrim Upscaler Plugin. Typically, I could just
@@ -176,73 +179,71 @@ namespace Modex
 						UserData::User().Set<bool>("Menu::Sidebar", this->expand_sidebar);
 					}
 
-					// ImGui::PopStyleVar();
 					ImGui::PopStyleColor(5);
 
-					// This is an alternative to doing the same UV scaling to the Y axis on a single image.
-					// Instead, I just overlay a second image on the first one, which yields the same results.
-					if (sidebar_w > min_sidebar_w) {
-						ImTextureID overlay = reinterpret_cast<ImTextureID>(GraphicManager::image_library["new_logo_bottom"].texture);
-						const float image_alpha = std::clamp(sidebar_w / max_sidebar_w, 0.0f, 1.0f);
-						ImGui::SameLine();
-						ImGui::SetCursorPos(backup_pos);
-						ImGui::SetNextItemAllowOverlap();
-						ImGui::Image(overlay, ImVec2(image_width * (sidebar_w / image_width) - 15.0f, image_height)); 
+					if (expand_sidebar) {
+						const char* title = "A Mod Explorer Menu";
+						ImGui::PushFont(NULL, 16.0f);
+						ImGui::SetCursorPosY(ImGui::GetCursorPosY() - image_height / 2.75f);
+						ImGui::SetCursorPosX(UICustom::GetCenterTextPosX(title));
+						ImGui::Text("%s", title);
+						ImGui::PopFont();
 					}
 				}
 
 				ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 
-				SideBarImage home_image 		= { reinterpret_cast<ImTextureID>(GraphicManager::image_library["IconHome"].texture), ImVec2(32.0f, 32.0f) };
-				SideBarImage additem_image 		= { reinterpret_cast<ImTextureID>(GraphicManager::image_library["IconAddItem"].texture), ImVec2(32.0f, 32.0f) };
-				SideBarImage equipment_image 	= { reinterpret_cast<ImTextureID>(GraphicManager::image_library["IconAddItem"].texture), ImVec2(32.0f, 32.0f) };
-				SideBarImage object_image 		= { reinterpret_cast<ImTextureID>(GraphicManager::image_library["IconObject"].texture), ImVec2(32.0f, 32.0f) };
-				SideBarImage npc_image 			= { reinterpret_cast<ImTextureID>(GraphicManager::image_library["IconNPC"].texture), ImVec2(32.0f, 32.0f) };
-				SideBarImage teleport_image 	= { reinterpret_cast<ImTextureID>(GraphicManager::image_library["IconTeleport"].texture), ImVec2(32.0f, 32.0f) };
-				SideBarImage settings_image 	= { reinterpret_cast<ImTextureID>(GraphicManager::image_library["IconSettings"].texture), ImVec2(32.0f, 32.0f) };
-				SideBarImage exit_image 		= { reinterpret_cast<ImTextureID>(GraphicManager::image_library["IconExit"].texture), ImVec2(32.0f, 32.0f) };
 
-				if (UICustom::SidebarImageButton("Home", activeWindow == ActiveWindow::Home, home_image.texture, home_image.size, ImVec2(button_width, button_height), home_w)) {
+				static constexpr std::string home_icon = ICON_LC_HOUSE; 
+				if (UICustom::SidebarImageButton("Home", home_icon, activeWindow == ActiveWindow::Home, ImVec2(button_width, button_height), home_w, expand_sidebar)) {
 					activeWindow = ActiveWindow::Home;
 				}
 			
-				if (UICustom::SidebarImageButton("Item", activeWindow == ActiveWindow::AddItem, additem_image.texture, additem_image.size, ImVec2(button_width, button_height), additem_w)) {
+				static constexpr std::string item_icon = ICON_LC_PLUS;
+				if (UICustom::SidebarImageButton("Item", item_icon, activeWindow == ActiveWindow::AddItem, ImVec2(button_width, button_height), additem_w, expand_sidebar)) {
 					ReloadWindow(ActiveWindow::AddItem);
 				}
 
-				if (UICustom::SidebarImageButton("Equipment", activeWindow == ActiveWindow::Equipment, equipment_image.texture, equipment_image.size, ImVec2(button_width, button_height), equipment_w)) {
+				static constexpr std::string equip_icon = ICON_LC_PACKAGE;
+				if (UICustom::SidebarImageButton("Equipment", equip_icon, activeWindow == ActiveWindow::Equipment, ImVec2(button_width, button_height), equipment_w, expand_sidebar)) {
 					ReloadWindow(ActiveWindow::Equipment);
 				}
 
-				if (UICustom::SidebarImageButton("Object", activeWindow == ActiveWindow::Object, object_image.texture, object_image.size, ImVec2(button_width, button_height), object_w)) {
+				static constexpr std::string object_icon = ICON_LC_SHAPES;
+				if (UICustom::SidebarImageButton("Object", object_icon, activeWindow == ActiveWindow::Object, ImVec2(button_width, button_height), object_w, expand_sidebar)) {
 					ReloadWindow(ActiveWindow::Object);
 				}				
 
-				if (UICustom::SidebarImageButton("NPC", activeWindow == ActiveWindow::NPC, npc_image.texture, npc_image.size, ImVec2(button_width, button_height), npc_w)) {
+				static constexpr std::string actor_icon = ICON_LC_USER_PLUS;
+				if (UICustom::SidebarImageButton("Actor", actor_icon, activeWindow == ActiveWindow::NPC, ImVec2(button_width, button_height), npc_w, expand_sidebar)) {
 					ReloadWindow(ActiveWindow::NPC);
 				}				
 
-				if (UICustom::SidebarImageButton("Teleport", activeWindow == ActiveWindow::Teleport, teleport_image.texture, teleport_image.size, ImVec2(button_width, button_height), teleport_w)) {
+				static constexpr std::string teleport_icon = ICON_LC_MAP_PIN;
+				if (UICustom::SidebarImageButton("Teleport", teleport_icon, activeWindow == ActiveWindow::Teleport, ImVec2(button_width, button_height), teleport_w, expand_sidebar)) {
 					ReloadWindow(ActiveWindow::Teleport);
 				}			
 
-				if (UICustom::SidebarImageButton("Settings", activeWindow == ActiveWindow::Settings, settings_image.texture, settings_image.size, ImVec2(button_width, button_height), settings_w)) {
+				static constexpr std::string settings_icon = ICON_LC_SETTINGS;
+				if (UICustom::SidebarImageButton("Settings", settings_icon, activeWindow == ActiveWindow::Settings, ImVec2(button_width, button_height), settings_w, expand_sidebar)) {
 					ReloadWindow(ActiveWindow::Settings);
 				}
 
-				if (UICustom::SidebarImageButton("Exit", false, exit_image.texture, exit_image.size, ImVec2(button_width, button_height), exit_w)) {
+				static constexpr std::string exit_icon = ICON_LC_LOG_OUT;
+				if (UICustom::SidebarImageButton("Exit", exit_icon, false, ImVec2(button_width, button_height), exit_w, expand_sidebar)) {
 					UIManager::GetSingleton()->Close();
 				}
 
+				static const float step = 5.0f;
 				if (this->expand_sidebar) {
-					if (sidebar_w + 20.0f < max_sidebar_w) {
-						sidebar_w += 20.0f;
+					if (sidebar_w + step < max_sidebar_w) {
+						sidebar_w += step;
 					} else {
 						sidebar_w = max_sidebar_w;
 					}
 				} else {
-					if (sidebar_w - 20.0f > min_sidebar_w) {
-						sidebar_w -= 20.0f;
+					if (sidebar_w - step > min_sidebar_w) {
+						sidebar_w -= step;
 					} else {
 						sidebar_w = min_sidebar_w;
 					}
@@ -252,12 +253,6 @@ namespace Modex
 
 			ImGui::EndChild();
 			ImGui::SameLine();
-
-			// Need to push a clip rect here so that sidebar overlaps contents while maintaining transparency.
-			// Otherwise, the overlap will be transparent, and the overlapped content will show under.
-			ImVec2 min = { sidebar_w + ImGui::GetWindowPos().x, ImGui::GetWindowPos().y };
-			ImVec2 max = { min.x + ImGui::GetWindowSize().x, min.y + ImGui::GetWindowSize().y };
-			ImGui::PushClipRect(min, max, true);
 
 			switch (activeWindow) {
 			case ActiveWindow::Home:
@@ -284,13 +279,11 @@ namespace Modex
 			default:
 				break;
 			}
-
-			ImGui::PopClipRect();
-
 		}
+
 		ImGui::End();
-		ImGui::PopStyleVar();
-		ImGui::PopStyleColor(2);
+		ImGui::PopStyleColor(3);
+		ImGui::PopStyleVar(); // alpha
 	}
 	
 }  // namespace Modex
