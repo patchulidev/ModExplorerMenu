@@ -75,8 +75,20 @@ namespace Modex
 		const auto& config = UserConfig::Get();
 
 		const auto displaySize = ImGui::GetMainViewport()->Size;
-		const float size_w = (displaySize.x * 0.90f) * (config.uiScaleHorizontal / 100.0f);
-		const float size_h = (displaySize.y * 0.775f) * (config.uiScaleVertical / 100.0f);
+
+		// Predefined window size.
+		const float size_x = displaySize.x * 0.90f;
+		const float size_y = displaySize.y * 0.775f;
+
+		// User defined window scale.
+		const float scale_x = (config.uiScaleHorizontal / 100.0f);
+		const float scale_y = (config.uiScaleVertical / 100.0f);
+
+		// Prevent users from scaling window outside the display bounds.
+		const float size_w = std::clamp(size_x * scale_x, displaySize.x / 4.0f, displaySize.x);
+		const float size_h = std::clamp(size_y * scale_y, displaySize.y / 4.0f, displaySize.y);
+
+		// Resolve final window resolution conditionally.
 		const float window_w = config.fullscreen ? displaySize.x : size_w;
 		const float window_h = config.fullscreen ? displaySize.y : size_h;
 
