@@ -35,19 +35,19 @@ namespace Modex
 			int modListSort 		= 0;
 			int uiScaleVertical 		= 100;
 			int uiScaleHorizontal 		= 100;
+			int globalFontSize 		= 16;
+			int logLevel 			= 1;
 
 			bool fullscreen 		= false;
 			bool pauseGame 			= false;
 			bool disableInMenu 		= false;
+			bool disableAlt			= false;
 			bool welcomeBanner 		= true;
 			bool smoothScroll 		= true;
-
-			float globalFontSize 		= 16.0f;
 
 			std::string language 		= "English";
 			std::string theme 		= "default";
 			std::string globalFont 		= "Ubuntu-Regular";
-			std::string logLevel 		= "info";
 
 			ImVec2 screenScaleRatio		= ImVec2(1.0f, 1.0f);
 		};
