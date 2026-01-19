@@ -14,7 +14,6 @@
 #include "config/EquipmentConfig.h"
 #include "config/BlacklistConfig.h"
 
-
 namespace
 {
 	void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
@@ -45,14 +44,14 @@ namespace
 			Modex::GraphicManager::Init(); // move to open
 			Modex::PrettyLog::Info("GraphicManager Initialized.");
 
-			// TODO: Load elsewhere
+			// OPTIMIZE: Maybe try better dynamic loading? 
 			Modex::Data::GetSingleton()->Run();
 			Modex::PrettyLog::Info("Data Manager Initialized.");
-			
 			
 			Modex::PrettyLog::Info("Done!");
 			Modex::PrettyLog::ReportSummary();
 			
+			// TODO: Pending Banner re-implementation.
 			// Modex::UIManager::GetSingleton()->ShowBanner();
 			// Modex::UIBanner::GetSingleton()->Display();
 
@@ -94,12 +93,15 @@ SKSEPluginLoad(const SKSE::LoadInterface* a_skse)
 
 	SetupLog();
 
-	Modex::PrettyLog::Info("Hello World!");
-
 	SKSE::GetMessagingInterface()->RegisterListener(MessageHandler);
 
 	return true;
 }
+
+// Sanity checks for testing buildsystem.
+#ifdef MODEX_DEBUG
+	// code
+#endif
 
 #ifdef ENABLE_SKYRIM_VR
 	// code

@@ -1,6 +1,6 @@
 #pragma once
 
-// TODO: Could probably make a module class
+// NOTE: Could probably make a module class for DRY principal.
 
 namespace Modex
 {

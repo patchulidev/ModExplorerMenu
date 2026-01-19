@@ -286,4 +286,4 @@ namespace Modex
 		ImGui::PopStyleVar(); // alpha
 	}
 	
-}  // namespace Modex
+}

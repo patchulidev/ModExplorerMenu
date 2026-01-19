@@ -1,13 +1,11 @@
-#pragma once
-
 #include "Data.h"
 #include "config/BlacklistConfig.h"
+#include "core/PrettyLog.h"
+#include "pch.h"
 
 namespace Modex
 {
 	// Sort Function for Case Insensitive comparing used for Plugin Lists.
-	// Doing additional checks to ensure the TESFile* pointer is not null.
-	// Due to reports of random crashing. #19 for example.
 	bool CaseInsensitiveCompareTESFile(const RE::TESFile* a, const RE::TESFile* b)
 	{
 		std::string filenameA = ValidateTESFileName(a);
@@ -21,7 +19,7 @@ namespace Modex
 			});
 	}
 
-	// Sort Function for compileIndex aka Load Order used for Plugin Lists.
+	// Sort function for compileindex (Load Order) - Ascending.
 	bool CompileIndexCompareTESFileAsc(const RE::TESFile* a, const RE::TESFile* b)
 	{
 		if (!a or !b) {
@@ -31,6 +29,7 @@ namespace Modex
 		return a->GetCombinedIndex() < b->GetCombinedIndex();
 	}
 
+	// Sort function for compileIndex (Load Order) - Descending.
 	bool CompileIndexCompareTESFileDesc(const RE::TESFile* a, const RE::TESFile* b)
 	{
 		if (!a or !b) {
@@ -40,11 +39,7 @@ namespace Modex
 		return a->GetCombinedIndex() > b->GetCombinedIndex();
 	}
 
-	// Returns a copy of the specified plugin list containing TESFile* pointers. as an unordered_set.
-	// This is primarily used as a quicker lookup than GetModulePluginListSorted (more expensive).
-	//
-	// @param a_type - The type of plugin list to return.
-	// @return std::unordered_set<const RE::TESFile*> - A set of TESFile* pointers.
+	// Returns an unordered set of TESFile pointers cached at startup based on PLUGIN_TYPE.
 	std::unordered_set<const RE::TESFile*> Data::GetModulePluginList(PLUGIN_TYPE a_type)
 	{
 		switch (a_type) {
@@ -58,16 +53,26 @@ namespace Modex
 			return m_cellModList;
 		case PLUGIN_TYPE::ALL:
 			return m_modList;
-		default:
-			PrettyLog::Error("Invalid PLUGIN_TYPE argument passed to GetModulePluginList");
-			return m_modList;
 		}
+
+		ASSERT_MSG(true, "Invalid Data::PLUGIN_TYPE arg passed to Data::GetModulePluginList: '{}'", static_cast<uint32_t>(a_type));
+
+		return m_modList;
 	}
 
-	// Returns a copy of the specified plugin list as a sorted vector.
-	//
-	// @param a_type - The type of plugin list to return.
-	// @return std::vector<const RE::TESFile*> - A list of alphabetically sorted TESFile* pointers.
+	// Returns an alphabetically sorted vector of plugin names cached at startup.
+	std::vector<std::string> Data::GetSortedListOfPluginNames()
+	{
+		std::vector<std::string> modList;
+
+		for (auto& mod : m_modListSorted) {
+			modList.push_back(mod);
+		}
+
+		return modList;
+	}
+
+	// Returns a sorted vector of TESFile pointers cached at startup based on PLUGIN_TYPE.
 	std::vector<const RE::TESFile*> Data::GetModulePluginListSorted(PLUGIN_TYPE a_type, SORT_TYPE a_sortType)
 	{
 		std::vector<const RE::TESFile*> copy;
@@ -81,7 +86,8 @@ namespace Modex
 			}
 		};
 
-		switch (a_type) {
+		switch (a_type) 
+		{
 		case PLUGIN_TYPE::ITEM:
 			safeCopy(m_itemModList);
 			break;
@@ -97,39 +103,25 @@ namespace Modex
 		case PLUGIN_TYPE::ALL:
 			safeCopy(m_modList);
 			break;
-		default:
-			PrettyLog::Error("Invalid PLUGIN_TYPE argument passed to GetModulePluginListSorted");
-			safeCopy(m_modList);
-			break;
 		}
 
-		if (a_sortType == SORT_TYPE::ALPHABETICAL) {
-			std::sort(copy.begin(), copy.end(), CaseInsensitiveCompareTESFile);
-		} else if (a_sortType == SORT_TYPE::COMPILEINDEX_ASC) {
-			std::sort(copy.begin(), copy.end(), CompileIndexCompareTESFileAsc);
-		} else if (a_sortType == SORT_TYPE::COMPILEINDEX_DESC) {
-			std::sort(copy.begin(), copy.end(), CompileIndexCompareTESFileDesc);
-		} else {
-			PrettyLog::Error("Invalid SORT_TYPE argument passed to GetModulePluginListSorted");
+		switch (a_sortType) 
+		{
+			case SORT_TYPE::ALPHABETICAL:
+				std::sort(copy.begin(), copy.end(), CaseInsensitiveCompareTESFile);
+				break;
+			case SORT_TYPE::COMPILEINDEX_ASC:
+				std::sort(copy.begin(), copy.end(), CompileIndexCompareTESFileAsc);
+				break;
+			case SORT_TYPE::COMPILEINDEX_DESC:
+				std::sort(copy.begin(), copy.end(), CompileIndexCompareTESFileDesc);
+				break;
 		}
 
 		return copy;
 	}
 
-	// Returns an alphabetically sorted vector of plugin names.
-	//
-	// @return std::vector<std::string> - A vector of plugin names.
-	std::vector<std::string> Data::GetSortedListOfPluginNames()
-	{
-		std::vector<std::string> modList;
-
-		for (auto& mod : m_modListSorted) {
-			modList.push_back(mod);
-		}
-
-		return modList;
-	}
-
+	// TODO: Verify that we are properly populating m_itemListModFormTypeMap in Data.cpp 
 	bool Data::IsFormTypeInPlugin(const RE::TESFile* a_plugin, RE::FormType a_formType)
 	{
 		if (a_plugin == nullptr) {
@@ -176,131 +168,30 @@ namespace Modex
 		case RE::FormType::Cell:
 			return m_itemListModFormTypeMap[a_plugin].cell;
 		default:
-			PrettyLog::Error("Invalid FormType argument passed to IsFormTypeInPlugin");
+			ASSERT_MSG(true, "Unhandled 'RE::FormType' passed to Data::IsFormTypeInPlugin: '{}'", static_cast<int>(a_formType));
 			return false;
 		}
 	}
 
-	// Returns an alphabetically sorted vector of plugin names that are cross-compared to the supplied
-	// ItemFilterType filter selected. Primarily used to populate the "Filter By Pluginlist" list in the
-	// table-view modules.
-	//
-	// @param a_selectedFilter - The selected filter to cross-compare against. (`RE::FormType`)
-	// @param a_sortType - The sort type to use when sorting the list. (`SORT_TYPE`)
-	// @param a_primaryFilter - The primary filter to use when selecting the list. (`RE::FormType`)
-	// @return std::vector<std::string> - A vector of plugin names that match the selected filter.
-	std::vector<std::string> Data::GetFilteredListOfPluginNames(PLUGIN_TYPE a_primaryFilter, SORT_TYPE a_sortType, RE::FormType a_secondaryFilter)
+	// BUG: Previously crashing to desktop, called from BuildPluginList. Might have been a weird
+	// build artifact. Test a_type and a_sort parameters. Doesn't seem like a runtime issue.
+
+	// Returns a sorted vector of plugin names filtered out by global blacklist config.
+	std::vector<std::string> Data::GetFilteredListOfPluginNames(PLUGIN_TYPE a_type, SORT_TYPE a_sort)
 	{
-		const auto& masterList = GetModulePluginListSorted(a_primaryFilter, a_sortType);
+		const auto& masterlist = GetModulePluginListSorted(a_type, a_sort);
 		const auto& blacklist = BlacklistConfig::Get();
+
 		std::vector<std::string> pluginList;
 
-		for (auto& mod : masterList) {
-			auto modName = Modex::ValidateTESFileName(mod);
+		for (const auto& plugin : masterlist) {
+			auto name = Modex::ValidateTESFileName(plugin);
 
-			if (blacklist.contains(mod)) {
+			if (blacklist.contains(plugin)) {
 				continue;
 			}
 
-			// We only step through the secondary filter if it's not None. This allows us to polymorphically
-			// filter the list based on whether the module supports a secondary filter or not. Which most do by now.
-			if (a_secondaryFilter == RE::FormType::None) {
-				pluginList.push_back(modName);
-			} else {
-				auto plugin = RE::TESDataHandler::GetSingleton()->LookupModByName(modName.c_str());
-				auto pluginFormTypeFlag = m_itemListModFormTypeMap[plugin];
-
-				switch (a_secondaryFilter) {
-				case RE::FormType::Armor:
-					if (pluginFormTypeFlag.armor) {
-						pluginList.push_back(modName);
-					}
-					break;
-				case RE::FormType::Book:
-					if (pluginFormTypeFlag.book) {
-						pluginList.push_back(modName);
-					}
-					break;
-				case RE::FormType::Weapon:
-					if (pluginFormTypeFlag.weapon) {
-						pluginList.push_back(modName);
-					}
-					break;
-				case RE::FormType::Misc:
-					if (pluginFormTypeFlag.misc) {
-						pluginList.push_back(modName);
-					}
-					break;
-				case RE::FormType::KeyMaster:
-					if (pluginFormTypeFlag.key) {
-						pluginList.push_back(modName);
-					}
-					break;
-				case RE::FormType::Ammo:
-					if (pluginFormTypeFlag.ammo) {
-						pluginList.push_back(modName);
-					}
-					break;
-				case RE::FormType::AlchemyItem:
-					if (pluginFormTypeFlag.alchemy) {
-						pluginList.push_back(modName);
-					}
-					break;
-				case RE::FormType::Ingredient:
-					if (pluginFormTypeFlag.ingredient) {
-						pluginList.push_back(modName);
-					}
-					break;
-				case RE::FormType::Scroll:
-					if (pluginFormTypeFlag.scroll) {
-						pluginList.push_back(modName);
-					}
-					break;
-				case RE::FormType::SoulGem:
-					if (pluginFormTypeFlag.misc) {
-						pluginList.push_back(modName);
-					}
-					break;
-				case RE::FormType::Static:
-					if (pluginFormTypeFlag.staticObject) {
-						pluginList.push_back(modName);
-					}
-					break;
-				case RE::FormType::Tree:
-					if (pluginFormTypeFlag.tree) {
-						pluginList.push_back(modName);
-					}
-					break;
-				case RE::FormType::Activator:
-					if (pluginFormTypeFlag.activator) {
-						pluginList.push_back(modName);
-					}
-					break;
-				case RE::FormType::Container:
-					if (pluginFormTypeFlag.container) {
-						pluginList.push_back(modName);
-					}
-					break;
-				case RE::FormType::Door:
-					if (pluginFormTypeFlag.door) {
-						pluginList.push_back(modName);
-					}
-					break;
-				case RE::FormType::Light:
-					if (pluginFormTypeFlag.light) {
-						pluginList.push_back(modName);
-					}
-				case RE::FormType::Flora:
-					if (pluginFormTypeFlag.flora) {
-						pluginList.push_back(modName);
-					}
-					break;
-				default:
-					PrettyLog::Error("Invalid FormType argument passed to GetFilteredListOfPluginNames");
-					pluginList.push_back(modName);
-					break;
-				}
-			}
+			pluginList.push_back(name);
 		}
 
 		return pluginList;

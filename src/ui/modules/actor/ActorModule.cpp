@@ -1,9 +1,5 @@
-// #include "include/N/NPC.h"
-// #include "include/U/UIUserData.h"
-
 #include "ActorModule.h"
 #include "config/UserData.h"
-// #include "ui/components/UICustom.h"
 
 namespace Modex
 {

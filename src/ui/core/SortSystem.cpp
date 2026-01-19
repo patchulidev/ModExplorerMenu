@@ -2,7 +2,6 @@
 
 namespace Modex
 {
-
 	bool SortSystem::Load(bool a_create)
 	{
 		ASSERT_MSG(a_create && m_file_path.empty(), "SortSystem::Load() called before setting file path!");
@@ -26,32 +25,8 @@ namespace Modex
 		}
 
 		ASSERT_MSG(a_create, "SortSystem::Load() - No SortProperty found in JSON. File: {}", m_file_path.string());
-
 		return m_initialized = !a_create;
 	}
-
-	// Will only load valid PropertyType enum entries. Invalid entries are skipped!!
-    // bool SortSystem::Load(const std::string& a_path)
-    // {
-    //     nlohmann::json j = OpenJSONFile(a_path);
-
-    //     if (j.contains("SortProperty")) {
-    //         const auto& key_array = j["SortProperty"];
-
-    //         for (const auto& key_entry : key_array) {
-    //             std::string key_name = key_entry.get<std::string>();
-    //             auto filter = FilterProperty::FromString(key_name);
-
-    //             if (filter.has_value()) {
-    //                 AddAvailableFilter(std::move(filter.value()));
-    //             }
-    //         }
-
-    //         return true;
-    //     }
-
-    //     return false;
-    // }
     
 	// Need special definitions for properties of int, float, or none string types.
 	bool SortSystem::SortFn(const std::unique_ptr<BaseObject>& a_lhs, const std::unique_ptr<BaseObject>& a_rhs) const
@@ -197,12 +172,14 @@ namespace Modex
 		if (delta > 0)
 			return m_ascending ? true : false;
 
-        return false;
-    }
+		return false;
+	}
 
-    bool SortSystem::SortFnKit(const std::unique_ptr<Kit>& a_lhs, const std::unique_ptr<Kit>& a_rhs) const 
-    {
-        // TODO: Implementation goes here
-        return true;
-    }
+	// TODO: Pending re-implementation if we intend to introduce this feature in v2.0
+	bool SortSystem::SortFnKit(const std::unique_ptr<Kit>& a_lhs, const std::unique_ptr<Kit>& a_rhs) const 
+	{
+		(void)a_lhs;
+		(void)a_rhs;
+		return true;
+	}
 }

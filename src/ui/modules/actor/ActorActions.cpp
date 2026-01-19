@@ -1,5 +1,4 @@
 #include "ActorModule.h"
-
 #include "ui/core/UIManager.h"
 #include "ui/components/UICustom.h"
 #include "localization/Locale.h"
@@ -44,14 +43,6 @@ namespace Modex
 		const auto& selectedNPC = GetTableView()->GetItemPreview();
 
 		if (selectedNPC != nullptr) {
-			// if (selectedNPC->refID != 0) {
-			// 	ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(a_style.button.x, a_style.button.y, a_style.button.z, a_style.button.w));
-			// 	ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(a_style.buttonHovered.x, a_style.buttonHovered.y, a_style.buttonHovered.z, a_style.buttonHovered.w));
-			// } else {
-			// 	ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(a_style.button.x, a_style.button.y, a_style.button.z, a_style.button.w - 0.35f));
-			// 	ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(a_style.button.x, a_style.button.y, a_style.button.z, a_style.button.w - 0.35f));
-			// }
-
 			if (ImGui::Button(Translate("NPC_GOTO_REFERENCE"), ImVec2(button_width, 0))) {
 				if (selectedNPC->m_refID != 0) {
 					if (auto playerREF = RE::PlayerCharacter::GetSingleton()->AsReference()) {
@@ -73,8 +64,6 @@ namespace Modex
 					}
 				}
 			}
-
-			// ImGui::PopStyleColor(2);
 		}
 
 		if (selectedNPC == nullptr) {

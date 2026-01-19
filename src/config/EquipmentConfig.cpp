@@ -6,34 +6,36 @@ namespace Modex
 	nlohmann::json OpenJSON(const std::filesystem::path& a_path)
 	{
 		nlohmann::json data;
-        if (!std::filesystem::exists(a_path)) {
-			Warn("JSON file does not exist: '{}'", a_path.string());
-            return nlohmann::json::object();
-        }
+		if (!std::filesystem::exists(a_path)) {
+			Warn("JSON file does not exist: '{}'", a_path.stem().string());
+			return nlohmann::json::object();
+		}
 
-        try {
-            std::ifstream file(a_path);
-            if (!file.is_open()) {
-				Error("Could not open JSON file: '{}'", a_path.string());
-                return nlohmann::json::object();
-            }
-            file >> data;
-			Trace("Successfully opened JSON file: '{}'", a_path.string());
-            return data;
-        } catch (...) {
-			ASSERT_MSG(true, "Failed to open JSON file: '{}'", a_path.string());
-            return nlohmann::json::object();
-        }
+		try {
+			std::ifstream file(a_path);
+
+			if (!file.is_open()) {
+				Error("Could not open JSON file: '{}'", a_path.stem().string());
+				return nlohmann::json::object();
+			}
+
+			file >> data;
+			Trace("Successfully opened JSON file: '{}'", a_path.stem().string());
+			return data;
+		} catch (...) {
+			ASSERT_MSG(true, "Failed to open JSON file: '{}'", a_path.stem().string());
+			return nlohmann::json::object();
+		}
 	}
 
-	// Validator for invalid key names.
+	// Validator for name assignement using invalid characters.
 	bool EquipmentConfig::ValidateKeyName(const std::string& a_keyName)
 	{
 		if (a_keyName.empty()) {
 			return Warn("Kit key validation failed: empty key");
 		}
 
-		// invalid keys
+		// invalid character check
 		const std::string invalid_chars = R"("')";
 		for (const char c : invalid_chars) {
 			if (a_keyName.find(c) != std::string::npos) {
@@ -41,6 +43,7 @@ namespace Modex
 			}
 		}
 
+		// whitespace-only check
 		if (std::all_of(a_keyName.begin(), a_keyName.end(), isspace)) {
 			return Warn("Kit key validation failed: whitespace-only key");
 		}
@@ -301,7 +304,7 @@ namespace Modex
 			cache.erase(old_key);
 			cache[new_key] = new_kit;
 			
-			PrettyLog::Info("Successfully renamed kit '{}' to '{}'", old_key, new_key);
+			Info("Successfully renamed kit '{}' to '{}'", old_key, new_key);
 			return std::move(new_kit);
 			
 		} catch (const std::exception& e) {

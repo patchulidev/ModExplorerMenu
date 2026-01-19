@@ -6,8 +6,8 @@
 namespace Modex
 {
 	static const std::filesystem::path EQUIPMENT_JSON_PATH = 
-    std::filesystem::path("data") / "interface" / "modex" / "user" / "equipment";
-    
+	std::filesystem::path("data") / "interface" / "modex" / "user" / "equipment";
+
 	class EquipmentConfig
 	{
 	private:

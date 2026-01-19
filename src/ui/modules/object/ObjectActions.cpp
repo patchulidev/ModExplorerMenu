@@ -1,4 +1,3 @@
-
 #include "ObjectModule.h"
 #include "ui/components/UICustom.h"
 #include "localization/Locale.h"

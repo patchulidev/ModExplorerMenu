@@ -3,23 +3,22 @@
 
 namespace Modex
 {
-    void UIWindow::OpenWindow(UIManager* a_manager) {
-        manager = a_manager;
-        m_state = WindowState::Opening;
-        OnOpen();
-    }
+	void UIWindow::OpenWindow(UIManager* a_manager)
+	{
+		manager = a_manager;
+		m_state = WindowState::Opening;
+		OnOpen();
+	}
 
-    void UIWindow::CloseWindow() {
-        m_state = WindowState::Closing;
+	void UIWindow::CloseWindow() 
+	{
+		m_state = WindowState::Closing;
 		OnClose();
-    }
+	}
     
 	void UIWindow::Update(float a_deltaTime) {
 		Draw();
 
-		// if (ImGui::IsKeyPressed(ImGuiKey_Escape, false)) {
-		// 	manager->PopWindow();
-		// }
 		if (ImGui::Shortcut(ImGuiKey_Escape, ImGuiInputFlags_RouteActive)) {
 			manager->PopWindow();
 		}

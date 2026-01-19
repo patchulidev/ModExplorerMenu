@@ -1,9 +1,4 @@
-#pragma once
-
 #include "SearchSystem.h"
-
-// #include "include/P/Persistent.h"
-// #include "extern/magic_enum.hpp"
 
 namespace Modex
 {
@@ -29,7 +24,7 @@ namespace Modex
 			return m_initialized = true;
 		}
 
-		// If we ensure JSON creation, we assume that the absence of SearchProperty is an error!
+		// If we ensure JSON creation (a_create == true), we assume that the absence of SearchProperty is an error!
 		ASSERT_MSG(a_create, "No SearchProperty found in JSON.\nFile: {}", m_file_path.string());
 
 		return m_initialized = !a_create;
@@ -118,10 +113,10 @@ namespace Modex
 		return compareString.find(input) != std::string::npos;
 	}
 
-	// TODO: The size_t argument on InputTextComboBox is kind of irrelevant if we pass a buffer.
+	// Source: https://github.com/ocornut/imgui/issues/718
+	// Modified with additional features to best fit our use-case.
 
-    // Source: https://github.com/ocornut/imgui/issues/718
-    // Modified with additional features to best fit our use-case.
+	// FIX: The size_t argument on InputTextComboBox is kind of irrelevant if we pass a buffer.
 	bool SearchSystem::InputTextComboBox(const char* a_label, char* a_buffer, std::string& a_preview, size_t a_size, std::vector<std::string> a_items, float a_width, bool a_showArrow)
 	{
 		bool result = false;
@@ -201,7 +196,7 @@ namespace Modex
 			const bool unlock_scroll_prev = ImGui::GetStateStorage()->GetBool(ImGui::GetID("UnlockScroll"), false);
 			bool unlock_scroll = unlock_scroll_prev;
 
-			// TODO: Locale
+			// TODO: Localize needed here.
 			if (m_navList.size() <= 0) {
 				ImGui::TextWrapped("No Results Found, try clearing your search.");
 				// ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.3f, 1.0f), "No Results Found, try clearing your search.");
@@ -264,7 +259,7 @@ namespace Modex
 				ImGui::CloseCurrentPopup();
 			}
 
-            // TODO: Why did we disable these?
+            // TEST: Why did we disable these?
 			// Disable PageUp/PageDown keys
 			if (ImGui::Shortcut(ImGuiKey_PageUp, 0, inputTextID)) {}
 			if (ImGui::Shortcut(ImGuiKey_PageDown, 0, inputTextID)) {}
@@ -284,12 +279,9 @@ namespace Modex
 			ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.f, 0.5f));
 			if (m_lastNavKey == ImGuiKey_DownArrow || m_lastNavKey == ImGuiKey_UpArrow) {
 				int filtered_idx = 0;
-				for (int i = 0; i < m_filteredList.size(); i++) {
+				for (size_t i = 0; i < m_filteredList.size(); i++) {
 					auto item = m_filteredList.at(i);
 					if (item.show && !item.name.empty()) {
-						// const char* item_name = item.name.c_str();
-						const ImVec2 item_pos = popup_window->DC.CursorPos;
-
 						std::string item_name = item.name;
 						item_name = item_name.substr(item_name.find_last_of("/\\") + 1);
 						item_name = item_name.substr(0, item_name.find_last_of('.'));
@@ -303,7 +295,7 @@ namespace Modex
 							break;
 						}
 
-						// TODO: Flickering while scrolling
+						// TEST: Previous issue with flickering while scrolling. Needs re-tested.
 						if (!unlock_scroll && filtered_idx == cursor_idx) {
 							ImGui::SetScrollHereY();
 						}
@@ -321,12 +313,12 @@ namespace Modex
 				// The purpose of doing two passes is to first observe the entire list and create
 				// a cache of each item. I do this so I can track the userdata and state across those
 				// items. The second pass (mostly through the filtered list) does the actual drawing.
-				for (int current_item_idx = 0; current_item_idx < a_items.size(); current_item_idx++) {
+				for (size_t current_item_idx = 0; current_item_idx < a_items.size(); current_item_idx++) {
 					std::string compare = a_items.at(current_item_idx);
 					std::string input = a_buffer;
 					size_t comparator_weight = 0;
 
-					// TODO: Is this an issue for Non-ASCII characters?
+					// TEST: Is this an issue for Non-ASCII characters? Needs tested with SimpleIME.
 					std::transform(compare.begin(), compare.end(), compare.begin(), ::tolower);
 					std::transform(input.begin(), input.end(), input.begin(), ::tolower);
 					comparator_weight = compare.find(input);
@@ -356,17 +348,15 @@ namespace Modex
 				// don't step through it incrementally. (Because we track shown state based on SearchItem::show).
 				// forceDropDown is used to keep bypass the filter and show all items if ArrowButton is clicked.
 				int filtered_idx = 0;
-				for (int i = 0; i < m_filteredList.size(); i++) {
+				for (size_t i = 0; i < m_filteredList.size(); i++) {
 					auto item = m_filteredList.at(i);
 					if ((item.show or m_forceDropdown) && !item.name.empty()) {
-						// const char* item_name = item.name.c_str();
-						const ImVec2 item_pos = popup_window->DC.CursorPos;
-
 						std::string item_name = item.name;
 						item_name = item_name.substr(item_name.find_last_of("/\\") + 1);
 						item_name = item_name.substr(0, item_name.find_last_of('.'));
 
-						if (strlen(a_buffer) == 0) {  // maybe utf-8 safe?
+						// TEST: Is this safe for non-ASCII filenames? 
+						if (strlen(a_buffer) == 0) { 
 							if (item_name == a_preview) {
 								if (popup_is_appearing) {
 									ImGui::SetScrollHereY();
@@ -384,7 +374,6 @@ namespace Modex
 
 						if (ImGui::Selectable(item_name.c_str(), cursor_idx == filtered_idx)) {
 							ImGui::ClearActiveID();
-							//ImFormatString(a_buffer, a_size, "%s", item_name);
 							m_navSelection = item;
 							ImGui::CloseCurrentPopup();
 							result = true;

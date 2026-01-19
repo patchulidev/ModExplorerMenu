@@ -1,11 +1,5 @@
 #pragma once
 
-// #include "extern/DescriptionFrameworkAPI.h"
-// #include "include/C/Columns.h"
-// #include "include/G/Graphic.h"
-// #include "include/I/InputManager.h"
-// #include "include/T/Table.h"
-
 #include "ui/components/UITable.h"
 
 namespace Modex
@@ -30,10 +24,10 @@ namespace Modex
 		ActorModule& operator=(const ActorModule&) = delete;
 		ActorModule& operator=(ActorModule&&) = delete;
 
-		void 					Draw(float a_offset);
-		void 					ShowActions();
-		void					Unload();
-		void					Load();
+		void Draw(float a_offset);
+		void ShowActions();
+		void Unload();
+		void Load();
 		
 		std::unique_ptr<UITable>& GetTableView() {
 			return m_tableView;
@@ -47,7 +41,7 @@ namespace Modex
 			Count
 		};
 		
-		Viewport 				m_viewport;
-		int 					m_clickCount;
+		Viewport m_viewport;
+		int m_clickCount;
 	};
 }

@@ -1,14 +1,6 @@
 #pragma once
 
-// #include "include/K/Keycode.h"
-// #include "include/S/Settings.h"
-// #include "include/U/Util.h"
-// #include "include/U/UIWindow.h"
-// #include "include/P/Persistent.h"
-// #include "include/U/UIMenuImpl.h"
-
-// #include <pch.h>
-
+#include "ui/Menu.h"
 #include "config/Keycodes.h"
 #include "ui/core/UIMenuImpl.h"
 #include "ui/components/UIWindow.h"
@@ -26,11 +18,13 @@ namespace Modex
 	class UIManager
 	{
 	private:
-		bool								m_wantTextInput = true;
-		bool								m_queueOpen = false;
-		std::atomic<bool>					m_initialized = false;
-		std::unique_ptr<ModexGUIMenu>		m_menu = nullptr;
-		HWND            					m_hWnd = nullptr;
+		bool                          m_menuListener = false;
+		bool                          m_wantTextInput = true;
+		bool                          m_queueOpen = false;
+
+		HWND                          m_hWnd = nullptr;
+		std::atomic<bool>             m_initialized = false;
+		std::unique_ptr<ModexGUIMenu> m_gui = nullptr;
 
 		static inline WNDPROC RealWndProc;
 		static auto MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) -> LRESULT;
@@ -88,7 +82,6 @@ namespace Modex
 		UIWindow* GetPopupWindowRef() const;
 
 		int GetWindowCount() const { return static_cast<int>(m_windowStack.size()); }
-
 		bool InputHandler(ImGuiKey a_key);
 
 	private:
@@ -100,23 +93,20 @@ namespace Modex
 		UIManager& operator=(const UIManager&) = delete;
 		UIManager& operator=(UIManager&&) = delete;
 
-		std::unique_ptr<AddItemModule>			m_addItemWindow;
-		std::unique_ptr<ActorModule>				m_npcWindow;
-		std::unique_ptr<EquipmentModule>		m_equipmentWindow;
-		std::unique_ptr<TeleportModule>			m_teleportWindow;
-		std::unique_ptr<ObjectModule>			m_objectWindow;
-		std::unique_ptr<HomeModule>				m_homeWindow;
-		bool									m_menuListener;
+		Menu*                                   m_menu;
+		std::unique_ptr<AddItemModule>          m_addItemWindow;
+		std::unique_ptr<ActorModule>            m_npcWindow;
+		std::unique_ptr<EquipmentModule>        m_equipmentWindow;
+		std::unique_ptr<TeleportModule>         m_teleportWindow;
+		std::unique_ptr<ObjectModule>           m_objectWindow;
+		std::unique_ptr<HomeModule>             m_homeWindow;
 
 		std::vector<std::unique_ptr<UIWindow>> 	m_windowStack;
-		uint8_t									m_lastActiveWindow;
-
-		ImVec2 									m_screenSize;
+		uint8_t                                 m_lastActiveWindow;
 	
-		// Smooth scrolling
-		ImVec2									m_scrollEnergy = ImVec2(0.0f, 0.0f);
-		static constexpr float					m_scrollMultiplier = 1.5f;
-		static constexpr float					m_scrollSmoothing = 10.0f;
+		ImVec2                                  m_scrollEnergy = ImVec2(0.0f, 0.0f);
+		static constexpr float                  m_scrollMultiplier = 1.5f;
+		static constexpr float                  m_scrollSmoothing = 10.0f;
 		
 	};
 }

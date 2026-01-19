@@ -1,13 +1,4 @@
-// #include "include/U/UserSettings.h"
-// #include "include/S/Settings.h"
-// #include "include/P/Persistent.h"
-// #include "include/D/Data.h"
-// #include "include/U/Util.h"
-// #include "include/U/UICustom.h"
-// #include "include/U/UIManager.h"
-
 #include "SettingsModule.h"
-
 #include "data/Data.h"
 #include "config/UserConfig.h"
 #include "config/ThemeConfig.h"
@@ -27,8 +18,10 @@ namespace Modex
 		a_pluginListVector.clear();
 
 		const auto& config = UserConfig::Get();
-		a_pluginList = Data::GetSingleton()->GetModulePluginListSorted(Data::PLUGIN_TYPE::ALL, (Data::SORT_TYPE)config.modListSort);
-		a_pluginListVector = Data::GetSingleton()->GetFilteredListOfPluginNames(Data::PLUGIN_TYPE::ALL, (Data::SORT_TYPE)config.modListSort, RE::FormType::None);
+		const auto sortType = static_cast<Data::SORT_TYPE>(config.modListSort);
+		const auto pluginType = Data::PLUGIN_TYPE::ALL;
+		a_pluginList = Data::GetSingleton()->GetModulePluginListSorted(pluginType, sortType);
+		a_pluginListVector = Data::GetSingleton()->GetFilteredListOfPluginNames(pluginType, (Data::SORT_TYPE)config.modListSort);
 		a_pluginListVector.insert(a_pluginListVector.begin(), Translate("Show All Plugins"));
 	}
 
@@ -106,7 +99,7 @@ namespace Modex
 		s_uiScaleVertical 	= UserConfig::Get().uiScaleVertical;
 		s_uiScaleHorizontal = UserConfig::Get().uiScaleHorizontal;
 		s_fontSize 			= (int)UserConfig::Get().globalFontSize;
-		m_selectedMod = Translate("Show All Plugins"); // TODO: Why?
+		m_selectedMod = Translate("Show All Plugins"); // TEST: Why are we localizing Show All?
 		m_updateHidden = true;
 		m_totalHidden = 0;
 		m_totalBlacklisted = 0; // deprecated?
@@ -183,36 +176,6 @@ namespace Modex
 			}
 		}
 
-		// UI Scale Setting
-		// ImGui::Spacing();
-		// ImGui::Text("%s", Translate("SETTINGS_UI_SCALE_VERTICAL"));
-		// ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth - ImGui::GetStyle().IndentSpacing);
-		// ImGui::PushItemWidth(s_widgetWidth);
-		// ImGui::SliderInt("##UIVerticalScaleSelection", &s_uiScaleVertical, 50, 150, "%d%%");
-		//
-		// if (ImGui::IsItemDeactivatedAfterEdit()) {
-		// 	config.uiScaleVertical = s_uiScaleVertical;
-		// 	UserConfig::GetSingleton()->SaveSettings();
-		// }
-		//
-		// ImGui::Spacing();
-		// ImGui::PopItemWidth();
-		//
-		// ImGui::Spacing();
-		// ImGui::Text("%s", Translate("SETTINGS_UI_SCALE_HORIZONTAL"));
-		// ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth - ImGui::GetStyle().IndentSpacing);
-		// ImGui::PushItemWidth(s_widgetWidth);
-		// ImGui::SliderInt("##UIHorizontalScaleSelection", &s_uiScaleHorizontal, 50, 150, "%d%%");
-		//
-		// if (ImGui::IsItemDeactivatedAfterEdit()) {
-		// 	config.uiScaleHorizontal = s_uiScaleHorizontal;
-		//
-		// 	UserConfig::GetSingleton()->SaveSettings();
-		// }
-		// ImGui::Spacing();
-		// ImGui::PopItemWidth();
-		// End UI Scale Setting
-
 		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 		{
 			if (UICustom::Settings_ToggleButton("SETTING_FULLSCREEN", config.fullscreen))
@@ -221,8 +184,7 @@ namespace Modex
 			}
 		}
 
-		// TODO: Unimplemented old feature, still needed?
-		// Pause Game Toggle
+		// NOTE: Unimplemented old feature, still needed?
 		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 		{
 			if (UICustom::Settings_ToggleButton("SETTINGS_PAUSE_GAME", config.pauseGame))
@@ -231,7 +193,7 @@ namespace Modex
 			}
 		}
 
-		// TODO: Unimplemented old feature, still needed?
+		// NOTE: Unimplemented old feature, still needed?
 		// Disable Menu opening over Skyrim Menu's (deprecated)
 		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 		{

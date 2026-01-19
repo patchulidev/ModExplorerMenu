@@ -9,11 +9,11 @@ namespace Modex
 	public:
 		virtual ~UIWindow() = default;
 		virtual void Draw() = 0;
-        virtual void OnOpen() {}
-        virtual void OnClose() {}
+		virtual void OnOpen() {}
+		virtual void OnClose() {}
 
-        virtual void OpenWindow(UIManager* a_manager);
-        virtual void CloseWindow();
+		virtual void OpenWindow(UIManager* a_manager);
+		virtual void CloseWindow();
 		virtual bool WantsInputCapture() const { return m_captureInput; }
 
 		virtual void Update(float a_deltaTime);
@@ -37,6 +37,5 @@ namespace Modex
 		};
 
 		WindowState m_state = WindowState::Closed;
-
 	};
 }

@@ -5,25 +5,24 @@
 
 namespace Modex
 {
-	bool GraphicManager::GetD3D11Texture(const char* filename, ID3D11ShaderResourceView** out_srv, int& out_width,
-		int& out_height)
+	bool GraphicManager::GetD3D11Texture(const char* filename, ID3D11ShaderResourceView** out_srv, int& out_width, int& out_height)
 	{
 		const auto* renderer = RE::BSGraphics::Renderer::GetSingleton();
-        ASSERT_MSG(renderer == nullptr, "Failed to get BSGraphics Renderer!");
+		ASSERT_MSG(renderer == nullptr, "Failed to get BSGraphics Renderer!");
 
 		const auto& renderData = renderer->GetRuntimeData();
 		ASSERT_MSG(renderData.forwarder == nullptr, "Failed to get D3D11 Device from Renderer!");
 
-        auto *device    = reinterpret_cast<ID3D11Device *>(renderData.forwarder);
+		auto *device    = reinterpret_cast<ID3D11Device *>(renderData.forwarder);
 
 		if (!device) {
-			PrettyLog::Error("D3D11 Device is null, cannot create texture for image: {}", filename);
+			Error("D3D11 Device is null, cannot create texture for image: '{}'", filename);
 			return false;
 		}
 
 		auto* render_manager = RE::BSGraphics::Renderer::GetSingleton();
 		if (!render_manager) {
-			PrettyLog::Error("Cannot find RE::BSGraphics::Renderer singleton. Uh oh!");
+			Error("Cannot find RE::BSGraphics::Renderer singleton. Uh oh!");
 			return false;
 		}
 
@@ -33,7 +32,7 @@ namespace Modex
 		unsigned char* image_data = stbi_load(filename, &image_width, &image_height, NULL, 4);
 
 		if (image_data == NULL) {
-			PrettyLog::Error("Failed to load image: {}", filename);
+			Error("Failed to load image: '{}'", filename);
 			return false;
 		}
 
@@ -85,6 +84,8 @@ namespace Modex
 		if (found != image_library.end()) {
 			return found->second;
 		}
+
+		ASSERT_MSG(true, "Image not found in library: {}", a_name);
 		return Image();
 	}
 
@@ -96,9 +97,11 @@ namespace Modex
 			}
 		}
 
+		ASSERT_MSG(true, "Image not found in library!");
 		return "None";
 	}
 
+	// Returns images loaded at startup, indexed by filename stem.
 	std::map<std::string, GraphicManager::Image> GraphicManager::GetListOfImages()
 	{
 		return GraphicManager::image_library;
@@ -113,7 +116,7 @@ namespace Modex
 				continue;
 			}
 
-        	auto index = entry.path().stem().string();
+			auto index = entry.path().stem().string();
 
 			bool success = GraphicManager::GetD3D11Texture(entry.path().string().c_str(), 
 				&out_struct[index].texture,
@@ -121,11 +124,13 @@ namespace Modex
 				out_struct[index].height);
 
 			if (!success) {
-				PrettyLog::Error("Failed to get D3D11 texture from image: {}", entry.path().string());
+				Error("Failed to get D3D11 texture from image: {}", entry.path().string());
+			} else {
+				Trace("Loaded image: '{}'", entry.path().string());
 			}
 		}
 
-		PrettyLog::Debug("Loaded {} images from \"{}\"", out_struct.size(), a_path.string());
+		Debug("Loaded {} images from '{}'", out_struct.size(), a_path.string());
 	}
 
 	void GraphicManager::Init()
@@ -136,7 +141,7 @@ namespace Modex
 		if (std::filesystem::exists(GraphicManager::IMGUI_PATH)) {
 			GraphicManager::LoadImagesFromFilepath(GraphicManager::IMGUI_PATH, GraphicManager::imgui_library);
 		} else {
-			PrettyLog::Info("ImGui Icon Library mod/directory not found. Skipping Custom ImGui Library loading.");
+			Info("ImGui Icon Library mod/directory not found. Skipping Custom ImGui Library loading.");
 		}
 	}
 }

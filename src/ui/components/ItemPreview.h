@@ -5,7 +5,6 @@
 #include "localization/Locale.h"
 #include "external/framework/DescriptionFrameworkImpl.h"
 
-// TODO: Not sure why this is its own header.
 // TODO: Change this style toward a more modern approach wiht a gradient background?
 
 namespace Modex
@@ -34,6 +33,8 @@ namespace Modex
 
 		ImVec2 barSize = ImVec2(100.0f, ImGui::GetFontSize());
 		float maxWidth = ImGui::GetContentRegionAvail().x;
+
+		// TODO: Move these lambda functions to UICustom class.
 
 		constexpr auto ProgressColor = [](const double value, const float max_value) -> ImVec4 {
 			static const float dampen = 0.7f;

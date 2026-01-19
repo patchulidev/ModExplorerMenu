@@ -4,36 +4,36 @@
 
 namespace Modex
 {
-    static const std::filesystem::path USERDATA_JSON_PATH =
-    std::filesystem::path("data") / "interface" / "modex" / "user" / "userdata.json";
+	static const std::filesystem::path USERDATA_JSON_PATH =
+	std::filesystem::path("data") / "interface" / "modex" / "user" / "userdata.json";
 
-    static const std::filesystem::path FAVORITES_JSON_PATH =
-    std::filesystem::path("data") / "interface" / "modex" / "user" / "favorites.json";
+	static const std::filesystem::path FAVORITES_JSON_PATH =
+	std::filesystem::path("data") / "interface" / "modex" / "user" / "favorites.json";
 
-    static const std::filesystem::path RECENT_JSON_PATH =
-    std::filesystem::path("data") / "interface" / "modex" / "user" / "recent.json";
+	static const std::filesystem::path RECENT_JSON_PATH =
+	std::filesystem::path("data") / "interface" / "modex" / "user" / "recent.json";
 
-    class UserData
-    {
-    private:
-        ConfigManager m_userDataConfig;
-        ConfigManager m_favoriteConfig;
-        ConfigManager m_recentConfig;
+	class UserData
+	{
+	private:
+		ConfigManager m_userDataConfig;
+		ConfigManager m_favoriteConfig;
+		ConfigManager m_recentConfig;
 
-    public:
-        UserData();
+	public:
+		UserData();
 
-        static UserData* GetSingleton()
-        {
-            static UserData singleton;
-            return &singleton;
-        }
+		static UserData* GetSingleton()
+		{
+			static UserData singleton;
+			return &singleton;
+		}
 
-        static void Save();
-        static void LoadAll();
+		static void Save();
+		static void LoadAll();
 
-        [[nodiscard]] static ConfigManager& User() { return GetSingleton()->m_userDataConfig; }
-        [[nodiscard]] static ConfigManager& Favorite() { return GetSingleton()->m_favoriteConfig; }
-        [[nodiscard]] static ConfigManager& Recent() { return GetSingleton()->m_recentConfig; }
-    };
+		[[nodiscard]] static ConfigManager& User() { return GetSingleton()->m_userDataConfig; }
+		[[nodiscard]] static ConfigManager& Favorite() { return GetSingleton()->m_favoriteConfig; }
+		[[nodiscard]] static ConfigManager& Recent() { return GetSingleton()->m_recentConfig; }
+	};
 }

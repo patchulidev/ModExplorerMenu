@@ -1,11 +1,5 @@
 #pragma once
 
-// #include "include/C/Columns.h"
-// #include "include/G/Graphic.h"
-// #include "include/I/InputManager.h"
-// #include "include/T/Table.h"
-// clang-format off
-
 #include "ui/components/UITable.h"
 
 namespace Modex
@@ -13,7 +7,7 @@ namespace Modex
 	class ObjectModule
 	{
 	private:
-		std::unique_ptr<UITable>			m_tableView;
+		std::unique_ptr<UITable> m_tableView;
 
 	public:
 		static inline ObjectModule* GetSingleton()
@@ -30,10 +24,10 @@ namespace Modex
 		ObjectModule& operator=(const ObjectModule&) = delete;
 		ObjectModule& operator=(ObjectModule&&) = delete;
 
-		void 						Draw(float a_offset);
-		void 						ShowActions();
-		void						Unload();
-		void						Load();
+		void Draw(float a_offset);
+		void ShowActions();
+		void Unload();
+		void Load();
 		
 		std::unique_ptr<UITable>& GetTableView() {
 			return m_tableView;
@@ -45,10 +39,9 @@ namespace Modex
 			TableView = 0,
 			BlacklistView,
 			Count
-			// Settings View
 		};
 		
-		Viewport 					activeViewport;
-		int 						m_clickCount;
+		Viewport activeViewport;
+		int m_clickCount;
 	};
 }

@@ -1,22 +1,16 @@
 #include "InputManager.h"
-
 #include "ui/core/UIManager.h"
 #include "config/UserConfig.h"
 
-// static void FlushInputState(); contains modified sources from:
-// 			License: GPL-3.0
-// 			Source: https://github.com/doodlum/skyrim-community-shaders/commit/8323dc521160c1d61ca9b9a872b7fb0e42078408
-//
-// 			License: MIT
-// 			Source: https://github.com/BingusEx/AltTabFix/blob/master/src/Hooks/AltTabFix.hpp
-
 namespace Modex
 {
+	// TODO: Determine whether this belongs here, or closer to Banner impl
 	std::array<uint32_t, 2> InputManager::GetShowMenuKey() const
 	{
 		return { showMenuModifier, showMenuKey };
 	}
 
+	// TODO: Determine whether this belongs here, or closer to Banner impl
 	std::string InputManager::GetShowMenuKeyAsText() const
 	{
 		uint32_t scanCode = showMenuKey;
@@ -39,6 +33,7 @@ namespace Modex
 		return "Unknown?";
 	}
 
+	// FIX: Remove showMenuKey member variable, reference config directly.
 	void InputManager::UpdateSettings()
 	{
 		auto& config = UserConfig::Get();
@@ -90,7 +85,8 @@ namespace Modex
 		_shiftDown = false;
 	}
 
-	// Called every frame inside D3D11 Present Hook
+	// Called every frame from D3DPresent Hook. Acts as a listener to
+	// open the menu when our showMenuKey + showMenuModifier is pressed.
 	void InputManager::ProcessInputEvents()
 	{
 		if (ImGui::GetCurrentContext() == nullptr) 

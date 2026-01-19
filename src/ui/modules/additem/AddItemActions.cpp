@@ -1,13 +1,5 @@
-// #include "include/A/AddItem.h"
-// #include "include/I/ItemPreview.h"
-// #include "include/U/UIManager.h"
-// #include "include/C/Commands.h"
-// #include "include/C/UIContainers.h"
-// #include "include/C/PlayerChestSpawn.h"
-// #include "include/U/UIUserData.h"
-
-#include "core/Commands.h"
 #include "AddItemModule.h"
+#include "core/Commands.h"
 #include "config/UserData.h"
 #include "config/ThemeConfig.h"
 #include "core/PlayerChestSpawn.h"
@@ -38,17 +30,6 @@ namespace Modex
 			const float button_half_width = (max_width / 2.0f) - (ImGui::GetStyle().WindowPadding.x / 2.0f);
 
 			UICustom::SubCategoryHeader(Translate("HEADER_ACTIONS"));
-
-			// TODO: Port over from equipment
-			// if (ImGui::Selectable(Translate("PLAYER"), playerToggle, 0, ImVec2(button_half_width, button_height))) {
-			// 	UserData::User().Set<bool>("Modex::TargetReference::IsPlayer", true);
-			// 	UIContainers::HandleTarget(true, a_view);
-			// }
-			// ImGui::SameLine();
-			// if (ImGui::Selectable(Translate("NPC"), !playerToggle, 0, ImVec2(button_half_width, button_height))) {
-			// 	UserData::User().Set<bool>("Modex::TargetReference::IsPlayer", false);
-			// 	UIContainers::HandleTarget(false, a_view);
-			// }
 			
 			ImGui::SetNextItemWidth(a_size.x);
 			ImGui::InputInt("##AddItem::Count", a_view->GetClickAmount(), 1, 100, ImGuiInputTextFlags_CharsDecimal);
@@ -73,8 +54,7 @@ namespace Modex
 				ImGui::EndChild();
 			}
 
-			// TODO: Add QueryCheck back
-			// TODO: These action buttons should probably go to UICUstom
+			// TODO: Add QueryCheck implementation.
 			if (UIContainers::ActionButton("CONTAINER_VIEW", ImVec2(max_width, button_height), true, cont_color)) {
 				if (a_view->GetSelectionCount() > 0) {
 					PlayerChestSpawn::GetSingleton()->PopulateChestWithItems(a_view->GetSelection());

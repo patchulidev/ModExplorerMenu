@@ -2,93 +2,103 @@
 
 namespace Modex
 {
-    void ConfigManager::CreateAndDumpJson(const std::filesystem::path& a_path, const nlohmann::json& a_data)
-    {
-        PrettyLog::Debug("Creating new config file at '{}'", a_path.string());
-        std::filesystem::create_directories(a_path.parent_path());
+	// Used by Load() to populate an empty JSON at specified location.
+	void ConfigManager::CreateAndDumpJson(const std::filesystem::path& a_path, const nlohmann::json& a_data)
+	{
+		Debug("Creating new config file at '{}'", a_path.string());
 
-        std::ofstream file(a_path);
-        if (file.is_open()) {
-            file << a_data.dump(4);
-            file.close();
-        }
-    }
+		std::filesystem::create_directories(a_path.parent_path());
 
-    // a_create ensures local JSON file is created to prevent CTD. Still propogate errors upwards.
-    // we pass false if we don't need a JSON file at load time.
+		std::ofstream file(a_path);
+		if (file.is_open()) {
+			file << a_data.dump(4);
+			file.close();
+		}
+	}
 
-    bool ConfigManager::Load(bool a_create)
-    {        
-        ASSERT_MSG(a_create && m_file_path.empty(), "Called before setting file path!");
-            
-        m_data = nlohmann::json::object();
+	// a_create ensures json file is created to prevent CTD.
+	bool ConfigManager::Load(bool a_create)
+	{        
+		ASSERT_MSG(a_create && m_file_path.empty(), "ConfigManager::Load() Called before setting file path!");
+		Trace("ConfigManager Load called for file '{}", m_file_path.stem().string());
+			
+		m_data = nlohmann::json::object();
 
-        if (!std::filesystem::exists(m_file_path)) {
-            if (a_create) {
-                CreateAndDumpJson(m_file_path, m_data);
-                return m_initialized = true;
-            }
+		if (!std::filesystem::exists(m_file_path)) {
+			if (a_create) {
+				Trace("  ^ Config file does not exist..");
+				CreateAndDumpJson(m_file_path, m_data);
+				return m_initialized = true;
+			}
 
-            return m_initialized = false;
-        }
-        
-        try {
-            std::ifstream file(m_file_path);
-            if (!file.is_open()) {
-                return m_initialized = false;
-            }
-            file >> m_data;
-            return m_initialized = true;
-        } catch (...) {
-            ASSERT_MSG(true, "Failed to load file {}", m_file_path.string());
-            return m_initialized = false;
-        }
-    }
+			return m_initialized = false;
+		}
+		
+		try {
+			std::ifstream file(m_file_path);
+			if (!file.is_open()) {
+				return m_initialized = false;
+			}
+			file >> m_data;
+			return m_initialized = true;
+		} catch (std::exception& e) {
+			ASSERT_MSG(true, "Failed to load file '{}'", m_file_path.stem().string(), e.what());
+			return m_initialized = false;
+		}
 
-    bool ConfigManager::Save()
-    {
-        ASSERT_MSG(!m_initialized, "Attempted to save uninitialized ConfigManager!");
+		Trace("Config file '{}' loaded successfully", m_file_path.stem().string());
+	}
 
-        try {
-            // Create directories if they don't exist
-            std::filesystem::create_directories(m_file_path.parent_path());
+	bool ConfigManager::Save()
+	{
+		ASSERT_MSG(!m_initialized, "Attempted to save uninitialized ConfigManager Class!");
 
-            std::ofstream file(m_file_path);
-            if (!file.is_open()) {
-                return false;
-            }
-            file << m_data.dump(4);
-            return true;
-        } catch (...) {
-            return false;
-        }
-    }
+		try {
+			// Create directories if they don't exist
+			if (!std::filesystem::exists(m_file_path.parent_path())) {
+				Trace("Creating directory to save Config File '{}'", m_file_path.string());
+				std::filesystem::create_directories(m_file_path.parent_path());
+			}
 
-    void ConfigManager::GetAsList(std::vector<std::string>& outList) const
-    {        
-        outList.clear();
-        for (auto& [key, value] : m_data.items()) {
-            outList.push_back(key);
-        }
-    }
+			std::ofstream file(m_file_path);
+			if (!file.is_open()) {
+				return false;
+			}
+			file << m_data.dump(4);
+			return true;
+		} catch (...) {
+			return false;
+		}
 
-    void ConfigManager::Clear()
-    {
-        m_data = nlohmann::json::object();
-    }
+		Trace("Config file '{}' saved successfully", m_file_path.stem().string());
+	}
 
-    void ConfigManager::Add(const std::string& a_key)
-    {
-        m_data[a_key] = nlohmann::json::object();
-    }
+	// Export vector of JSON keys, does not include values!
+	void ConfigManager::GetAsList(std::vector<std::string>& outList) const
+	{
+		outList.clear();
+		for (auto& [key, value] : m_data.items()) {
+			outList.push_back(key);
+		}
+	}
 
-    bool ConfigManager::Has(const std::string& a_key) const
-    {
-        return m_data.contains(a_key);
-    }
+	void ConfigManager::Clear()
+	{
+		m_data = nlohmann::json::object();
+	}
 
-    void ConfigManager::Remove(const std::string& a_key)
-    {
-        m_data.erase(a_key);
-    }
+	void ConfigManager::Add(const std::string& a_key)
+	{
+		m_data[a_key] = nlohmann::json::object();
+	}
+
+	bool ConfigManager::Has(const std::string& a_key) const
+	{
+		return m_data.contains(a_key);
+	}
+
+	void ConfigManager::Remove(const std::string& a_key)
+	{
+		m_data.erase(a_key);
+	}
 }

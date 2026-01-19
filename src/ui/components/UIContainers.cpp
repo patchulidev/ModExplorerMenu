@@ -1,5 +1,4 @@
 #include "UIContainers.h"
-
 #include "core/Commands.h"
 #include "config/UserData.h"
 #include "core/PlayerChestSpawn.h"
@@ -10,6 +9,7 @@
 namespace Modex
 {
 
+	// Compact helper for Warning popup on large queries.
     bool UIContainers::QueryCheck(const bool a_condition)
     {
         if (a_condition) {
@@ -20,6 +20,8 @@ namespace Modex
         }
     }
 
+
+	// Used exclusively in the UITable renderer for the tree node filter buttons.
     bool UIContainers::TabButton(const char* a_label, const ImVec2& a_size, const bool a_condition, const ImVec4& a_color)
     {
         bool success = false;
@@ -47,6 +49,7 @@ namespace Modex
         return success;
     }
 
+	// TODO: Move to UICustom.
     // Buttons used for actions pane inside module windows (right-hand side).
     bool UIContainers::ActionButton(const char* a_translate, const ImVec2& a_size, const bool a_condition, const ImVec4& a_color)
     {
@@ -68,17 +71,17 @@ namespace Modex
         return success;
     }
 
+	// Used exclusively in the equipment module window for rendering Kit actionable buttons.
     void UIContainers::DrawKitActionsPanel(const ImVec2 &a_pos, const ImVec2 &a_size, std::unique_ptr<UITable> &a_kitView, std::unique_ptr<UITable> &a_mainView, Kit& a_kit)
     {
         const float button_height = ImGui::GetFrameHeight();
         const ImVec4 button_color = ThemeConfig::GetColor("BUTTON");
         const ImVec4 cont_color = ThemeConfig::GetColor("CONTAINER_BUTTON");
         
-        // const int count = a_mainView->GetClickAmount() == nullptr ? 1 : *a_mainView->GetClickAmount();
         const bool playerToggle = UserData::User().Get<bool>("Modex::TargetReference::IsPlayer", true);
         const std::string toggle_text = playerToggle ? Translate("TARGET_PLAYER") : Translate("TARGET_NPC");
 
-        // TODO: Remove
+        // TODO: Previously used for dynamic height adjustment. Smelly code, remove.
         const ImVec2 adjusted_size = ImVec2(a_size.x, !playerToggle ? a_size.y + (button_height) * 2.0f : a_size.y);
         
         ImGui::SameLine();
@@ -149,12 +152,12 @@ namespace Modex
         ImGui::EndChild();
     }
 
-    void UIContainers::DrawAddItemTablePanel(const ImVec2 &a_pos, const ImVec2 &a_size, std::unique_ptr<UITable> &a_view)
+	// Can be used globally as a general purpose BaseObject table.
+    void UIContainers::DrawBasicTablePanel(const ImVec2 &a_pos, const ImVec2 &a_size, std::unique_ptr<UITable> &a_view)
     {
         ImGui::SameLine();
         ImGui::SetCursorPos(a_pos);
         if (ImGui::BeginChild("##Modex::AddItemTable", a_size, false)) {
-            // ImGui::SubCategoryHeader(Translate("HEADER_ITEM_TABLE"));
 	    a_view->DrawWarningBar();
             a_view->ShowSort();
             ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
@@ -169,16 +172,16 @@ namespace Modex
         ImGui::SetCursorPos(a_pos);
         if (ImGui::BeginChild("##Modex::InventoryTable", a_size, false)) {
             UICustom::SubCategoryHeader(Translate("HEADER_INVENTORY_TABLE"));
-            // a_view->ShowSort();
             ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
             a_view->Draw(a_view->GetTableList());
         }
         ImGui::EndChild();
     }
 
+	// BUG: Previously had a weird LayoutItemSize bug when a Separator was used between the
+	// ShowSort() and Draw() functions below. 
     void UIContainers::DrawKitTablePanel(const ImVec2 &a_pos, const ImVec2 &a_size, std::unique_ptr<UITable> &a_view)
     {
-        // FIXME: Removed Separator between Sort and Draw to potentially fix LayoutItemSize issues.
         ImGui::SameLine();
         ImGui::SetCursorPos(a_pos);
         if (ImGui::BeginChild("##Modex::KitTable", a_size, false)) {

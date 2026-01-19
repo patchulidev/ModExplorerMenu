@@ -1,5 +1,4 @@
 #include "core/Hooks.h"
-
 #include "core/InputManager.h"
 #include "ui/core/UIManager.h"
 #include "ui/core/UIMenuImpl.h"

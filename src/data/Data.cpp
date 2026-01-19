@@ -19,8 +19,9 @@ namespace Modex
 		return {};
 	}
 
-	constexpr const char* ERROR_FILENAME = "Unable to Read";
+	static constexpr const char* ERROR_FILENAME = "Unable to Read";
 
+	// NOTE: Consider using std::optional<> since we can't guarantee char*
 	std::string ValidateTESFileName(const RE::TESFile* a_file)
 	{
 		if (a_file == nullptr) {
@@ -163,7 +164,7 @@ namespace Modex
 	void Data::MergeNPCRefIds(std::shared_ptr<std::unordered_map<RE::FormID, RE::FormID>> npc_ref_map)
 	{
 		if (npc_ref_map->empty()) {
-			PrettyLog::Debug("No NPC references found.");
+			Debug("No NPC references found.");
 		} else {
 			for (auto& npc : m_npcCache) {
 				auto it = npc_ref_map->find(npc.GetBaseFormID());
@@ -255,7 +256,7 @@ namespace Modex
 			count++;
 		}
 
-		PrettyLog::Trace("Finished caching {} items of type: {}", count, RE::FormTypeToString(T::FORMTYPE).data());
+		Trace("Finished caching {} items of type: {}", count, RE::FormTypeToString(T::FORMTYPE).data());
 	}
 
 	template <class T>
@@ -281,7 +282,7 @@ namespace Modex
 	void Data::CacheCells(RE::TESFile* a_file, std::map<std::tuple<std::uint32_t, const std::string, const std::string>, std::string_view>& out_map)
 	{
 		if (!a_file->OpenTES(RE::NiFile::OpenMode::kReadOnly, false)) {
-			PrettyLog::Warn("Failed to open file: {:s}", a_file->fileName);
+			Warn("Failed to open file: {:s}", a_file->fileName);
 			return;
 		}
 
@@ -303,7 +304,7 @@ namespace Modex
 						if (gotEDID) {
 							count++;
 							out_map.insert_or_assign(std::make_tuple(cidx, edid, "First Pass"), a_file->fileName);
-							PrettyLog::Trace(" - {:s} -> {:s}", a_file->fileName, edid);
+							Trace(" - {:s} -> {:s}", a_file->fileName, edid);
 						}
 						break;
 					default:
@@ -314,10 +315,10 @@ namespace Modex
 		} while (a_file->SeekNextForm(true));
 
 		// TODO: Bug, survivalmode has a single cell that isn't being loaded for some reason.
-		PrettyLog::Debug("Found {} cells in mod: {:s}", count, a_file->fileName);
+		Debug("Found {} cells in mod: {:s}", count, a_file->fileName);
 
 		if (!a_file->CloseTES(false)) {
-			PrettyLog::Error("Failed to close file: {:s}", a_file->fileName);
+			Error("Failed to close file: {:s}", a_file->fileName);
 		}
 	}
 
@@ -325,11 +326,11 @@ namespace Modex
 	{
 		m_inventory.clear();
 
-		PrettyLog::Debug("Generating Inventory List...");
+		Debug("Generating Inventory List...");
 
 		auto player = RE::PlayerCharacter::GetSingleton();
 		if (!player) {
-			PrettyLog::Warn("Unable to get player character singleton!");
+			Warn("Unable to get player character singleton!");
 			return;
 		}
 
@@ -342,7 +343,7 @@ namespace Modex
 			}
 		}
 
-		PrettyLog::Debug("Cached {} inventory items.", m_inventory.size());
+		Debug("Cached {} inventory items.", m_inventory.size());
 	}
 
 	void Data::GenerateItemList()
@@ -352,7 +353,7 @@ namespace Modex
 		// PrettyLog::Assert(true, "Generating Item List called when item cache is not empty!");
 		// ASSERT_MSG(true, "TEST");
 
-		PrettyLog::Debug("Generating Item List...");
+		Debug("Generating Item List...");
 
 		if (auto dataHandler = RE::TESDataHandler::GetSingleton()) {
 			CacheItems<RE::TESObjectARMO>(dataHandler);
@@ -372,7 +373,7 @@ namespace Modex
 	{
 		m_npcCache.clear();
 
-		PrettyLog::Debug("Generating NPC List...");
+		Debug("Generating NPC List...");
 
 		if (auto dataHandler = RE::TESDataHandler::GetSingleton()) {
 			CacheNPCs<RE::TESNPC>(dataHandler);
@@ -384,7 +385,7 @@ namespace Modex
 	{
 		m_npcClassList.clear();
 
-		PrettyLog::Debug("Populating NPCClassList for {} NPCs.", m_npcCache.size());
+		Debug("Populating NPCClassList for {} NPCs.", m_npcCache.size());
 
 		for (auto& npc : m_npcCache) {
 			auto className = npc.GetClass();
@@ -396,7 +397,7 @@ namespace Modex
 	{
 		m_npcRaceList.clear();
 
-		PrettyLog::Debug("Populating NPCRaceList for {} NPCs.", m_npcCache.size());
+		Debug("Populating NPCRaceList for {} NPCs.", m_npcCache.size());
 
 		for (auto& npc : m_npcCache) {
 			auto raceName = npc.GetRace();
@@ -408,7 +409,7 @@ namespace Modex
 	{
 		m_npcFactionList.clear();
 
-		PrettyLog::Debug("Populating NPCFactionList for {} NPCs.", m_npcCache.size());
+		Debug("Populating NPCFactionList for {} NPCs.", m_npcCache.size());
 
 		for (auto& npc : m_npcCache) {
 			if (auto faction_names = npc.GetFactions(); faction_names.has_value()) {
@@ -424,7 +425,7 @@ namespace Modex
 	{
 		m_staticCache.clear();
 
-		PrettyLog::Debug("Generating Object List...");
+		Debug("Generating Object List...");
 
 		if (auto dataHandler = RE::TESDataHandler::GetSingleton()) {
 			CacheStaticObjects<RE::TESObjectTREE>(dataHandler);
@@ -452,7 +453,7 @@ namespace Modex
 	{
 		m_cellCache.clear();
 
-		PrettyLog::Debug("Generating Cell List...");
+		Debug("Generating Cell List...");
 
 		std::map<std::tuple<std::uint32_t, const std::string, const std::string>, std::string_view> rawCellMap;
 		if (auto dataHandler = RE::TESDataHandler::GetSingleton()) {
@@ -470,9 +471,9 @@ namespace Modex
 				}
 			}
 
-			PrettyLog::Debug("Found a total of {} mods containing CELL records", m_cellModList.size());
+			Debug("Found a total of {} mods containing CELL records", m_cellModList.size());
 			if (rawCellMap.empty()) {
-				PrettyLog::Debug("No cells found in loaded worldspaces.");
+				Debug("No cells found in loaded worldspaces.");
 			} else {
 				for (const auto& [key, value] : rawCellMap) {
 					const std::string& editorID = std::get<1>(key);
@@ -514,7 +515,7 @@ namespace Modex
 		return emptyCell;
 	}
 
-	// TODO: Optimize this by loading on demand rather than all at once.
+	// OPTIMIZE: Optimize this by loading on demand rather than all at once.
 	void Data::Run()
 	{
 		GenerateItemList();
@@ -526,10 +527,10 @@ namespace Modex
 		GenerateCellList();
 		
 
-		PrettyLog::Info("Successfully registered data from {} mods.", m_modList.size());
+		Info("Successfully registered data from {} mods.", m_modList.size());
 		for (auto& file : m_modList) {
 			m_modListSorted.insert(ValidateTESFileName(file));
-			PrettyLog::Trace(" - \"{}\"", ValidateTESFileName(file));
+			Trace(" - \"{}\"", ValidateTESFileName(file));
 		}
 		
 		DescriptionFramework_Impl::SetDescriptionFrameworkInterface(DescriptionFrameworkAPI::GetDescriptionFrameworkInterface001());

@@ -1,5 +1,4 @@
 #include "FontManager.h"
-
 #include "config/UserConfig.h"
 #include "external/icons/IconsLucide.h"
 

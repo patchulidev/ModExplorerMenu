@@ -9,9 +9,9 @@ namespace Modex
         this->firstFrame = true;
     }
 
+	// FIXME: Pending Banner Re-implementation.
     bool UIBanner::ShouldDisplay() const
     {
-		// TODO: REFACTOR
 		// if (Settings::GetSingleton()->GetConfig().welcomeBanner == true) {
 		// 	return this->lingerTime > 0.0f;
 		// }

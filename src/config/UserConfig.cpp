@@ -1,5 +1,4 @@
 #include "UserConfig.h"
-
 #include "ConfigManager.h"
 #include "core/InputManager.h"
 #include "external/json_serializers.cpp"
@@ -14,12 +13,12 @@ namespace Modex
 	
 		user.showMenuKey 	= ConfigManager::Get<uint32_t>("Open Menu Keybind", _default.showMenuKey);
 		user.showMenuModifier 	= ConfigManager::Get<uint32_t>("Open Menu Modifier", _default.showMenuModifier);
+		user.modListSort 	= ConfigManager::Get<uint32_t>("Plugin List Sorting", _default.modListSort);
+		user.logLevel 		= ConfigManager::Get<uint32_t>("Log Level", _default.logLevel);
 
-		user.modListSort 	= ConfigManager::Get<int>("Plugin List Sorting", _default.modListSort);
 		user.uiScaleVertical 	= ConfigManager::Get<int>("UI Scale Vertical", _default.uiScaleVertical);
 		user.uiScaleHorizontal 	= ConfigManager::Get<int>("UI Scale Horizontal", _default.uiScaleHorizontal);
 		user.globalFontSize 	= ConfigManager::Get<int>("Global Font Size", _default.globalFontSize);
-		user.logLevel 		= ConfigManager::Get<int>("Log Level", _default.logLevel);
 
 		user.fullscreen 	= ConfigManager::Get<bool>("Fullscreen", _default.fullscreen);
 		user.pauseGame 		= ConfigManager::Get<bool>("Pause Game While Open", _default.pauseGame);
@@ -43,12 +42,12 @@ namespace Modex
 	{
 		ConfigManager::Set<uint32_t>("Open Menu Keybind", user.showMenuKey);
 		ConfigManager::Set<uint32_t>("Open Menu Modifier", user.showMenuModifier);
+		ConfigManager::Set<uint32_t>("Plugin List Sorting", user.modListSort);
+		ConfigManager::Set<uint32_t>("Log Level", user.logLevel);
 
-		ConfigManager::Set<int>("Plugin List Sorting", user.modListSort);
 		ConfigManager::Set<int>("UI Scale Vertical", user.uiScaleVertical);
 		ConfigManager::Set<int>("UI Scale Horizontal", user.uiScaleHorizontal);
 		ConfigManager::Set<int>("Global Font Size", user.globalFontSize);
-		ConfigManager::Set<int>("Log Level", user.logLevel);
 
 		ConfigManager::Set<bool>("Fullscreen", user.fullscreen);
 		ConfigManager::Set<bool>("Pause Game While Open", user.pauseGame);
@@ -65,58 +64,8 @@ namespace Modex
 	
 		this->Save();
 	}
+
+	UserConfig::UserConfig() {
+		SetFilePath(USERCONFIG_JSON_PATH);
+	}
 }
-
-	/*
-	static inline void LoadColorsFromJSON()
-	{
-		const std::filesystem::path a_path = "Data\\Interface\\Modex\\user\\colors.json";
-		GetSingleton()->m_colors.clear();
-
-		nlohmann::json j = OpenJSONFile(a_path);
-
-		for (auto& [key, value] : j.items()) {
-			if (value.is_array() && value.size() == 4) {
-				ImVec4 color = ImVec4(
-					value[0].get<float>(),
-					value[1].get<float>(),
-					value[2].get<float>(),
-					value[3].get<float>()
-				);
-				GetSingleton()->m_colors[key] = color;
-			}
-		}
-
-		// Manually override ImGui colors that are overlapping
-		auto& colors = ImGui::GetStyle().Colors;
-		colors[ImGuiCol_Button] = GetSingleton()->m_colors["BUTTON"];
-		colors[ImGuiCol_ButtonHovered] = GetSingleton()->m_colors["BUTTON_HOVER"];
-		colors[ImGuiCol_ButtonActive] = GetSingleton()->m_colors["BUTTON_ACTIVE"];
-
-		colors[ImGuiCol_Text] = GetSingleton()->m_colors["TEXT"];
-		colors[ImGuiCol_TextDisabled] = GetSingleton()->m_colors["TEXT_DISABLED"];
-		colors[ImGuiCol_TableRowBg] = GetSingleton()->m_colors["TABLE_ROW_BG"];
-		colors[ImGuiCol_TableRowBgAlt] = GetSingleton()->m_colors["TABLE_ROW_BG_ALT"];
-		colors[ImGuiCol_TableBorderLight] = GetSingleton()->m_colors["TABLE_ROW_BORDER"];
-	}
-
-	static inline ImVec4 GetColor(const std::string& a_key, float a_alphaMult = 1.0f)
-	{
-		auto& colors = GetSingleton()->m_colors;
-
-		try {
-			return colors.at(a_key) * ImVec4(1.0f, 1.0f, 1.0f, a_alphaMult * ImGui::GetStyle().Alpha);
-		} catch (const std::out_of_range&) {
-			ASSERT_MSG(true, std::format("PersistentData -> Color key '{}' not found!", a_key));
-			return ImGui::GetStyleColorVec4(ImGuiCol_FrameBg);
-		}
-		
-	}
-
-	static inline ImU32 GetColorU32(const std::string& a_key, float a_alphaMult = 1.0f)
-	{
-		ImVec4 color = GetColor(a_key);
-		color.w *= a_alphaMult;
-		return ImGui::ColorConvertFloat4ToU32(color);
-	}
-			*/

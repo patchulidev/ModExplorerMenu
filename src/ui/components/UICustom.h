@@ -12,11 +12,12 @@ namespace Modex::UICustom
 	// These methods include fixed width styling seen in settings panel.
 	bool Settings_SliderFloat(const char* a_text, float& a_valRef, float a_min, float a_max);
 	bool Settings_Keybind(const char* a_text, uint32_t& a_keybind, uint32_t defaultKey, ImVec4& a_hover);
-	bool Settings_Dropdown(const char* a_text, int& a_value, const std::vector<std::string>& a_options, bool a_localizeList = true);
+	bool Settings_Dropdown(const char* a_text, uint32_t& a_value, const std::vector<std::string>& a_options, bool a_localizeList = true);
 	bool Settings_FontDropdown(const char* a_text, std::string* a_font);
 	bool Settings_ToggleButton(const char* a_localeString, bool& a_value);
 	bool Settings_SliderInt(const char* a_localeString, int& a_value, int a_min, int a_max);
 
+	// These methods are exclusively used for popup window widgets.
 	bool Popup_MenuHeader(const char* a_text);
 	bool Popup_ConfirmDeclineButtons(bool& a_confirm, bool& a_cancel, bool m_navAccept = true);
 

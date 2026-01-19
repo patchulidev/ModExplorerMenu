@@ -22,9 +22,6 @@ namespace Modex
         virtual bool Load(bool a_create) override;
 		void LoadFromPath(std::filesystem::path a_path);
 		const char* GetTranslation(const char* fallback_text) const;
-
-        template<size_t N>
-		const char* GetTranslation(const char (&fallback_text)[N]) const;
     };
 
 	#define Translate(text) Locale::GetSingleton()->GetTranslation(text)

@@ -1,11 +1,4 @@
-// #include "include/U/UserSettings.h"
-// #include "include/S/Settings.h"
-// #include "include/P/Persistent.h"
-// #include "include/D/Data.h"
-// #include "include/U/Util.h"
-
 #include "SettingsModule.h"
-
 #include "data/Data.h"
 #include "config/BlacklistConfig.h"
 #include "ui/components/UICustom.h"
@@ -91,7 +84,6 @@ namespace Modex
 		}
 
 		ImGui::Unindent();
-
 		ImGui::EndColumns();
 
 		// Left and Right Sections
@@ -132,11 +124,9 @@ namespace Modex
 				}
 			}
 		}
-
 		ImGui::EndChild();
 
 		ImGui::SameLine(0.0f, -1.0f);
-
 		ImGui::BeginChild("##Blacklist::RightBox", ImVec2(ImGui::GetContentRegionAvail().x, 0.0f), true, ImGuiWindowFlags_NoFocusOnAppearing);
 		{
 			UICustom::SubCategoryHeader(Translate("Blacklist"));
@@ -169,8 +159,6 @@ namespace Modex
 		}
 
 		ImGui::EndChild();
-		
-
 		m_updateHidden = false;
 	}
 }

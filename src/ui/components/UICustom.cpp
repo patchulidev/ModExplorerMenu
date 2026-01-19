@@ -1,5 +1,4 @@
 #include "UICustom.h"
-
 #include "core/Graphic.h"
 #include "external/icons/IconsLucide.h"
 #include "imgui.h"
@@ -13,7 +12,7 @@
 
 namespace Modex::UICustom
 {
-	static inline float s_widgetWidth = 150.0f; // TODO: FUCK YOU
+	static inline float s_widgetWidth = 150.0f; // Fixed Settings right-align widget width.
 
 	[[nodiscard]] float GetCenterTextPosX(const char* a_text)
 	{
@@ -34,6 +33,7 @@ namespace Modex::UICustom
 		ImGui::PopStyleColor(3);
 	}
 
+	// OPTIMIZE: Can we also include hovering logic? Check references.
 	void FancyTooltip(const char* a_text)
 	{
 		const float width = ImGui::GetIO().DisplaySize.x * 0.20f;
@@ -57,7 +57,8 @@ namespace Modex::UICustom
 		ImGui::PopStyleVar();
 	}
 
-	bool IconButton(const char* a_icon, const char* a_tooltip, bool& a_toggle) {
+	bool IconButton(const char* a_icon, const char* a_tooltip, bool& a_toggle) 
+	{
 		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
 		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
 		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
@@ -303,7 +304,7 @@ namespace Modex::UICustom
 		return changes;
 	}
 
-	bool Settings_Dropdown(const char* a_text, int& a_value, const std::vector<std::string>& a_options, bool a_localizeList)
+	bool Settings_Dropdown(const char* a_text, uint32_t& a_value, const std::vector<std::string>& a_options, bool a_localizeList)
 	{
 		bool result = false;
 		auto id = "##Settings::Dropdown" + std::string(a_text);
@@ -316,7 +317,7 @@ namespace Modex::UICustom
 			for (size_t i = 0; i < a_options.size(); ++i) {
 				const char* entry = a_localizeList ? Translate(a_options[i].c_str()) : a_options[i].c_str();
 				if (ImGui::Selectable(entry)) {
-					a_value = static_cast<int>(i);
+					a_value = static_cast<uint32_t>(i); // WARN: size_t to uint32_t conversion
 					result = true;
 				}
 			}

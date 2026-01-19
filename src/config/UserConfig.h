@@ -9,6 +9,10 @@ namespace Modex
 
 	class UserConfig : private ConfigManager
 	{
+	private:
+		void CreateDefaultMaster();
+		static void FormatMasterIni(CSimpleIniA& a_ini);
+
 	public:
 		static inline UserConfig* GetSingleton()
 		{
@@ -16,27 +20,22 @@ namespace Modex
 			return std::addressof(singleton);
 		}
 
-		UserConfig() {
-			SetFilePath(USERCONFIG_JSON_PATH);
-		}
+		UserConfig();
 
 		void LoadSettings();
 		void LoadFontSettings();
 		void SaveSettings();
 
-		void CreateDefaultMaster();
-		static void FormatMasterIni(CSimpleIniA& a_ini);
-
 		struct UserSettings
 		{
 			uint32_t showMenuKey 		= 211;
 			uint32_t showMenuModifier 	= 0;
+			uint32_t modListSort 		= 0;
+			uint32_t logLevel 			= 1;
 
-			int modListSort 		= 0;
-			int uiScaleVertical 		= 100;
-			int uiScaleHorizontal 		= 100;
+			int uiScaleVertical 	= 100;
+			int uiScaleHorizontal 	= 100;
 			int globalFontSize 		= 16;
-			int logLevel 			= 1;
 
 			bool fullscreen 		= false;
 			bool pauseGame 			= false;
@@ -46,7 +45,7 @@ namespace Modex
 			bool smoothScroll 		= true;
 
 			std::string language 		= "English";
-			std::string theme 		= "default";
+			std::string theme 			= "default";
 			std::string globalFont 		= "Ubuntu-Regular";
 
 			ImVec2 screenScaleRatio		= ImVec2(1.0f, 1.0f);
@@ -57,7 +56,5 @@ namespace Modex
 
 		[[nodiscard]] static UserSettings& Get() { return GetSingleton()->user; };
 		[[nodiscard]] static UserSettings& GetDefault() { return GetSingleton()->_default; };
-
-	private:
 	};
 }

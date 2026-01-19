@@ -3,6 +3,8 @@
 namespace Modex
 {
 	// D3D11 Implementation Sourced from dTry's Wheeler and Llama's Tiny Hud. Adapted to NG.
+	// This plugin would absolutely not be possible without dMenu, OAR, Tiny HUD, and so many
+	// more public repositories
 
 	class GraphicManager
 	{

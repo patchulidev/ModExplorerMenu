@@ -18,16 +18,17 @@ namespace Modex
 		void DrawGeneralSettings();
 		void DrawBlacklistSettings();
 
-		int 									m_totalPlugins;
-		int 									m_totalBlacklisted;
-		int 									m_totalHidden;
-		bool									m_updateHidden;
-		RE::FormType							m_primaryFilter;
-		std::vector<const RE::TESFile*>         m_pluginList;
-		std::vector<std::string>				m_pluginListVector;
+		int   m_totalPlugins;
+		int   m_totalBlacklisted;
+		int   m_totalHidden;
+		bool  m_updateHidden;
 
-		char 									m_modSearchBuffer[256];
-		std::string 							m_selectedMod;
+		char        m_modSearchBuffer[256];
+		std::string m_selectedMod;
+
+		RE::FormType                    m_primaryFilter;
+		std::vector<const RE::TESFile*> m_pluginList;
+		std::vector<std::string>        m_pluginListVector;
 
 		enum class Viewport : uint8_t
 		{
@@ -36,6 +37,6 @@ namespace Modex
 			Count
 		};
 
-		Viewport				m_activeViewport = Viewport::UserSettings;
+		Viewport m_activeViewport = Viewport::UserSettings;
 	};
 }

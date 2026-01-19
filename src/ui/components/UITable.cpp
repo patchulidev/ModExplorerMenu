@@ -677,8 +677,10 @@ namespace Modex
 
 	void UITable::BuildPluginList()
 	{
+		Info("TEST");
 		const auto& config = UserConfig::Get();
-		this->pluginList = Data::GetSingleton()->GetFilteredListOfPluginNames(this->pluginType, (Data::SORT_TYPE)config.modListSort, RE::FormType::None);
+		// this->pluginList = Data::GetSingleton()->GetFilteredListOfPluginNames(Data::PLUGIN_TYPE::ALL, Data::SORT_TYPE::ALPHABETICAL); 
+		this->pluginList = Data::GetSingleton()->GetFilteredListOfPluginNames(this->pluginType, (Data::SORT_TYPE)config.modListSort);
 		this->pluginSet = Data::GetSingleton()->GetModulePluginList(this->pluginType);
 		pluginList.insert(pluginList.begin(), Translate("SHOW_ALL"));
 	}

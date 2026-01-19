@@ -2,7 +2,6 @@
 
 #include "config/ConfigManager.h"
 #include "core/Graphic.h"
-	
 
 namespace Modex
 {
@@ -14,8 +13,7 @@ namespace Modex
 		std::string m_name;
 		std::filesystem::path m_filePath;
 
-		ModexTheme(const std::filesystem::path& a_path)
-			: m_filePath(a_path)
+		ModexTheme(const std::filesystem::path& a_path) : m_filePath(a_path)
 		{
 			m_name = a_path.stem().string();
 			m_filePath = a_path;

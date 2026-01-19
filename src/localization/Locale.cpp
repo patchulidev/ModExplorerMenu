@@ -1,5 +1,3 @@
-#pragma once
-
 #include "localization/Locale.h"
 
 namespace Modex
@@ -40,19 +38,6 @@ namespace Modex
         }
 
         return true;
-    }
-
-    template<size_t N>
-    const char* Locale::GetTranslation(const char (&fallback_text)[N]) const
-    {
-        constexpr size_t text_hash = hash_string(fallback_text);
-        
-        auto it = m_hash.find(text_hash);
-        if (it != m_hash.end()) {
-            return it->second.c_str();
-        }
-        
-        return fallback_text;
     }
 
     const char* Locale::GetTranslation(const char* fallback_text) const
