@@ -21,16 +21,17 @@ This is a CommonlibSSE-NG Plugin for Skyrim SE/AE Game versions 1.5.97 - 1.6.117
 
 ### Information
 
-This project is natively maintained and built on Windows 11 using Visual Studio Code 2026. Mileage may vary.
+This project is natively maintained and built on Windows 11 using Neovim. Mileage may vary.
 
-This project is setup for a local download of Commonlib in the project folder. Will require reconfiguration if you have a global instance of it.
+This project is setup for a *local* install of Commonlib in the project folder. Will require reconfiguration if you have a global instance of it.
 
-P.S. You may have include path issues with my xmake configuration - sorry.
+> ***Note:*** *You may have include path issues with my xmake configuration - sorry.*
 
 ## Getting Started
 ```bat
 git clone --recurse-submodules https://github.com/patchulidev/ModExplorerMenu
-cd commonlibsse-ng-template
+cd ModExplorerMenu
+xmake config -m releasedbg --skyrim_vr=n
 ```
 
 ### Build
@@ -39,17 +40,19 @@ To build the project, run the following command:
 xmake build
 ```
 
-> ***Note:*** *This will generate a `build/windows/` directory in the **project's root directory** with the build output.*
+> ***Note:*** *This will generate a `/build/` directory in the **project's root directory** with the build output.*
 > ***Note:*** *Project packages are installed locally in the .xmake directory in your workspace folder. This can be turned off*
 
-### Build Output (Optional) (Untested)
+### Build Output (Optional)
+The project configuration is designed to copy the contents of `/dist/` into your mod manager `/data/`
+directory after building the plugin. This requires the below environment variable set. Otherwise,
+the binaries will only be distributed to `/dist/`.
+
 If you want to redirect the build output, set one of or both of the following environment variables:
 
-- Path to a Skyrim install folder: `XSE_TES5_GAME_PATH`
+- Path to a Mod Manager mods folder: `MO2_MODS_FOLDER`
 
-- Path to a Mod Manager mods folder: `XSE_TES5_MODS_PATH`
-
-### Project Generation (Optional)
+### Project Generation (Optional) (Untested)
 If you want to generate a Visual Studio project, run the following command:
 ```bat
 xmake project -k vsxmake
@@ -63,6 +66,13 @@ If you want to upgrade/modify the project's dependencies, run the following comm
 xmake repo --update
 xmake require --upgrade
 ```
+Alternatively, if you want to clean and re-install project dependencies, run the following commands:
+```bat
+xrepo remove --all
+xrepo clean
+xmake f -c
+```
+Doing so will redownload project dependencies from source. Follow "Getting Started" afterwards.
 
 ### Clean and Reconfigure (Optional)
 Similarly to CMake, you may need to clean and reconfigure your installation.
