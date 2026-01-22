@@ -237,7 +237,7 @@ namespace Modex
 		// Font Selection Dropdown
 		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 		{
-			if (UICustom::Settings_FontDropdown("SETTING_FONT", &config.globalFont))
+			if (UICustom::Settings_ToggleButton("SETTINGS_BASE_PLUGIN", config.basePlugin))
 			{
 				UserConfig::GetSingleton()->SaveSettings();
 			}

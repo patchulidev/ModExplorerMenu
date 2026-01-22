@@ -43,6 +43,7 @@ namespace Modex
 			bool disableAlt			= false;
 			bool welcomeBanner 		= true;
 			bool smoothScroll 		= true;
+			bool basePlugin			= true;
 
 			std::string language 		= "English";
 			std::string theme 			= "default";
@@ -54,6 +55,7 @@ namespace Modex
 		UserSettings _default;
 		UserSettings user;
 
+		[[nodiscard]] static int32_t GetCompileIndex() { return GetSingleton()->user.basePlugin ? 0 : -1; };
 		[[nodiscard]] static UserSettings& Get() { return GetSingleton()->user; };
 		[[nodiscard]] static UserSettings& GetDefault() { return GetSingleton()->_default; };
 	};

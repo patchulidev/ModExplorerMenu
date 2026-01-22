@@ -8,8 +8,8 @@ namespace Modex
 	// Sort Function for Case Insensitive comparing used for Plugin Lists.
 	bool CaseInsensitiveCompareTESFile(const RE::TESFile* a, const RE::TESFile* b)
 	{
-		std::string filenameA = ValidateTESFileName(a);
-		std::string filenameB = ValidateTESFileName(b);
+		std::string filenameA = a->GetFilename().data();
+		std::string filenameB = b->GetFilename().data();
 
 		return std::lexicographical_compare(
 			filenameA.begin(), filenameA.end(),
@@ -185,7 +185,7 @@ namespace Modex
 		std::vector<std::string> pluginList;
 
 		for (const auto& plugin : masterlist) {
-			auto name = Modex::ValidateTESFileName(plugin);
+			const std::string name = plugin->GetFilename().data();
 
 			if (blacklist.contains(plugin)) {
 				continue;

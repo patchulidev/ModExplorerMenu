@@ -26,6 +26,7 @@ namespace Modex
 		user.welcomeBanner 	= ConfigManager::Get<bool>("Welcome Banner", _default.welcomeBanner);
 		user.smoothScroll 	= ConfigManager::Get<bool>("Smooth Scroll", _default.smoothScroll);
 		user.disableAlt		= ConfigManager::Get<bool>("Disable Alt Key Shortcut", _default.disableAlt);
+		user.basePlugin 	= ConfigManager::Get<bool>("Use Base Plugin", _default.basePlugin);
 
 		user.language 		= ConfigManager::Get<std::string>("Language", _default.language);
 		user.theme 		= ConfigManager::Get<std::string>("Modex Theme", _default.theme);
@@ -55,6 +56,7 @@ namespace Modex
 		ConfigManager::Set<bool>("Welcome Banner", user.welcomeBanner);
 		ConfigManager::Set<bool>("Smooth Scroll", user.smoothScroll);
 		ConfigManager::Set<bool>("Disable Alt Key Shortcut", user.disableAlt);
+		ConfigManager::Set<bool>("Use Base Plugin", user.basePlugin);
 
 		ConfigManager::Set<std::string>("Language", user.language);
 		ConfigManager::Set<std::string>("Modex Theme", user.theme);

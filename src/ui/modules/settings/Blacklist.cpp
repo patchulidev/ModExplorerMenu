@@ -95,7 +95,7 @@ namespace Modex
 			ImGui::NewLine();
 
 			for (const auto& plugin : m_pluginList) {
-				auto pluginName = ValidateTESFileName(plugin);
+				const std::string pluginName = plugin->GetFilename().data();
 				auto pluginNameLower = pluginName;
 
 				std::transform(pluginNameLower.begin(), pluginNameLower.end(), pluginNameLower.begin(),
@@ -134,7 +134,7 @@ namespace Modex
 			ImGui::NewLine();
 
 			for (const auto& plugin : m_pluginList) {
-				auto pluginName = ValidateTESFileName(plugin);
+				const std::string pluginName = plugin->GetFilename().data();
 				auto pluginNameLower = pluginName;
 
 				std::transform(pluginNameLower.begin(), pluginNameLower.end(), pluginNameLower.begin(),

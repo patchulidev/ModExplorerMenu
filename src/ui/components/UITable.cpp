@@ -765,7 +765,7 @@ namespace Modex
 						continue;
 					}
 
-					std::string pluginName = Modex::ValidateTESFileName(plugin);
+					const std::string pluginName = plugin->GetFilename().data();
 
 					if (pluginName == Translate("SHOW_ALL")) {
 						ImFormatString(this->pluginSearchBuffer, IM_ARRAYSIZE(this->pluginSearchBuffer), "");

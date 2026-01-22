@@ -3,16 +3,13 @@
 #include "pch.h"
 #include "external/magic_enum.hpp"
 #include "external/icons/IconsLucide.h"
+#include "config/UserConfig.h"
 
 #include <format>
 #include <optional>
 
 namespace Modex
 {
-	template <class TESObject>
-	const char* ValidateTESName(const TESObject* a_object);
-	std::string ValidateTESFileName(const RE::TESFile* a_file);
-
 	// https://github.com/Nightfallstorm/DescriptionFramework | License GPL-3.0
 	using _GetFormEditorID = const char* (*)(std::uint32_t);
 	std::string po3_GetEditorID(RE::FormID a_formID);
@@ -324,23 +321,44 @@ namespace Modex
 		
 		[[nodiscard]] bool IsValid() const { return m_form != nullptr; }
 		[[nodiscard]] RE::TESForm* Get() const { return m_form; }
-		
-		// Safe accessors with default fallbacks
-		[[nodiscard]] const char* WGetName() const {
-			return m_form ? ValidateTESName(m_form) : "[NULL FORM]";
+
+		std::string ValidateFilename(int32_t a_compileIndex) const
+		{
+			if (!IsValid()) return "Error";
+
+			auto* TESFile = m_form->GetFile(a_compileIndex);
+
+			if (!TESFile) return "Error";	
+			if (TESFile->fileName[0] == '\0') return "Error";
+
+			return TESFile->fileName;
+		}
+
+		std::string ValidateName() const
+		{
+			if (!IsValid()) return "Error";
+			if (m_form->GetName() == nullptr) return "Error";
+			if (m_form->GetName()[0] == '\0') return "Error";
+
+			return m_form->GetName();
 		}
 		
-		[[nodiscard]] std::string WGetEditorID() const {
+		// Safe accessors with default fallbacks
+		[[nodiscard]] const std::string WGetName() const {
+			return m_form ? ValidateName() : "[NULL FORM]";
+		}
+		
+		[[nodiscard]] const std::string WGetEditorID() const {
 			return m_form ? po3_GetEditorID(m_form->GetFormID()) : "[NULL FORM]";
 		}
 		
-		[[nodiscard]] std::string WGetPluginName() const {
-			return m_form ? ValidateTESFileName(m_form->GetFile()) : "[NULL FORM]";
+		[[nodiscard]] const std::string WGetPluginName() const {
+			const int32_t idx = UserConfig::GetCompileIndex();
+			return m_form ? ValidateFilename(idx) : "[NULL FORM]";
 		}
 		
-		[[nodiscard]] std::string WGetFormID() const {
-			// return m_form ? fmt::format("{:08x}", m_form->GetFormID()) : "";
-			return m_form ? std::format("{:08X}", m_form->GetFormID()) : "";
+		[[nodiscard]] const std::string WGetFormID() const {
+			return m_form ? std::format("{:08X}", m_form->GetFormID()) : "[NULL FORM]";
 		}
 
 		[[nodiscard]] RE::FormID WGetBaseFormID() const {
@@ -995,7 +1013,7 @@ namespace Modex
 		inline const std::string GetClass() const
 		{
 			if (auto npc = GetTESNPC(); npc.has_value()) {
-				return ValidateTESName(npc.value()->npcClass);
+				return npc.value()->npcClass->GetName();
 			}
 
 			return "";
@@ -1004,7 +1022,7 @@ namespace Modex
 		inline const std::string GetRace() const
 		{
 			if (auto npc = GetTESNPC(); npc.has_value()) {
-				return ValidateTESName(npc.value()->race);
+				return npc.value()->race->GetName();
 			}
 
 			return "";

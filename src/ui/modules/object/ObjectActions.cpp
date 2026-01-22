@@ -86,7 +86,7 @@ namespace Modex
 		if (const auto& sourceFiles = obj->GetFileArray(); sourceFiles.has_value()) {
 			for (uint32_t i = 0; i < sourceFiles.value()->size(); i++) {
 				if (const auto file = (*sourceFiles.value())[i]) {
-					auto fileName = ValidateTESFileName(file);
+					const std::string fileName = file->GetFilename().data();
 
 					if (i == 0 && sourceFiles.value()->size() > 1) {
 						ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "%s", fileName.c_str());
