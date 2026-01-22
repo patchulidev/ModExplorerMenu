@@ -1,3 +1,4 @@
+#include "config/Keycodes.h"
 #define STB_IMAGE_IMPLEMENTATION
 
 #include "Graphic.h"
@@ -133,6 +134,18 @@ namespace Modex
 		Debug("Loaded {} images from '{}'", out_struct.size(), a_path.string());
 	}
 
+	bool GraphicManager::ValidateImGuiIcons()
+	{
+		// Validate users local install of ImGuiIcon's matches our compiled map.
+		for (const auto& [key, name] : ImGui::SkyrimKeymap) {
+			if (imgui_library.find(name) == imgui_library.end()) {
+				return Error("ImGuiIcon for key '{}' not found in ImGui Icon Library!", name);
+			}
+		}
+
+		Trace("Validated ImGui Icon Library with {} icons.", imgui_library.size());
+	}
+
 	void GraphicManager::Init()
 	{
 		image_library["None"] = Image();
@@ -140,6 +153,15 @@ namespace Modex
 
 		if (std::filesystem::exists(GraphicManager::IMGUI_PATH)) {
 			GraphicManager::LoadImagesFromFilepath(GraphicManager::IMGUI_PATH, GraphicManager::imgui_library);
+			bool success = GraphicManager::ValidateImGuiIcons();
+
+			// If we cannot validate a proper library of ImGuiIcons, sweep our local definitions and
+			// assume the user does not have it installed.
+
+			if (!success) {
+				imgui_library.clear();
+				Error("ImGuiIcon Libary failed to load properly. Disabling for compatibility!");
+			}
 		} else {
 			Info("ImGui Icon Library mod/directory not found. Skipping Custom ImGui Library loading.");
 		}

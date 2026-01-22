@@ -28,6 +28,7 @@ namespace Modex
 		static void 		Init();
 		static void 		LoadImagesFromFilepath(const std::filesystem::path& a_path, std::map<std::string, Image>& out_struct);
 		static bool 		GetD3D11Texture(const char* filename, ID3D11ShaderResourceView** out_srv, int& out_width, int& out_height);
+		static bool 		ValidateImGuiIcons();
 
 		[[nodiscard]] static Image GetImage(std::string a_name);
 		[[nodiscard]] static std::string GetImageName(Image a_image);
