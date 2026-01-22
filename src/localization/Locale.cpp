@@ -22,33 +22,68 @@ namespace Modex
 		static constexpr size_t size = N;
 	};
 
-    bool Locale::Load(bool a_create)
-    {
-        ASSERT_MSG(a_create, "Localization does not create files!");
+	bool Locale::Load(bool a_create)
+	{
+		ASSERT_MSG(a_create, "Localization does not create files!");
 
-        m_hash.clear();
+		m_hash.clear();
 
-        ASSERT_MSG(!ConfigManager::Load(a_create), "Failed to load localization file!");
+		if (m_initialized == false) {
+			BuildLocaleList();
+		}
 
-        if (!m_data.empty()) {        
-            for (auto& [key, value] : m_data.items()) {
-                size_t key_hash = hash_string(key.c_str());
-                m_hash[key_hash] = value;
-            }
-        }
+		ASSERT_MSG(!ConfigManager::Load(a_create), "Failed to load localization file!");
 
-        return true;
-    }
+		if (!m_data.empty()) {        
+			for (auto& [key, value] : m_data.items()) {
+				size_t key_hash = hash_string(key.c_str());
+				m_hash[key_hash] = value;
+			}
+		}
 
-    const char* Locale::GetTranslation(const char* fallback_text) const
-    {
-        size_t text_hash = hash_string(fallback_text);
+		return true;
+	}
 
-        auto it = m_hash.find(text_hash);
-        if (it != m_hash.end()) {
-            return it->second.c_str();
-        }
+	const char* Locale::GetTranslation(const char* fallback_text) const
+	{
+		size_t text_hash = hash_string(fallback_text);
 
-        return fallback_text;
-    }
+		auto it = m_hash.find(text_hash);
+		if (it != m_hash.end()) {
+			return it->second.c_str();
+		}
+
+		return fallback_text;
+	}
+
+	std::filesystem::path Locale::GetFilepath(const std::string& a_stem)
+	{
+		Debug("Conducting Lookup for Locale file '{}' in '{}'", a_stem, LOCALE_JSON_DIR.string());
+
+		for (const auto& entry : std::filesystem::directory_iterator(LOCALE_JSON_DIR)) {
+			if (entry.is_regular_file() && entry.path().extension() == ".json") {
+				if (entry.path().stem().string() == a_stem) {
+					Debug(" - Found locale file: '{}'", entry.path().filename().stem().string());
+					return entry.path();
+				}
+			}
+		}
+
+		Debug(" - Error: Could not locate file: '{}'", a_stem);
+		return std::filesystem::path();
+	}
+
+	void Locale::BuildLocaleList()
+	{
+		Debug("Building Locale List from: '{}'", LOCALE_JSON_DIR.string());
+
+		for (const auto& entry : std::filesystem::directory_iterator(LOCALE_JSON_DIR)) {
+			if (entry.is_regular_file() && entry.path().extension() == ".json") {
+				Trace(" - Found locale file: '{}'", entry.path().filename().string());
+
+				const std::string language = entry.path().filename().stem().string();
+				m_languages.push_back(language);
+			}
+		}
+	}
 }

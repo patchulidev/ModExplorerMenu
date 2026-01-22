@@ -11,6 +11,7 @@ namespace Modex
     {
     private:
         std::unordered_map<size_t, std::string> m_hash;
+		std::vector<std::string> m_languages;
 
     public:
         static inline Locale* GetSingleton()
@@ -20,7 +21,12 @@ namespace Modex
         }
 
         virtual bool Load(bool a_create) override;
-		void LoadFromPath(std::filesystem::path a_path);
+
+		void BuildLocaleList();
+		// void LoadFromPath(std::filesystem::path a_path);
+
+		std::vector<std::string> GetLanguages() noexcept { return m_languages; }
+		std::filesystem::path GetFilepath(const std::string& a_stem);
 		const char* GetTranslation(const char* fallback_text) const;
     };
 

@@ -358,6 +358,41 @@ namespace Modex::UICustom
 		return result;
 	}
 
+	bool Settings_LanguageDropdown(const char* a_text, std::string* a_config)
+	{
+		auto id = "##Settings::LanguageDropdown" + std::string(a_text);
+		bool result = false;
+
+		ImGui::Spacing();
+		ImGui::Text("%s", Translate(a_text));
+		ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth - ImGui::GetStyle().IndentSpacing);
+		ImGui::PushItemWidth(s_widgetWidth);
+		
+		const auto languages = Locale::GetSingleton()->GetLanguages();
+		if (ImGui::BeginCombo(id.c_str(), a_config->c_str())) {
+			ImGui::PushID("##Settings::Language::Combo");
+			for (const auto& language : languages) {
+				if (ImGui::Selectable(language.c_str())) {
+					const auto filepath = Locale::GetSingleton()->GetFilepath(language);
+					if (!filepath.empty()) {
+						Locale::GetSingleton()->SetFilePath(filepath);
+						bool success = Locale::GetSingleton()->Load(false);
+						
+						if (success) {
+							*a_config = language;
+							result = true;
+						}
+					}
+				}
+			}
+			ImGui::PopID();
+			ImGui::EndCombo();
+		}
+		ImGui::PopItemWidth();
+
+		return result;
+	}
+
 	// Draws a header bar inline with a square X button to the right to close the menu
 	bool Popup_MenuHeader(const char* label) 
 	{

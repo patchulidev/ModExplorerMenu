@@ -14,6 +14,7 @@ namespace Modex::UICustom
 	bool Settings_Keybind(const char* a_text, uint32_t& a_keybind, uint32_t defaultKey, ImVec4& a_hover);
 	bool Settings_Dropdown(const char* a_text, uint32_t& a_value, const std::vector<std::string>& a_options, bool a_localizeList = true);
 	bool Settings_FontDropdown(const char* a_text, std::string* a_font);
+	bool Settings_LanguageDropdown(const char* a_text, std::string* a_language);
 	bool Settings_ToggleButton(const char* a_localeString, bool& a_value);
 	bool Settings_SliderInt(const char* a_localeString, int& a_value, int a_min, int a_max);
 

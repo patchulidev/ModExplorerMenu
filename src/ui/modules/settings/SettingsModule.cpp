@@ -226,8 +226,7 @@ namespace Modex
 		// Welcome Banner Toggle
 		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 		{
-			if (UICustom::Settings_ToggleButton("SETTING_WELCOME_BANNER", config.welcomeBanner))
-			{
+			if (UICustom::Settings_LanguageDropdown("SETTINGS_LANGUAGE", &config.language)) {
 				UserConfig::GetSingleton()->SaveSettings();
 			}
 		}
