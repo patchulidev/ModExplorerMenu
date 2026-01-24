@@ -56,6 +56,31 @@ namespace Modex
 		return fallback_text;
 	}
 
+	bool Locale::HasTooltip(const char* a_localeString) const
+	{
+		size_t tooltip_hash = hash_string(a_localeString);
+
+		auto it = m_hash.find(tooltip_hash);
+		if (it != m_hash.end()) {
+			return true;
+		}
+
+		return false;
+	}
+
+	const char* Locale::GetTooltip(const char* a_localeString) const
+	{
+		std::string tooltip_key = std::string(a_localeString) + std::string("_TOOLTIP");
+		size_t tooltip_hash = hash_string(tooltip_key.c_str());
+
+		auto it = m_hash.find(tooltip_hash);
+		if (it != m_hash.end()) {
+			return it->second.c_str();
+		}
+
+		return "";
+	}
+
 	std::filesystem::path Locale::GetFilepath(const std::string& a_stem)
 	{
 		Debug("Conducting Lookup for Locale file '{}' in '{}'", a_stem, LOCALE_JSON_DIR.string());

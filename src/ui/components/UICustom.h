@@ -5,9 +5,16 @@ namespace Modex::UICustom
 	// These methods can be used anywhere.
 	bool IconButton(const char* a_icon, const char* a_tooltip, bool& condition);
 	bool ToggleButton(const char* a_localeString, bool& a_value);
-	void FancyTooltip(const char* a_localeString);
 	bool SidebarImageButton(const std::string& a_title, const std::string& a_icon, bool a_selected, ImVec2 a_buttonSize, float& a_textMod, bool a_expanded);
 	void SubCategoryHeader(const char* label, ImVec4 color = ImVec4(0.22f, 0.22f, 0.22f, 0.9f));
+
+	void FancyTooltip(const char* a_localeString);
+	bool FancyInputText(const char* a_id, const char* a_hint, const char* a_tooltip, char* a_buffer, float a_width, ImGuiInputTextFlags a_flags = 0);
+	bool FancyDropdown(const char* a_id, const char* a_tooltip, uint32_t& a_currentItem, const std::vector<std::string>& a_items, float a_width);
+	bool FancyDropdown(const char* a_id, const char* a_tooltip, int& a_currentItem, const std::vector<std::string>& a_items, float a_width);
+
+	bool BeginTabBar(const char* a_id, float a_height, float a_offset, ImVec2& a_start);
+	void EndTabBar();
 
 	// These methods include fixed width styling seen in settings panel.
 	bool Settings_SliderFloat(const char* a_text, float& a_valRef, float a_min, float a_max);
@@ -27,6 +34,7 @@ namespace Modex::UICustom
 	// Helpers, probably belong in ImGui namespace.
 	[[nodiscard]] float GetCenterTextPosX(const char* a_text);
 	[[nodiscard]] float GetCenterTextPosX(const std::string& a_string);
+}
 
 namespace ImGui
 {

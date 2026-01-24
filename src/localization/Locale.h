@@ -28,6 +28,8 @@ namespace Modex
 		std::vector<std::string> GetLanguages() noexcept { return m_languages; }
 		std::filesystem::path GetFilepath(const std::string& a_stem);
 		const char* GetTranslation(const char* fallback_text) const;
+		const char* GetTooltip(const char* a_localeString) const;
+		bool HasTooltip(const char* a_localeString) const;
     };
 
 	#define Translate(text) Locale::GetSingleton()->GetTranslation(text)
