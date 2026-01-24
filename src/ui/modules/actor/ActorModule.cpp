@@ -122,9 +122,9 @@ namespace Modex
 
 		m_tableView = std::make_unique<UITable>();
 		m_tableView->SetGenerator([]() { return Data::GetSingleton()->GetNPCList(); });
-		m_tableView->SetPluginType(Data::PLUGIN_TYPE::NPC);
+		m_tableView->SetPluginType(Data::PLUGIN_TYPE::Actor);
 		// m_tableView->SetClickAmount(&m_clickCount);
-		m_tableView->SetDataID("Actor");
+		m_tableView->SetUserDataID("Actor");
 		m_tableView->Init();
 		m_tableView->SetShowEditorID(UserData::User().Get<bool>("NPC::ShowEditorID", false));
 	}

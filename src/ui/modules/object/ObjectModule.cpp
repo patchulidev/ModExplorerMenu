@@ -123,10 +123,10 @@ namespace Modex
 
 		m_tableView = std::make_unique<UITable>();
 		m_tableView->SetGenerator([]() { return Data::GetSingleton()->GetObjectList(); });
-		m_tableView->SetPluginType(Data::PLUGIN_TYPE::OBJECT);
+		m_tableView->SetPluginType(Data::PLUGIN_TYPE::Object);
 		m_tableView->AddFlag(UITable::ModexTableFlag_EnableCategoryTabs);
 		// m_tableView->SetClickAmount(&m_clickCount);
-		m_tableView->SetDataID("Object");
+		m_tableView->SetUserDataID("Object");
 		m_tableView->Init();
 		m_tableView->SetShowEditorID(UserData::User().Get<bool>("Object::ShowEditorID", false));
 	}

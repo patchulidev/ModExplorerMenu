@@ -73,9 +73,9 @@ namespace Modex
 		
 		m_tableView = std::make_unique<UITable>();
 		m_tableView->SetGenerator([]() { return Data::GetSingleton()->GetAddItemList(); });
-		m_tableView->SetPluginType(Data::PLUGIN_TYPE::ITEM);
-		m_tableView->SetDataID("AddItem");
-		m_tableView->SetDragDropID("FROM_TABLE");
+		m_tableView->SetPluginType(Data::PLUGIN_TYPE::Item);
+		m_tableView->SetUserDataID("AddItem");
+		m_tableView->SetDragDropHandle(UITable::DragDropHandle::Table);
 		// m_tableView->SetClickAmount(&m_clickCount);
 		m_tableView->AddFlag(UITable::ModexTableFlag_Base);
 		m_tableView->AddFlag(UITable::ModexTableFlag_EnablePluginKitView);

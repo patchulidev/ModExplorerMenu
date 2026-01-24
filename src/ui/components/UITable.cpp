@@ -3,6 +3,7 @@
 #include "core/Commands.h"
 #include "imgui.h"
 #include "imgui_internal.h"
+#include "localization/FontManager.h"
 #include "localization/Locale.h"
 #include "ui/core/UIManager.h"
 #include "ui/components/UICustom.h"
@@ -335,28 +336,28 @@ namespace Modex
 		this->Reset();
 	}
 
-	void UITable::SetDragDropTarget(const std::string a_id, UITable* a_view)
+	void UITable::SetDragDropTarget(DragDropHandle a_handle, UITable* a_view)
 	{
 		this->dragDropSourceList.clear();
-		this->dragDropSourceList[a_id] = a_view;
+		this->dragDropSourceList[a_handle] = a_view;
 	}
 
-	void UITable::AddDragDropTarget(const std::string a_id, UITable* a_view)
+	void UITable::AddDragDropTarget(DragDropHandle a_handle, UITable* a_view)
 	{
-		this->dragDropSourceList[a_id] = a_view;
+		this->dragDropSourceList[a_handle] = a_view;
 	}
 
-	void UITable::RemoveDragDropTarget(const std::string a_id)
+	void UITable::RemoveDragDropTarget(DragDropHandle a_handle)
 	{
-		auto it = this->dragDropSourceList.find(a_id);
+		auto it = this->dragDropSourceList.find(a_handle);
 		if (it != this->dragDropSourceList.end()) {
 			this->dragDropSourceList.erase(it);
 		}
 	}
 
-	void UITable::SetDragDropID(const std::string& a_id)
+	void UITable::SetDragDropHandle(DragDropHandle a_id)
 	{
-		this->dragDropSourceID = a_id;
+		this->dragDropHandle = a_id;
 	}
 
 	void UITable::SetGenerator(std::function<std::vector<BaseObject>()> a_generator)
@@ -395,7 +396,7 @@ namespace Modex
 	}
 
 	// TODO: Need a better way to manage inventory changes
-	void UITable::AddPayloadItemToInventory(const std::unique_ptr<BaseObject>& a_item)
+	void UITable::AddPayloadItemToTable(const std::unique_ptr<BaseObject>& a_item)
 	{
 		for (auto& item : this->tableList) {
 			if (item->GetEditorID() == a_item->GetEditorID()) {
@@ -408,6 +409,7 @@ namespace Modex
 		Data::GetSingleton()->GenerateInventoryList();
 	}
 
+	// TODO: This doesn't make sense. Inventory != table.
 	void UITable::RemovePayloadItemFromInventory(const std::unique_ptr<BaseObject>& a_item)
 	{
 		if (this->tableList.empty()) {
@@ -430,7 +432,7 @@ namespace Modex
 
 	void UITable::AddSelectedToKit()
 	{
-		if (auto map = this->dragDropSourceList.find("FROM_KIT"); map != this->dragDropSourceList.end()) {
+		if (auto map = dragDropSourceList.find(DragDropHandle::Kit); map != this->dragDropSourceList.end()) {
 			const auto dragDropSourceTable = map->second->GetTableListPtr();
 
 			void* it = NULL;
@@ -492,40 +494,6 @@ namespace Modex
 	void UITable::SyncChangesToKit()
 	{
 		if (this->HasFlag(ModexTableFlag_Kit)) {
-			// TODO: REFACTOR pending kit shit
-			// if (this->selectedKit) {
-			// 	auto& collection = EquipmentConfig::GetLoadedKits();
-			// 	if (auto it = collection.find(*this->selectedKit); it != collection.end()) {
-			// 		auto& kit = it->second;
-
-			// 		kit.m_items.clear();
-
-			// 		if (!this->tableList.empty()) {
-			// 			for (auto& item : this->tableList) {
-			// 				kit.m_items.emplace(CreateKitItem(*item));
-			// 			}
-			// 		}
-
-			// 		EquipmentConfig::GetSingleton()->SaveKitToJSON(kit);
-			// 	}
-			// }
-
-			// if (selectedKitPtr && !selectedKitPtr->empty()) {
-			// 	auto equipmentConfig = EquipmentConfig::GetSingleton();
-			// 	if (auto kitOpt = equipmentConfig->LoadKit(*selectedKitPtr); kitOpt.has_value()) {
-			// 		auto& kit = kitOpt.value();
-			// 		kit.m_items.clear();
-
-			// 		if (!this->tableList.empty()) {
-			// 			for (auto& item : this->tableList) {
-			// 				kit.m_items.emplace(EquipmentConfig::CreateKitItem(*item));
-			// 			}
-			// 		}
-
-			// 		equipmentConfig->SaveKit(kit);
-			// 	}
-			// }
-
 			if (selectedKitPtr && !selectedKitPtr->empty()) {
 				auto equipmentConfig = EquipmentConfig::GetSingleton();
 				selectedKitPtr->m_items.clear();
@@ -605,7 +573,6 @@ namespace Modex
 		ImFormatString(searchSystem->GetLastSearchBuffer(), IM_ARRAYSIZE(searchSystem->GetLastSearchBuffer()), "%s", searchSystem->GetSearchBuffer());
 
 		if (filterSystem && filterSystem->ShowRecent()) {
-			// std::vector<std::pair<std::string, std::uint32_t>> recently_used;
 			std::vector<std::string> recently_used;
 			UserData::Recent().GetAsList(recently_used);
 			
@@ -677,14 +644,15 @@ namespace Modex
 
 	void UITable::BuildPluginList()
 	{
-		Info("TEST");
-		const auto& config = UserConfig::Get();
-		// this->pluginList = Data::GetSingleton()->GetFilteredListOfPluginNames(Data::PLUGIN_TYPE::ALL, Data::SORT_TYPE::ALPHABETICAL); 
-		this->pluginList = Data::GetSingleton()->GetFilteredListOfPluginNames(this->pluginType, (Data::SORT_TYPE)config.modListSort);
-		this->pluginSet = Data::GetSingleton()->GetModulePluginList(this->pluginType);
-		pluginList.insert(pluginList.begin(), Translate("SHOW_ALL"));
+		if (pluginType != Data::PLUGIN_TYPE::kTotal) {
+			const auto& config = UserConfig::Get();
+			this->pluginList = Data::GetSingleton()->GetFilteredListOfPluginNames(this->pluginType, (Data::SORT_TYPE)config.modListSort);
+			this->pluginSet = Data::GetSingleton()->GetModulePluginList(this->pluginType);
+			pluginList.insert(pluginList.begin(), Translate("SHOW_ALL"));
+		}
 	}
 
+	// TODO: Swap over to new Fancy rounded widgets with Icons.
 	void UITable::DrawFormSearchBar(const ImVec2& a_size)
 	{
 		const float input_width = a_size.x;
@@ -1211,127 +1179,85 @@ namespace Modex
 	// TODO: Try adding that + or - or Trash icon background thing again.
 	void UITable::HandleDragDropBehavior()
 	{
+
+		static std::string tooltip_icon = "";
+
+		// The UITable Widget rectangle acts as the drop target.
 		if (ImGui::BeginDragDropTarget()) {
-			if (this->HasFlag(ModexTableFlag_Inventory)) { // Inventory Table Receiving Drag 'n Drop Event.
-				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FROM_TABLE", ImGuiDragDropFlags_AcceptBeforeDelivery)) {
-					if (payload->IsDelivery()) {
-						const auto dragDropSourceTable = this->dragDropSourceList.at("FROM_TABLE");
-						const int payload_count = (int)payload->DataSize / (int)sizeof(ImGuiID);
+			for (auto& source : dragDropSourceList) {
+				const auto handle = source.first;
+				const auto ptr = source.second;
 
-						std::vector<std::unique_ptr<BaseObject>> payload_items;
-						for (int payload_idx = 0; payload_idx < payload_count; ++payload_idx) {
-							const ImGuiID payload_item_id = ((ImGuiID*)payload->Data)[payload_idx];
-							const auto& payload_item = (*dragDropSourceTable->GetTableListPtr())[payload_item_id];
-							payload_items.emplace_back(std::make_unique<BaseObject>(*payload_item));
-						}
+				const auto handle_string = GetDragDropHandleText(handle);
+				const auto destination = this;
+				const auto origin = ptr;
 
-						for (const auto& payload_item : payload_items) {
-							this->AddPayloadItemToInventory(payload_item);
-						}
-
-						this->Refresh();
+				// Peak and assign tooltip icon. Handle payload dropping next.
+				tooltip_icon = "";
+				if (ImGui::AcceptDragDropPayload(handle_string, ImGuiDragDropFlags_AcceptPeekOnly)) {
+					if (destination->GetDragDropHandle() == DragDropHandle::Kit) {
+						tooltip_icon = ICON_LC_PLUS;
 					}
 
-					if (payload->IsPreview()) {
-						this->DrawDragDropPayload(DragBehavior_Add);
+					if (destination->GetDragDropHandle() == DragDropHandle::Inventory) {
+						tooltip_icon = ICON_LC_PLUS;
+					}
+
+					if (destination->GetDragDropHandle() == DragDropHandle::Table) {
+						tooltip_icon = ICON_LC_X;
 					}
 				}
 
-				ImGui::EndDragDropTarget();
-			} else if (this->HasFlag(ModexTableFlag_Kit)) { // Kit Table Receiving Drag 'n Drop Event.
-				if (this->selectedKitPtr && !this->selectedKitPtr->empty()) {
-					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FROM_TABLE", ImGuiDragDropFlags_AcceptBeforeDelivery)) {
-						if (payload->IsDelivery()) {
-							const auto dragDropSourceTable = this->dragDropSourceList.at("FROM_TABLE");
-							const int payload_count = (int)payload->DataSize / (int)sizeof(ImGuiID);
+				// Payload Data is contained in other table sources.
+				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(handle_string); payload && payload->IsDelivery()) {
+					const int payloadCount = (int)payload->DataSize / (int)sizeof(ImGuiID);
 
-							for (int payload_idx = 0; payload_idx < payload_count; ++payload_idx) {
-								const ImGuiID payload_item_id = ((ImGuiID*)payload->Data)[payload_idx];
-								const auto& payload_item = (*dragDropSourceTable->GetTableListPtr())[payload_item_id];
+					std::vector<std::unique_ptr<BaseObject>> payload_items;
+					for (int payload_idx = 0; payload_idx < payloadCount; ++payload_idx) {
+						const ImGuiID payloadID = ((ImGuiID*)payload->Data)[payload_idx];
+						const auto& item = (*ptr->GetTableListPtr())[payloadID];
+						payload_items.emplace_back(std::make_unique<BaseObject>(*item));
+					}
 
-								this->AddPayloadItemToKit(payload_item);
+
+					// Behavior based on source and destination types.
+					for (const auto& item : payload_items) {
+						if (destination->GetDragDropHandle() == DragDropHandle::Kit) {
+							destination->AddPayloadItemToKit(item);
+						}	
+
+						if (destination->GetDragDropHandle() == DragDropHandle::Table) {
+							if (origin->GetDragDropHandle() == DragDropHandle::Kit) {
+								origin->RemovePayloadItemFromKit(item);
 							}
 
-							this->SyncChangesToKit();
-							dragDropSourceTable->LoadKitsFromSelectedPlugin();
-							this->Refresh();
-
-							// In-table kit view is disabled if there are no kits in the plugin.
-							if (dragDropSourceTable->pluginKitList.empty()) {
-								dragDropSourceTable->showPluginKitView = false;
+							if (origin->GetDragDropHandle() == DragDropHandle::Inventory) {
+								origin->RemovePayloadItemFromInventory(item);
 							}
 						}
 
-						if (payload->IsPreview()) {
-							this->DrawDragDropPayload(DragBehavior_Add);
+						if (destination->GetDragDropHandle() == DragDropHandle::Inventory) {
+							destination->AddPayloadItemToTable(item);
 						}
 					}
+					
+					if (destination->GetDragDropHandle() == DragDropHandle::Kit) {
+						destination->SyncChangesToKit();
+						destination->Refresh();
+					}
 
-					ImGui::EndDragDropTarget();
-				} else { // TODO: Here is where we add behavior for kit creation on drag'n'drop.
-					this->DrawDragDropPayload(DragBehavior_Invalid);
+					if (origin->GetDragDropHandle() == DragDropHandle::Kit) {
+						origin->SyncChangesToKit();
+						origin->Refresh();
+					}
+
+					Refresh();
 				}
-			} else { // Item Table Receiving Drag 'n Drop Event
-				const ImGuiPayload* kit_payload = ImGui::AcceptDragDropPayload("FROM_KIT", ImGuiDragDropFlags_AcceptBeforeDelivery);
-				const ImGuiPayload* inventory_payload = ImGui::AcceptDragDropPayload("FROM_INVENTORY", ImGuiDragDropFlags_AcceptBeforeDelivery);
-				if (kit_payload) {
-					if (kit_payload->IsDelivery()) {
-						const auto dragDropSourceTable = this->dragDropSourceList.at("FROM_KIT");
-						const int payload_count = (int)kit_payload->DataSize / (int)sizeof(ImGuiID);
-
-						std::vector<std::unique_ptr<BaseObject>> payload_items;
-						for (int payload_idx = 0; payload_idx < payload_count; ++payload_idx) {
-							const ImGuiID payload_item_id = ((ImGuiID*)kit_payload->Data)[payload_idx];
-							const auto& payload_item = (*dragDropSourceTable->GetTableListPtr())[payload_item_id];
-							payload_items.emplace_back(std::make_unique<BaseObject>(*payload_item));
-						}
-
-						for (const auto& payload_item : payload_items) {
-							dragDropSourceTable->RemovePayloadItemFromKit(payload_item);
-						}
-
-						dragDropSourceTable->SyncChangesToKit();
-						this->LoadKitsFromSelectedPlugin();
-						dragDropSourceTable->Refresh();
-
-						if (this->pluginKitList.empty()) {
-							this->showPluginKitView = false;
-						}
-					}
-
-					if (kit_payload->IsPreview()) {
-						this->DrawDragDropPayload(DragBehavior_Remove);
-					}
-				} 
-				else if (inventory_payload) {
-					if (inventory_payload->IsDelivery()) {
-						const auto dragDropSourceTable = this->dragDropSourceList.at("FROM_INVENTORY");
-						const int payload_count = (int)inventory_payload->DataSize / (int)sizeof(ImGuiID);
-
-						std::vector<std::unique_ptr<BaseObject>> payload_items;
-						for (int payload_idx = 0; payload_idx < payload_count; ++payload_idx) {
-							const ImGuiID payload_item_id = ((ImGuiID*)inventory_payload->Data)[payload_idx];
-							const auto& payload_item = (*dragDropSourceTable->GetTableListPtr())[payload_item_id];
-							payload_items.emplace_back(std::make_unique<BaseObject>(*payload_item));
-						}
-
-						for (const auto& payload_item : payload_items) {
-							this->RemovePayloadItemFromInventory(payload_item);
-						}
-
-						// this->Refresh(); // Don't need to refresh Item table.
-						dragDropSourceTable->Refresh();
-					}
-
-					if (inventory_payload->IsPreview()) {
-						this->DrawDragDropPayload(DragBehavior_Add);
-					}
-				}
-
-				ImGui::EndDragDropTarget();
 			}
+		}
 
-			selectionStorage.Clear();
+		if (ImGui::GetDragDropPayload()) { // Handle Tooltips outside of widget targets!
+			DrawDragDropPayload(tooltip_icon);
 		}
 	}
 
@@ -1465,7 +1391,7 @@ namespace Modex
 
 						this->SyncChangesToKit();
 
-						if (auto it = this->dragDropSourceList.find("FROM_KIT"); it != this->dragDropSourceList.end()) {
+						if (auto it = dragDropSourceList.find(DragDropHandle::Kit); it != this->dragDropSourceList.end()) {
 							const auto dragDropSourceTable = it->second;
 
 							dragDropSourceTable->LoadKitsFromSelectedPlugin();
@@ -1480,7 +1406,7 @@ namespace Modex
 
 				// We use dragDropSourceList to find paired Kit table, since selectedKit is stored in the kit table.
 				if (HasFlag(ModexTableFlag_Base)) { // Main UITable Window
-					if (auto it = this->dragDropSourceList.find("FROM_KIT"); it != this->dragDropSourceList.end()) {						
+					if (auto it = dragDropSourceList.find(DragDropHandle::Kit); it != this->dragDropSourceList.end()) {						
 						const auto dragDropSourceTable = it->second;
 						if (const auto selected_kit = dragDropSourceTable->selectedKitPtr; selected_kit && !selected_kit->empty()) {
 							if (ImGui::MenuItem(Translate("KIT_ADD"))) {
@@ -2102,34 +2028,39 @@ namespace Modex
 		}
 	}
 
-	// TODO: Make it fancy
-	void UITable::DrawDragDropPayload(DragBehavior a_behavior)
+	void UITable::DrawDragDropPayload(const std::string& a_icon)
 	{
-		ImGui::PushStyleColor(ImGuiCol_PopupBg, ImVec4(0.0f, 0.0f, 0.0f, 0.75f));
-		if (ImGui::BeginTooltip()) {
-			if (a_behavior == DragBehavior::DragBehavior_Add) {
-				const static std::string hint = Translate("COPY");
-				ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
-				ImGui::Text(ICON_LC_PLUS " %s", hint.c_str());
-			} else if (a_behavior == DragBehavior::DragBehavior_Invalid) {
-				const static std::string hint = Translate("REQUIRES_KIT");
-				ImGui::SetMouseCursor(ImGuiMouseCursor_NotAllowed);
-				ImGui::Text(ICON_LC_X " %s", hint.c_str());
-			} else if (a_behavior == DragBehavior::DragBehavior_Remove) {
-				ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
-				const static std::string hint = Translate("DELETE");
-				ImGui::Text(ICON_LC_MINUS " %s", hint.c_str());
-			} else {
-				const static std::string hint = Translate("ITEM_SELECTED");
-				ImGui::SetMouseCursor(ImGuiMouseCursor_NotAllowed);
-				const auto payload_size = ImGui::GetDragDropPayload()->DataSize / (int)sizeof(ImGuiID);
-				ImGui::Text("(%d) %s", payload_size, hint.c_str());
+		const auto payload = ImGui::GetDragDropPayload();
+		if (payload && payload->IsDataType(GetDragDropHandleText(dragDropHandle))) {
+			const auto payloadCount = payload->DataSize / (int)sizeof(ImGuiID);
+
+			const float mult = ImGui::GetFrameHeightWithSpacing();
+			const ImVec2 size_min = ImVec2(mult * 5.0f, mult * 5.0f);
+			const ImVec2 size_max = ImVec2(mult * 10.0f, mult * 10.0f);
+
+			ImGui::SetNextWindowSizeConstraints(size_min, size_max);
+			if (ImGui::BeginTooltip()) {
+				const ImVec2 start_pos = ImGui::GetCursorScreenPos();
+				ImGui::PushFontBold(36.0f);
+				ImGui::SetCursorPosX(UICustom::GetCenterTextPosX(std::to_string(payloadCount).c_str()));
+				ImGui::SetCursorPosY((ImGui::GetContentRegionAvail().y / 2.0f) - 24.0f); // 6px
+				ImGui::Text("%d", payloadCount);
+				ImGui::PopFont();
+				ImGui::SetCursorPosX(UICustom::GetCenterTextPosX(Translate("SELECTED")));
+				ImGui::Text("%s", Translate("SELECTED"));
+
+				auto DrawList = ImGui::GetWindowDrawList();
+				float size = 24.0f;
+				float icon_x = ImGui::GetWindowWidth() - ImGui::GetFrameHeight() * 1.5f;
+				float icon_y = -5.0f;
+
+				ImGui::PushFont(NULL, size);
+				DrawList->AddText(start_pos + ImVec2(icon_x, icon_y), ThemeConfig::GetColorU32("TEXT"), a_icon.c_str());
+				ImGui::PopFont();
+
+				ImGui::EndTooltip();
 			}
-
-			ImGui::EndTooltip();
 		}
-
-		ImGui::PopStyleColor();
 	}
 
 	void UITable::DrawTableSettingsPopup()
@@ -2552,12 +2483,15 @@ namespace Modex
 				return;
 			}
 
-			if (std::ssize(this->pluginList) <= 1) {
-				ImGui::TextColored(ImVec4(1.0f, 0.1f, 0.1f, 1.0f), "Error: Moduled failed to load. Try clicking the Sidebar Button for this module!");
-				ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "If you don't see a button for this module in the sidebar, it's because it's disabled! You have to enable it in settings!");
-				ImGui::EndChild();
-				return;
-			}
+			// FIX: PluginList isn't deterministic of a module failing to load anymore due to
+			// polymorphic use of UITable's. Need to redefine what a failure to load looks like.
+
+			// if (std::ssize(this->pluginList) <= 1) {
+			// 	ImGui::TextColored(ImVec4(1.0f, 0.1f, 0.1f, 1.0f), "Error: Moduled failed to load. Try clicking the Sidebar Button for this module!");
+			// 	ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "If you don't see a button for this module in the sidebar, it's because it's disabled! You have to enable it in settings!");
+			// 	ImGui::EndChild();
+			// 	return;
+			// }
 
 			if (test_table_selection) {
 				Test_TableSelection();
@@ -2682,7 +2616,7 @@ namespace Modex
 						// }
 
 						// Drag and drop
-						if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_AcceptBeforeDelivery | ImGuiDragDropFlags_SourceNoPreviewTooltip)) {
+						if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceNoPreviewTooltip)) {
 							// Create payload with full selection OR single unselected item.
 							// (the later is only possible when using ImGuiMultiSelectFlags_SelectOnClickRelease)
 							if (ImGui::GetDragDropPayload() == NULL) {
@@ -2698,19 +2632,7 @@ namespace Modex
 										}
 									}
 								}
-								ImGui::SetDragDropPayload(this->dragDropSourceID.c_str(), payload_items.Data, (size_t)payload_items.size_in_bytes());
-							}
-
-							ImGuiContext& g = *GImGui;
-							const ImGuiPayload* payload = ImGui::GetDragDropPayload();
-							const int payload_count = (int)payload->DataSize / (int)sizeof(ImGuiID);
-
-							if (!g.DragDropAcceptIdPrev) {
-								if (payload_count == 1) {
-									this->DrawDragDropPayload(DragBehavior_None);
-								} else {
-									this->DrawDragDropPayload(DragBehavior_None);
-								}
+								ImGui::SetDragDropPayload(GetDragDropHandleText(dragDropHandle), payload_items.Data, (size_t)payload_items.size_in_bytes());
 							}
 
 							ImGui::EndDragDropSource();

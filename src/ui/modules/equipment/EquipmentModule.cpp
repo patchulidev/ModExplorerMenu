@@ -31,8 +31,8 @@ namespace Modex
 			ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5f, 0.5f));
 			if (ImGui::Selectable("Equipment Setup", m_viewport == Viewport::EquipmentView, 0, ImVec2(button_width, button_height))) {
 				m_viewport = Viewport::EquipmentView;
-				m_tableView->RemoveDragDropTarget(m_inventoryView->GetDragDropID());
-				m_tableView->AddDragDropTarget(m_kitTableView->GetDragDropID(), m_kitTableView.get());
+				m_tableView->RemoveDragDropTarget(m_inventoryView->GetDragDropHandle());
+				m_tableView->AddDragDropTarget(m_kitTableView->GetDragDropHandle(), m_kitTableView.get());
 				m_kitTableView->Load();
 			}
 
@@ -42,8 +42,8 @@ namespace Modex
 			// InventoryList changes as we modified inventories in UITables.
 			if (ImGui::Selectable("Inventory View", m_viewport == Viewport::InventoryView, 0, ImVec2(button_width, button_height))) {
 				m_viewport = Viewport::InventoryView;
-				m_tableView->RemoveDragDropTarget(m_kitTableView->GetDragDropID());
-				m_tableView->AddDragDropTarget(m_inventoryView->GetDragDropID(), m_inventoryView.get());
+				m_tableView->RemoveDragDropTarget(m_kitTableView->GetDragDropHandle());
+				m_tableView->AddDragDropTarget(m_inventoryView->GetDragDropHandle(), m_inventoryView.get());
 				Data::GetSingleton()->GenerateInventoryList();
 				m_inventoryView->Load();
 			}
@@ -52,8 +52,8 @@ namespace Modex
 
 			if (ImGui::Selectable("Follower View", m_viewport == Viewport::FollowerView, 0, ImVec2(button_width, button_height))) {
 				m_viewport = Viewport::FollowerView;
-				m_tableView->RemoveDragDropTarget(m_kitTableView->GetDragDropID());
-				m_tableView->RemoveDragDropTarget(m_inventoryView->GetDragDropID());
+				m_tableView->RemoveDragDropTarget(m_kitTableView->GetDragDropHandle());
+				m_tableView->RemoveDragDropTarget(m_inventoryView->GetDragDropHandle());
 			}
 
 			ImGui::PopStyleVar();
@@ -107,16 +107,16 @@ namespace Modex
 	void EquipmentModule::Load()
 	{
 		if (m_viewport == Viewport::EquipmentView) {
-			m_tableView->SetDragDropTarget(m_kitTableView->GetDragDropID(), m_kitTableView.get());
+			m_tableView->SetDragDropTarget(m_kitTableView->GetDragDropHandle(), m_kitTableView.get());
 			m_tableView->Load();
 
-			m_kitTableView->SetDragDropTarget(m_tableView->GetDragDropID(), m_tableView.get());
+			m_kitTableView->SetDragDropTarget(m_tableView->GetDragDropHandle(), m_tableView.get());
 			m_kitTableView->Load();
 		} else if (m_viewport == Viewport::InventoryView) {
-			m_tableView->SetDragDropTarget(m_inventoryView->GetDragDropID(), m_inventoryView.get());
+			m_tableView->SetDragDropTarget(m_inventoryView->GetDragDropHandle(), m_inventoryView.get());
 			m_tableView->Load();
 
-			m_inventoryView->SetDragDropTarget(m_tableView->GetDragDropID(), m_tableView.get());
+			m_inventoryView->SetDragDropTarget(m_tableView->GetDragDropHandle(), m_tableView.get());
 			m_inventoryView->Load();
 		}
 	}
@@ -131,9 +131,9 @@ namespace Modex
 
 		m_tableView = std::make_unique<UITable>();
 		m_tableView->SetGenerator([]() { return Data::GetSingleton()->GetAddItemList(); });
-		m_tableView->SetPluginType(Data::PLUGIN_TYPE::ITEM);
-		m_tableView->SetDataID("Equipment");
-		m_tableView->SetDragDropID("FROM_TABLE");
+		m_tableView->SetPluginType(Data::PLUGIN_TYPE::Item);
+		m_tableView->SetUserDataID("Equipment");
+		m_tableView->SetDragDropHandle(UITable::DragDropHandle::Table);
 		m_tableView->AddFlag(UITable::ModexTableFlag_Base);
 		m_tableView->AddFlag(UITable::ModexTableFlag_EnablePluginKitView);
 		m_tableView->AddFlag(UITable::ModexTableFlag_EnableCategoryTabs);
@@ -146,8 +146,8 @@ namespace Modex
 		m_kitTableView = std::make_unique<UITable>();
 		m_kitTableView->SetGenerator([this]() { return EquipmentConfig::GetItems(m_selectedKit); });
 		m_kitTableView->SetKitPointer(&m_selectedKit);
-		m_kitTableView->SetDataID("Equipment");
-		m_kitTableView->SetDragDropID("FROM_KIT");
+		m_kitTableView->SetUserDataID("Equipment");
+		m_kitTableView->SetDragDropHandle(UITable::DragDropHandle::Kit);
 		m_kitTableView->AddFlag(UITable::ModexTableFlag_Kit);
 		m_kitTableView->AddFlag(UITable::ModexTableFlag_EnableHeader);
 		m_kitTableView->Init();
@@ -155,8 +155,8 @@ namespace Modex
 		// TODO: Revisit generator impl so that it registers tableref instead of just player
 		m_inventoryView = std::make_unique<UITable>();
 		m_inventoryView->SetGenerator([]() { return Data::GetSingleton()->GetInventoryList(); });
-		m_inventoryView->SetDataID("Equipment");
-		m_inventoryView->SetDragDropID("FROM_INVENTORY");
+		m_inventoryView->SetUserDataID("Equipment");
+		m_inventoryView->SetDragDropHandle(UITable::DragDropHandle::Inventory);
 		m_inventoryView->AddFlag(UITable::ModexTableFlag_Inventory);
 		m_inventoryView->AddFlag(UITable::ModexTableFlag_EnableHeader);
 		m_inventoryView->Init();
