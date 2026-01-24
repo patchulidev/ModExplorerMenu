@@ -183,7 +183,7 @@ namespace Modex
 
 		ImGui::NewFrame();
 
-		ImGui::ShowDemoWindow();
+		// ImGui::ShowDemoWindow();
 
 		TrySetAllowTextInput();
 		ImGui::PushFont(NULL, UserConfig::Get().globalFontSize);

@@ -286,8 +286,6 @@ namespace Modex
 			return;
 		}
 
-		Info("Detected Key Event: ShowMenuKey: {} | {} ImGuiKey: {} ScanCode: {}", showMenu[0], showMenu[1], static_cast<int>(imguiKey), scanCode);
-
 		// override behaviors for specific keys
 		if (imguiKey == ImGuiKey_PageUp && down) {
 			UIManager::GetSingleton()->AddScrollEvent(0, 1.0f);
@@ -306,7 +304,6 @@ namespace Modex
 			}
 		}
 
-		// UIManager::GetSingleton()->InputHandler(imguiKey);
 		ImGui::GetIO().AddKeyEvent(imguiKey, down);
 	}
 

@@ -117,7 +117,6 @@ namespace Modex
 		std::vector<const RE::TESFile*> copy;
 
 		auto safeCopy = [&copy](const std::unordered_set<const RE::TESFile*>& a_set) {
-			// copy.reserve(std::ssize(a_set));
 			for (const auto& mod : a_set) {
 				if (mod != nullptr) {
 					copy.push_back(mod);

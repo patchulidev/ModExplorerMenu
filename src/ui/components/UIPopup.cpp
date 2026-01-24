@@ -1,7 +1,3 @@
-// #include "include/U/UIPopup.h"
-// #include "include/C/UIContainers.h"
-// #include "include/S/Settings.h"
-
 #include "UIPopup.h"
 #include "UIContainers.h"
 #include "config/Keycodes.h"
@@ -10,33 +6,28 @@
 #include "config/ThemeConfig.h"
 #include "ui/components/UICustom.h"
 
-
 namespace Modex
-{    
-    ////////////////////////////////////////////////////////////////////////////////
-    // UIPopupHotkey
-    ////////////////////////////////////////////////////////////////////////////////
-
-    void UIPopupHotkey::Draw()
-    {
+{
+	void UIPopupHotkey::Draw()
+	{
 		static float height;
-        auto width = ImGui::GetMainViewport()->Size.x * 0.25f;
-        const float center_x = ImGui::GetMainViewport()->Size.x * 0.5f;
-        const float center_y = ImGui::GetMainViewport()->Size.y * 0.5f;
-        const float pos_x = center_x - (width * 0.5f);
-        const float pos_y = center_y - (height * 0.5f);
+		auto width = ImGui::GetMainViewport()->Size.x * 0.25f;
+		const float center_x = ImGui::GetMainViewport()->Size.x * 0.5f;
+		const float center_y = ImGui::GetMainViewport()->Size.y * 0.5f;
+		const float pos_x = center_x - (width * 0.5f);
+		const float pos_y = center_y - (height * 0.5f);
 
-        DrawPopupBackground(m_alpha);
+		DrawPopupBackground(m_alpha);
 
-        ImGui::SetNextWindowSize(ImVec2(width, 0));
-        ImGui::SetNextWindowPos(ImVec2(pos_x, pos_y));
-        ImGui::SetNextWindowFocus();
+		ImGui::SetNextWindowSize(ImVec2(width, 0));
+		ImGui::SetNextWindowPos(ImVec2(pos_x, pos_y));
+		ImGui::SetNextWindowFocus();
 
-        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, m_alpha);
-        if (ImGui::Begin("##Modex::HotkeyPopup", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoFocusOnAppearing)) {
-            if (ImGui::IsWindowAppearing()) {
-                ImGui::GetIO().ClearInputKeys();
-            }
+		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, m_alpha);
+		if (ImGui::Begin("##Modex::HotkeyPopup", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoFocusOnAppearing)) {
+			if (ImGui::IsWindowAppearing()) {
+				ImGui::GetIO().ClearInputKeys();
+			}
 
 			if (UICustom::Popup_MenuHeader(m_pendingHotkeyTitle.c_str())) {
 				DeclineHotkey();
@@ -53,29 +44,28 @@ namespace Modex
 			}
 			ImGui::PopStyleColor();
 
-            height = ImGui::GetWindowSize().y;
-        }
+			height = ImGui::GetWindowSize().y;
+		}
 
-        ImGui::End();
-        ImGui::PopStyleVar();
-    }
+		ImGui::End();
+		ImGui::PopStyleVar();
+	}
 
-    void UIPopupHotkey::PopupHotkey(const char* a_title, const char* a_desc, uint32_t* a_hotkey, uint32_t a_default, bool a_modifierOnly, std::function<void()> onConfirmHotkeyCallback)
-    {
+	void UIPopupHotkey::PopupHotkey(const char* a_title, const char* a_desc, uint32_t* a_hotkey, uint32_t a_default, bool a_modifierOnly, std::function<void()> onConfirmHotkeyCallback)
+	{
 		m_pendingHotkeyTitle = a_title;
 		m_pendingHotkeyDesc = a_desc;
 		m_hotkeyModifierOnly = a_modifierOnly;
-        m_hotkeyCurrent = a_hotkey;
-        m_hotkeyDefault = a_default;
-        m_onConfirmCallback = onConfirmHotkeyCallback;
-        m_captureInput = true;
+		m_hotkeyCurrent = a_hotkey;
+		m_hotkeyDefault = a_default;
+		m_onConfirmCallback = onConfirmHotkeyCallback;
+		m_captureInput = true;
 
 		ModexGUIMenu::RegisterListener([this](uint32_t a_key) { AcceptHotkey(a_key); });
-    }
+	}
 
-	// TODO: Need to refactor inputmanager to update keybinds.
-    void UIPopupHotkey::AcceptHotkey(uint32_t a_key)
-    {
+	void UIPopupHotkey::AcceptHotkey(uint32_t a_key)
+	{
 		bool success = false;
 		if (ImGui::IsValidHotkey(a_key)) {
 			if (m_hotkeyModifierOnly) {
@@ -112,254 +102,243 @@ namespace Modex
 
 			CloseWindow();
 		}
-    }
+	}
 
-    void UIPopupHotkey::DeclineHotkey()
-    {
-        CloseWindow();
-    }
+	void UIPopupHotkey::DeclineHotkey()
+	{
+		CloseWindow();
+	}
 
-    ////////////////////////////////////////////////////////////////////////////////
-    // UIPopupWarning
-    ////////////////////////////////////////////////////////////////////////////////
+	void UIPopupWarning::Draw()
+	{
+		static float height;
+		auto width = ImGui::GetMainViewport()->Size.x * 0.25f;
+		const float center_x = ImGui::GetMainViewport()->Size.x * 0.5f;
+		const float center_y = ImGui::GetMainViewport()->Size.y * 0.5f;
+		const float pos_x = center_x - (width * 0.5f);
+		const float pos_y = center_y - (height * 0.5f);
 
-    void UIPopupWarning::Draw()
-    {
-        static float height;
-        auto width = ImGui::GetMainViewport()->Size.x * 0.25f;
-        const float center_x = ImGui::GetMainViewport()->Size.x * 0.5f;
-        const float center_y = ImGui::GetMainViewport()->Size.y * 0.5f;
-        const float pos_x = center_x - (width * 0.5f);
-        const float pos_y = center_y - (height * 0.5f);
+		DrawPopupBackground(m_alpha);
 
-        DrawPopupBackground(m_alpha);
+		ImGui::SetNextWindowSize(ImVec2(width, 0));
+		ImGui::SetNextWindowPos(ImVec2(pos_x, pos_y));
+		ImGui::SetNextWindowFocus();
 
-        ImGui::SetNextWindowSize(ImVec2(width, 0));
-        ImGui::SetNextWindowPos(ImVec2(pos_x, pos_y));
-        ImGui::SetNextWindowFocus();
+		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, m_alpha);
+		if (ImGui::Begin("##Modex::WarningPopup", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoFocusOnAppearing)) {
+			if (ImGui::IsWindowAppearing()) {
+				ImGui::GetIO().ClearInputKeys();
+			}
 
-        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, m_alpha);
-        if (ImGui::Begin("##Modex::WarningPopup", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoFocusOnAppearing)) {
-            if (ImGui::IsWindowAppearing()) {
-                ImGui::GetIO().ClearInputKeys();
-            }
+			if (UICustom::Popup_MenuHeader(m_pendingWarningTitle.c_str())) {
+				DeclineWarning();
+			}
 
-            if (UICustom::Popup_MenuHeader(m_pendingWarningTitle.c_str())) {
-                DeclineWarning();
-            }
+			if (ImGui::IsKeyPressed(ImGuiKey_LeftArrow) || ImGui::IsKeyPressed(ImGuiKey_RightArrow)) {
+				if (!ImGui::GetIO().WantTextInput) {
+					m_navAccept = !m_navAccept;
+				}
+			}
+			
+			ImGui::TextWrapped("%s", m_pendingWarningMessage.c_str());
+			ImGui::NewLine();
+			ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 
-            if (ImGui::IsKeyPressed(ImGuiKey_LeftArrow) || ImGui::IsKeyPressed(ImGuiKey_RightArrow)) {
-                if (!ImGui::GetIO().WantTextInput) {
-                    m_navAccept = !m_navAccept;
-                }
-            }
-            
-            ImGui::TextWrapped("%s", m_pendingWarningMessage.c_str());
-            ImGui::NewLine();
-            ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
+			bool _confirm, _cancel;
+			if (UICustom::Popup_ConfirmDeclineButtons(_confirm, _cancel, m_navAccept)) {
+				if (_confirm) {
+					AcceptWarning();
+				} else if (_cancel) {
+					DeclineWarning();
+				}
+			}
 
-            bool _confirm, _cancel;
-            if (UICustom::Popup_ConfirmDeclineButtons(_confirm, _cancel, m_navAccept)) {
-                if (_confirm) {
-                    AcceptWarning();
-                } else if (_cancel) {
-                    DeclineWarning();
-                }
-            }
+			if (ImGui::IsKeyPressed(ImGuiKey_Enter) && ImGui::GetIO().WantTextInput == false) {
+				if (m_navAccept) {
+					AcceptWarning();
+				} else {
+					DeclineWarning();
+				}
+			}
 
-            if (ImGui::IsKeyPressed(ImGuiKey_Enter) && ImGui::GetIO().WantTextInput == false) {
-                if (m_navAccept) {
-                    AcceptWarning();
-                } else {
-                    DeclineWarning();
-                }
-            }
+			height = ImGui::GetWindowSize().y;
+		}
 
-            height = ImGui::GetWindowSize().y;
-        }
+		ImGui::End();
+		ImGui::PopStyleVar();
+	}
 
-        ImGui::End();
-        ImGui::PopStyleVar();
-    }
+	void UIPopupWarning::PopupWarning(const std::string& a_title, const std::string& a_message, std::function<void()> a_onConfirmCallback)
+	{
+		m_pendingWarningTitle = a_title;
+		m_pendingWarningMessage = a_message;
+		m_onConfirmCallback = a_onConfirmCallback;
+		m_captureInput = true;
+	}
 
-    void UIPopupWarning::PopupWarning(const std::string& a_title, const std::string& a_message, std::function<void()> a_onConfirmCallback)
-    {
-        m_pendingWarningTitle = a_title;
-        m_pendingWarningMessage = a_message;
-        m_onConfirmCallback = a_onConfirmCallback;
-        m_captureInput = true;
-    }
+	void UIPopupWarning::AcceptWarning()
+	{
+		if (m_onConfirmCallback) {
+			m_onConfirmCallback();
+		}
 
-    void UIPopupWarning::AcceptWarning()
-    {
-        if (m_onConfirmCallback) {
-            m_onConfirmCallback();
-        }
+		CloseWindow();
+	}
 
-        this->CloseWindow();
-    }
+	void UIPopupWarning::DeclineWarning()
+	{
+		CloseWindow();
+	}
 
-    void UIPopupWarning::DeclineWarning()
-    {
-        this->CloseWindow();
-    }
+	void UIPopupInputBox::Draw()
+	{
+		static float height;
+		auto width = ImGui::GetMainViewport()->Size.x * 0.25f;
+		const float center_x = ImGui::GetMainViewport()->Size.x * 0.5f;
+		const float center_y = ImGui::GetMainViewport()->Size.y * 0.5f;
+		const float pos_x = center_x - (width * 0.5f);
+		const float pos_y = center_y - (height * 0.5f);
 
-    ////////////////////////////////////////////////////////////////////////////////
-    // UIPopupInput
-    ////////////////////////////////////////////////////////////////////////////////
+		DrawPopupBackground(m_alpha);
 
-    void UIPopupInputBox::Draw()
-    {
-        static float height;
-        auto width = ImGui::GetMainViewport()->Size.x * 0.25f;
-        const float center_x = ImGui::GetMainViewport()->Size.x * 0.5f;
-        const float center_y = ImGui::GetMainViewport()->Size.y * 0.5f;
-        const float pos_x = center_x - (width * 0.5f);
-        const float pos_y = center_y - (height * 0.5f);
+		ImGui::SetNextWindowSize(ImVec2(width, 0));
+		ImGui::SetNextWindowPos(ImVec2(pos_x, pos_y));
+		ImGui::SetNextWindowFocus();
 
-        DrawPopupBackground(m_alpha);
+		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, m_alpha);
+		if (ImGui::Begin("##Modex::InputBoxPopup", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar)) {
+			if (ImGui::IsWindowAppearing()) {
+				ImGui::GetIO().ClearInputKeys();
+			}
 
-        ImGui::SetNextWindowSize(ImVec2(width, 0));
-        ImGui::SetNextWindowPos(ImVec2(pos_x, pos_y));
-        ImGui::SetNextWindowFocus();
+			if (ImGui::IsKeyPressed(ImGuiKey_LeftArrow) || ImGui::IsKeyPressed(ImGuiKey_RightArrow)) {
+				if (!ImGui::GetIO().WantTextInput) {
+					m_navAccept = !m_navAccept;
+				}
+			}
 
-        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, m_alpha);
-        if (ImGui::Begin("##Modex::InputBoxPopup", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar)) {
-            if (ImGui::IsWindowAppearing()) {
-                ImGui::GetIO().ClearInputKeys();
-            }
+			ImGui::SetNextItemWidth(500.0f);
+			if (UICustom::Popup_MenuHeader(m_pendingInputTitle.c_str())) {
+				DeclineInput();
+			}
 
-            if (ImGui::IsKeyPressed(ImGuiKey_LeftArrow) || ImGui::IsKeyPressed(ImGuiKey_RightArrow)) {
-                if (!ImGui::GetIO().WantTextInput) {
-                    m_navAccept = !m_navAccept;
-                }
-            }
+			ImGui::TextWrapped("%s",m_pendingInputMessage.c_str());
+			ImGui::NewLine();
 
-            ImGui::SetNextItemWidth(500.0f);
-            if (UICustom::Popup_MenuHeader(m_pendingInputTitle.c_str())) {
-                DeclineInput();
-            }
+			ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+			ImGui::InputText("##Modex::InputBoxPopup::InputText", m_inputBuffer, IM_ARRAYSIZE(m_inputBuffer));
 
-            ImGui::TextWrapped("%s",m_pendingInputMessage.c_str());
-            ImGui::NewLine();
+			if (ImGui::IsWindowAppearing()) {
+				ImGui::SetKeyboardFocusHere(-1);
+			}
 
-            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-            ImGui::InputText("##Modex::InputBoxPopup::InputText", m_inputBuffer, IM_ARRAYSIZE(m_inputBuffer));
+			ImGui::NewLine();
+			ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal, 2.0f);
 
-            if (ImGui::IsWindowAppearing()) {
-                ImGui::SetKeyboardFocusHere(-1);
-            }
+			bool _confirm, _cancel;
+			if (UICustom::Popup_ConfirmDeclineButtons(_confirm, _cancel, m_navAccept)) {
+				if (_confirm) {
+					AcceptInput();
+				} else if (_cancel) {
+					DeclineInput();
+				}
+			}
 
-            ImGui::NewLine();
-            ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal, 2.0f);
+			if (ImGui::IsKeyPressed(ImGuiKey_Enter) && ImGui::GetIO().WantTextInput == false) {
+				if (m_navAccept) {
+					AcceptInput();
+				} else {
+					DeclineInput();
+				}
+			}
 
-            bool _confirm, _cancel;
-            if (UICustom::Popup_ConfirmDeclineButtons(_confirm, _cancel, m_navAccept)) {
-                if (_confirm) {
-                    AcceptInput();
-                } else if (_cancel) {
-                    DeclineInput();
-                }
-            }
+			height = ImGui::GetWindowSize().y;
+		}
+		ImGui::End();
+		ImGui::PopStyleVar();
+	}
 
-            if (ImGui::IsKeyPressed(ImGuiKey_Enter) && ImGui::GetIO().WantTextInput == false) {
-                if (m_navAccept) {
-                    AcceptInput();
-                } else {
-                    DeclineInput();
-                }
-            }
+	void UIPopupInputBox::PopupInputBox(const std::string& a_title, const std::string& a_message, std::string a_hint, std::function<void(const std::string&)> a_onConfirmCallback)
+	{
+		m_pendingInputTitle = a_title;
+		m_pendingInputMessage = a_message;
+		m_onConfirmCallback = a_onConfirmCallback;
+		m_navAccept = true;
+		m_captureInput = true;
 
-            height = ImGui::GetWindowSize().y;
-        }
-        ImGui::End();
-        ImGui::PopStyleVar();
-    }
+		ImFormatString(m_inputBuffer, IM_ARRAYSIZE(m_inputBuffer), "%s", a_hint.c_str());
+	}
 
-    void UIPopupInputBox::PopupInputBox(const std::string& a_title, const std::string& a_message, std::string a_hint, std::function<void(const std::string&)> a_onConfirmCallback)
-    {
-        m_pendingInputTitle = a_title;
-        m_pendingInputMessage = a_message;
-        m_onConfirmCallback = a_onConfirmCallback;
-        m_captureInput = true;
+	void UIPopupInputBox::AcceptInput()
+	{
+		if (m_onConfirmCallback) {
+			m_onConfirmCallback(m_inputBuffer);
+		}
 
-        ImFormatString(m_inputBuffer, IM_ARRAYSIZE(m_inputBuffer), "%s", a_hint.c_str());
-    }
+		CloseWindow();
+	}
 
-    void UIPopupInputBox::AcceptInput()
-    {
-        if (m_onConfirmCallback) {
-            m_onConfirmCallback(m_inputBuffer);
-        }
+	void UIPopupInputBox::DeclineInput()
+	{
+		CloseWindow();
+	}
 
-        this->CloseWindow();
-    }
+	void UIPopupInfo::Draw()
+	{
+		static float height;
+		auto width = ImGui::GetMainViewport()->Size.x * 0.25f;
+		const float center_x = ImGui::GetMainViewport()->Size.x * 0.5f;
+		const float center_y = ImGui::GetMainViewport()->Size.y * 0.5f;
+		const float pos_x = center_x - (width * 0.5f);
+		const float pos_y = center_y - (height * 0.5f);
 
-    void UIPopupInputBox::DeclineInput()
-    {
-        this->CloseWindow();
-    }
+		DrawPopupBackground(m_alpha);
 
-    //////////////////////////////////////////////////////////////////////////////
-    // UIPopupInfo
-    //////////////////////////////////////////////////////////////////////////////
+		ImGui::SetNextWindowSize(ImVec2(width, 0));
+		ImGui::SetNextWindowPos(ImVec2(pos_x, pos_y));
+		ImGui::SetNextWindowFocus();
 
-    void UIPopupInfo::Draw()
-    {
-        static float height;
-        auto width = ImGui::GetMainViewport()->Size.x * 0.25f;
-        const float center_x = ImGui::GetMainViewport()->Size.x * 0.5f;
-        const float center_y = ImGui::GetMainViewport()->Size.y * 0.5f;
-        const float pos_x = center_x - (width * 0.5f);
-        const float pos_y = center_y - (height * 0.5f);
+		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, m_alpha);
+		if (ImGui::Begin("##Modex::InfoPopup", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoFocusOnAppearing)) {
+			if (ImGui::IsWindowAppearing()) {
+				ImGui::GetIO().ClearInputKeys();
+			}
 
-        DrawPopupBackground(m_alpha);
+			if (UICustom::Popup_MenuHeader(m_pendingInfoTitle.c_str())) {
+				CloseInfo();
+			}
+			
+		ImGui::NewLine();
+			ImGui::TextWrapped("%s", m_pendingInfoMessage.c_str());
+			ImGui::NewLine();
+			ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 
-        ImGui::SetNextWindowSize(ImVec2(width, 0));
-        ImGui::SetNextWindowPos(ImVec2(pos_x, pos_y));
-        ImGui::SetNextWindowFocus();
+		ImGui::PushStyleColor(ImGuiCol_Button, ThemeConfig::GetColor("BUTTON_CONFIRM"));
+		if (ImGui::Button(Translate("CONFIRM"), ImVec2(ImGui::GetContentRegionAvail().x, 0.f))) {
+			CloseInfo();
+		}
+		ImGui::PopStyleColor();
 
-        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, m_alpha);
-        if (ImGui::Begin("##Modex::InfoPopup", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoFocusOnAppearing)) {
-            if (ImGui::IsWindowAppearing()) {
-                ImGui::GetIO().ClearInputKeys();
-            }
-
-            if (UICustom::Popup_MenuHeader(m_pendingInfoTitle.c_str())) {
-                CloseInfo();
-            }
-            
-	    ImGui::NewLine();
-            ImGui::TextWrapped("%s", m_pendingInfoMessage.c_str());
-            ImGui::NewLine();
-            ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-
-	    ImGui::PushStyleColor(ImGuiCol_Button, ThemeConfig::GetColor("BUTTON_CONFIRM"));
-	    if (ImGui::Button(Translate("CONFIRM"), ImVec2(ImGui::GetContentRegionAvail().x, 0.f))) {
-		    CloseInfo();
-	    }
-	    ImGui::PopStyleColor();
-
-            if (ImGui::IsKeyPressed(ImGuiKey_Enter) && ImGui::GetIO().WantTextInput == false) {
+			if (ImGui::IsKeyPressed(ImGuiKey_Enter) && ImGui::GetIO().WantTextInput == false) {
 		CloseInfo();
-            }
+			}
 
-            height = ImGui::GetWindowSize().y;
-        }
+			height = ImGui::GetWindowSize().y;
+		}
 
-        ImGui::End();
-        ImGui::PopStyleVar();
-    }
+		ImGui::End();
+		ImGui::PopStyleVar();
+	}
 
-    void UIPopupInfo::PopupInfo(const std::string& a_title, const std::string& a_message)
-    {
-        m_pendingInfoTitle = a_title;
-        m_pendingInfoMessage = a_message;
-        m_captureInput = true;
-    }
+	void UIPopupInfo::PopupInfo(const std::string& a_title, const std::string& a_message)
+	{
+		m_pendingInfoTitle = a_title;
+		m_pendingInfoMessage = a_message;
+		m_captureInput = true;
+	}
 
-    void UIPopupInfo::CloseInfo()
-    {
-        CloseWindow();
-    }
+	void UIPopupInfo::CloseInfo()
+	{
+		CloseWindow();
+	}
 }
