@@ -313,11 +313,11 @@ namespace Modex
 		popup->OpenWindow(this);
 	}
 
-	void UIManager::ShowHotkey(uint32_t* a_hotkey, uint32_t& a_default, std::function<void()> onConfirmHotkeyCallback)
+	void UIManager::ShowHotkey(const char* a_title, const char* a_desc, uint32_t* a_hotkey, uint32_t& a_default, bool a_modifierOnly, std::function<void()> onConfirmHotkeyCallback)
 	{
 		m_windowStack.push_back(std::make_unique<UIPopupHotkey>());
 		UIPopupHotkey* popup = static_cast<UIPopupHotkey*>(m_windowStack.back().get());
-		popup->PopupHotkey(a_hotkey, a_default, onConfirmHotkeyCallback);
+		popup->PopupHotkey(a_title, a_desc, a_hotkey, a_default, a_modifierOnly, onConfirmHotkeyCallback);
 		popup->OpenWindow(this);
 	}
 
@@ -355,84 +355,6 @@ namespace Modex
 		}
 
 		return nullptr;
-	}
-
-	// OPTIMIZE: Probably not necessary anymore. Try handling via shortcuts in Popup component class.
-	bool UIManager::InputHandler(ImGuiKey a_key)
-	{
-		if (auto infoBoxPopup = dynamic_cast<UIPopupInfo*>(GetPopupWindowRef<UIPopupInfo>()); infoBoxPopup) {
-			if (a_key == ImGuiKey_Escape) {
-				infoBoxPopup->CloseInfo();
-				return true;
-			}
-
-			if (a_key == ImGuiKey_Enter) {
-				infoBoxPopup->CloseInfo();
-				return false;
-			}
-		}
-
-		if (auto inputBoxPopup = dynamic_cast<UIPopupInputBox*>(GetPopupWindowRef<UIPopupInputBox>()); inputBoxPopup) {
-			if (a_key == ImGuiKey_Enter) {
-				inputBoxPopup->AcceptInput();  // Empty string, handled in callback
-				return false;
-
-			} else if (a_key == ImGuiKey_Escape) {
-				inputBoxPopup->DeclineInput();
-				return true;
-			}
-		}
-		
-		if (auto warningPopup = dynamic_cast<UIPopupWarning*>(GetPopupWindowRef<UIPopupWarning>()); warningPopup) {
-			if (a_key == ImGuiKey_UpArrow || a_key == ImGuiKey_DownArrow) {
-				*warningPopup->GetNavAccept() = !*warningPopup->GetNavAccept();
-			}
-
-			if (a_key == ImGuiKey_Enter) {
-				if (warningPopup->GetNavAccept() && *warningPopup->GetNavAccept()) {
-					warningPopup->AcceptWarning();
-				} else {
-					warningPopup->DeclineWarning();
-				}
-				return false;
-
-			} else if (a_key == ImGuiKey_Escape) {
-				warningPopup->DeclineWarning();
-				return true;
-
-			} else if (a_key == ImGuiKey_Y) {
-				warningPopup->AcceptWarning();
-				return false;
-
-			} else if (a_key == ImGuiKey_N) {
-				warningPopup->DeclineWarning();
-				return false;
-			}
-		}
-
-		// FIX: Probably need to specifically handle a whitelist for modifier keys for users wanting to set modifiers
-		if (auto hotkeyPopup = dynamic_cast<UIPopupHotkey*>(GetPopupWindowRef<UIPopupHotkey>()); hotkeyPopup) {
-			if (a_key == ImGuiKey_T) {
-				hotkeyPopup->AcceptHotkey(true);
-				return false;
-			}
-
-			if (a_key == ImGuiKey_Escape) {
-				hotkeyPopup->DeclineHotkey();
-				return true;
-			}
-
-			if (ImGui::ImGuiKeyToScanCode(a_key) == hotkeyPopup->GetCurrentHotkey()) {
-				hotkeyPopup->DeclineHotkey();
-				return false;
-			} else {
-				hotkeyPopup->SetCurrentHotkey(ImGui::ImGuiKeyToScanCode(a_key));
-				hotkeyPopup->AcceptHotkey();
-				return false;
-			}
-		}
-
-		return false;
 	}
 
 	// Simple IME compatibility! <3

@@ -58,5 +58,7 @@ namespace Modex
 		[[nodiscard]] static int32_t GetCompileIndex() { return GetSingleton()->user.basePlugin ? 0 : -1; };
 		[[nodiscard]] static UserSettings& Get() { return GetSingleton()->user; };
 		[[nodiscard]] static UserSettings& GetDefault() { return GetSingleton()->_default; };
+		[[nodiscard]] static std::array<uint32_t, 2> GetShowMenuKeys();
+		[[nodiscard]] static std::string GetShowMenuKeysAsText();
 	};
 }

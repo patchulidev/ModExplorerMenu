@@ -10,6 +10,28 @@
 
 namespace ImGui
 {
+	static inline bool IsKeyModifier(uint32_t a_key)
+	{
+		return (a_key == 0x2A ||  // Left Shift key
+				a_key == 0x36 ||  // Right Shift key
+				a_key == 0x1D ||  // Left Control key
+				a_key == 0x9D ||  // Right Control key
+				a_key == 0x38 ||  // Left Alt key
+				a_key == 0xB8     // Right Alt key
+		);
+	}
+
+	static inline bool IsValidHotkey(uint32_t a_key)
+	{
+		return (a_key != 0x01 &&  // Escape key
+				a_key != 0x0F &&  // Tab key
+				a_key != 0x00 &&  // Invalid GFX key
+				a_key != 0x1C &&  // Enter key
+				a_key != 0x39 &&  // Space key
+				a_key != 0x14     // T key (default)
+		);
+	}
+
 	// Used for conditional hotkey assignment. Prevent users from assigning invalid keys to open/close hotkey.
 	static inline bool IsKeyboardWhitelist(ImGuiKey a_key)
 	{
@@ -155,22 +177,22 @@ namespace ImGui
 			return 0x4E;
 		case ImGuiKey_KeypadEnter:
 			return 0x9C;
+		case ImGuiMod_Shift:
+		case ImGuiKey_RightShift:
 		case ImGuiKey_LeftShift:
 			return 0x2A;
+		case ImGuiMod_Ctrl:
+		case ImGuiKey_RightCtrl:
 		case ImGuiKey_LeftCtrl:
 			return 0x1D;
+		case ImGuiMod_Alt:
+		case ImGuiKey_RightAlt:
 		case ImGuiKey_LeftAlt:
 			return 0x38;
+		case ImGuiMod_Super:
+		case ImGuiKey_RightSuper:
 		case ImGuiKey_LeftSuper:
 			return 0x5B;
-		case ImGuiKey_RightShift:
-			return 0x36;
-		case ImGuiKey_RightCtrl:
-			return 0x9D;
-		case ImGuiKey_RightAlt:
-			return 0xB8;
-		case ImGuiKey_RightSuper:
-			return 0x5C;
 		case ImGuiKey_Menu:
 			return 0x5D;
 		case ImGuiKey_0:

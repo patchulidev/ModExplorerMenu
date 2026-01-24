@@ -73,7 +73,7 @@ namespace Modex
 		
 		void ShowBanner();
 		void ShowWarning(const std::string& a_title, const std::string& a_message, std::function<void()> onConfirmCallback = nullptr);
-		void ShowHotkey(uint32_t* a_hotkey, uint32_t& a_default, std::function<void()> onConfirmHotkeyCallback = nullptr);
+		void ShowHotkey(const char* a_title, const char* a_desc, uint32_t* a_hotkey, uint32_t& a_default, bool a_modifierOnly, std::function<void()> onConfirmHotkeyCallback = nullptr);
 		void ShowInputBox(const std::string& a_title, const std::string& a_message, std::string a_hint = "", std::function<void(const std::string&)> onConfirmCallback = nullptr);
 		void ShowBrowser(const std::string& a_title, const std::vector<std::string>& a_items, std::function<void(const std::string&)> onSelectCallback = nullptr);
 		void ShowInfoBox(const std::string& a_title, const std::string& a_message);
@@ -82,7 +82,6 @@ namespace Modex
 		UIWindow* GetPopupWindowRef() const;
 
 		int GetWindowCount() const { return static_cast<int>(m_windowStack.size()); }
-		bool InputHandler(ImGuiKey a_key);
 
 	private:
 		UIManager();

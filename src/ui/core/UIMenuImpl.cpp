@@ -1,6 +1,7 @@
 #include "UIMenuImpl.h"
 #include "ui/core/UIManager.h"
 #include "core/InputManager.h"
+#include "config/UserConfig.h"
 
 // Credit toward cyfewlp of SimpleIME for introducing this alternative to the DX present draw method.
 // https://github.com/cyfewlp/
@@ -115,6 +116,11 @@ namespace Modex
 		{
 			ui->Register(MENU_NAME, Creator);
 		}
+	}
+
+	void ModexGUIMenu::RegisterListener(std::function<void(uint32_t)> a_func)
+	{
+		m_listeners.push_back(a_func);
 	}
 
 	void ModexGUIMenu::PostDisplay()
@@ -267,9 +273,20 @@ namespace Modex
 	{
 		const auto keyEvent = reinterpret_cast<RE::GFxKeyEvent *>(event);
 		const auto imguiKey = GFxKeyToImGuiKey(keyEvent->keyCode);
-		const auto showMenu = InputManager::GetSingleton()->GetShowMenuKey();
+		const auto showMenu = UserConfig::GetShowMenuKeys();
 		const auto scanCode = ImGui::ImGuiKeyToScanCode(imguiKey);
 		const auto modifier = InputManager::GetSingleton()->IsBoundModifierDown();
+
+		if (m_listeners.size() > 0) {
+			for (const auto& func : m_listeners) {
+				func(scanCode);
+			}
+
+			m_listeners.clear();
+			return;
+		}
+
+		Info("Detected Key Event: ShowMenuKey: {} | {} ImGuiKey: {} ScanCode: {}", showMenu[0], showMenu[1], static_cast<int>(imguiKey), scanCode);
 
 		// override behaviors for specific keys
 		if (imguiKey == ImGuiKey_PageUp && down) {
@@ -280,8 +297,8 @@ namespace Modex
 			UIManager::GetSingleton()->AddScrollEvent(0, -1.0f);
 			return;
 		}
-		else if (scanCode == showMenu[1] && down) {
-			if ((showMenu[0] == 0) || (showMenu[0] != 0 && modifier)) {
+		else if (scanCode == showMenu[0] && down) {
+			if ((showMenu[1] == 0) || (showMenu[1] != 0 && modifier)) {
 				if (!ImGui::GetIO().WantCaptureKeyboard) {
 					UIManager::GetSingleton()->PopWindow();
 					return;

@@ -236,72 +236,73 @@ namespace Modex::UICustom
 		return changes;
 	}
 
-	bool Settings_Keybind(const char* a_text, uint32_t& a_keybind, uint32_t defaultKey, ImVec4& a_hover)
+	void Settings_Keybind(const char* a_title, const char* a_desc, uint32_t& a_keybind, uint32_t defaultKey, bool a_modifierOnly)
 	{
-		auto& config = UserConfig::Get();
+		ImGui::Indent();
 
-		auto id = "##Keybind" + std::string(a_text);
-		bool changes = false;
+		auto id = "##Keybind" + std::string(a_title);
 
-		ImGui::Spacing();
-		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().ItemSpacing.y / 2 + ImGui::GetFontSize() / 2);
-		ImGui::Text("%s", Translate(a_text));
+		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + (ImGui::GetFrameHeightWithSpacing() / 2.0f)); 
+		ImGui::AlignTextToFramePadding();
+		ImGui::Text("%s", Translate(a_title));
+
+		ImGui::HelpMarker(a_title);
 
 		if (GraphicManager::imgui_library.empty()) {
-			const float height = ((config.uiScaleVertical / 100) * 20.0f) + 10.0f;
+			const float height = ImGui::GetFrameHeight() * 2.0f;
+			const std::string label = a_keybind == 0 ? Translate("NONE") : ImGui::SkyrimKeymap.at(a_keybind);
 
-			ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth - ImGui::GetStyle().IndentSpacing);  // Right Align
-			ImGui::SetCursorPosY(ImGui::GetCursorPosY() - (height / 2) + 5.0f);                                            // Center Align
+			ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth);  // Right Align
+			ImGui::SetCursorPosY(ImGui::GetCursorPosY() - (ImGui::GetFrameHeight() / 2.0f));
 
-			if (ImGui::Button(ImGui::SkyrimKeymap.at(a_keybind), ImVec2(s_widgetWidth, height + 5.0f))) {
-				UIManager::GetSingleton()->ShowHotkey(&a_keybind, defaultKey, [&]() {
-					changes = true;
+			if (ImGui::Button(label.c_str(), ImVec2(s_widgetWidth, height))) {
+				UIManager::GetSingleton()->ShowHotkey(Translate(a_title), Translate(a_desc), &a_keybind, defaultKey, a_modifierOnly, [&]() {
+					UserConfig::GetSingleton()->SaveSettings();
 				});
 			}
 		} else {
-			const ImVec2& uv0 = ImVec2(0, 0);
-			const ImVec2& uv1 = ImVec2(1, 1);
-			const ImVec4& bg_col = ImVec4(0, 0, 0, 0);
-			const float alpha = 1.0f;
+			GraphicManager::Image img;
 
-			GraphicManager::Image img = GraphicManager::imgui_library[ImGui::ImGuiKeymap.at(a_keybind)];
+			const auto keyIt = ImGui::SkyrimKeymap.find(a_keybind);
+			if (a_keybind == 0 || keyIt == ImGui::SkyrimKeymap.end()) {
+				img = GraphicManager::imgui_library.at("UnknownKey");
+			} else {
+				const std::string& keyName = keyIt->second;
+				img = GraphicManager::imgui_library.at(keyName);
+			}
 
-			float scale = config.uiScaleVertical / 100.0f;
-			const float imageWidth = ((float)img.width * 0.5f) * scale;
-			const float imageHeight = ((float)img.height * 0.5f) * scale;
-			const ImVec2& size = ImVec2(imageWidth, imageHeight);
+			// Scale the image to FrameHeight, while keeping aspect ratio maintained.
+			const float imageRatio = static_cast<float>(img.width) / static_cast<float>(img.height);
+			const float imageWidth = (ImGui::GetFrameHeight() * 2.0f) * imageRatio;
+			const float imageHeight = ImGui::GetFrameHeight() * 2.0f;
+			const ImVec2 size = ImVec2(imageWidth, imageHeight);
 
-			// ImGui::SameLine(ImGui::GetContentRegionAvail().x - (s_widgetWidth - p_padding) + imageWidth / scale);  // Right Align
-			ImGui::SameLine(ImGui::GetContentRegionAvail().x - ImGui::GetStyle().IndentSpacing - imageWidth);
-			ImGui::SetCursorPosY(ImGui::GetCursorPosY() - (imageHeight / 2) + 5.0f);  // Center Align
+			ImGui::SameLine(ImGui::GetContentRegionAvail().x - imageWidth);
 
-			ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * alpha);
 			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.f, 0.f, 0.f, 0.f));
-			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.f, 0.f, 0.f, 0.f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(1.f, 1.f, 1.f, 0.05f));
 			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.f, 0.f, 0.f, 0.f));
 			ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.f, 0.f, 0.f, 0.f));
 			ImGui::PushStyleColor(ImGuiCol_BorderShadow, ImVec4(0.f, 0.f, 0.f, 0.f));
 
 			ImTextureID texture = (ImTextureID)(intptr_t)img.texture;
-			if (ImGui::ImageButton(id.c_str(), texture, size, uv0, uv1, bg_col, a_hover)) {
-				UIManager::GetSingleton()->ShowHotkey(&a_keybind, defaultKey, [&]() {
-					changes = true;
+			ImGui::SetCursorPosY(ImGui::GetCursorPosY() - (ImGui::GetFrameHeight() / 2.0f));
+			if (ImGui::ImageButton(id.c_str(), texture, size)) {
+				UIManager::GetSingleton()->ShowHotkey(Translate(a_title), Translate(a_desc), &a_keybind, defaultKey, a_modifierOnly, []() {
+						UserConfig::GetSingleton()->SaveSettings();
 				});
 			}
 
-			if (ImGui::IsItemHovered()) {
-				a_hover = ImVec4(1.f, 1.f, 1.f, 1.f);
-			} else {
-				a_hover = ImVec4(0.9f, 0.9f, 0.9f, 0.9f);
+			if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNone)) {
+				if (ImGui::IsKeyPressed(ImGuiKey_T, false)) {
+					a_keybind = defaultKey;
+					UserConfig::GetSingleton()->SaveSettings();
+				}
 			}
 
-			ImGui::PopStyleVar();
 			ImGui::PopStyleColor(5);
 		}
-
-		ImGui::Spacing();
-
-		return changes;
+		ImGui::Unindent();
 	}
 
 	bool Settings_Dropdown(const char* a_text, uint32_t& a_value, const std::vector<std::string>& a_options, bool a_localizeList)

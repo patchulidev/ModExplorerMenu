@@ -28,8 +28,8 @@ namespace Modex
     public:
         void Draw();
 
-        void PopupHotkey(uint32_t* a_hotkey, uint32_t a_default, std::function<void()> onConfirmHotkeyCallback);
-        void AcceptHotkey(bool a_default = false);
+        void PopupHotkey(const char* a_title, const char* a_desc, uint32_t* a_hotkey, uint32_t a_default, bool a_modifierOnly, std::function<void()> onConfirmHotkeyCallback);
+        void AcceptHotkey(uint32_t a_key);
         void DeclineHotkey();
 
         uint32_t GetCurrentHotkey() const { return m_hotkeyCurrent ? *m_hotkeyCurrent : 0; }
@@ -37,8 +37,12 @@ namespace Modex
     private:
         void RenderHotkeyPopup();
 
+		std::string                 m_pendingHotkeyTitle;
+		std::string                 m_pendingHotkeyDesc;
+
+		bool                        m_hotkeyModifierOnly;
         uint32_t*                   m_hotkeyCurrent = nullptr;
-        uint32_t                    m_hotkeyDefault = 0;
+        uint32_t                    m_hotkeyDefault;
 
         std::function<void()>       m_onConfirmCallback;
     };

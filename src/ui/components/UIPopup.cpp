@@ -4,6 +4,7 @@
 
 #include "UIPopup.h"
 #include "UIContainers.h"
+#include "config/Keycodes.h"
 #include "imgui.h"
 #include "localization/Locale.h"
 #include "config/ThemeConfig.h"
@@ -18,9 +19,8 @@ namespace Modex
 
     void UIPopupHotkey::Draw()
     {
-        
+		static float height;
         auto width = ImGui::GetMainViewport()->Size.x * 0.25f;
-        auto height = ImGui::GetMainViewport()->Size.y * 0.20f;
         const float center_x = ImGui::GetMainViewport()->Size.x * 0.5f;
         const float center_y = ImGui::GetMainViewport()->Size.y * 0.5f;
         const float pos_x = center_x - (width * 0.5f);
@@ -28,7 +28,7 @@ namespace Modex
 
         DrawPopupBackground(m_alpha);
 
-        ImGui::SetNextWindowSize(ImVec2(width, height));
+        ImGui::SetNextWindowSize(ImVec2(width, 0));
         ImGui::SetNextWindowPos(ImVec2(pos_x, pos_y));
         ImGui::SetNextWindowFocus();
 
@@ -38,60 +38,85 @@ namespace Modex
                 ImGui::GetIO().ClearInputKeys();
             }
 
-            UICustom::SubCategoryHeader(Translate("HEADER_HOTKEY"), ImVec4(0.20f, 0.20f, 0.20f, 1.0f));
+			if (UICustom::Popup_MenuHeader(m_pendingHotkeyTitle.c_str())) {
+				DeclineHotkey();
+			}
 
-            ImGui::NewLine();
+			ImGui::NewLine();
+			ImGui::TextWrapped("%s", m_pendingHotkeyDesc.c_str());
+			ImGui::NewLine();
 
-            ImGui::SetCursorPosX(UICustom::GetCenterTextPosX(Translate("CONFIG_HOTKEY_SET")));
-            ImGui::Text("%s", Translate("CONFIG_HOTKEY_SET"));
-            ImGui::NewLine();
+			ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
+			ImGui::PushStyleColor(ImGuiCol_Button, ThemeConfig::GetColor("BUTTON_DECLINE"));
+			if (ImGui::Button(Translate("CLOSE"), ImVec2(ImGui::GetContentRegionAvail().x, 0.f))) {
+				DeclineHotkey();
+			}
+			ImGui::PopStyleColor();
 
-            ImGui::SetCursorPosX(UICustom::GetCenterTextPosX(Translate("CONFIG_HOTKEY_RESET")));
-            ImGui::Text("%s",Translate("CONFIG_HOTKEY_RESET"));
-            ImGui::NewLine();
-
-            ImGui::SetCursorPosX(UICustom::GetCenterTextPosX(Translate("CONFIG_KEY_CANCEL")));
-            ImGui::Text("%s",Translate("CONFIG_KEY_CANCEL"));
-
-            ImGui::SetCursorPosY(ImGui::GetWindowSize().y - ImGui::GetFrameHeightWithSpacing() - ImGui::GetStyle().WindowPadding.y);
-            if (ImGui::Button(Translate("Close"), ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetFrameHeightWithSpacing()))) {
-                DeclineHotkey();
-                m_close = true;
-            }
+            height = ImGui::GetWindowSize().y;
         }
 
         ImGui::End();
         ImGui::PopStyleVar();
     }
 
-    void UIPopupHotkey::PopupHotkey(uint32_t* a_hotkey, uint32_t a_default, std::function<void()> onConfirmHotkeyCallback)
+    void UIPopupHotkey::PopupHotkey(const char* a_title, const char* a_desc, uint32_t* a_hotkey, uint32_t a_default, bool a_modifierOnly, std::function<void()> onConfirmHotkeyCallback)
     {
+		m_pendingHotkeyTitle = a_title;
+		m_pendingHotkeyDesc = a_desc;
+		m_hotkeyModifierOnly = a_modifierOnly;
         m_hotkeyCurrent = a_hotkey;
         m_hotkeyDefault = a_default;
         m_onConfirmCallback = onConfirmHotkeyCallback;
         m_captureInput = true;
+
+		ModexGUIMenu::RegisterListener([this](uint32_t a_key) { AcceptHotkey(a_key); });
     }
 
-    void UIPopupHotkey::AcceptHotkey(bool a_default)
+	// TODO: Need to refactor inputmanager to update keybinds.
+    void UIPopupHotkey::AcceptHotkey(uint32_t a_key)
     {
-        if (a_default) {
-            *m_hotkeyCurrent = m_hotkeyDefault;
-        }
+		bool success = false;
+		if (ImGui::IsValidHotkey(a_key)) {
+			if (m_hotkeyModifierOnly) {
+				if (ImGui::IsKeyModifier(a_key)) {
+					*m_hotkeyCurrent = a_key;
+					success = true;
+				}
+			}
 
-        if (m_onConfirmCallback) {
-            m_onConfirmCallback();
-        }
+			if (!m_hotkeyModifierOnly) {
+				if (!ImGui::IsKeyModifier(a_key)) {
+					*m_hotkeyCurrent = a_key;
+					success = true;
+				}
+			}
+		}
 
-        this->CloseWindow();
+		if (success == false && a_key == 0x14) {
+			*m_hotkeyCurrent = m_hotkeyDefault;
+			success = true;
+		}
+
+		if (success) {
+			if (m_onConfirmCallback) {
+				m_onConfirmCallback();
+			}
+
+			CloseWindow();
+		} else {
+			UIManager::GetSingleton()->ShowWarning(
+				m_pendingHotkeyTitle,
+				Translate("SETTINGS_MENU_KEYBIND_INVALID")
+			);
+
+			CloseWindow();
+		}
     }
 
     void UIPopupHotkey::DeclineHotkey()
     {
-        m_hotkeyCurrent = 0;
-        m_hotkeyDefault = 0;
-        m_onConfirmCallback = nullptr;
-
-        this->CloseWindow();
+        CloseWindow();
     }
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -120,10 +145,7 @@ namespace Modex
             }
 
             if (UICustom::Popup_MenuHeader(m_pendingWarningTitle.c_str())) {
-                ImGui::End();
-                ImGui::PopStyleVar();
                 DeclineWarning();
-                return;
             }
 
             if (ImGui::IsKeyPressed(ImGuiKey_LeftArrow) || ImGui::IsKeyPressed(ImGuiKey_RightArrow)) {
@@ -215,10 +237,7 @@ namespace Modex
 
             ImGui::SetNextItemWidth(500.0f);
             if (UICustom::Popup_MenuHeader(m_pendingInputTitle.c_str())) {
-                ImGui::End();
-                ImGui::PopStyleVar();
                 DeclineInput();
-                return;
             }
 
             ImGui::TextWrapped("%s",m_pendingInputMessage.c_str());
@@ -307,10 +326,7 @@ namespace Modex
             }
 
             if (UICustom::Popup_MenuHeader(m_pendingInfoTitle.c_str())) {
-                ImGui::End();
-                ImGui::PopStyleVar();
                 CloseInfo();
-                return;
             }
             
 	    ImGui::NewLine();

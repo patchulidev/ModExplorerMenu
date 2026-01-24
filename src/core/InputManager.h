@@ -44,9 +44,6 @@ namespace Modex
 	class InputManager
 	{
 	private:
-		uint32_t				showMenuKey;
-		uint32_t				showMenuModifier;
-
 		bool					_shiftDown;
 		bool					_ctrlDown;
 		bool					_altDown;
@@ -72,15 +69,5 @@ namespace Modex
 		void						AddKeyEvent(KeyEvent& a_keyEvent);
 		void						ProcessInputEvents();
 		bool						IsBoundModifierDown();
-		
-		std::array<uint32_t, 2>		GetShowMenuKey() const;
-		std::string					GetShowMenuKeyAsText() const;
-
-		static void SetCurrentHotkey(uint32_t a_modifier, uint32_t a_key)
-		{
-			auto* inputMgr = InputManager::GetSingleton();
-			inputMgr->showMenuModifier = a_modifier;
-			inputMgr->showMenuKey = a_key;
-		}
 	};
 }

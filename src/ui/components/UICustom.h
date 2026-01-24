@@ -11,7 +11,7 @@ namespace Modex::UICustom
 
 	// These methods include fixed width styling seen in settings panel.
 	bool Settings_SliderFloat(const char* a_text, float& a_valRef, float a_min, float a_max);
-	bool Settings_Keybind(const char* a_text, uint32_t& a_keybind, uint32_t defaultKey, ImVec4& a_hover);
+	void Settings_Keybind(const char* a_title, const char* a_desc, uint32_t& a_keybind, uint32_t defaultKey, bool a_modifierOnly);
 	bool Settings_Dropdown(const char* a_text, uint32_t& a_value, const std::vector<std::string>& a_options, bool a_localizeList = true);
 	bool Settings_FontDropdown(const char* a_text, std::string* a_font);
 	bool Settings_LanguageDropdown(const char* a_text, std::string* a_language);

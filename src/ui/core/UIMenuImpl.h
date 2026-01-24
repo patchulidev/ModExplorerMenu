@@ -11,7 +11,9 @@ namespace Modex
 
 	public:
 		static constexpr std::string_view MENU_NAME = "ModexGUIMenu";
+		static inline std::vector<std::function<void(uint32_t)>> m_listeners = {};
 
+		static void RegisterListener(std::function<void(uint32_t)>);
 		static void FlushInputState();
 		static void RegisterMenu();
 		void PostDisplay() override;

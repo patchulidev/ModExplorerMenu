@@ -1,12 +1,36 @@
 #include "UserConfig.h"
 #include "ConfigManager.h"
-#include "core/InputManager.h"
 #include "external/json_serializers.cpp"
 #include "localization/Locale.h"
 #include "config/ThemeConfig.h"
+#include "config/Keycodes.h"
 
 namespace Modex
 {
+	std::array<uint32_t, 2> UserConfig::GetShowMenuKeys()
+	{
+		auto& config = UserConfig::Get();
+		return { config.showMenuKey, config.showMenuModifier };
+	}
+
+	std::string UserConfig::GetShowMenuKeysAsText()
+	{
+		auto& config = UserConfig::Get();
+
+		// BUG: Can we gaurantee this lookup?
+		const std::string keyName = ImGui::SkyrimKeymap.at(config.showMenuKey);
+		const std::string modifierKeyName = ImGui::SkyrimKeymap.at(config.showMenuModifier);
+
+		if (!modifierKeyName.empty()) {
+			return std::format("{} + {}", modifierKeyName, keyName);
+		}
+		
+		if (!keyName.empty()) {
+			return keyName;
+		}
+
+		return "Unknown?";
+	}
 	void UserConfig::LoadSettings()
 	{
 		ASSERT_MSG(!Load(true), "Failed to load user config!");
@@ -34,7 +58,6 @@ namespace Modex
 
 		user.screenScaleRatio 	= ConfigManager::Get<ImVec2>("Screen Scale Ratio", _default.screenScaleRatio);
 
-		InputManager::SetCurrentHotkey(user.showMenuModifier, user.showMenuKey);
 		Locale::GetSingleton()->SetFilePath(LOCALE_JSON_DIR / (user.language + ".json"));
 		ThemeConfig::GetSingleton()->SetFilePath(THEMES_JSON_PATH / (user.theme + ".json"));
 	}
