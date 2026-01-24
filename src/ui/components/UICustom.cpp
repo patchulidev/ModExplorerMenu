@@ -33,6 +33,95 @@ namespace Modex::UICustom
 		ImGui::PopStyleColor(3);
 	}
 
+	bool FancyInputText(const char* a_id, const char *a_hint, const char* a_tooltip, char* a_buffer, float a_width, ImGuiInputTextFlags a_flags)
+	{
+		auto bufferSize = IM_ARRAYSIZE(a_buffer);
+		bool changed = false;
+		auto pos = ImGui::GetCursorScreenPos();
+
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 12.0f);
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 8.0f));
+
+		ImGui::SetNextItemWidth(a_width);
+		if (ImGui::InputTextWithHint(a_id, a_hint, a_buffer, bufferSize, a_flags)) {
+			changed = true;
+		}
+
+		if (Locale::GetSingleton()->HasTooltip(a_tooltip)) {
+			if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal | ImGuiHoveredFlags_NoSharedDelay)) {
+				UICustom::FancyTooltip(a_tooltip);
+			}
+		}
+
+		ImGui::SameLine();
+
+		ImGui::PushFont(NULL, 18.0f);
+		auto DrawList = ImGui::GetWindowDrawList();
+		pos.x += a_width - ImGui::GetFrameHeightWithSpacing() + ImGui::GetStyle().FramePadding.x;
+		pos.y += (ImGui::GetItemRectSize().y / 2.0f) - (ImGui::GetFontSize() / 2.0f);
+
+		DrawList->AddText(pos, ThemeConfig::GetColorU32("TEXT"), ICON_LC_SEARCH);
+		ImGui::PopFont();
+		
+		ImGui::PopStyleVar(2);
+		return changed;
+	}
+
+	bool FancyDropdown(const char* a_id, const char* a_tooltip, uint32_t& a_currentItem, const std::vector<std::string>& a_items, float a_width)
+	{
+		auto tempIndex = static_cast<int>(a_currentItem);
+		return FancyDropdown(a_id, a_tooltip, tempIndex, a_items, a_width) && (a_currentItem = static_cast<uint32_t>(tempIndex), true);
+	}
+
+	bool FancyDropdown(const char* a_id, const char* a_tooltip, int& a_currentItem, const std::vector<std::string>& a_items, float a_width)
+	{
+		bool changed = false;
+
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 12.0f);
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 8.0f));
+		auto pos = ImGui::GetCursorScreenPos();
+
+		if (a_width == 0.0f) {
+			a_width = ImGui::GetContentRegionAvail().x;
+		}
+
+		ImGui::SetNextItemWidth(a_width);
+		if (ImGui::BeginCombo(a_id, a_items[a_currentItem].c_str(), ImGuiComboFlags_NoArrowButton)) {
+			for (size_t i = 0; i < a_items.size(); i++) {
+				bool isSelected = (a_currentItem == static_cast<int>(i));
+				if (ImGui::Selectable(a_items[i].c_str(), isSelected)) {
+					a_currentItem = static_cast<int>(i);
+					changed = true;
+				}
+
+				if (isSelected) {
+					ImGui::SetItemDefaultFocus();
+				}
+			}
+			ImGui::EndCombo();
+		}
+
+		if (Locale::GetSingleton()->HasTooltip(a_tooltip)) {
+			if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal | ImGuiHoveredFlags_NoSharedDelay)) {
+				UICustom::FancyTooltip(a_tooltip);
+			}
+		}
+
+		ImGui::SameLine();
+
+		ImGui::PushFont(NULL, 18.0f);
+		auto DrawList = ImGui::GetWindowDrawList();
+		pos.x += a_width - ImGui::GetFrameHeightWithSpacing() + ImGui::GetStyle().FramePadding.x;
+		pos.y += (ImGui::GetItemRectSize().y / 2.0f) - (ImGui::GetFontSize() / 2.0f);
+
+		DrawList->AddText(pos, ThemeConfig::GetColorU32("TEXT"), ICON_LC_SQUARE_CHEVRON_DOWN);
+		ImGui::PopFont();
+
+		ImGui::PopStyleVar(2);
+		return changed;
+	}
+
+
 	// OPTIMIZE: Can we also include hovering logic? Check references.
 	void FancyTooltip(const char* a_text)
 	{
@@ -55,6 +144,20 @@ namespace Modex::UICustom
 			ImGui::EndTooltip();
 		}
 		ImGui::PopStyleVar();
+	}
+
+	bool BeginTabBar(const char* a_id, float a_height, float a_offset, ImVec2& a_start)
+	{
+		const ImVec2 window_padding = ImGui::GetStyle().WindowPadding;
+		const float tab_height = a_height + window_padding.y;
+
+		ImGui::SameLine();
+		ImGui::SetCursorPosX(window_padding.x + a_offset);
+		ImGui::SetCursorPosY(window_padding.y);
+
+		a_start.y += ImGui::GetFrameHeightWithSpacing() + window_padding.y;
+		
+		return ImGui::BeginChild(a_id, ImVec2(0.0f, tab_height), false, false);
 	}
 
 	bool IconButton(const char* a_icon, const char* a_tooltip, bool& a_toggle) 
@@ -150,17 +253,19 @@ namespace Modex::UICustom
 
 	bool Settings_ToggleButton(const char* a_localeString, bool& a_toggle)
 	{
+		ImGui::Indent();
+
 		auto id = "##Settings::ToggleButton::" + std::string(a_localeString);
 		
 		ImGui::PushID(id.c_str());
-		ImGui::Spacing();
-
-
 		const ImVec4 button_color = a_toggle == true ? ThemeConfig::GetColor("BUTTON_CONFIRM") : ThemeConfig::GetColor("BUTTON_CANCEL");
 		const std::string button_text = a_toggle == true ? Translate("ON") : Translate("OFF"); 
 
+		ImGui::AlignTextToFramePadding();
 		ImGui::Text("%s", Translate(a_localeString));
-		ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth - ImGui::GetStyle().IndentSpacing);
+		ImGui::HelpMarker(a_localeString);
+
+		ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth);
 		ImGui::PushStyleColor(ImGuiCol_Button, button_color);
 		bool pressed = ImGui::Button(button_text.c_str(), ImVec2(s_widgetWidth, 0.0f));
 		ImGui::PopStyleColor();
@@ -169,69 +274,46 @@ namespace Modex::UICustom
 			a_toggle = !a_toggle;
 		}
 
-		ImGui::Spacing();
 		ImGui::PopID();
+		ImGui::Unindent();
 		return pressed;
 	}
 
 	bool Settings_SliderInt(const char* a_localeString, int& a_value, int a_min, int a_max)
 	{
+		ImGui::Indent();
+
 		auto id = "##Settings::SliderInt::" + std::string(a_localeString);
 
-		ImGui::Spacing();
-
+		ImGui::AlignTextToFramePadding();
 		ImGui::Text("%s", Translate(a_localeString));
-		ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth - ImGui::GetStyle().IndentSpacing);
+		ImGui::HelpMarker(a_localeString);
+
+		ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth);
 		ImGui::SetNextItemWidth(s_widgetWidth);
 		bool pressed = ImGui::SliderInt(id.c_str(), &a_value, a_min, a_max);
 
-		ImGui::Spacing();
+		ImGui::Unindent();
 		return pressed;
 	}
 
-
-	bool Settings_ColorPicker(const char* a_text, ImVec4& a_colRef)
+	bool Settings_SliderFloat(const char* a_localeString, float& a_valRef, float a_min, float a_max)
 	{
-		constexpr auto flags = ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_AlphaBar;
-		auto id = "##Settings::ColorPicker::" + std::string(a_text);
-		auto popup = id + "::Popup";
-		bool change = false;
+		ImGui::Indent();
 
-		ImGui::Spacing();
-		ImGui::Text("%s", Translate(a_text));
-		ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth - ImGui::GetStyle().IndentSpacing);
+		auto id = "##Settings::SliderFloat" + std::string(a_localeString);
 
-		if (ImGui::ColorButton(id.c_str(), a_colRef, flags, ImVec2(s_widgetWidth, 0))) {
-			ImGui::OpenPopup(popup.c_str());
-		}
-
-		if (ImGui::BeginPopup(popup.c_str())) {
-			if (ImGui::ColorPicker4(id.c_str(), (float*)&a_colRef, flags)) {
-				change = true;
-			}
-			ImGui::EndPopup();
-		}
-		
-		ImGui::Spacing();
-		
-		return change;
-	}
-
-	bool Settings_SliderFloat(const char* a_text, float& a_valRef, float a_min, float a_max)
-	{
-		auto id = "##Settings::SliderFloat" + std::string(a_text);
 		bool changes = false;
+		ImGui::AlignTextToFramePadding();
+		ImGui::Text("%s", Translate(a_localeString));
+		ImGui::HelpMarker(a_localeString);
 
-		ImGui::Spacing();
-		ImGui::Text("%s", Translate(a_text));
-		ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth - ImGui::GetStyle().IndentSpacing);
+		ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth);
 		ImGui::SetNextItemWidth(s_widgetWidth);
-
-		if (ImGui::SliderFloat(id.c_str(), &a_valRef, a_min, a_max)) {
+		if (ImGui::SliderFloat(id.c_str(), &a_valRef, a_min, a_max, "%.3f", ImGuiSliderFlags_ClampOnInput)) {
 			changes = true;
 		}
-
-		ImGui::Spacing();
+		ImGui::Unindent();
 
 		return changes;
 	}
@@ -305,15 +387,19 @@ namespace Modex::UICustom
 		ImGui::Unindent();
 	}
 
-	bool Settings_Dropdown(const char* a_text, uint32_t& a_value, const std::vector<std::string>& a_options, bool a_localizeList)
+	bool Settings_Dropdown(const char* a_localeString, uint32_t& a_value, const std::vector<std::string>& a_options, bool a_localizeList)
 	{
-		bool result = false;
-		auto id = "##Settings::Dropdown" + std::string(a_text);
+		ImGui::Indent();
 
-		ImGui::Spacing();
-		ImGui::Text("%s", Translate(a_text));
-		ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth - ImGui::GetStyle().IndentSpacing);
-		ImGui::PushItemWidth(s_widgetWidth);
+		auto id = "##Settings::Dropdown" + std::string(a_localeString);
+
+		bool result = false;
+		ImGui::AlignTextToFramePadding();
+		ImGui::Text("%s", Translate(a_localeString));
+		ImGui::HelpMarker(a_localeString);
+
+		ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth);
+		ImGui::SetNextItemWidth(s_widgetWidth);
 		if (ImGui::BeginCombo(id.c_str(), Translate(a_options[a_value].c_str()))) {
 			for (size_t i = 0; i < a_options.size(); ++i) {
 				const char* entry = a_localizeList ? Translate(a_options[i].c_str()) : a_options[i].c_str();
@@ -324,22 +410,25 @@ namespace Modex::UICustom
 			}
 			ImGui::EndCombo();
 		}
-		ImGui::Spacing();
-		ImGui::PopItemWidth();
+		ImGui::Unindent();
 
 		return result;
 	}
 
-	bool Settings_FontDropdown(const char* a_text, std::string* a_font)
+	bool Settings_FontDropdown(const char* a_localeString, std::string* a_font)
 	{
-		auto id = "##Settings::FontDropdown" + std::string(a_text);
-		bool result = false;
+		ImGui::Indent();
 
-		ImGui::Spacing();
-		ImGui::Text("%s", Translate(a_text));
-		ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth - ImGui::GetStyle().IndentSpacing);
-		ImGui::PushItemWidth(s_widgetWidth);
+		auto id = "##Settings::FontDropdown" + std::string(a_localeString);
+
+		bool result = false;
+		ImGui::AlignTextToFramePadding();
+		ImGui::Text("%s", Translate(a_localeString));
+		ImGui::HelpMarker(a_localeString);
+
+		ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth);
 		
+		ImGui::SetNextItemWidth(s_widgetWidth);
 		const auto fontLibrary = FontManager::GetSingleton()->GetFontLibrary();
 		if (ImGui::BeginCombo(id.c_str(), a_font->c_str())) {
 			ImGui::PushID("##Settings::FontDropdown::Combo");
@@ -354,21 +443,24 @@ namespace Modex::UICustom
 			ImGui::PopID();
 			ImGui::EndCombo();
 		}
-		ImGui::PopItemWidth();
+		ImGui::Unindent();
 
 		return result;
 	}
 
-	bool Settings_LanguageDropdown(const char* a_text, std::string* a_config)
+	bool Settings_LanguageDropdown(const char* a_localeString, std::string* a_config)
 	{
-		auto id = "##Settings::LanguageDropdown" + std::string(a_text);
-		bool result = false;
+		ImGui::Indent();
 
-		ImGui::Spacing();
-		ImGui::Text("%s", Translate(a_text));
-		ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth - ImGui::GetStyle().IndentSpacing);
-		ImGui::PushItemWidth(s_widgetWidth);
-		
+		auto id = "##Settings::LanguageDropdown" + std::string(a_localeString);
+
+		bool result = false;
+		ImGui::AlignTextToFramePadding();
+		ImGui::Text("%s", Translate(a_localeString));
+		ImGui::HelpMarker(a_localeString);
+
+		ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth);
+		ImGui::SetNextItemWidth(s_widgetWidth);
 		const auto languages = Locale::GetSingleton()->GetLanguages();
 		if (ImGui::BeginCombo(id.c_str(), a_config->c_str())) {
 			ImGui::PushID("##Settings::Language::Combo");
@@ -389,9 +481,50 @@ namespace Modex::UICustom
 			ImGui::PopID();
 			ImGui::EndCombo();
 		}
-		ImGui::PopItemWidth();
+		ImGui::Unindent();
 
 		return result;
+	}
+	
+	bool Settings_ThemeDropdown(const char* a_localeString, std::string* a_config)
+	{
+		ImGui::Indent();
+
+		auto id = "##Settings::ThemeDropdown" + std::string(a_localeString);
+
+		bool result = false;
+		ImGui::AlignTextToFramePadding();
+		ImGui::Text("%s", Translate(a_localeString));
+		
+		ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth);
+		ImGui::SetNextItemWidth(s_widgetWidth);
+
+		std::vector<ModexTheme> themes = ThemeConfig::GetAvailableThemes();
+		if (ImGui::BeginCombo("##ThemeSelection", a_config->c_str())) {
+			for (size_t i = 0; i < themes.size(); ++i) {
+				if (ImGui::Selectable(Translate(themes[i].m_name.c_str()))) {
+					result = ThemeConfig::GetSingleton()->LoadTheme(themes[i]);
+
+					if (result) {
+						*a_config = themes[i].m_name;
+					}
+				}
+			}
+			ImGui::EndCombo();
+		}
+		ImGui::Unindent();
+
+		return result;
+	}
+
+	void Settings_Header(const char* a_localeString)
+	{
+		ImGui::PushFontBold();
+		ImGui::PushStyleColor(ImGuiCol_Text, ThemeConfig::GetColor("HEADER"));
+		ImGui::SeparatorText(Translate(a_localeString));
+		ImGui::PopStyleColor();
+		ImGui::PopFont();
+		ImGui::NewLine();
 	}
 
 	// Draws a header bar inline with a square X button to the right to close the menu
@@ -463,5 +596,22 @@ namespace Modex::UICustom
 		}
 
 		return false;
+	}
+}
+
+namespace ImGui
+{
+	static void HelpMarker(const std::string& a_localeString)
+	{
+		const char* tooltip = Modex::Locale::GetSingleton()->GetTooltip(a_localeString.c_str());
+
+		if (tooltip && tooltip[0] != '\0') {
+			ImGui::SameLine();
+			ImGui::TextDisabled(ICON_LC_MESSAGE_CIRCLE_QUESTION);
+
+			if (ImGui::IsItemHovered(ImGuiHoveredFlags_NoSharedDelay | ImGuiHoveredFlags_DelayNone)) {
+				Modex::UICustom::FancyTooltip(tooltip);
+			}
+		}
 	}
 }

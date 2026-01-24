@@ -33,6 +33,10 @@ namespace Modex
 			std::string logo_path = it->get<std::string>();
 			static GraphicManager::Image splash_image;
 
+			if (std::filesystem::exists(logo_path) == false) {
+				return std::nullopt;
+			}
+
 			if (splash_image.texture == nullptr) {
 				GraphicManager::GetD3D11Texture(
 					logo_path.c_str(),
@@ -79,10 +83,12 @@ namespace Modex
 		return theme_found;
 	}
 
-	void ThemeConfig::LoadTheme(const ModexTheme& a_theme)
+	bool ThemeConfig::LoadTheme(const ModexTheme& a_theme)
 	{
+		Debug("Loading/Switching Theme to '{}'", a_theme.m_name);
+
 		SetFilePath(a_theme.m_filePath);
-		ConfigManager::Load(false);
+		return ConfigManager::Load(false);
 	}
 
 	ThemeConfig::ThemeConfig()

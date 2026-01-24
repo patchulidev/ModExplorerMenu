@@ -3,6 +3,8 @@
 #include "core/PrettyLog.h"
 #include "pch.h"
 
+#include "external/magic_enum.hpp"
+
 namespace Modex
 {
 	// Sort Function for Case Insensitive comparing used for Plugin Lists.
@@ -39,19 +41,56 @@ namespace Modex
 		return a->GetCombinedIndex() > b->GetCombinedIndex();
 	}
 
+	std::vector<std::string> Data::GetTypeString()
+	{
+		auto enumNames = magic_enum::enum_names<PLUGIN_TYPE>();
+		std::vector<std::string> strings;
+
+		for (auto& name : enumNames) {
+			if (name == "kTotal") {
+				continue;
+			}
+
+			std::string prettyName = name.data();
+			std::replace(prettyName.begin(), prettyName.end(), '_', ' ');
+			strings.push_back(prettyName);
+		}
+
+		return strings;
+	}
+
+	std::vector<std::string> Data::GetSortStrings()
+	{
+		auto enumNames = magic_enum::enum_names<SORT_TYPE>();
+		std::vector<std::string> strings;
+
+		for (auto& name : enumNames) {
+			if (name == "kTotal") {
+				continue;
+			}
+
+			std::string prettyName = name.data();
+			std::replace(prettyName.begin(), prettyName.end(), '_', ' ');
+			strings.push_back(prettyName);
+		}
+
+		return strings;
+	}
+
 	// Returns an unordered set of TESFile pointers cached at startup based on PLUGIN_TYPE.
 	std::unordered_set<const RE::TESFile*> Data::GetModulePluginList(PLUGIN_TYPE a_type)
 	{
 		switch (a_type) {
-		case PLUGIN_TYPE::ITEM:
+		case PLUGIN_TYPE::Item:
 			return m_itemModList;
-		case PLUGIN_TYPE::NPC:
+		case PLUGIN_TYPE::Actor:
 			return m_npcModList;
-		case PLUGIN_TYPE::OBJECT:
+		case PLUGIN_TYPE::Object:
 			return m_staticModList;
-		case PLUGIN_TYPE::CELL:
+		case PLUGIN_TYPE::Cell:
 			return m_cellModList;
-		case PLUGIN_TYPE::ALL:
+		case PLUGIN_TYPE::kTotal:
+		case PLUGIN_TYPE::All:
 			return m_modList;
 		}
 
@@ -88,33 +127,36 @@ namespace Modex
 
 		switch (a_type) 
 		{
-		case PLUGIN_TYPE::ITEM:
+		case PLUGIN_TYPE::Item:
 			safeCopy(m_itemModList);
 			break;
-		case PLUGIN_TYPE::NPC:
+		case PLUGIN_TYPE::Actor:
 			safeCopy(m_npcModList);
 			break;
-		case PLUGIN_TYPE::OBJECT:
+		case PLUGIN_TYPE::Object:
 			safeCopy(m_staticModList);
 			break;
-		case PLUGIN_TYPE::CELL:
+		case PLUGIN_TYPE::Cell:
 			safeCopy(m_cellModList);
 			break;
-		case PLUGIN_TYPE::ALL:
+		case PLUGIN_TYPE::kTotal:
+		case PLUGIN_TYPE::All:
 			safeCopy(m_modList);
 			break;
 		}
 
 		switch (a_sortType) 
 		{
-			case SORT_TYPE::ALPHABETICAL:
+			case SORT_TYPE::Alphabetical:
 				std::sort(copy.begin(), copy.end(), CaseInsensitiveCompareTESFile);
 				break;
-			case SORT_TYPE::COMPILEINDEX_ASC:
+			case SORT_TYPE::Load_Order_Ascending:
 				std::sort(copy.begin(), copy.end(), CompileIndexCompareTESFileAsc);
 				break;
-			case SORT_TYPE::COMPILEINDEX_DESC:
+			case SORT_TYPE::Load_Order_Descending:
 				std::sort(copy.begin(), copy.end(), CompileIndexCompareTESFileDesc);
+				break;
+			case SORT_TYPE::kTotal:
 				break;
 		}
 
@@ -175,6 +217,7 @@ namespace Modex
 
 	// BUG: Previously crashing to desktop, called from BuildPluginList. Might have been a weird
 	// build artifact. Test a_type and a_sort parameters. Doesn't seem like a runtime issue.
+	// 1245198 error code?
 
 	// Returns a sorted vector of plugin names filtered out by global blacklist config.
 	std::vector<std::string> Data::GetFilteredListOfPluginNames(PLUGIN_TYPE a_type, SORT_TYPE a_sort)

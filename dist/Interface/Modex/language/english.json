@@ -25,6 +25,8 @@
     "DESCRIPTION": "Description",
     "DIRECTORY": "Directory://",
     "CLOSE": "Close",
+    "ON": "ON",
+    "OFF": "OFF",
 
     "KIT": "Kit",
     "KIT_CREATE": "Create New Kit",
@@ -46,6 +48,12 @@
     "COPY_PLUGIN": "Copy Plugin",
     "COPY_REFERENCEID": "Copy Reference ID",
     
+	"TAB_ADDITEM": "AddItem Table Layout",
+	"TAB_SETTINGS": "User Settings Layout",
+	"TAB_BLACKLIST": "Blacklist Settings Layout",
+	"TAB_INVENTORY": "Inventory Layout",
+	"TAB_EQUIPMENT": "Equipment Layout",
+
     "HEADER_HOTKEY": "Set Hotkey",
     "HEADER_TAGS": "Tags",
     "HEADER_SEARCH": "Search",
@@ -124,6 +132,45 @@
     "PLACE_ALL": "Place All",
     "PLACE_ALL_TOOLTIP": "Place All\n\nPlace all items from the table on the ground.",
 
+	"SETTINGS_HEADER_INPUT": "Input Settings",
+	"SETTINGS_HEADER_FONT": "Font & Language Settings",
+	"SETTINGS_HEADER_GENERAL": "General Behaviors",
+	"SETTINGS_HEADER_STYLE": "Visual Settings",
+
+	"SETTINGS_INFO": "All settings are saved automatically to \"Data/Interface/Modex/User/Settings.json\" in your relative Skyrim Special Edition directory.",
+	"SETTINGS_INFO_2": "Everything can be configured through the menu settings. Editing the files directly may cause critical issues, and is not recommended.",
+	"SETTINGS_THEME": "Theme Preset",
+	"SETTINGS_MENU_KEYBIND": "Show Menu Hotkey",
+	"SETTINGS_MENU_KEYBIND_INVALID": "Sorry! The keybind you pressed doesn't correspond to the assignment rules.\n\nInvalid Hotkeys:\n - Escape\n - Tab\n - Enter\n - Space\n - T\n - <any modifier key>\n\nTry again. If you're setting your Modifier hotkey, only these keys are valid:\n\n - Shift\n - Alt\n - Ctrl",
+	"SETTINGS_MENU_KEYBIND_DESC": "Waiting for user to press <Any> key...\n\nPress <T> to revert to default hotkey.\n\nPress <Esc> to close this popup.",
+	"SETTINGS_MENU_KEYBIND_TOOLTIP": "Show Menu Hotkey\n\nThe keybind used to open and close the Modex menu in-game.\n\nWill only support keys recognized by Skyrim.\n\nIf a modifier is set below, both keys must be pressed to open the menu. Pressing <T> while hovering over a Hotkey will reset it to default.\n\nIf you break something, you can always edit the settings.json directly. (Requires Restart)",
+	"SETTINGS_MENU_MODIFIER": "Show Menu Modifier",
+	"SETTINGS_MENU_MODIFIER_TOOLTIP": "Show Menu Modifier\n\nNot Required. Can only be set to Ctrl, Alt, or Shift. If you use Alt, you may want to disable 'Alt' behavior in 'General Behaviors'.\n\nNote: There is no Left/Right discrimination for modifier keys. For example, 'Shift' works with both 'L-Shift' and 'R-Shift'.",
+	"SETTINGS_SORT": "Plugin List - Sort Direction",
+	"SETTINGS_SORT_TOOLTIP": "Plugin List - Sort Direction\n\nDetermines the sorting for any list populated with plugins.\n- Table Plugin Selection Dropdown\n- Blacklist Settings", 
+	"SETTINGS_UI_SCALE_VERTICAL": "Vertical Menu Scale (Up/Down)",
+	"SETTINGS_UI_SCALE_HORIZONTAL": "Horizontal Menu Scale (Left/Right)",
+	"SETTINGS_FULLSCREEN": "Fullscreen Mode",
+	"SETTINGS_BASE_PLUGIN": "Plugin List - Reference Base Plugin",
+	"SETTINGS_BASE_PLUGIN_TOOLTIP": "Plugin List - Reference Base Plugin\n\nWhen enabled, forms will be indexed by their base plugin instead of the last plugin to modify them.\n\nE.g. 'Iron Sword' will always be located in 'Skyrim.esm' even if 'IronSwordReplacer.esp' modifies it. If this option is disabled, then it will be categorized under the last plugin that modified the form.",
+	"SETTINGS_PAUSE_GAME": "Pause Game while Open",
+	"SETTINGS_DISABLE_IN_MENU": "Prevent Modex from Opening over Skyrim Menu's",
+	"SETTINGS_DISABLE_IN_MENU_TOOLTIP": "Disable Inside Menu(s)\n\nThis setting will disable Modex from opening while any other Skyrim Game menu is open. E.g.\n\n- Journal Menu\n- Console\n- Time Skip Menu\n- Inventory\n- System Menu",
+	"SETTINGS_SMOOTH_SCROLL": "Smooth Scroll Animations",
+	"SETTINGS_LOG_LEVEL": "Modex Log Level",
+	"SETTINGS_LOG_LEVEL_TOOLTIP": "Modex Log Level\n\nControls what level of information is outputted to the log file. Typically this can remain off, or set to Info. Any option below Info is subject to potential performance impacts while Modex is being used.\n\nI only recommend changing this if you encounter bugs, errors, or crashes and need more debugging information.",
+	"SETTINGS_WELCOME_BANNER": "Show Startup Welcome Banner",
+	"SETTINGS_FONT": "Font",
+	"SETTINGS_FONT_SIZE": "Font Size",
+	"SETTINGS_LANGUAGE": "Language / Translation",
+
+	"BLACKLIST": "Plugin Blacklist",
+	"WHITELIST": "Plugin Whitelist",
+	"PLUGIN_TYPE_TOOLTIP": "Plugin Type\n\nThis option will exclude plugins from showing in the tables below based on what option you select.\n\nFor example, if you only want to see plugins which contain 'Item' records for the Add Item module. Likewise, 'Actor' will only display plugins with Actor records in them.",
+	"SORT_TYPE_TOOLTIP": "Sort Type\n\nSort the tables below based on this option. This does not apply universally to other layouts or tables!\n\nIf you want to change this for other modules and layouts, go to the Settings page.",
+	"PLUGIN_SEARCH_TOOLTIP": "Fuzzy Plugin Search\n\nThis field allows you to fuzzily search through recognized plugins. It uses a straightforward string comparison function.",
+	"BLACKLIST_DESCRIPTION": "This window is responsible for hiding unecessary, unwanted plugins while interacting with Modex. The intended use-case for this setting is to hide plugins which contain mostly unusable or irrelevant forms. A good example of this would be patches, replacers, frameworks, or plugins containing dummy forms only. Typically as you use the module and scroll over hundreds and thousands of forms, you'll notice some plugins contain heaps of useless items, objects, or actors that clutter your results. This is why I made this.",
+
 
     "TABLE_SETTING_SHOW_HIDE": "Show/Hide",
     "TABLE_SETTING_HEIGHT": "Row Height",
@@ -140,7 +187,7 @@
     "KITVIEW_DISABLE_TOOLTIP": "Full View\n\nToggle Full View to show all items.",
     "SORT_ASCENDING_TOOLTIP": "Sort Ascending/Descending\n\nToggle the sort order between ascending and descending.",
 
-    "TABLE_SEARCH_TOOLTIP": "Property -> Search Field\n\nType to search within the currently shown Plugin, based on the Property specified on the left-hand side. Press 'Enter' to submit.\n\n E.g. 'Name' -> Iron Armor",
+    "TABLE_SEARCH_TOOLTIP": "Property <-> Search Field\n\nType to search within the currently shown Plugin, based on the Property specified on the left-hand side. Press 'Enter' to submit.\n\n E.g. 'Name' -> Iron Armor",
     "TABLE_PLUGIN_TOOLTIP": "Plugin Field\n\nSelect a plugin which you would like to explore. Optionally, you can include ALL plugins currently loaded (SHOW ALL). This helps refine the table results more precisely.",
     "STATUS_BAR_TARGET_TITLE": "Table Status Bar - Targeted Actor",
     "STATUS_BAR_TARGET_TOOLTIP": "Targeted Actor\n\nClick to show more information.",
@@ -218,9 +265,9 @@
     "kScrollSpell_TOOLTIP": "Scroll\n\nThe spell that the scroll casts when used.",
 
     "WARNING_NO_ITEMS": "No items found in the table matching the current criteria. If this is unexpected, check your search and plugin fields to confirm your query. It's likely you may be searching inside the wrong plugin, or searching by the wrong property (left-side drop-down box).",
+	"ERROR_PLUGIN_NAME": "ERROR: Invalid Plugin Name",
+	"ERROR_FORM_NAME": "ERROR: Invalid Form Name",
     "ERROR_NO_KIT_SELECTED": "No kit selected! Please select a kit from the selection panel above. Once a Kit is selected, you can use the actions panel to interact with it.",
     "ERROR_MISSING_REFERENCE": "Target Actor not found! Please ensure you have an Actor targeted in-game via the console. A valid Actor is required to perform most actions in this module",
     "ERROR_INVALID_REFERENCE": "Invalid Target Actor! The currently targeted Actor is either not an Actor or is otherwise invalid. Please confirm that you have properly selected an Actor NPC or Player Character using the console"
-
-
 }

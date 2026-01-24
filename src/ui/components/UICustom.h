@@ -17,6 +17,8 @@ namespace Modex::UICustom
 	bool Settings_LanguageDropdown(const char* a_text, std::string* a_language);
 	bool Settings_ToggleButton(const char* a_localeString, bool& a_value);
 	bool Settings_SliderInt(const char* a_localeString, int& a_value, int a_min, int a_max);
+	bool Settings_ThemeDropdown(const char* a_text, std::string* a_theme);
+	void Settings_Header(const char* a_localeString);
 
 	// These methods are exclusively used for popup window widgets.
 	bool Popup_MenuHeader(const char* a_text);
@@ -26,4 +28,7 @@ namespace Modex::UICustom
 	[[nodiscard]] float GetCenterTextPosX(const char* a_text);
 	[[nodiscard]] float GetCenterTextPosX(const std::string& a_string);
 
+namespace ImGui
+{
+	static void HelpMarker(const std::string& a_localeString);
 }

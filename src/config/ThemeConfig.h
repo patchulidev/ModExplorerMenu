@@ -33,7 +33,7 @@ namespace Modex
 		}
 
 		virtual bool Load(bool a_create) override;
-		void LoadTheme(const ModexTheme& a_theme);
+		bool LoadTheme(const ModexTheme& a_theme);
 
 		ThemeConfig();
 

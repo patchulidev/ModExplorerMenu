@@ -1,66 +1,49 @@
 #include "SettingsModule.h"
 #include "data/Data.h"
 #include "config/BlacklistConfig.h"
+#include "external/icons/IconsLucide.h"
 #include "ui/components/UICustom.h"
 #include "localization/Locale.h"
+#include "localization/FontManager.h"
 
 namespace Modex
 {
 	void SettingsModule::DrawBlacklistSettings()
 	{
-		const auto& blacklist = BlacklistConfig::Get();
-
-		m_totalBlacklisted = static_cast<int>(blacklist.size());
-
-		UICustom::SubCategoryHeader(Translate("SETTING_BLACKLIST"));
 		ImGui::NewLine();
-		ImGui::BeginColumns("##Blacklist::Columns", 2, ImGuiOldColumnFlags_NoBorder);
 		ImGui::Indent();
+		ImGui::PushTextWrapPos(ImGui::GetContentRegionAvail().x - ImGui::GetStyle().IndentSpacing);
+		ImGui::TextWrapped("%s", Translate("BLACKLIST_DESCRIPTION"));
+		ImGui::PopTextWrapPos();
+		ImGui::Unindent();
+		ImGui::NewLine();
 
-		// FormType Filter Box.
-		ImGui::Text("%s", TranslateFormat("GENERAL_FILTER_FORMTYPE", ":"));
-		const auto primary_filter_text = RE::FormTypeToString(m_primaryFilter);
-		if (ImGui::BeginCombo("##Blacklist::PluginType", primary_filter_text.data())) {
-			if (ImGui::Selectable(Translate("None"), m_primaryFilter == RE::FormType::None)) {
-				m_updateHidden = true;
-				m_totalHidden = 0;
-				m_primaryFilter = RE::FormType::None;
-				ImGui::SetItemDefaultFocus();
-			}
+		const float separator_width = ImGui::CalcTextSize(ICON_LC_ARROW_RIGHT).x + ImGui::GetStyle().ItemSpacing.x;
+		const float widget_width = ((ImGui::GetContentRegionAvail().x - (2.0f) * separator_width) / 3.0f);
+		UICustom::FancyInputText("##Blacklist::ModSearch", Translate("TABLE_SEARCH_HINT"), "PLUGIN_SEARCH_TOOLTIP", m_modSearchBuffer, widget_width);
 
-			// TODO: REFACTOR post removal of Utils namespace
-			// for (auto& filter : Utils::GetHandledFormTypes()) {
-			// 	bool isSelected = (filter == m_primaryFilter);
-
-			// 	if (ImGui::Selectable(Translate(RE::FormTypeToString(filter).data()), isSelected)) {
-			// 		m_primaryFilter = filter;
-			// 		m_updateHidden = true;
-			// 		m_totalHidden = 0;
-			// 	}
-
-			// 	if (isSelected) {
-			// 		ImGui::SetItemDefaultFocus();
-			// 	}
-			// }
-
-			ImGui::EndCombo();
+		if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_F, ImGuiInputFlags_RouteAlways)) {
+			ImGui::SetKeyboardFocusHere(-1);
 		}
 
-		const auto FilterModByRecord = [](const RE::TESFile* mod, RE::FormType formType) {
-			if (formType == RE::FormType::None) {
-				return true;
-			}
+		ImGui::SameLine();
+		ImGui::AlignTextToFramePadding();
+		ImGui::Text(ICON_LC_ARROW_RIGHT);
+		ImGui::SameLine();
 
-			return Data::GetSingleton()->IsFormTypeInPlugin(mod, formType);
-		};
+		std::vector<std::string> pluginOptions = Data::GetTypeString();
+		if (UICustom::FancyDropdown("##Blacklist::TypeDropdown", "PLUGIN_TYPE_TOOLTIP", m_type, pluginOptions, widget_width)) {
+			BuildBlacklistPlugins();
+		}
 
-		ImGui::NewLine();
+		ImGui::SameLine();
+		ImGui::AlignTextToFramePadding();
+		ImGui::Text(ICON_LC_ARROW_RIGHT);
+		ImGui::SameLine();
 
-		// Plugin Name Fuzzy Search
-		ImGui::Text("%s", TranslateFormat("GENERAL_FILTER_FUZZY", ":"));
-		if (ImGui::InputTextWithHint("##Blacklist::ModSearch", Translate("GENERAL_CLICK_TO_TYPE"), m_modSearchBuffer, IM_ARRAYSIZE(m_modSearchBuffer))) {
-			m_updateHidden = true;
-			m_totalHidden = 0;
+		std::vector<std::string> sortOptions = Data::GetSortStrings();
+		if (UICustom::FancyDropdown("##Blacklist::SortDropdown", "SORT_TYPE_TOOLTIP", m_sort, sortOptions, 0.0f)) { 
+			BuildBlacklistPlugins();
 		}
 
 		std::string pluginFilter = m_modSearchBuffer;
@@ -68,31 +51,16 @@ namespace Modex
 			[](unsigned char c) { return static_cast<char>(std::tolower(c)); });
 
 		ImGui::NewLine();
-		ImGui::Unindent();
-		ImGui::NextColumn();
-		ImGui::Indent();
-
-		// Plugin Count
-		ImGui::Text(TranslateFormat("GENERAL_TOTAL_PLUGINS", ": %d"), m_totalPlugins);
-		ImGui::Text(TranslateFormat("GENERAL_TOTAL_BLACKLIST", ": %d"), m_totalBlacklisted);
-
-		if (m_totalHidden > 0) {
-			ImGui::TextColored(ImVec4(0.9f, 0.1f, 0.1f, 1.0f), TranslateFormat("GENERAL_TOTAL_HIDDEN", ": %d"), m_totalHidden);
-			ImGui::TextColored(ImVec4(0.9f, 0.1f, 0.1f, 1.0f), "%s", Translate("GENERAL_TOTAL_HIDDEN_MESSAGE"));
-		} else {
-			ImGui::Text(TranslateFormat("GENERAL_TOTAL_HIDDEN", ": %d"), m_totalHidden);
-		}
-
-		ImGui::Unindent();
-		ImGui::EndColumns();
 
 		// Left and Right Sections
-		ImGui::BeginChild("##Blacklist::LeftBox", ImVec2(ImGui::GetContentRegionAvail().x / 2, 0), true, ImGuiWindowFlags_NoFocusOnAppearing);
+		const auto& blacklist = BlacklistConfig::Get();
+		ImGui::BeginChild("##Blacklist::LeftContainer", ImVec2(ImGui::GetContentRegionAvail().x / 2, 0), false, ImGuiWindowFlags_NoFocusOnAppearing);
 		{
-			UICustom::SubCategoryHeader(Translate("Whitelist"));
+			ImGui::PushFontBold();
+			UICustom::SubCategoryHeader(Translate("WHITELIST"));
+			ImGui::PopFont();
 
 			ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-			ImGui::NewLine();
 
 			for (const auto& plugin : m_pluginList) {
 				const std::string pluginName = plugin->GetFilename().data();
@@ -102,20 +70,10 @@ namespace Modex
 					[](unsigned char c) { return static_cast<char>(std::tolower(c)); });
 
 				if (pluginNameLower.find(pluginFilter) == std::string::npos) {
-					if (m_updateHidden) {
-						m_totalHidden++;
-					}
 					continue;
 				}
 
-				if (!FilterModByRecord(plugin, m_primaryFilter)) {
-					if (m_updateHidden) {
-						m_totalHidden++;
-					}
-					continue;
-				}
-
-				if (blacklist.find(plugin) != blacklist.end()) {
+				if (BlacklistConfig::GetSingleton()->Has(plugin) == true) {
 					continue;
 				}
 
@@ -126,12 +84,17 @@ namespace Modex
 		}
 		ImGui::EndChild();
 
-		ImGui::SameLine(0.0f, -1.0f);
-		ImGui::BeginChild("##Blacklist::RightBox", ImVec2(ImGui::GetContentRegionAvail().x, 0.0f), true, ImGuiWindowFlags_NoFocusOnAppearing);
+		ImGui::SameLine();
+		ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
+		ImGui::SameLine();
+
+		ImGui::BeginChild("##Blacklist::RightContainer", ImVec2(ImGui::GetContentRegionAvail().x, 0.0f), false, ImGuiWindowFlags_NoFocusOnAppearing);
 		{
-			UICustom::SubCategoryHeader(Translate("Blacklist"));
+			ImGui::PushFontBold();
+			UICustom::SubCategoryHeader(Translate("BLACKLIST"));
+			ImGui::PopFont();
+
 			ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-			ImGui::NewLine();
 
 			for (const auto& plugin : m_pluginList) {
 				const std::string pluginName = plugin->GetFilename().data();
@@ -144,11 +107,7 @@ namespace Modex
 					continue;
 				}
 
-				if (!FilterModByRecord(plugin, m_primaryFilter)) {
-					continue;
-				}
-
-				if (blacklist.find(plugin) == blacklist.end()) {
+				if (BlacklistConfig::GetSingleton()->Has(plugin) == false) {
 					continue;
 				}
 
@@ -159,6 +118,5 @@ namespace Modex
 		}
 
 		ImGui::EndChild();
-		m_updateHidden = false;
 	}
 }

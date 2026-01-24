@@ -48,7 +48,7 @@ namespace Modex
 
 			// These produce really clean and crisp results;
 			config.FontLoaderFlags |= ImGuiFreeTypeLoaderFlags_ForceAutoHint;
-			config.FontLoaderFlags |= ImGuiFreeTypeLoaderFlags_MonoHinting;
+			// config.FontLoaderFlags |= ImGuiFreeTypeLoaderFlags_MonoHinting;
 			
 			if (a_bold) {
 				config.FontLoaderFlags |= ImGuiFreeTypeLoaderFlags_Bold;

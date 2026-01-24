@@ -1,9 +1,20 @@
 #pragma once
 
+// I could abstract widgets into their own class and introduce behaviors such as state tracking,
+// undo history, etc. Would likely require UserConfig to require a struct for defining settings.
+
 namespace Modex
 {
 	class SettingsModule
 	{
+	private:
+		char                            m_modSearchBuffer[256];
+		RE::FormType                    m_primaryFilter;
+		std::vector<const RE::TESFile*> m_pluginList;
+		std::vector<std::string>        m_pluginListVector;
+		uint32_t                        m_sort;
+		uint32_t                        m_type;
+
 	public:
 		static inline SettingsModule* GetSingleton()
 		{
@@ -17,18 +28,7 @@ namespace Modex
 	private:
 		void DrawGeneralSettings();
 		void DrawBlacklistSettings();
-
-		int   m_totalPlugins;
-		int   m_totalBlacklisted;
-		int   m_totalHidden;
-		bool  m_updateHidden;
-
-		char        m_modSearchBuffer[256];
-		std::string m_selectedMod;
-
-		RE::FormType                    m_primaryFilter;
-		std::vector<const RE::TESFile*> m_pluginList;
-		std::vector<std::string>        m_pluginListVector;
+		void BuildBlacklistPlugins();
 
 		enum class Viewport : uint8_t
 		{

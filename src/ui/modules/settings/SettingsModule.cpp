@@ -12,17 +12,17 @@ namespace Modex
 {
 	static inline float s_widgetWidth = 150.0f; // Represents fixed with for right-aligned widgets.
 
-	void InitializeBlacklistPlugins(std::vector<const RE::TESFile*>& a_pluginList, std::vector<std::string>& a_pluginListVector)
+	void SettingsModule::BuildBlacklistPlugins()
 	{
-		a_pluginList.clear();
-		a_pluginListVector.clear();
+		m_pluginList.clear();
+		m_pluginListVector.clear();
 
-		const auto& config = UserConfig::Get();
-		const auto sortType = static_cast<Data::SORT_TYPE>(config.modListSort);
-		const auto pluginType = Data::PLUGIN_TYPE::ALL;
-		a_pluginList = Data::GetSingleton()->GetModulePluginListSorted(pluginType, sortType);
-		a_pluginListVector = Data::GetSingleton()->GetFilteredListOfPluginNames(pluginType, (Data::SORT_TYPE)config.modListSort);
-		a_pluginListVector.insert(a_pluginListVector.begin(), Translate("Show All Plugins"));
+		// BUG: When are these two member variables being set?
+		const auto sortType = static_cast<Data::SORT_TYPE>(m_sort);
+		const auto pluginType = static_cast<Data::PLUGIN_TYPE>(m_type);
+
+		m_pluginList = Data::GetSingleton()->GetModulePluginListSorted(pluginType, sortType);
+		m_pluginListVector = Data::GetSingleton()->GetFilteredListOfPluginNames(pluginType, sortType);
 	}
 
 	static inline ImVec4 keyHoverTintColor = ImVec4(0.9f, 0.9f, 0.9f, 0.9f);
@@ -35,46 +35,47 @@ namespace Modex
 	void SettingsModule::Draw(float a_offset)
 	{
 		ImVec2 window_padding = ImGui::GetStyle().WindowPadding;
-        const float button_width = (ImGui::GetContentRegionAvail().x / static_cast<int>(Viewport::Count)) - window_padding.x / 2.0f;
-        const float button_height = ImGui::GetFontSize() * 1.5f;
-        const float tab_bar_height = button_height + (ImGui::GetStyle().WindowPadding.y * 2.0f);
+		const int viewports = static_cast<int>(Viewport::Count);
+        const float button_width = (ImGui::GetContentRegionAvail().x / viewports);
+        const float button_height = ImGui::GetFrameHeightWithSpacing();
 
-		// Top Left
-		ImGui::SameLine();
-        ImGui::SetCursorPosX(window_padding.x + a_offset);
-        ImGui::SetCursorPosY(window_padding.y);
         ImVec2 start_pos = ImGui::GetCursorPos();
 
         // Tab Button Area
-        if (ImGui::BeginChild("##Settings::TabBar", ImVec2(0.0f, button_height), 0, ImGuiWindowFlags_NoFocusOnAppearing)) {
-            ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5f, 0.5f));
-            if (ImGui::Selectable("User Settings", m_activeViewport == Viewport::UserSettings, 0, ImVec2(button_width, button_height))) {
+		if (UICustom::BeginTabBar("#Settings::TabBar", button_height, a_offset, start_pos)) {
+			ImGui::PushStyleColor(ImGuiCol_Header, ThemeConfig::GetColor("TAB_BUTTON"));
+			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(.0f, .0f));
+			if (m_activeViewport == Viewport::UserSettings) ImGui::PushFontBold();
+            if (ImGui::Selectable(Translate("TAB_SETTINGS"), m_activeViewport == Viewport::UserSettings, ImGuiSelectableFlags_NoPadWithHalfSpacing, ImVec2(button_width + window_padding.x, button_height))) {
                 m_activeViewport = Viewport::UserSettings;
             }
+			if (m_activeViewport == Viewport::UserSettings) ImGui::PopFont();
 
             ImGui::SameLine();
 
-            if (ImGui::Selectable("Plugin Blacklist", m_activeViewport == Viewport::Blacklist, 0, ImVec2(button_width, button_height))) {
+			if (m_activeViewport == Viewport::Blacklist) ImGui::PushFontBold();
+            if (ImGui::Selectable(Translate("TAB_BLACKLIST"), m_activeViewport == Viewport::Blacklist, ImGuiSelectableFlags_NoPadWithHalfSpacing, ImVec2(button_width, button_height))) {
                 m_activeViewport = Viewport::Blacklist;
             }
+			if (m_activeViewport == Viewport::Blacklist) ImGui::PopFont();
 
-            ImGui::PopStyleVar();
+			ImGui::PopStyleVar();
+			ImGui::PopStyleColor();
         }
 
         ImGui::EndChild();
-        ImGui::SameLine();
         ImGui::SetCursorPos(start_pos);
 
 		// Tab Bar Separator
-        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + button_height);
-        ImGui::PushStyleColor(ImGuiCol_Separator, ImGui::GetStyleColorVec4(ImGuiCol_Button));
-        ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
+        ImGui::PushStyleColor(ImGuiCol_Separator, ThemeConfig::GetColor("TAB_BUTTON"));
+        ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal, 2.0f);
         ImGui::PopStyleColor();
+
+		start_pos.y += window_padding.y;
         ImGui::SetCursorPos(start_pos);
 		
-		ImGui::SetCursorPos(ImVec2(ImGui::GetCursorPosX(), ImGui::GetCursorPosY() + tab_bar_height));
 		if (m_activeViewport == Viewport::UserSettings) {
-			if (ImGui::BeginChild("Modex::Settings::User", ImVec2(0, 0), true)) {
+			if (ImGui::BeginChild("Modex::Settings::User", ImVec2(0, 0), false)) {
 				DrawGeneralSettings();
 			}
 
@@ -82,10 +83,9 @@ namespace Modex
 		}
 
 		if (m_activeViewport == Viewport::Blacklist) {
-			if (ImGui::BeginChild("Modex::Settings::Blacklist", ImVec2(0, 0), true)) {
+			if (ImGui::BeginChild("Modex::Settings::Blacklist", ImVec2(0, 0), false)) {
 				if (m_pluginList.empty() || m_pluginListVector.empty()) {
-					InitializeBlacklistPlugins(m_pluginList, m_pluginListVector);
-					m_totalPlugins = static_cast<int>(m_pluginList.size());
+					BuildBlacklistPlugins();
 				}
 
 				DrawBlacklistSettings();
@@ -99,68 +99,36 @@ namespace Modex
 		s_uiScaleVertical 	= UserConfig::Get().uiScaleVertical;
 		s_uiScaleHorizontal = UserConfig::Get().uiScaleHorizontal;
 		s_fontSize 			= (int)UserConfig::Get().globalFontSize;
-		m_selectedMod = Translate("Show All Plugins"); // TEST: Why are we localizing Show All?
-		m_updateHidden = true;
-		m_totalHidden = 0;
-		m_totalBlacklisted = 0; // deprecated?
-		m_primaryFilter = RE::FormType::None;
 	}
 
 	void SettingsModule::DrawGeneralSettings()
 	{
 		auto& config = UserConfig::Get();
 
-		UICustom::SubCategoryHeader(Translate("SETTING_GENERAL"));
+		ImGui::NewLine();
+
+		float center_text_pos = UICustom::GetCenterTextPosX(Translate("SETTINGS_INFO"));
+		ImGui::SetCursorPosX(center_text_pos);
+		ImGui::Text("%s", Translate("SETTINGS_INFO"));
+
+		center_text_pos = UICustom::GetCenterTextPosX(Translate("SETTINGS_INFO_2"));
+		ImGui::SetCursorPosX(center_text_pos);
+		ImGui::Text("%s", Translate("SETTINGS_INFO_2"));
+
+		UICustom::Settings_Header(Translate("SETTINGS_HEADER_INPUT"));
+
+		UICustom::Settings_Keybind("SETTINGS_MENU_KEYBIND", "SETTINGS_MENU_KEYBIND_DESC", config.showMenuKey, 211, false);
+		UICustom::Settings_Keybind("SETTINGS_MENU_MODIFIER", "SETTINGS_MENU_KEYBIND_DESC", config.showMenuModifier, 0, true);
+
+		ImGui::NewLine();
+		UICustom::Settings_Header(Translate("SETTINGS_HEADER_STYLE"));
+
+		if (UICustom::Settings_ThemeDropdown("SETTINGS_THEME", &config.theme))
 		{
-			if (UICustom::Settings_Keybind("SETTING_MENU_KEYBIND", config.showMenuKey, 211, keyHoverTintColor))
-			{
-				UserConfig::GetSingleton()->SaveSettings();
-			}
+			UserConfig::GetSingleton()->SaveSettings();
 		}
 
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		{
-			if (UICustom::Settings_Keybind("SETTING_MENU_MODIFIER", config.showMenuModifier, 0, modifierHoverTint))
-			{
-				UserConfig::GetSingleton()->SaveSettings();
-			}
-		}
-
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		{
-			ImGui::Spacing();
-			ImGui::Text("%s", Translate("SETTINGS_THEME"));
-			
-			ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth - ImGui::GetStyle().IndentSpacing);
-
-			ImGui::PushItemWidth(s_widgetWidth);
-			std::vector<ModexTheme> themes = ThemeConfig::GetAvailableThemes();
-			if (ImGui::BeginCombo("##ThemeSelection", config.theme.c_str())) {
-				for (size_t i = 0; i < themes.size(); ++i) {
-					if (ImGui::Selectable(Translate(themes[i].m_name.c_str()))) {
-						config.theme = themes[i].m_name;
-						ThemeConfig::GetSingleton()->LoadTheme(themes[i]);
-						UserConfig::GetSingleton()->SaveSettings();
-					}
-				}
-				ImGui::EndCombo();
-			}
-			ImGui::Spacing();
-			ImGui::PopItemWidth();
-		}
-		
-		// Plugin List Sort Dropdown
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		{
-			std::vector<std::string> sorts = { "SETTING_SORT_ALPHA", "SETTING_SORT_LOAD_ASC", "SETTING_SORT_LOAD_DESC" };
-			if (UICustom::Settings_Dropdown("SETTING_SORT", config.modListSort, sorts)) {
-				UserConfig::GetSingleton()->SaveSettings();
-			}
-		}
-
-		// Vertical & Horizontal UI Scale Sliders
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		{
+		if (config.fullscreen) ImGui::BeginDisabled();
 			UICustom::Settings_SliderInt("SETTINGS_UI_SCALE_VERTICAL", s_uiScaleVertical, 25, 200);
 
 			if (ImGui::IsItemDeactivatedAfterEdit()) {
@@ -174,86 +142,72 @@ namespace Modex
 				config.uiScaleHorizontal = s_uiScaleHorizontal;
 				UserConfig::GetSingleton()->SaveSettings();
 			}
+		if (config.fullscreen) ImGui::EndDisabled();
+
+		if (UICustom::Settings_ToggleButton("SETTINGS_FULLSCREEN", config.fullscreen))
+		{
+			UserConfig::GetSingleton()->SaveSettings();
 		}
 
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
+		if (UICustom::Settings_ToggleButton("SETTINGS_SMOOTH_SCROLL", config.smoothScroll))
 		{
-			if (UICustom::Settings_ToggleButton("SETTING_FULLSCREEN", config.fullscreen))
-			{
-				UserConfig::GetSingleton()->SaveSettings();
-			}
+			UserConfig::GetSingleton()->SaveSettings();
 		}
 
-		// NOTE: Unimplemented old feature, still needed?
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
+		if (UICustom::Settings_ToggleButton("SETTINGS_WELCOME_BANNER", config.welcomeBanner))
 		{
-			if (UICustom::Settings_ToggleButton("SETTINGS_PAUSE_GAME", config.pauseGame))
-			{
-				UserConfig::GetSingleton()->SaveSettings();
-			}
+			UserConfig::GetSingleton()->SaveSettings();
+		}
+
+		ImGui::NewLine();
+		UICustom::Settings_Header(Translate("SETTINGS_HEADER_FONT"));
+
+		if (UICustom::Settings_FontDropdown("SETTINGS_FONT", &config.globalFont))
+		{
+			UserConfig::GetSingleton()->SaveSettings();
+		}
+
+		UICustom::Settings_SliderInt("SETTINGS_FONT_SIZE", s_fontSize, 8, 48);
+
+		if (ImGui::IsItemDeactivatedAfterEdit())
+		{
+			config.globalFontSize = s_fontSize;
+			UserConfig::GetSingleton()->SaveSettings();
+		}
+
+		if (UICustom::Settings_LanguageDropdown("SETTINGS_LANGUAGE", &config.language)) {
+			UserConfig::GetSingleton()->SaveSettings();
+		}
+
+		ImGui::NewLine();
+		UICustom::Settings_Header(Translate("SETTINGS_HEADER_GENERAL"));
+
+		std::vector<std::string> sorts = Data::GetSortStrings();
+		if (UICustom::Settings_Dropdown("SETTINGS_SORT", config.modListSort, sorts)) {
+			UserConfig::GetSingleton()->SaveSettings();
+		}
+
+		if (UICustom::Settings_ToggleButton("SETTINGS_BASE_PLUGIN", config.basePlugin))
+		{
+			UserConfig::GetSingleton()->SaveSettings();
+		}
+
+		if (UICustom::Settings_ToggleButton("SETTINGS_PAUSE_GAME", config.pauseGame))
+		{
+			UserConfig::GetSingleton()->SaveSettings();
 		}
 
 		// NOTE: Unimplemented old feature, still needed?
 		// Disable Menu opening over Skyrim Menu's (deprecated)
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
+		if (UICustom::Settings_ToggleButton("SETTINGS_DISABLE_IN_MENU", config.disableInMenu))
 		{
-			if (UICustom::Settings_ToggleButton("SETTINGS_DISABLE_IN_MENU", config.disableInMenu))
-			{
-				UserConfig::GetSingleton()->SaveSettings();
-			}
+			UserConfig::GetSingleton()->SaveSettings();
 		}
 
-		// Smooth Scroll Toggle
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
+		std::vector<std::string> levels = { "trace", "debug", "info", "none" };
+		if (UICustom::Settings_Dropdown("SETTINGS_LOG_LEVEL", config.logLevel, levels, false))
 		{
-			if (UICustom::Settings_ToggleButton("SETTINGS_SMOOTH_SCROLL", config.smoothScroll))
-			{
-				UserConfig::GetSingleton()->SaveSettings();
-			}
+			UserConfig::GetSingleton()->SaveSettings();
 		}
-
-		// Log Level Dropdown
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		{
-			std::vector<std::string> levels = { "trace", "debug", "info", "none" };
-
-			if (UICustom::Settings_Dropdown("SETTINGS_LOG_LEVEL", config.logLevel, levels, false))
-			{
-				UserConfig::GetSingleton()->SaveSettings();
-			}
-		}
-
-		// Welcome Banner Toggle
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		{
-			if (UICustom::Settings_LanguageDropdown("SETTINGS_LANGUAGE", &config.language)) {
-				UserConfig::GetSingleton()->SaveSettings();
-			}
-		}
-
-		UICustom::SubCategoryHeader(Translate("SETTING_FONT_AND_LANGUAGE"));
-		
-		// Font Selection Dropdown
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		{
-			if (UICustom::Settings_ToggleButton("SETTINGS_BASE_PLUGIN", config.basePlugin))
-			{
-				UserConfig::GetSingleton()->SaveSettings();
-			}
-		}
-
-		// Font Size Slider
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		{
-			UICustom::Settings_SliderInt("SETTING_FONT_SIZE", s_fontSize, 8, 48);
-
-			if (ImGui::IsItemDeactivatedAfterEdit())
-			{
-				config.globalFontSize = s_fontSize;
-				UserConfig::GetSingleton()->SaveSettings();
-			}
-		}
-
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 	}
 }

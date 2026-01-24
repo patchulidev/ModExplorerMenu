@@ -35,6 +35,7 @@ namespace Modex
 		}
 
 		ConfigManager::Add(a_plugin->fileName);
+		ConfigManager::Save();
 	}
 
 	void BlacklistConfig::RemovePluginFromBlacklist(const RE::TESFile* a_plugin)
@@ -48,6 +49,7 @@ namespace Modex
 		}
 
 		ConfigManager::Remove(a_plugin->fileName);
+		ConfigManager::Save();
 	}
 
 	BlacklistConfig::BlacklistConfig()

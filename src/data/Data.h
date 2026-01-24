@@ -8,20 +8,22 @@ namespace Modex
 	{
 	public:
 
-		enum PLUGIN_TYPE : uint32_t
+		enum class PLUGIN_TYPE : uint32_t
 		{
-			ALL = 0,
-			ITEM,
-			NPC,
-			OBJECT,
-			CELL,
+			All = 0,
+			Item,
+			Actor,
+			Object,
+			Cell,
+			kTotal,
 		};
 
-		enum SORT_TYPE : uint32_t
+		enum class SORT_TYPE : uint32_t
 		{
-			ALPHABETICAL = 0,
-			COMPILEINDEX_ASC,
-			COMPILEINDEX_DESC,
+			Alphabetical = 0,
+			Load_Order_Ascending,
+			Load_Order_Descending,
+			kTotal,
 		};
 
 		struct ModFileItemFlags
@@ -65,6 +67,9 @@ namespace Modex
 		void 											GenerateNPCRaceList();
 		void 											GenerateNPCFactionList();
 		void 											AddModToIndex(const RE::TESFile* a_mod, std::unordered_set<const RE::TESFile*>& a_out);
+
+		static std::vector<std::string>					GetTypeString();
+		static std::vector<std::string>					GetSortStrings();
 
 		[[nodiscard]] inline std::vector<BaseObject>& 	GetInventoryList()	{ return m_inventory; 		}
 		[[nodiscard]] inline std::vector<BaseObject>& 	GetAddItemList() 	{ return m_cache; 			}

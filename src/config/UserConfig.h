@@ -39,6 +39,7 @@ namespace Modex
 
 			bool fullscreen 		= false;
 			bool pauseGame 			= false;
+			bool disableSplash		= false;
 			bool disableInMenu 		= false;
 			bool disableAlt			= false;
 			bool welcomeBanner 		= true;

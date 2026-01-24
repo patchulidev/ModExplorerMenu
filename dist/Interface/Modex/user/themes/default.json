@@ -1,13 +1,22 @@
 {
+    "SPLASH_FILE_PATH": "data/interface/splash.png",
+
+    "SCREEN_BACKGROUND": [0.0, 0.0, 0.0, 0.35],
+    "WINDOW_BACKGROUND": [0.05, 0.05, 0.05, 0.95],
+
     "BUTTON": [0.26, 0.59, 0.98, 0.40],
     "BUTTON_HOVER": [0.26, 0.59, 0.98, 1.00],
     "BUTTON_ACTIVE": [0.06, 0.53, 0.98, 1.00],
+
+    "BUTTON_SIDEBAR": [0.26, 0.59, 0.98, 0.40],
+    "BUTTON_SIDEBAR_ACTIVE": [0.06, 0.53, 0.98, 1.00],
 
     "BUTTON_CONFIRM": [0.18, 0.35, 0.39, 0.40],
     "BUTTON_CONFIRM_HOVER": [0.18, 0.35, 0.39, 1.00],
     "BUTTON_CANCEL": [0.80, 0.20, 0.20, 0.40],
     "BUTTON_CANCEL_HOVER": [0.80, 0.20, 0.20, 1.00],
 
+	"TAB_BUTTON": [0.06, 0.39, 0.68, 1.0],
     "CONTAINER_BUTTON": [0.18, 0.35, 0.39, 1.00],
     "TABLE_FIELD_BG": [0.15, 0.15, 0.15, 0.50],
 
@@ -16,6 +25,8 @@
 
     "TEXT": [1.00, 1.00, 1.00, 1.00],
     "TEXT_DISABLED": [0.50, 0.50, 0.50, 1.00],
+
+	"HEADER": [0.18, 0.59, 0.98, 1.00],
     "HEADER_TEXT": [0.26, 0.59, 0.98, 1.00],
     "HEADER_SEPARATOR": [0.26, 0.59, 0.98, 0.40],
 
