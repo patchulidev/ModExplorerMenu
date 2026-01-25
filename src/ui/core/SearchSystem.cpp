@@ -1,4 +1,5 @@
 #include "SearchSystem.h"
+#include "imgui.h"
 
 namespace Modex
 {
@@ -113,321 +114,370 @@ namespace Modex
 		return compareString.find(input) != std::string::npos;
 	}
 
-	// Source: https://github.com/ocornut/imgui/issues/718
-	// Modified with additional features to best fit our use-case.
-
-	// FIX: The size_t argument on InputTextComboBox is kind of irrelevant if we pass a buffer.
-	bool SearchSystem::InputTextComboBox(const char* a_label, char* a_buffer, std::string& a_preview, size_t a_size, std::vector<std::string> a_items, float a_width, bool a_showArrow)
+	// Backwards compatible for tables, use for extracting kit names.
+	std::string SearchSystem::ExtractDisplayName(const std::string& a_fullName)
 	{
-		bool result = false;
-		ImGuiContext& g = *GImGui;
-
-		auto arrowSize = ImGui::GetFrameHeight();
-		ImGui::SetNextItemWidth(a_width - arrowSize);
-		result = ImGui::InputTextWithHint(a_label, a_preview.c_str(), a_buffer, a_size, ImGuiInputTextFlags_EnterReturnsTrue);
-
-		if (ImGui::IsItemDeactivated() && !result) {
-			if (a_buffer && std::strcmp(a_buffer, a_preview.c_str()) != 0) {
-				ImFormatString(a_buffer, a_size, "%s", "");
-			}
+		if (a_fullName.empty()) {
+			return "";
 		}
 		
+		std::string name = a_fullName.substr(a_fullName.find_last_of("/\\") + 1);
+		
+		size_t dotPos = name.find_last_of('.');
+		if (dotPos != std::string::npos) {
+			name = name.substr(0, dotPos);
+		}
+		
+		return name;
+	}
+
+	void SearchSystem::FilterItems(const std::vector<std::string>& a_items, const char* a_buffer)
+	{
+		m_filteredList.clear();
+		m_navList.clear();
+		m_topComparisonWeight = std::string::npos;
+		m_topComparisonIdx = -1;
+
+		std::string input = a_buffer;
+		std::transform(input.begin(), input.end(), input.begin(), ::tolower);
+
+		for (size_t i = 0; i < a_items.size(); i++) {
+			std::string compare = a_items[i];
+			std::transform(compare.begin(), compare.end(), compare.begin(), ::tolower);
+			
+			size_t weight = compare.find(input);
+			bool show = (weight != std::string::npos);
+
+			SearchItem item(m_searchKey.GetPropertyType());
+			item.name = a_items[i];
+			item.weight = weight;
+			item.idx = static_cast<int>(i);
+			item.show = show;
+
+			m_filteredList.push_back(item);
+
+			if (show) {
+				m_navList.push_back(item);
+				
+				// Track the best match
+				if (weight < m_topComparisonWeight) {
+					m_topComparisonWeight = weight;
+					m_topComparisonIdx = static_cast<int>(i);
+				}
+			}
+		}
+	}
+
+	bool SearchSystem::RenderPopupItems(const char* a_buffer, const std::string& a_preview, bool a_popupIsAppearing, int& a_cursorIdx)
+	{
+		if (m_navList.size() <= 0 && !m_forceDropdown) {
+			ImGui::TextWrapped("No Results Found, try clearing your search.");
+			return false;
+		}
+
+		int filtered_idx = 0;
+		bool bufferIsEmpty = (strlen(a_buffer) == 0);
+		bool clicked = false;
+
+		for (size_t i = 0; i < m_filteredList.size(); i++) {
+			const auto& item = m_filteredList[i];
+			
+			if ((item.show || m_forceDropdown) && !item.name.empty()) {
+				std::string displayName = ExtractDisplayName(item.name);
+				bool isSelected = (filtered_idx == a_cursorIdx);
+
+				// Auto-select the best match when popup appears
+				if (a_popupIsAppearing) {
+					if (bufferIsEmpty && displayName == a_preview) {
+						m_navSelection = item;
+						a_cursorIdx = filtered_idx;
+						ImGui::SetScrollHereY();
+					} else if (!bufferIsEmpty && m_topComparisonIdx == item.idx) {
+						m_navSelection = item;
+						a_cursorIdx = filtered_idx;
+						ImGui::SetScrollHereY();
+					}
+				}
+
+				if (ImGui::Selectable(displayName.c_str(), isSelected)) {
+					clicked = true;
+					m_navSelection = item;
+					a_cursorIdx = filtered_idx;
+				}
+
+				filtered_idx++;
+			}
+		}
+
+		return clicked;
+	}
+
+	bool SearchSystem::HandleKeyboardNavigation(char* a_buffer, size_t a_size, ImGuiID a_inputTextID, int& a_cursorIdx, bool& a_unlockScroll)
+	{
+		bool shouldClosePopup = false;
+		bool bufferChanged = false;
+		
+		ImGuiInputTextState* inputState = ImGui::GetInputTextState(a_inputTextID);
+
+		// Down arrow -- Increment with wrap-around
+		if (ImGui::Shortcut(ImGuiKey_DownArrow, ImGuiInputFlags_Repeat, a_inputTextID) && !m_navList.empty()) {
+			a_cursorIdx = (a_cursorIdx + 1) % static_cast<int>(m_navList.size());
+			m_navSelection = m_navList[a_cursorIdx];
+			a_unlockScroll = false;
+			m_lastNavKey = ImGuiKey_DownArrow;
+			bufferChanged = true;
+		}
+
+		// Up arrow -- Decrement with wrap-around
+		if (ImGui::Shortcut(ImGuiKey_UpArrow, ImGuiInputFlags_Repeat, a_inputTextID) && !m_navList.empty()) {
+			a_cursorIdx = (a_cursorIdx - 1 + static_cast<int>(m_navList.size())) % static_cast<int>(m_navList.size());
+			m_navSelection = m_navList[a_cursorIdx];
+			a_unlockScroll = false;
+			m_lastNavKey = ImGuiKey_UpArrow;
+			bufferChanged = true;
+		}
+
+		// Update buffer with selected item (preview only - don't commit yet)
+		// This emulates the virtual selection / auto completion behavior.
+		if (bufferChanged && m_lastNavKey != ImGuiKey_None) {
+			std::string displayName = ExtractDisplayName(m_navSelection.name);
+			ImFormatString(a_buffer, a_size, "%s", displayName.c_str());
+			
+			if (inputState) {
+				inputState->ReloadUserBufAndSelectAll();
+			}
+		}
+
+		// Only capture Enter when we're rendering a navable list.
+		if (ImGui::Shortcut(ImGuiKey_Enter, ImGuiInputFlags_RouteAlways, a_inputTextID) && !m_navList.empty()) {
+			ImFormatString(a_buffer, a_size, "%s", m_navSelection.name.c_str());
+			
+			if (inputState) {
+				inputState->ReloadUserBufAndMoveToEnd();
+			}
+			
+			ImGui::ClearActiveID();
+			shouldClosePopup = true;
+			return true; // Signal that selection was committed
+		}
+
+		// TEST: Leftover from v1.x, not sure why we disabled these.
+		if (ImGui::Shortcut(ImGuiKey_PageUp, 0, a_inputTextID)) {}
+		if (ImGui::Shortcut(ImGuiKey_PageDown, 0, a_inputTextID)) {}
+
+		return shouldClosePopup;
+	}
+
+	// Source: https://github.com/ocornut/imgui/issues/718
+	// Modified with additional features to best fit our use-case.
+	bool SearchSystem::InputTextComboBox(const char* a_label, char* a_buffer, 
+		std::string& a_preview, 
+		size_t a_size, 
+		std::vector<std::string> a_items, 
+		float a_width, 
+		bool a_showArrow)
+	{
+		// Generate unique IDs for this widget instance
+		auto suffix = std::string("##InputTextCombo::") + a_label;
+		auto popupID = suffix + "Popup";
+		bool result = false;
+
+		auto arrowSize = ImGui::GetFrameHeight();
+		ImGui::SetNextItemWidth(a_width - (a_showArrow ? arrowSize : 0));
+		
+		bool enterPressed = ImGui::InputTextWithHint(a_label, a_preview.c_str(), a_buffer, a_size, ImGuiInputTextFlags_EnterReturnsTrue);
+
+		ImGuiID inputTextID = ImGui::GetItemID();
+		const bool inputTextActive = ImGui::IsItemActive();
+		const bool inputTextDeactivated = ImGui::IsItemDeactivated();
+
+		// Global keyboard shortcut to focus search (Ctrl+Shift+F)
 		if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_F, ImGuiInputFlags_RouteAlways)) {
 			ImGui::SetKeyboardFocusHere(-1);
 		}
 
-		auto suffix = std::string("##InputTextCombo::");
-		auto prevItemRectMax = ImGui::GetItemRectMax();
+		// Store rect info for popup positioning
 		auto prevItemRectMin = ImGui::GetItemRectMin();
+		auto prevItemRectMax = ImGui::GetItemRectMax();
 		auto prevItemRectSize = ImGui::GetItemRectSize();
 
-		ImGuiID inputTextID = ImGui::GetItemID();
-		const bool inputTextActive = ImGui::IsItemActive();
-		ImGuiInputTextState* inputState = inputTextActive ? ImGui::GetInputTextState(inputTextID) : NULL;
-
-		// Block ImGui ItemSpacing to re-create ComboBox style.
-		
+		// Arrow button (optional)
 		if (a_showArrow) {
 			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
 			ImGui::SameLine();
-			if (ImGui::ArrowButton((suffix + a_label).c_str(), ImGuiDir_Down)) {
-				if (ImGui::IsPopupOpen((suffix + a_label + "Popup").c_str())) {
+			
+			if (ImGui::ArrowButton(suffix.c_str(), ImGuiDir_Down)) {
+				if (ImGui::IsPopupOpen(popupID.c_str())) {
 					ImGui::CloseCurrentPopup();
 					m_forceDropdown = false;
 				} else {
-					ImGui::OpenPopup((suffix + a_label + "Popup").c_str());
+					ImGui::OpenPopup(popupID.c_str());
 					m_forceDropdown = true;
 				}
 			}
+			
 			ImGui::PopStyleVar();
 		}
 
+		// Open popup when input is active
 		if (inputTextActive) {
 			m_forceDropdown = false;
-			ImGui::OpenPopup((suffix + a_label + "Popup").c_str());
+			ImGui::OpenPopup(popupID.c_str());
 		}
 
-		// Position and size popup
-		ImGui::SetNextWindowPos(ImVec2(prevItemRectMin.x, prevItemRectMax.y + ImGui::GetStyle().ItemSpacing.y));
-
-		ImGuiWindowFlags popup_window_flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings;
-		popup_window_flags |= ImGuiWindowFlags_NoFocusOnAppearing;
-		popup_window_flags |= ImGuiWindowFlags_NoNav;
-		popup_window_flags |= ImGuiWindowFlags_AlwaysAutoResize;
+		// Don't touch these flags without understanding their implications!
+		ImGuiWindowFlags popup_flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings;
+		popup_flags |= ImGuiWindowFlags_NoFocusOnAppearing;
+		popup_flags |= ImGuiWindowFlags_NoNav;
 
 		auto minPopupSize = ImVec2(prevItemRectSize.x, 0);
-		auto maxPopupSize = ImVec2(prevItemRectSize.x, prevItemRectSize.y * 20);  // 20 items max (?)
+		auto maxPopupSize = ImVec2(prevItemRectSize.x, prevItemRectSize.y * 20);
+
+		ImGui::SetNextWindowPos(ImVec2(prevItemRectMin.x, prevItemRectMax.y + ImGui::GetStyle().ItemSpacing.y));
 		ImGui::SetNextWindowSizeConstraints(minPopupSize, maxPopupSize);
 		ImGui::SetNextWindowBgAlpha(1.0f);
-		if (ImGui::BeginPopupEx(ImGui::GetID((suffix + a_label + "Popup").c_str()), popup_window_flags)) {
-			ImGuiWindow* popup_window = g.CurrentWindow;
+
+		// Begin popup
+		if (ImGui::BeginPopupEx(ImGui::GetID(popupID.c_str()), popup_flags)) {
 			const bool popup_is_appearing = ImGui::IsWindowAppearing();
 
-			// https://github.com/ocornut/imgui/issues/4461
-			if (popup_is_appearing) {
-				ImGui::BringWindowToDisplayFront(popup_window);
-			}
-
-			// Important: Tracks navigation cursor for keyboard input.
-			const int cursor_idx_prev = ImGui::GetStateStorage()->GetInt(ImGui::GetID("CursorIdx"), -1);
+			ImGuiStorage* storage = ImGui::GetStateStorage();
+			const int cursor_idx_prev = storage->GetInt(ImGui::GetID("CursorIdx"), -1);
+			const bool unlock_scroll_prev = storage->GetBool(ImGui::GetID("UnlockScroll"), false);
+			
 			int cursor_idx = cursor_idx_prev;
-
-			// Important: Tracks navigation state so that the user can switch between Arrow Keys and Mousewheel seamlessly.
-			const bool unlock_scroll_prev = ImGui::GetStateStorage()->GetBool(ImGui::GetID("UnlockScroll"), false);
 			bool unlock_scroll = unlock_scroll_prev;
 
-			// TODO: Localize needed here.
-			if (m_navList.size() <= 0) {
-				ImGui::TextWrapped("No Results Found, try clearing your search.");
-				// ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.3f, 1.0f), "No Results Found, try clearing your search.");
-			}
+			// NOTE: Detect if user is typing (reset navigation state). No Simplified
+			// logic from v1.x to no longer align cursor to best match. Makes navigation
+			// heuristics more predictable, and safer.
 
-			// If we are typing, reset navigation state and cursor. The filtered list
-			// will also be reset further down in the code.
+			bool userIsTyping = false;
 			for (int i = ImGuiKey_NamedKey_BEGIN; i < ImGuiKey_NamedKey_END; i++) {
 				auto key = static_cast<ImGuiKey>(i);
-				if (key == ImGuiKey_DownArrow ||
-					key == ImGuiKey_UpArrow ||
-					key == ImGuiKey_Tab ||
-					key == ImGuiKey_Enter ||
-					key == ImGuiKey_MouseLeft ||
-					key == ImGuiKey_MouseRight)
+				
+				// Skip navigation keys
+				if (key == ImGuiKey_DownArrow || key == ImGuiKey_UpArrow || 
+					key == ImGuiKey_Enter || key == ImGuiKey_MouseLeft || 
+					key == ImGuiKey_MouseRight) {
 					continue;
+				}
 
+				// Mouse wheel unlocks scroll
 				if (key == ImGuiKey_MouseWheelX || key == ImGuiKey_MouseWheelY) {
-					unlock_scroll = true;
-					break;
+					if (ImGui::IsKeyPressed(key)) {
+						unlock_scroll = true;
+					}
+					continue;
 				}
 
 				if (ImGui::IsKeyDown(key)) {
+					userIsTyping = true;
 					m_lastNavKey = ImGuiKey_None;
+					cursor_idx = -1; // Reset cursor when typing
 					break;
 				}
 			}
 
-			// Custom keyboard navigation.
-			// - Keyboard navigation relies on navList which is a cached SearchList with hidden SearchItems omitted.
-			// - This is important: We have to feed navigation a linear list of items to match cursor idx.
-			bool rewrite_buf = false;
-			if (ImGui::Shortcut(ImGuiKey_DownArrow, ImGuiInputFlags_Repeat, inputTextID) && (m_navList.size() > 0)) {
-				cursor_idx = (cursor_idx + 1) % m_navList.size();
-				m_navSelection = m_navList.at(cursor_idx);
-
-				rewrite_buf = true;
-				unlock_scroll = false;
-				m_lastNavKey = ImGuiKey_DownArrow;
-			}
-			if (ImGui::Shortcut(ImGuiKey_UpArrow, ImGuiInputFlags_Repeat, inputTextID) && (m_navList.size() > 0)) {
-				cursor_idx = (cursor_idx - 1 + static_cast<int>(m_navList.size())) % static_cast<int>(m_navList.size());
-				m_navSelection = m_navList.at(cursor_idx);
-				rewrite_buf = true;
-				unlock_scroll = false;
-				m_lastNavKey = ImGuiKey_UpArrow;
+			// Filter items when typing or when popup first appears
+			if (userIsTyping || m_lastNavKey == ImGuiKey_None || popup_is_appearing) {
+				FilterItems(a_items, a_buffer);
 			}
 
-			// Makeshift auto-completion to circumvent the need for ImGui's implementation.
-			if (ImGui::Shortcut(ImGuiKey_Tab, ImGuiInputFlags_RouteActive, inputTextID) && (m_navList.size() > 0)) {
-				ImFormatString(a_buffer, a_size, "%s", m_navSelection.ToString().c_str());
-				if (inputState) {
-					inputState->ReloadUserBufAndMoveToEnd();
-					ImGui::ClearActiveID();
-				} else {
-					ImGui::ActivateItemByID(inputTextID);
-				}
-
+			// Handle keyboard navigation
+			bool selectionCommitted = HandleKeyboardNavigation(a_buffer, a_size, inputTextID, cursor_idx, unlock_scroll);
+			
+			if (selectionCommitted) {
 				result = true;
 				ImGui::CloseCurrentPopup();
-			}
-
-            // TEST: Why did we disable these?
-			// Disable PageUp/PageDown keys
-			if (ImGui::Shortcut(ImGuiKey_PageUp, 0, inputTextID)) {}
-			if (ImGui::Shortcut(ImGuiKey_PageDown, 0, inputTextID)) {}
-			if (rewrite_buf) {
-				ImFormatString(a_buffer, a_size, "%s", m_navSelection.ToString().c_str());
-
-				if (inputState) {
-					inputState->ReloadUserBufAndSelectAll();
-				} else {
-					ImGui::ActivateItemByID(inputTextID);
-				}
-			}
-
-			// If we are ever using the navigation keys, we do not want to modify the original filterList copy.
-			// This is because we want to keep the original list intact for future filtering.
-			// Only when accepting input do we clear the previous filterList and navList cache and rebuild.
-			ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.f, 0.5f));
-			if (m_lastNavKey == ImGuiKey_DownArrow || m_lastNavKey == ImGuiKey_UpArrow) {
-				int filtered_idx = 0;
-				for (size_t i = 0; i < m_filteredList.size(); i++) {
-					auto item = m_filteredList.at(i);
-					if (item.show && !item.name.empty()) {
-						std::string item_name = item.name;
-						item_name = item_name.substr(item_name.find_last_of("/\\") + 1);
-						item_name = item_name.substr(0, item_name.find_last_of('.'));
-
-						if (ImGui::Selectable(item_name.c_str(), filtered_idx == cursor_idx)) {
-							ImGui::ClearActiveID();
-							// ImFormatString(a_buffer, a_size, "%s", item_name);
-							m_navSelection = item;
-							ImGui::CloseCurrentPopup();
-							result = true;
-							break;
-						}
-
-						// TEST: Previous issue with flickering while scrolling. Needs re-tested.
-						if (!unlock_scroll && filtered_idx == cursor_idx) {
-							ImGui::SetScrollHereY();
-						}
-
-						filtered_idx++;
-					}
-				}
-
 			} else {
-				m_navList.clear();
-				m_filteredList.clear();
-				m_topComparisonWeight = std::string::npos;
+				ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.f, 0.5f));
+				ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5.0f, 5.0f));
+				ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(5.0f, 5.0f));
+				
+				// NOTE: Bisected logic for handling keyboard navigation vs autocompletion.
+				// Now the two congruently work without interfering with each other. This is based
+				// on unlock_scroll state.
 
-				// (First Pass)
-				// The purpose of doing two passes is to first observe the entire list and create
-				// a cache of each item. I do this so I can track the userdata and state across those
-				// items. The second pass (mostly through the filtered list) does the actual drawing.
-				for (size_t current_item_idx = 0; current_item_idx < a_items.size(); current_item_idx++) {
-					std::string compare = a_items.at(current_item_idx);
-					std::string input = a_buffer;
-					size_t comparator_weight = 0;
-
-					// TEST: Is this an issue for Non-ASCII characters? Needs tested with SimpleIME.
-					std::transform(compare.begin(), compare.end(), compare.begin(), ::tolower);
-					std::transform(input.begin(), input.end(), input.begin(), ::tolower);
-					comparator_weight = compare.find(input);
-
-					// Set top match to true item_idx position
-					if (comparator_weight < m_topComparisonWeight) {
-						m_topComparisonWeight = comparator_weight;
-						m_topComparisonIdx = current_item_idx;
-					}
-
-					SearchItem a_item(m_searchKey.GetPropertyType());
-					a_item.name = a_items.at(current_item_idx);
-					a_item.weight = comparator_weight;
-					a_item.idx = current_item_idx;
-					a_item.show = (comparator_weight == std::string::npos) ? false : true;
-
-					// a_temp.push_back(a_item);
-					m_filteredList.push_back(a_item);
-
-					if (a_item.show) {
-						m_navList.push_back(a_item);
-					}
-				}
-
-				// (Second Pass)
-				// Need to keep track of the filtered index for cursor position since we don't use a vector and
-				// don't step through it incrementally. (Because we track shown state based on SearchItem::show).
-				// forceDropDown is used to keep bypass the filter and show all items if ArrowButton is clicked.
-				int filtered_idx = 0;
-				for (size_t i = 0; i < m_filteredList.size(); i++) {
-					auto item = m_filteredList.at(i);
-					if ((item.show or m_forceDropdown) && !item.name.empty()) {
-						std::string item_name = item.name;
-						item_name = item_name.substr(item_name.find_last_of("/\\") + 1);
-						item_name = item_name.substr(0, item_name.find_last_of('.'));
-
-						// TEST: Is this safe for non-ASCII filenames? 
-						if (strlen(a_buffer) == 0) { 
-							if (item_name == a_preview) {
-								if (popup_is_appearing) {
-									ImGui::SetScrollHereY();
-								}
+				if (m_lastNavKey == ImGuiKey_DownArrow || m_lastNavKey == ImGuiKey_UpArrow) {
+					int filtered_idx = 0;
+					for (const auto& item : m_filteredList) {
+						if (item.show && !item.name.empty()) {
+							std::string displayName = ExtractDisplayName(item.name);
+							bool isSelected = (filtered_idx == cursor_idx);
+							
+							// Make sure we store the full name in buffer, not the display name.
+							if (ImGui::Selectable(displayName.c_str(), isSelected)) {
 								m_navSelection = item;
-								cursor_idx = filtered_idx;
+								ImFormatString(a_buffer, a_size, "%s", item.name.c_str());
+								ImGui::ClearActiveID();
+								ImGui::CloseCurrentPopup();
+								result = true;
+								break;
 							}
-						} else if (m_topComparisonIdx == item.idx) {
-							if (popup_is_appearing) {
+
+							// Auto-scroll to cursor position
+							if (!unlock_scroll && isSelected) {
 								ImGui::SetScrollHereY();
 							}
-							m_navSelection = item;
-							cursor_idx = filtered_idx;
-						}
 
-						if (ImGui::Selectable(item_name.c_str(), cursor_idx == filtered_idx)) {
-							ImGui::ClearActiveID();
-							m_navSelection = item;
-							ImGui::CloseCurrentPopup();
-							result = true;
-							break;
+							filtered_idx++;
 						}
-
-						filtered_idx++;
+					}
+				} else {
+					if (RenderPopupItems(a_buffer, a_preview, popup_is_appearing, cursor_idx)) {
+						m_navSelection = m_navList[cursor_idx];
+						ImFormatString(a_buffer, a_size, "%s", m_navSelection.name.c_str());
+						ImGui::ClearActiveID();
+						ImGui::CloseCurrentPopup();
+						result = true;
 					}
 				}
+				
+				ImGui::PopStyleVar(3);
 			}
-			ImGui::PopStyleVar();
 
-			// Close popup on deactivation (unless we are mouse-clicking in our popup)
+			// Close popup when appropriate
 			if (!inputTextActive && !ImGui::IsWindowFocused() && !m_forceDropdown) {
 				m_lastNavKey = ImGuiKey_None;
 				ImGui::CloseCurrentPopup();
 			}
 
-			// Additional state handling for ArrowButton drop-down.
-			if (m_forceDropdown && !ImGui::IsWindowFocused() && ImGui::IsMouseClicked(0) && !ImGui::IsAnyItemHovered()) {
+			// Handle force dropdown close
+			if (m_forceDropdown && !ImGui::IsWindowFocused() && 
+				ImGui::IsMouseClicked(0) && !ImGui::IsAnyItemHovered()) {
 				m_forceDropdown = false;
 				ImGui::CloseCurrentPopup();
 			}
 
-			// Store cursor position.
+			// Persist state
 			if (cursor_idx != cursor_idx_prev) {
-				ImGui::GetStateStorage()->SetInt(ImGui::GetID("CursorIdx"), cursor_idx);
+				storage->SetInt(ImGui::GetID("CursorIdx"), cursor_idx);
 			}
-
-			// Store scroll position.
 			if (unlock_scroll != unlock_scroll_prev) {
-				ImGui::GetStateStorage()->SetBool(ImGui::GetID("UnlockScroll"), unlock_scroll);
+				storage->SetBool(ImGui::GetID("UnlockScroll"), unlock_scroll);
 			}
 
 			ImGui::EndPopup();
+		} else {
+			// Popup closed - reset navigation state
+			m_lastNavKey = ImGuiKey_None;
 		}
 
-		// Because we introduced the InputTextFlags_EnterReturnsTrue flag, we need to manually handle some of these
-		// exceptions with fallbacks to prevent undefined behavior or unexpected results.
-		// We use navList here since it's `.size()` reflects the number of plugins that are shown in the dropdown.
-
-		// Fallback in-case the user presses enter without a matching plugin or selection.
-		if ((result && !m_forceDropdown) && m_navList.size() <= 0) {
-			a_preview = "(Warning: No Results Found \"" + std::string(a_buffer) + "\")";
-			ImFormatString(a_buffer, a_size, "%s", "");
-			ImGui::CloseCurrentPopup();
-			result = false;
-		}
-
-		// Fallback in-case the user presses enter with an empty buffer, but with a navList selection.
-		if (result && m_navList.size() > 0) {
-			ImFormatString(a_buffer, a_size, "%s", m_navSelection.name.c_str());
-			ImGui::CloseCurrentPopup();
-			result = true;
+		// Handle enter key press from input field using nav selection or default=0.
+		if (enterPressed) {
+			if (!m_navList.empty()) {
+				if (m_navSelection.name.empty()) {
+					m_navSelection = m_navList[0];
+				}
+				
+				ImFormatString(a_buffer, a_size, "%s", m_navSelection.name.c_str());
+				result = true;
+			} else {
+				a_preview = "(Warning: No Results Found \"" + std::string(a_buffer) + "\")";
+				ImFormatString(a_buffer, a_size, "%s", "");
+				result = false;
+			}
 		}
 
 		return result;

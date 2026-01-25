@@ -27,15 +27,10 @@ namespace Modex
 			
 			const float width = ImGui::GetContentRegionAvail().x - rename_width - ImGui::GetStyle().ItemSpacing.x;
 			if (searchSystem->InputTextComboBox("##KitBar::Search", m_searchBuffer, preview_string, IM_ARRAYSIZE(m_searchBuffer), equipment_keys, width)) {
-				selectedKit = Kit();
-				
-				auto key = std::find(equipment_keys.begin(), equipment_keys.end(), m_searchBuffer);
-		
-				if (key != equipment_keys.end()) {
-					ImFormatString(m_searchBuffer, IM_ARRAYSIZE(m_searchBuffer), "");
-					selectedKit = EquipmentConfig::KitLookup(*key).value_or(Kit());
-					kitTableView->Refresh();
-				}
+				selectedKit = EquipmentConfig::KitLookup(m_searchBuffer).value_or(Kit());
+
+				m_searchBuffer[0] = '\0';
+				a_kitTable->Refresh();
 			}
 
 			ImGui::SameLine();

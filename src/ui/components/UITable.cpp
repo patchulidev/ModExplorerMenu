@@ -723,32 +723,9 @@ namespace Modex
 		ImGui::PushStyleColor(ImGuiCol_FrameBg, ThemeConfig::GetColor("TABLE_FIELD_BG"));
 
 		if (searchSystem->InputTextComboBox("##Search::Filter::PluginField", this->pluginSearchBuffer, this->selectedPlugin, IM_ARRAYSIZE(this->pluginSearchBuffer), this->pluginList, a_size.x, false)) {
-			this->selectedPlugin = Translate("SHOW_ALL");
-
-			if (this->selectedPlugin.find(this->pluginSearchBuffer) != std::string::npos) {
-				ImFormatString(this->pluginSearchBuffer, IM_ARRAYSIZE(this->pluginSearchBuffer), "");
-			} else {
-				for (auto& plugin : this->pluginSet) {
-					if (BlacklistConfig::GetSingleton()->Has(plugin)) {
-						continue;
-					}
-
-					const std::string pluginName = plugin->GetFilename().data();
-
-					if (pluginName == Translate("SHOW_ALL")) {
-						ImFormatString(this->pluginSearchBuffer, IM_ARRAYSIZE(this->pluginSearchBuffer), "");
-						break;
-					}
-
-					if (pluginName.find(this->pluginSearchBuffer) != std::string::npos) {
-						this->selectedPlugin = pluginName;
-						ImFormatString(this->pluginSearchBuffer, IM_ARRAYSIZE(this->pluginSearchBuffer), "");
-						break;
-					}
-				}
-			}
-
-			this->LoadKitsFromSelectedPlugin();
+			this->selectedPlugin = this->pluginSearchBuffer;
+			this->pluginSearchBuffer[0] = '\0';
+			
 			this->selectionStorage.Clear();
 			this->Refresh();
 		}

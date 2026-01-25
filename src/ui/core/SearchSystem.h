@@ -107,5 +107,11 @@ namespace Modex
 
 		bool CompareInputToObject(const BaseObject* a_object);
 		bool InputTextComboBox(const char* a_label, char* a_buffer, std::string& a_preview, size_t a_size, std::vector<std::string> a_items, float a_width, bool a_showArrow = true);
+
+	private:
+		std::string ExtractDisplayName(const std::string& a_fullName);
+		void FilterItems(const std::vector<std::string>& a_items, const char* a_buffer);
+		bool RenderPopupItems(const char* a_buffer, const std::string& a_preview, bool a_popupIsAppearing, int& a_cursorIdx);
+		bool HandleKeyboardNavigation(char* a_buffer, size_t a_size, ImGuiID a_inputTextID, int& a_cursorIdx, bool& a_unlockScroll);
     };
 }
