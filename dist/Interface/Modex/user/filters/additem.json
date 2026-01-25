@@ -413,7 +413,7 @@
     {
         "id": "alchemy",
         "displayName": "Alchemy",
-        "behavior": "single_select",
+        "behavior": "multi_select",
         "rule": {
             "property": "kFormType",
             "operator": "equals",
@@ -423,7 +423,7 @@
     {
         "id": "ammo",
         "displayName": "Ammo",
-        "behavior": "single_select",
+        "behavior": "multi_select",
         "rule": {
             "property": "kFormType",
             "operator": "equals",
@@ -433,7 +433,7 @@
     {
         "id": "book",
         "displayName": "Book",
-        "behavior": "single_select",
+        "behavior": "multi_select",
         "rule": {
             "property": "kFormType",
             "operator": "equals",
@@ -443,7 +443,7 @@
     {
         "id": "ingredient",
         "displayName": "Ingredient",
-        "behavior": "single_select",
+        "behavior": "multi_select",
         "rule": {
             "property": "kFormType",
             "operator": "equals",
@@ -453,7 +453,7 @@
     {
         "id": "keymaster",
         "displayName": "Keys",
-        "behavior": "single_select",
+        "behavior": "multi_select",
         "rule": {
             "property": "kFormType",
             "operator": "equals",
@@ -463,7 +463,7 @@
     {
         "id": "misc",
         "displayName": "Misc",
-        "behavior": "single_select",
+        "behavior": "multi_select",
         "rule": {
             "property": "kFormType",
             "operator": "equals",
@@ -473,7 +473,7 @@
     {
         "id": "scroll",
         "displayName": "Scroll",
-        "behavior": "single_select",
+        "behavior": "multi_select",
         "rule": {
             "property": "kFormType",
             "operator": "equals",

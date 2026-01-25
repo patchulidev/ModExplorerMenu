@@ -137,10 +137,14 @@ namespace Modex
 				const auto& filtersArray = j["FilterProperty"];
 
 				if (filtersArray.is_array()) {
-					// Create virtual root node
 					node->id = "__root__";
 					node->displayName = "Root";
-					node->behavior = FilterBehavior::SINGLE_SELECT; // FIX: Decide appropriate behavior for root
+					node->behavior = FilterBehavior::SINGLE_SELECT;
+
+					// NOTE: Using MULTI_SELECT on root nodes is kind of weird. Would require
+					// restructuring filter logic. E.g. Armor -> Type -> Light && Weapon -> Type ->
+					// Sword should show both Light Armor && Sword Weapon Type? Because underlying system
+					// would not yield those results.
 					
 					// Add each filter as a child
 					for (const auto& filterJson : filtersArray) {
@@ -156,12 +160,12 @@ namespace Modex
 			node->id = j.at("id").get<std::string>();
 			node->displayName = j.at("displayName").get<std::string>();
 			
-			// Optional behavior (default to SINGLE_SELECT)
+			// Optional toggle behavior
 			if (j.contains("behavior")) {
 				std::string behaviorStr = j.at("behavior").get<std::string>();
 				node->behavior = StringToBehavior(behaviorStr);
 			} else {
-				node->behavior = FilterBehavior::SINGLE_SELECT;
+				node->behavior = FilterBehavior::MULTI_SELECT;
 			}
 
 			node->rule = FilterRule::FromJson(j);

@@ -255,7 +255,7 @@ namespace Modex
 		auto       &io          = ImGui::GetIO();
 
 		if (down) {
-			FlushInputState();
+			// FlushInputState(); // FIXME
 		}
 
 		io.AddMouseSourceEvent(mouseSource);
@@ -287,7 +287,7 @@ namespace Modex
 		}
 
 		// override behaviors for specific keys
-		if (imguiKey == ImGuiKey_PageUp && down) {
+		if (imguiKey == ImGuiKey_PageUp && down) { // TODO: Pass KeyEvent, handle if key is bound
 			UIManager::GetSingleton()->AddScrollEvent(0, 1.0f);
 			return;
 		}

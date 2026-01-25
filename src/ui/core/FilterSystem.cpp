@@ -1,4 +1,5 @@
 #include "FilterSystem.h"
+#include "imgui.h"
 #include "localization/Locale.h"
 #include "config/ThemeConfig.h"
 #include "ui/components/UIContainers.h"
@@ -107,6 +108,7 @@ namespace Modex
 
 	void FilterSystem::HandleNodeClick(FilterNode* a_parent, FilterNode* a_clicked) {
 		bool _change = false;
+		bool isModifierDown = ImGui::GetIO().KeyCtrl || ImGui::GetIO().KeyShift;
 
 		if (!a_parent || !a_clicked) return;
 
@@ -145,23 +147,38 @@ namespace Modex
 		switch (a_parent->behavior) {
 			case FilterBehavior::SINGLE_SELECT:
 				for (auto& sibling : a_parent->children) {
-					if (sibling. get() == a_clicked) {
-						sibling->isSelected = ! sibling->isSelected;
+					if (sibling.get() == a_clicked) {
+						sibling->isSelected = !sibling->isSelected;
 						_change = true;
 					} else {
 						sibling->isSelected = false;
-						ClearChildren(sibling. get());
+						ClearChildren(sibling.get());
 						_change = true;
 					}
 				}
 				break;
 				
 			case FilterBehavior::MULTI_SELECT:
-				a_clicked->isSelected = !a_clicked->isSelected;
-				_change = true;
-				if (!a_clicked->isSelected) {
-					ClearChildren(a_clicked);
+				if (isModifierDown) {
+					a_clicked->isSelected = !a_clicked->isSelected;
+					_change = true;
+					if (!a_clicked->isSelected) {
+						ClearChildren(a_clicked);
+					}
+				} else {
+					// Without Ctrl, behave like SINGLE_SELECT
+					for (auto& sibling : a_parent->children) {
+						if (sibling.get() == a_clicked) {
+							sibling->isSelected = ! sibling->isSelected;
+							_change = true;
+						} else {
+							sibling->isSelected = false;
+							ClearChildren(sibling.get());
+							_change = true;
+						}
+					}
 				}
+
 				break;
 				
 			case FilterBehavior::AUTOMATIC:
