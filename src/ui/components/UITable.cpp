@@ -1,8 +1,6 @@
 #include "UITable.h" 
 
 #include "core/Commands.h"
-#include "imgui.h"
-#include "imgui_internal.h"
 #include "localization/FontManager.h"
 #include "localization/Locale.h"
 #include "ui/core/UIManager.h"

@@ -1,7 +1,6 @@
 #include "UIPopup.h"
 #include "UIContainers.h"
 #include "config/Keycodes.h"
-#include "imgui.h"
 #include "localization/Locale.h"
 #include "config/ThemeConfig.h"
 #include "ui/components/UICustom.h"

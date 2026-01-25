@@ -11,10 +11,16 @@
 
 #define MODEX_DEBUG
 
-#define IMGUI_USER_CONFIG "external/imgui/imconfig.h"
+#define IMGUI_DISABLE_DEMO_WINDOWS
+#define IMGUI_DISABLE_DEBUG_TOOLS
+#define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+#define IMGUI_ENABLE_FREETYPE
+#define IMGUI_DEFINE_MATH_OPERATORS
+
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <imgui_freetype.h>
+
 
 #include <SimpleIni.h>
 #include <nlohmann/json.hpp>

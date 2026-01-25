@@ -1,8 +1,6 @@
 #include "UICustom.h"
 #include "core/Graphic.h"
 #include "external/icons/IconsLucide.h"
-#include "imgui.h"
-#include "imgui_internal.h"
 #include "ui/core/UIManager.h"
 #include "config/UserConfig.h"
 #include "config/ThemeConfig.h"

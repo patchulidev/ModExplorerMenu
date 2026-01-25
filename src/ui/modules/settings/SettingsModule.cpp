@@ -2,7 +2,6 @@
 #include "data/Data.h"
 #include "config/UserConfig.h"
 #include "config/ThemeConfig.h"
-#include "imgui_internal.h"
 #include "ui/components/UICustom.h"
 #include "localization/FontManager.h"
 #include "localization/Locale.h"

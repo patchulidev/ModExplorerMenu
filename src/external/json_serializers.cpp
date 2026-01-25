@@ -1,7 +1,6 @@
 #pragma once
 
 #include <nlohmann/json.hpp>
-#include "imgui.h"
 
 namespace nlohmann {
     template <>

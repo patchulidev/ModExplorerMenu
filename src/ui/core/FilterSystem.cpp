@@ -1,5 +1,4 @@
 #include "FilterSystem.h"
-#include "imgui.h"
 #include "localization/Locale.h"
 #include "config/ThemeConfig.h"
 #include "ui/components/UIContainers.h"
