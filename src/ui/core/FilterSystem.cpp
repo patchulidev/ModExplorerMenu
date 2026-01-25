@@ -214,8 +214,11 @@ namespace Modex
 			int _count = 0;
 			for (auto& child : a_node->children) {
 				if (_count >= MAX_BUTTONS_PER_LINE) {
-					ImGui::NewLine();
 					_count = 0;
+				} else {
+					if (_count > 0) {
+						ImGui::SameLine();
+					}
 				}
 				
 				ImVec4 button_color;
@@ -245,10 +248,7 @@ namespace Modex
 				}
 				
 				_count++;
-				ImGui::SameLine();
 			}
-
-			ImGui::NewLine();
 
 			ImGui::PushStyleColor(ImGuiCol_Separator, ThemeConfig::GetColor("FILTER_SEPARATOR"));
 			ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal, 1.0f);
@@ -308,7 +308,7 @@ namespace Modex
 		}
 		
 		// Root with no selections - return empty
-		if (node == m_rootNode. get() && !anyChildSelected) {
+		if (node == m_rootNode.get() && !anyChildSelected) {
 			outPaths.clear();
 		}
 	}
@@ -356,7 +356,7 @@ namespace Modex
 		}
 		
 		for (const auto& child : node->children) {
-			CollectSelectedNodesByParent(child. get(), outMap);
+			CollectSelectedNodesByParent(child.get(), outMap);
 		}
 	}
 

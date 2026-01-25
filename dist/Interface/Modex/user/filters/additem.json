@@ -322,7 +322,7 @@
                         "id": "armor_slot_60",
                         "displayName": "Mod Misc 2",
                         "rule": {
-                            "property": "kArmorSLot",
+                            "property": "kArmorSlot",
                             "operator": "equals",
                             "value": "Mod Misc 2"
                         }
@@ -331,7 +331,7 @@
                         "id": "armor_slot_61",
                         "displayName": "FX01",
                         "rule": {
-                            "property": "kArmorSLot",
+                            "property": "kArmorSlot",
                             "operator": "equals",
                             "value": "FX01"
                         }
