@@ -82,10 +82,10 @@
     "PLUGIN_DEPENDENCIES": "Show Plugin Dependencies",
     "PLUGIN_DEPENDENCIES_TOOLTIP": "Plugin Dependencies\n\nShow a list of all plugins that the selected item or kit depends on.",
     
-    "SHOW_ALL": "Show All",
+    "SHOW_ALL": "Showing All",
     "SHOW_ALL_TOOLTIP": "Show All\n\nDisplay all items in the table, ignoring recent items.\nClick To Toggle.",
 
-    "SHOW_RECENT": "Show Recent",
+    "SHOW_RECENT": "Showing Recent",
     "SHOW_RECENT_TOOLTIP": "Show Recent\n\nDisplay recently used items in the table.\nClick To Toggle.",
 
     "CONTAINER_VIEW": "To Container",

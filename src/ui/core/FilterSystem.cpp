@@ -113,7 +113,7 @@ namespace Modex
 		if (!a_parent || !a_clicked) return;
 
 		// Handle toggling of show_all and show_recent state.
-		if (const auto from = GetSelectedRootNode(); from) {
+		if (auto from = GetSelectedRootNode(); from) {
 			if (from->id == "show_all" and a_clicked->id == "show_all") 
 			{
 				ClearActiveNodes();
@@ -136,6 +136,19 @@ namespace Modex
 				a_clicked->isSelected = true;
 				m_showRecentList = false;
 
+				if (m_filterChangeCallback) {
+					m_filterChangeCallback();
+				}
+
+				return;
+			} else if (from->id == "show_recent") {
+				ClearActiveNodes();
+				from->id = "show_all";
+				from->displayName = Translate("SHOW_ALL");
+				from->isSelected = false;
+				m_showRecentList = false;
+
+				a_clicked->isSelected = !a_clicked->isSelected;
 				if (m_filterChangeCallback) {
 					m_filterChangeCallback();
 				}
@@ -183,7 +196,12 @@ namespace Modex
 				
 			case FilterBehavior::AUTOMATIC:
 				break;
+		}
 
+		// If we deselect a root node, go back to show_all.
+		if (GetSelectedRootNode() == nullptr) {
+			ActivateNodeByID("show_all", true);
+			m_showRecentList = false;
 		}
 
 		if (_change && m_filterChangeCallback) {
