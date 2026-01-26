@@ -4,20 +4,16 @@
 
 namespace Modex
 {
-	class HomeModule
+	class HomeModule : public UIModule
 	{
 	public:
 		HomeModule();
 		~HomeModule() = default;
-		
 		HomeModule(const HomeModule&) = delete;
 		HomeModule(HomeModule&&) = delete;
 		HomeModule& operator=(const HomeModule&) = delete;
 		HomeModule& operator=(HomeModule&&) = delete;
-		
-		static void Draw();
-		static void Init();
-	private:
 
+		void Draw() override;
 	};
 }

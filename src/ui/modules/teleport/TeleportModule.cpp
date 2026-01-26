@@ -1,27 +1,27 @@
 #include "TeleportModule.h"
+#include "localization/Locale.h"
 
 // TODO: Re-Implement Teleport Module
 
 namespace Modex
 {
-	void TeleportModule::Draw(float a_offset)
+	void TeleportModule::Draw()
 	{
-		(void)a_offset;
+		DrawTabMenu();
 	}
 
-	void TeleportModule::Unload()
+	static inline void DrawTeleportLayout(std::vector<std::unique_ptr<UITable>>& a_tables)
 	{
-
-	}
-
-	void TeleportModule::Load()
-	{
-
+		(void)a_tables;
+		ImGui::Text("Hello!");
 	}
 
 	TeleportModule::TeleportModule() {
-		m_tableView = std::make_unique<UITable>();
-		m_tableView->Init();
-	}
+		m_name = Translate("MODULE_TELEPORT");
+		m_icon = ICON_LC_MAP_PIN;
 
+		m_layouts.push_back({ "Teleport View", true, DrawTeleportLayout }); // TODO: Locale
+
+		// auto table = std::make_unique<UITable>();
+	}
 }

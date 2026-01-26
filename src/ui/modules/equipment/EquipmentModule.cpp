@@ -7,158 +7,122 @@
 
 namespace Modex
 {
-	void EquipmentModule::Draw(float a_offset)
+	void EquipmentModule::Draw()
 	{
-		ImVec2 window_padding = ImGui::GetStyle().WindowPadding;
-		const float button_width = (ImGui::GetContentRegionAvail().x / static_cast<int>(Viewport::Count)) - window_padding.x / 2.0f;
-		const float button_height = ImGui::GetFrameHeight();
-		const float tab_bar_height = button_height + (ImGui::GetStyle().WindowPadding.y * 2.0f);
-		const float table_width = ImGui::GetContentRegionAvail().x * 0.5f;
-		const float table_height = ImGui::GetContentRegionAvail().y - (window_padding.y * 2.0f) - tab_bar_height;
-
-		constexpr float action_button_count = 6.0f;
-		const float panel_width = (table_width / 2.0f) - (window_padding.x * 2.0f);
-		const float panel_height = (action_button_count * button_height) + ((action_button_count - 1.0f) * ImGui::GetStyle().ItemSpacing.y) + window_padding.x;
-
-		ImGui::SameLine();
-		ImGui::SetCursorPosX(window_padding.x + a_offset);
-		ImGui::SetCursorPosY(window_padding.y);
-		ImVec2 start_pos = ImGui::GetCursorPos();
-
-		// Tab Button Area
-		// OPTIMIZE: Revisit loading logic now that we changed Equipment.cpp load. Do the same with AddItem
-		if (ImGui::BeginChild("##Equipment::TabBar", ImVec2(0.0f, button_height), 0, ImGuiWindowFlags_NoFocusOnAppearing)) {
-			ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5f, 0.5f));
-			if (ImGui::Selectable("Equipment Setup", m_viewport == Viewport::EquipmentView, 0, ImVec2(button_width, button_height))) {
-				m_viewport = Viewport::EquipmentView;
-				m_tableView->RemoveDragDropTarget(m_inventoryView->GetDragDropHandle());
-				m_tableView->AddDragDropTarget(m_kitTableView->GetDragDropHandle(), m_kitTableView.get());
-				m_kitTableView->Load();
-			}
-
-			ImGui::SameLine();
-
-			// TODO: Need some kind of callback system, or event system, to dynamically update
-			// InventoryList changes as we modified inventories in UITables.
-			if (ImGui::Selectable("Inventory View", m_viewport == Viewport::InventoryView, 0, ImVec2(button_width, button_height))) {
-				m_viewport = Viewport::InventoryView;
-				m_tableView->RemoveDragDropTarget(m_kitTableView->GetDragDropHandle());
-				m_tableView->AddDragDropTarget(m_inventoryView->GetDragDropHandle(), m_inventoryView.get());
-				Data::GetSingleton()->GenerateInventoryList();
-				m_inventoryView->Load();
-			}
-
-			ImGui::SameLine();
-
-			if (ImGui::Selectable("Follower View", m_viewport == Viewport::FollowerView, 0, ImVec2(button_width, button_height))) {
-				m_viewport = Viewport::FollowerView;
-				m_tableView->RemoveDragDropTarget(m_kitTableView->GetDragDropHandle());
-				m_tableView->RemoveDragDropTarget(m_inventoryView->GetDragDropHandle());
-			}
-
-			ImGui::PopStyleVar();
-		}
-
-		ImGui::EndChild();
-		ImGui::SameLine();
-		ImGui::SetCursorPos(start_pos);
-
-		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + button_height);
-		ImGui::PushStyleColor(ImGuiCol_Separator, ThemeConfig::GetColor("FILTER_SEPARATOR"));
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		ImGui::PopStyleColor();
-		ImGui::SetCursorPos(start_pos);
-
-		if (m_viewport == Viewport::EquipmentView) {
-			const ImVec2 table_pos = ImGui::GetCursorPos() + ImVec2(0.0f, tab_bar_height);
-			UIContainers::DrawBasicTablePanel(table_pos, ImVec2(table_width, table_height), m_tableView);
-
-			const ImVec2 search_pos = table_pos + ImVec2(table_width + window_padding.x, 0.0f);
-			DrawKitSelectionPanel(search_pos, ImVec2(panel_width, panel_height));
-
-			const ImVec2 action_pos = search_pos + ImVec2(panel_width + window_padding.x, 0.0f);
-			UIContainers::DrawKitActionsPanel(action_pos, ImVec2(0.0f, panel_height), m_kitTableView, m_tableView, m_selectedKit);
-
-			const ImVec2 kit_pos = search_pos + ImVec2(0.0f, panel_height + window_padding.y);
-			UIContainers::DrawKitTablePanel(kit_pos, ImVec2(table_width - window_padding.x, table_height - panel_height - window_padding.y), m_kitTableView);
-		}
-
-		if (m_viewport == Viewport::InventoryView) {
-			ImVec2 table_pos = ImGui::GetCursorPos();
-			table_pos.y += tab_bar_height;
-
-			UIContainers::DrawBasicTablePanel(table_pos, ImVec2(table_width, table_height), m_tableView);
-
-			ImVec2 inventory_pos = start_pos;
-			inventory_pos.x += table_width + window_padding.x;
-			inventory_pos.y += tab_bar_height; 
-
-			UIContainers::DrawInventoryTablePanel(inventory_pos, ImVec2(table_width - window_padding.x, table_height), m_inventoryView);
-		}
-	}
-
-	void EquipmentModule::Unload()
-	{
-		m_tableView->Unload();
-		m_kitTableView->Unload();
-		m_inventoryView->Unload();
+		DrawTabMenu();
 	}
 
 	void EquipmentModule::Load()
 	{
-		if (m_viewport == Viewport::EquipmentView) {
-			m_tableView->SetDragDropTarget(m_kitTableView->GetDragDropHandle(), m_kitTableView.get());
-			m_tableView->Load();
+		UIModule::Load();
 
-			m_kitTableView->SetDragDropTarget(m_tableView->GetDragDropHandle(), m_tableView.get());
-			m_kitTableView->Load();
-		} else if (m_viewport == Viewport::InventoryView) {
-			m_tableView->SetDragDropTarget(m_inventoryView->GetDragDropHandle(), m_inventoryView.get());
-			m_tableView->Load();
+		auto& table = m_tables[0];
+		auto& kitTable = m_tables[1];
+		auto& invTable = m_tables[2];
 
-			m_inventoryView->SetDragDropTarget(m_tableView->GetDragDropHandle(), m_tableView.get());
-			m_inventoryView->Load();
-		}
+		// TEST: Can we setup targets without layout conditions now?
+		table->AddDragDropTarget(kitTable->GetDragDropHandle(), kitTable.get());
+		kitTable->AddDragDropTarget(table->GetDragDropHandle(), table.get());
+
+		table->AddDragDropTarget(invTable->GetDragDropHandle(), invTable.get());
+		invTable->AddDragDropTarget(table->GetDragDropHandle(), table.get());
+
+		auto last_kit = UserData::User().Get<std::string>("lastSelectedKit", "");
+		m_selectedKit = EquipmentConfig::KitLookup(last_kit).value_or(Kit());
+		kitTable->Refresh();
+	}
+
+	void EquipmentModule::Unload()
+	{
+		UIModule::Unload();
+		UserData::User().Set<std::string>("lastSelectedKit", m_selectedKit.m_key);
+	}
+
+	static inline void DrawEquipmentLayout(std::vector<std::unique_ptr<UITable>>& a_tables)
+	{
+		const ImVec2 window_padding = ImGui::GetStyle().WindowPadding;
+		const float table_width = ImGui::GetContentRegionAvail().x * 0.5f;
+		const float table_height = ImGui::GetContentRegionAvail().y - (window_padding.y * 2.0f);
+
+		const float panel_width = (table_width / 2.0f) - (window_padding.x * 2.0f);
+		const float panel_height = table_height / 2.5f; // FIX: Broken;
+
+		auto& table = a_tables[0];
+		auto& kitTable = a_tables[1];
+
+		const ImVec2 table_pos = ImGui::GetCursorPos();
+		UIContainers::DrawBasicTablePanel(table_pos, ImVec2(table_width, table_height), table);
+
+		const ImVec2 search_pos = table_pos + ImVec2(table_width + window_padding.x, 0.0f);
+		EquipmentModule::DrawKitSelectionPanel(search_pos, ImVec2(panel_width, panel_height), kitTable);
+
+		const ImVec2 action_pos = search_pos + ImVec2(panel_width + window_padding.x, 0.0f);
+		UIContainers::DrawKitActionsPanel(action_pos, ImVec2(0.0f, panel_height), kitTable, table, EquipmentModule::m_selectedKit);
+
+		const ImVec2 kit_pos = search_pos + ImVec2(0.0f, panel_height + window_padding.y);
+		UIContainers::DrawKitTablePanel(kit_pos, ImVec2(table_width - window_padding.x, table_height - panel_height - window_padding.y), kitTable);
+	}
+
+	static inline void DrawInventoryLayout(std::vector<std::unique_ptr<UITable>>& a_tables)
+	{
+		const ImVec2 window_padding = ImGui::GetStyle().WindowPadding;
+		const float table_width = ImGui::GetContentRegionAvail().x * 0.5f;
+		const float table_height = ImGui::GetContentRegionAvail().y - (window_padding.y * 2.0f);
+
+		auto& table = a_tables[0];
+		auto& invTable = a_tables[2];
+
+		ImVec2 table_pos = ImGui::GetCursorPos();
+		UIContainers::DrawBasicTablePanel(table_pos, ImVec2(table_width, table_height), table);
+
+		ImVec2 inventory_pos = table_pos;
+		inventory_pos.x += table_width + window_padding.x;
+		UIContainers::DrawInventoryTablePanel(inventory_pos, ImVec2(table_width - window_padding.x, table_height), invTable);
 	}
 
 	EquipmentModule::EquipmentModule() 
 	{
-		m_viewport = Viewport::EquipmentView;
-		m_selectedKit = Kit();
+		m_name = Translate("MODULE_EQUIPMENT");
+		m_icon = ICON_LC_PACKAGE;
 
+		m_selectedKit = Kit();
 		m_searchSystem = std::make_unique<SearchSystem>(std::filesystem::path());
 		m_searchSystem->Load(false);
 
-		m_tableView = std::make_unique<UITable>();
-		m_tableView->SetGenerator([]() { return Data::GetSingleton()->GetAddItemList(); });
-		m_tableView->SetPluginType(Data::PLUGIN_TYPE::Item);
-		m_tableView->SetUserDataID("Equipment");
-		m_tableView->SetDragDropHandle(UITable::DragDropHandle::Table);
-		m_tableView->AddFlag(UITable::ModexTableFlag_Base);
-		m_tableView->AddFlag(UITable::ModexTableFlag_EnablePluginKitView);
-		m_tableView->AddFlag(UITable::ModexTableFlag_EnableCategoryTabs);
-		m_tableView->AddFlag(UITable::ModexTableFlag_EnableHeader);
-		m_tableView->AddFlag(UITable::ModexTableFlag_EnableItemPreviewOnHover);
-		m_tableView->Init();
-		m_tableView->SetShowEditorID(UserData::User().Get<bool>("Equipment::ShowEditorID", false));
-		m_tableView->SetShowPluginKitView(UserData::User().Get<bool>("Equipment::ShowPluginKitView", false));
+		m_layouts.push_back({"Equipment Layout", true, DrawEquipmentLayout});
+		m_layouts.push_back({"Inventory Layout", false, DrawInventoryLayout});
 
-		m_kitTableView = std::make_unique<UITable>();
-		m_kitTableView->SetGenerator([this]() { return EquipmentConfig::GetItems(m_selectedKit); });
-		m_kitTableView->SetKitPointer(&m_selectedKit);
-		m_kitTableView->SetUserDataID("Equipment");
-		m_kitTableView->SetDragDropHandle(UITable::DragDropHandle::Kit);
-		m_kitTableView->AddFlag(UITable::ModexTableFlag_Kit);
-		m_kitTableView->AddFlag(UITable::ModexTableFlag_EnableHeader);
-		m_kitTableView->Init();
+		auto table = std::make_unique<UITable>();
+		table->SetGenerator([]() { return Data::GetSingleton()->GetAddItemList(); });
+		table->SetPluginType(Data::PLUGIN_TYPE::Item);
+		table->SetUserDataID("Equipment");
+		table->SetDragDropHandle(UITable::DragDropHandle::Table);
+		table->AddFlag(UITable::ModexTableFlag_Base);
+		table->AddFlag(UITable::ModexTableFlag_EnableCategoryTabs);
+		table->AddFlag(UITable::ModexTableFlag_EnableHeader);
+		table->AddFlag(UITable::ModexTableFlag_EnableItemPreviewOnHover);
+		table->SetShowEditorID(UserData::User().Get<bool>("Equipment::ShowEditorID", false));
+		table->Init();
+		m_tables.push_back(std::move(table));
+
+		auto kit = std::make_unique<UITable>();
+		kit->SetGenerator([]() { return EquipmentConfig::GetItems(m_selectedKit); });
+		kit->SetKitPointer(&m_selectedKit);
+		kit->SetUserDataID("Equipment");
+		kit->SetDragDropHandle(UITable::DragDropHandle::Kit);
+		kit->AddFlag(UITable::ModexTableFlag_Kit);
+		kit->AddFlag(UITable::ModexTableFlag_EnableHeader);
+		kit->Init();
+		m_tables.push_back(std::move(kit));
 
 		// TODO: Revisit generator impl so that it registers tableref instead of just player
-		m_inventoryView = std::make_unique<UITable>();
-		m_inventoryView->SetGenerator([]() { return Data::GetSingleton()->GetInventoryList(); });
-		m_inventoryView->SetUserDataID("Equipment");
-		m_inventoryView->SetDragDropHandle(UITable::DragDropHandle::Inventory);
-		m_inventoryView->AddFlag(UITable::ModexTableFlag_Inventory);
-		m_inventoryView->AddFlag(UITable::ModexTableFlag_EnableHeader);
-		m_inventoryView->Init();
+		auto inventory = std::make_unique<UITable>();
+		inventory->SetGenerator([]() { return Data::GetSingleton()->GetInventoryList(); });
+		inventory->SetUserDataID("Equipment");
+		inventory->SetDragDropHandle(UITable::DragDropHandle::Inventory);
+		inventory->AddFlag(UITable::ModexTableFlag_Inventory);
+		inventory->AddFlag(UITable::ModexTableFlag_EnableHeader);
+		inventory->Init();
+		m_tables.push_back(std::move(inventory));
 	}
 }

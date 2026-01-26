@@ -4,38 +4,26 @@
 
 namespace Modex
 {
-	class SettingsModule
+	class SettingsModule : public UIModule
 	{
-	private:
-		char                            m_modSearchBuffer[256];
-		RE::FormType                    m_primaryFilter;
-		std::vector<const RE::TESFile*> m_pluginList;
-		std::vector<std::string>        m_pluginListVector;
-		uint32_t                        m_sort;
-		uint32_t                        m_type;
-
 	public:
-		static inline SettingsModule* GetSingleton()
-		{
-			static SettingsModule singleton;
-			return std::addressof(singleton);
-		}
+		static inline char                            m_modSearchBuffer[256];
+		static inline std::vector<const RE::TESFile*> m_pluginList;
+		static inline std::vector<std::string>        m_pluginListVector;
+		static inline uint32_t                        m_sort;
+		static inline uint32_t                        m_type;
 
-		void Draw(float a_offset);
-		void Load();
+		SettingsModule();
+		~SettingsModule() = default;
+		SettingsModule(const SettingsModule&) = delete;
+		SettingsModule(SettingsModule&&) = delete;
+		SettingsModule& operator=(const SettingsModule&) = delete;
+		SettingsModule& operator=(SettingsModule&&) = delete;
 
-	private:
-		void DrawGeneralSettings();
-		void DrawBlacklistSettings();
-		void BuildBlacklistPlugins();
+		void Draw() override;
+		void Load() override;
+		void Unload() override;
 
-		enum class Viewport : uint8_t
-		{
-			UserSettings = 0,
-			Blacklist,
-			Count
-		};
-
-		Viewport m_activeViewport = Viewport::UserSettings;
+		static void DrawBlacklistSettings();
 	};
 }
