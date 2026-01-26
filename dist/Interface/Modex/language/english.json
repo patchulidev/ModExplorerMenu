@@ -29,6 +29,15 @@
     "ON": "ON",
     "OFF": "OFF",
 
+	"MODULE_HOME": "Home",
+	"MODULE_ADD_ITEM": "Add Item",
+	"MODULE_EQUIPMENT": "Equipment",
+	"MODULE_ACTOR": "Actor",
+	"MODULE_OBJECTS": "Objects",
+	"MODULE_TELEPORT": "Teleport",
+	"MODULE_SETTINGS": "Settings",
+	"MODULE_EXIT": "Exit",
+
     "KIT": "Kit",
     "KIT_CREATE": "Create New Kit",
     "KIT_CREATE_TOOLTIP": "Create New Kit\n\nCreate a new empty kit to add items to.",

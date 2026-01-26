@@ -1,34 +1,26 @@
 #pragma once
 
 #include "ui/components/UIWindow.h"
+#include "ui/components/UIModule.h"
 
 namespace Modex
 {
 	class Menu : public UIWindow
 	{
-	private:
-		enum ActiveWindow : uint8_t
-		{
-			Home = 0,
-			AddItem,
-			Equipment,
-			Object,
-			NPC,
-			Teleport,
-			Settings,
-			kTotal
-		};
-
-		ActiveWindow activeWindow = ActiveWindow::Home;
-
 	public:
 
-		Menu() = default;
+		Menu();
+
+		Menu(const Menu&) = delete;
+		Menu(Menu&&) = delete;
+		Menu& operator=(const Menu&) = delete;
+		Menu& operator=(Menu&&) = delete;
+
 		void Draw();
 		void OnOpen();
 		void OnClose();
 
-		void ReloadWindow(ActiveWindow a_window);
+		void LoadModule(std::unique_ptr<UIModule>& a_module, uint8_t a_layoutIndex);
 		void NextWindow();
 
 		static constexpr ImGuiWindowFlags WINDOW_FLAGS =
@@ -38,6 +30,7 @@ namespace Modex
 			ImGuiWindowFlags_NoCollapse         |
 			ImGuiWindowFlags_NoTitleBar         |
 			ImGuiWindowFlags_NoResize           |
+			ImGuiWindowFlags_NoBringToFrontOnFocus | 
 			ImGuiWindowFlags_NoMove;
 
 		static constexpr ImGuiWindowFlags BACKGROUND_FLAGS =
@@ -51,6 +44,10 @@ namespace Modex
 			ImGuiWindowFlags_NoBringToFrontOnFocus;
 
 	private:
+		void DrawSidebar();
+		void DrawModule();
+		void DrawBackground(const ImVec2& a_displaySize);
+
 		bool expand_sidebar;
 		bool sidebar_initialized = false;
 
@@ -67,5 +64,7 @@ namespace Modex
 		float teleport_w   = 0.0f;
 		float settings_w   = 0.0f;
 		float exit_w       = 0.0f;
+
+		std::vector<std::unique_ptr<UIModule>> m_modules;
 	};
 }
