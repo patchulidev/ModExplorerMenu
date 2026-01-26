@@ -80,8 +80,8 @@ namespace
 		auto fileLoggerPtr = std::make_shared<spdlog::sinks::basic_file_sink_mt>(logFilePath.string(), true);
 		auto loggerPtr = std::make_shared<spdlog::logger>("log", std::move(fileLoggerPtr));
 		spdlog::set_default_logger(std::move(loggerPtr));
-		spdlog::set_level(spdlog::level::debug); // TODO: Move back to settings
-		spdlog::flush_on(spdlog::level::debug);
+		// spdlog::set_level(spdlog::level::debug); // TODO: Move back to settings
+		// spdlog::flush_on(spdlog::level::debug);
 	}
 }
 

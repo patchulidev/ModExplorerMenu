@@ -196,11 +196,11 @@ namespace Modex
 			UserConfig::GetSingleton()->SaveSettings();
 		}
 
-		// NOTE: Unimplemented old feature, still needed?
-		// Disable Menu opening over Skyrim Menu's (deprecated)
-		if (UICustom::Settings_ToggleButton("SETTINGS_DISABLE_IN_MENU", config.disableInMenu))
-		{
-			UserConfig::GetSingleton()->SaveSettings();
+			std::vector<std::string> levels = { "trace", "debug", "info", "warn", "error", "critical", "off" };
+			if (UICustom::Settings_Dropdown("SETTINGS_LOG_LEVEL", config.logLevel, levels, false))
+			{
+				UserConfig::GetSingleton()->SaveSettings();
+			}
 		}
 
 		std::vector<std::string> levels = { "trace", "debug", "info", "none" };

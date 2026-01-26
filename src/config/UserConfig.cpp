@@ -4,6 +4,7 @@
 #include "localization/Locale.h"
 #include "config/ThemeConfig.h"
 #include "config/Keycodes.h"
+#include "spdlog/spdlog.h"
 
 namespace Modex
 {
@@ -60,6 +61,8 @@ namespace Modex
 
 		Locale::GetSingleton()->SetFilePath(LOCALE_JSON_DIR / (user.language + ".json"));
 		ThemeConfig::GetSingleton()->SetFilePath(THEMES_JSON_PATH / (user.theme + ".json"));
+		spdlog::set_level(static_cast<spdlog::level::level_enum>(user.logLevel));
+		spdlog::flush_on(static_cast<spdlog::level::level_enum>(user.logLevel));
 	}
 
 	void UserConfig::SaveSettings()
