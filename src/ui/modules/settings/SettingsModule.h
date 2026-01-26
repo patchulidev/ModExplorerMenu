@@ -1,7 +1,6 @@
 #pragma once
 
-// I could abstract widgets into their own class and introduce behaviors such as state tracking,
-// undo history, etc. Would likely require UserConfig to require a struct for defining settings.
+#include "ui/components/UIModule.h"
 
 namespace Modex
 {

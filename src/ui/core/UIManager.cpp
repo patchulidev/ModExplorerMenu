@@ -385,16 +385,21 @@ namespace Modex
 		func(controlMap, allow);
 	}
 
-	UIManager::UIManager() try {
-		m_homeWindow = std::make_unique<HomeModule>();
-		m_addItemWindow = std::make_unique<AddItemModule>();
-		m_equipmentWindow = std::make_unique<EquipmentModule>();
-		m_npcWindow = std::make_unique<ActorModule>();
-		m_objectWindow = std::make_unique<ObjectModule>();
-		// m_teleportWindow = std::make_unique<TeleportModule>();
-	} catch (const std::exception& e) {
-		ASSERT_MSG(true, "UIManager constructor failed!\n\n" + std::string(e.what()));
+	UIManager::UIManager()
+	{
+
 	}
+
+	// UIManager::UIManager() try {
+	// 	m_homeWindow = std::make_unique<HomeModule>();
+	// 	m_addItemWindow = std::make_unique<AddItemModule>();
+	// 	m_equipmentWindow = std::make_unique<EquipmentModule>();
+	// 	m_npcWindow = std::make_unique<ActorModule>();
+	// 	m_objectWindow = std::make_unique<ObjectModule>();
+	// 	// m_teleportWindow = std::make_unique<TeleportModule>();
+	// } catch (const std::exception& e) {
+	// 	ASSERT_MSG(true, "UIManager constructor failed!\n\n" + std::string(e.what()));
+	// }
 
 	UIManager::~UIManager() noexcept = default;
 }

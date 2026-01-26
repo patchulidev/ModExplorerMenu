@@ -1,6 +1,6 @@
 #pragma once
 
-// NOTE: Could probably make a module class for DRY principal.
+#include "ui/components/UIModule.h"
 
 namespace Modex
 {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ui/components/UITable.h"
+#include "ui/components/UIModule.h"
 
 namespace Modex
 {
