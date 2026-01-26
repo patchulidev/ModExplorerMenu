@@ -12,11 +12,10 @@
 #include "config/UserData.h"
 #include "config/ThemeConfig.h"
 
+#include "pch.h"
 
 namespace Modex
 {
-	// TODO: Maybe add a (?) or something that will show a tooltip explaining the table view and colors
-
 	float Pulse(float a_time, float a_frequency, float a_amplitude)
 	{
 		return a_amplitude * sin(a_time * a_frequency);
@@ -40,52 +39,49 @@ namespace Modex
 		return false;
 	}
 
-	// Does this really belong here?
 	ImU32 GetFormTypeColor(const RE::FormType& a_type)
 	{
 		auto alpha = ImGui::GetStyle().Alpha;
 		switch (a_type) {
 		case RE::FormType::Armor:
-			return IM_COL32(0, 102, 204, 100 * alpha);  // Medium Blue
+			return ThemeConfig::GetColorU32("ARMO", alpha);
 		case RE::FormType::AlchemyItem:
-			return IM_COL32(0, 204, 204, 100 * alpha);  // Cyan
+			return ThemeConfig::GetColorU32("ALCH", alpha);
 		case RE::FormType::Ammo:
-			return IM_COL32(204, 204, 0, 100 * alpha);  // Yellow
+			return ThemeConfig::GetColorU32("AMMO", alpha);
 		case RE::FormType::Book:
-			return IM_COL32(153, 76, 0, 100 * alpha);  // Brown
+			return ThemeConfig::GetColorU32("BOOK", alpha);
 		case RE::FormType::Ingredient:
-			return IM_COL32(0, 153, 0, 100 * alpha);  // Green
+			return ThemeConfig::GetColorU32("INGR", alpha);
 		case RE::FormType::KeyMaster:
-			return IM_COL32(255, 153, 51, 100 * alpha);  // Orange
+			return ThemeConfig::GetColorU32("KEYM", alpha);
 		case RE::FormType::Misc:
-			return IM_COL32(153, 0, 153, 100 * alpha);  // Purple
+			return ThemeConfig::GetColorU32("MISC", alpha);
 		case RE::FormType::Scroll:
-			return IM_COL32(255, 204, 153, 100 * alpha);  // Light Orange
+			return ThemeConfig::GetColorU32("SCRL", alpha);
 		case RE::FormType::Weapon:
-			return IM_COL32(255, 51, 51, 100 * alpha);  // Bright Red
+			return ThemeConfig::GetColorU32("WEAP", alpha);
 		case RE::FormType::NPC:
-			return IM_COL32(102, 178, 255, 100 * alpha);  // Light Blue
+			return ThemeConfig::GetColorU32("NPC_", alpha);
 		case RE::FormType::Tree:
-			return IM_COL32(0, 102, 0, 100 * alpha);  // Dark Green
+			return ThemeConfig::GetColorU32("TREE", alpha);
 		case RE::FormType::Static:
-			return IM_COL32(102, 0, 204, 100 * alpha);  // Violet
+			return ThemeConfig::GetColorU32("STAT", alpha);
 		case RE::FormType::Container:
-			return IM_COL32(204, 0, 0, 100 * alpha);  // Dark Red
+			return ThemeConfig::GetColorU32("CONT", alpha);
 		case RE::FormType::Activator:
-			return IM_COL32(255, 102, 0, 100 * alpha);  // Orange Red
+			return ThemeConfig::GetColorU32("ACTI", alpha);
 		case RE::FormType::Light:
-			return IM_COL32(255, 204, 0, 100 * alpha);  // Gold
+			return ThemeConfig::GetColorU32("LIGH", alpha);
 		case RE::FormType::Door:
-			return IM_COL32(0, 204, 0, 100 * alpha);  // Bright Green
+			return ThemeConfig::GetColorU32("DOOR", alpha);
 		case RE::FormType::Furniture:
-			return IM_COL32(153, 0, 153, 100 * alpha);  // Dark Magenta
+			return ThemeConfig::GetColorU32("FURN", alpha);
 		default:
 			return IM_COL32(169, 169, 169, 100 * alpha);  // Dark Gray
 		}
 	}
 
-
-	// Should we newline instead of ellipsis?
 	std::string TRUNCATE(const std::string& a_text, const float& a_width)
 	{
 		const float textWidth = ImGui::CalcTextSize(a_text.c_str()).x;
@@ -108,18 +104,58 @@ namespace Modex
 				resultWidth += charWidth;
 			}
 
-			// ImGui::SetItemTooltip("%s", a_text.c_str());
-
 			return result;
 		}
 
 		return a_text;
 	}
 
+	void UITable::Init()
+	{
+		const auto filename = ConfigManager::FILTER_DIRECTORY / (this->data_id + ".json");
+
+		filterSystem = std::make_unique<FilterSystem>(filename);
+		filterSystem->Load(true);
+		filterSystem->SetSystemCallback([this]() {
+			Refresh();
+		});
+
+		sortSystem = std::make_unique<SortSystem>(filename);
+		sortSystem->Load(true);
+
+		searchSystem = std::make_unique<SearchSystem>(filename);
+		searchSystem->Load(true);
+		searchSystem->SetupDefaultKey();
+
+		selectedPlugin = Translate("SHOW_ALL");
+
+	}
+
+	void UITable::Unload()
+	{
+		tableList.clear();
+		recentList.clear();
+
+		pluginList.clear();
+		pluginSet.clear();
+		selectionStorage.Clear();
+		dragDropSourceList.clear();
+
+		itemPreview = nullptr;
+		tableTargetRef = nullptr;
+	}
+
+	void UITable::Load()
+	{
+		tableTargetRef = Commands::GetConsoleReference();
+		BuildPluginList();
+		LoadRecentList();
+		Refresh();
+	}
 	void UITable::AddItemToRecent(const std::unique_ptr<BaseObject>& a_item)
 	{
 		UserData::Recent().Add(a_item->GetEditorID());
-		this->updateRecentList = true;
+		updateRecentList = true;
 	}
 
 	void UITable::LoadRecentList()
@@ -129,16 +165,15 @@ namespace Modex
 
 		UserData::Recent().GetAsList(recentItems);
 
-		if (recentItems.empty()) {
+		if (recentItems.empty())
 			return;
-		}
 
+		// TEST: Should we keep dummy objects in recent list?
 		for (const auto& editorID : recentItems) {
 			if (RE::TESForm* form = RE::TESForm::LookupByEditorID(editorID)) {
 				recentList.emplace_back(std::make_unique<BaseObject>(form, 0, 0));
 			} else {
-				// TODO: Should we include dummy objects in recent list?
-				// recentList.emplace_back(std::make_unique<BaseObject>(editorID, editorID, "Unknown", 0));
+				recentList.emplace_back(std::make_unique<BaseObject>(editorID, editorID, "Unknown", 0));
 			}
 		}
 
@@ -146,33 +181,38 @@ namespace Modex
 			recentList[i]->m_tableID = i;
 		}
 
-		this->updateRecentList = false;
+		updateRecentList = false;
 	}
 
-	void UITable::AddKitItemsToInventory(const Kit& a_kit)
+	void UITable::AddKitToTargetInventory(const Kit& a_kit)
     {
-		if (this->tableList.empty())
+		if (tableList.empty())
 			return;
 
-        if (a_kit.m_items.empty())
-            return;
+		if (a_kit.m_items.empty())
+			return;
 
-        for (auto& kitItem : a_kit.m_items) {
-            Commands::AddItemToRefInventory(tableTargetRef, kitItem->m_editorid, static_cast<std::uint32_t>(kitItem->m_amount));
-        }
+		if (!tableTargetRef)
+			return;
+
+		for (auto& kitItem : a_kit.m_items) {
+			Commands::AddItemToRefInventory(tableTargetRef, kitItem->m_editorid, static_cast<std::uint32_t>(kitItem->m_amount));
+		}
     }
 
-	// operates on tableTargetRef
-	void UITable::RemoveSelectedFromInventory()
+	void UITable::RemoveSelectionFromTargetInventory()
 	{
-		if (this->tableList.empty())
+		if (tableList.empty())
+			return;
+
+		if (GetSelectionCount() <= 0)
+			return;
+
+		if (!tableTargetRef)
 			return;
 
 		void* it = NULL;
 		ImGuiID id = 0;
-
-		if (!tableTargetRef)
-			return;
 
 		while (selectionStorage.GetNextSelectedItem(&it, &id)) {
 			if (id < std::ssize(tableList) && id >= 0) {
@@ -185,16 +225,19 @@ namespace Modex
 		selectionStorage.Clear();
 	}
 
-	void UITable::AddSelectionToInventory(int a_count)
+	void UITable::AddSelectionToTargetInventory(int a_count)
 	{
-		if (this->tableList.empty()) 
+		if (tableList.empty()) 
+			return;
+
+		if (GetSelectionCount() <= 0)
 			return;
 		
-		void* it = NULL;
-		ImGuiID id = 0;
-
 		if (!tableTargetRef)
 			return;
+
+		void* it = NULL;
+		ImGuiID id = 0;
 
 		while (selectionStorage.GetNextSelectedItem(&it, &id)) {
 			if (id < std::ssize(tableList) && id >= 0) {
@@ -207,36 +250,19 @@ namespace Modex
 		selectionStorage.Clear();
 	}
 
-	// void UITable::AddSelectionToNPC(int a_count)
-	// {
-	// 	if (this->tableList.empty())
-	// 		return;
-
-	// 	void* it = NULL;
-	// 	ImGuiID id = 0;
-
-	// 	while (selectionStorage.GetNextSelectedItem(&it, &id)) {
-	// 		if (id < std::ssize(tableList) && id >= 0) {
-	// 			const auto& item = tableList[id];
-	// 			Commands::AddItemToNPC(item->GetEditorID(), a_count);
-	// 			this->AddItemToRecent(item);
-	// 		}
-	// 	}
-
-	// 	selectionStorage.Clear();
-	// }
-
-
-	void UITable::EquipSelection()
+	void UITable::EquipSelectionToTarget()
 	{
-		if (this->tableList.empty()) 
+		if (tableList.empty()) 
+			return;
+
+		if (GetSelectionCount() <= 0)
 			return;
 		
-		void* it = NULL;
-		ImGuiID id = 0;
-
 		if (!tableTargetRef)
 			return;
+
+		void* it = NULL;
+		ImGuiID id = 0;
 
 		while (selectionStorage.GetNextSelectedItem(&it, &id)) {
 			if (id < std::ssize(tableList) && id >= 0) {
@@ -251,7 +277,7 @@ namespace Modex
 
 	void UITable::PlaceSelectionOnGround(int a_count)
 	{
-		if (this->tableList.empty()) 
+		if (tableList.empty()) 
 			return;
 		
 		void* it = NULL;
@@ -270,13 +296,13 @@ namespace Modex
 
 	void UITable::AddAll()
 	{
-		if (this->tableList.empty()) {
+		if (tableList.empty())
 			return;
-		}
+
 		if (!tableTargetRef)
 			return;
 		
-		for (auto& item : this->tableList) {
+		for (auto& item : tableList) {
 			Commands::AddItemToRefInventory(tableTargetRef, item->GetEditorID(), 1);
 			AddItemToRecent(item);
 		}
@@ -286,11 +312,10 @@ namespace Modex
 
 	void UITable::PlaceAll()
 	{
-		if (this->tableList.empty()) {
+		if (tableList.empty())
 			return;
-		}
 
-		for (auto& item : this->tableList) {
+		for (auto& item : tableList) {
 			Commands::PlaceAtMe(item->GetEditorID(), 1);
 			AddItemToRecent(item);
 		}
@@ -298,76 +323,40 @@ namespace Modex
 		selectionStorage.Clear();
 	}
 
-	void UITable::Init()
-	{
-		// FIXME: Why is this called (x) amount of times on launch?
-
-		const auto filename = ConfigManager::FILTER_DIRECTORY / (this->data_id + ".json");
-
-		this->filterSystem = std::make_unique<FilterSystem>(filename);
-		this->filterSystem->Load(true);
-		this->filterSystem->SetSystemCallback([this]() {
-			this->Refresh();
-		});
-
-		this->sortSystem = std::make_unique<SortSystem>(filename);
-		this->sortSystem->Load(true);
-
-		this->searchSystem = std::make_unique<SearchSystem>(filename);
-		this->searchSystem->Load(true);
-		this->searchSystem->SetupDefaultKey();
-
-		this->BuildPluginList();
-		this->LoadRecentList();
-	}
-
-	void UITable::Unload()
-	{
-		this->tableList.clear();
-		this->pluginList.clear();
-		this->selectionStorage.Clear();
-		this->dragDropSourceList.clear();
-	}
-
-	void UITable::Load()
-	{
-		this->Reset();
-	}
-
 	void UITable::SetDragDropTarget(DragDropHandle a_handle, UITable* a_view)
 	{
-		this->dragDropSourceList.clear();
-		this->dragDropSourceList[a_handle] = a_view;
+		dragDropSourceList.clear();
+		dragDropSourceList[a_handle] = a_view;
 	}
 
 	void UITable::AddDragDropTarget(DragDropHandle a_handle, UITable* a_view)
 	{
-		this->dragDropSourceList[a_handle] = a_view;
+		dragDropSourceList[a_handle] = a_view;
 	}
 
 	void UITable::RemoveDragDropTarget(DragDropHandle a_handle)
 	{
-		auto it = this->dragDropSourceList.find(a_handle);
-		if (it != this->dragDropSourceList.end()) {
-			this->dragDropSourceList.erase(it);
+		auto it = dragDropSourceList.find(a_handle);
+		if (it != dragDropSourceList.end()) {
+			dragDropSourceList.erase(it);
 		}
 	}
 
 	void UITable::SetDragDropHandle(DragDropHandle a_id)
 	{
-		this->dragDropHandle = a_id;
+		dragDropHandle = a_id;
 	}
 
 	void UITable::SetGenerator(std::function<std::vector<BaseObject>()> a_generator)
 	{
-		this->generator = a_generator;
+		generator = a_generator;
 	}
 
 	std::vector<std::unique_ptr<BaseObject>> UITable::GetSelection()
 	{
 		std::vector<std::unique_ptr<BaseObject>> selectedItems;
 
-		for (auto& item : this->tableList) {
+		for (auto& item : tableList) {
 			bool is_item_selected = selectionStorage.Contains(item->m_tableID);
 			if (is_item_selected) {
 				selectedItems.emplace_back(std::make_unique<BaseObject>(*item));
@@ -382,19 +371,23 @@ namespace Modex
 		return selectionStorage.Size;
 	}
 
-	void UITable::AddPayloadItemToKit(const std::unique_ptr<BaseObject>& a_item)
+	void UITable::AddPayloadToTableList(const std::unique_ptr<BaseObject>& a_item)
 	{
-		for (auto& item : this->tableList) {
+		bool has_item = false;
+		for (auto& item : tableList) {
 			if (item->GetEditorID() == a_item->GetEditorID()) {
-				return;
+				item->kitAmount++;
+				has_item = true;
 			}
 		}
 
-		this->tableList.emplace_back(std::make_unique<BaseObject>(*a_item));
+		if (!has_item) {
+			tableList.emplace_back(std::make_unique<BaseObject>(*a_item));
+		}
 	}
 
-	// TODO: Need a better way to manage inventory changes
-	void UITable::AddPayloadItemToTable(const std::unique_ptr<BaseObject>& a_item)
+	// TODO: Need a better way to manage inventory change callbacks
+	void UITable::AddPayloadToInventory(const std::unique_ptr<BaseObject>& a_item)
 	{
 		for (auto& item : this->tableList) {
 			if (item->GetEditorID() == a_item->GetEditorID()) {
@@ -408,7 +401,7 @@ namespace Modex
 	}
 
 	// TODO: This doesn't make sense. Inventory != table.
-	void UITable::RemovePayloadItemFromInventory(const std::unique_ptr<BaseObject>& a_item)
+	void UITable::RemovePayloadFromInventory(const std::unique_ptr<BaseObject>& a_item)
 	{
 		if (this->tableList.empty()) {
 			return;
@@ -428,10 +421,10 @@ namespace Modex
 		Data::GetSingleton()->GenerateInventoryList();
 	}
 
-	void UITable::AddSelectedToKit()
+	void UITable::AddSelectionToActiveKit()
 	{
 		if (auto map = dragDropSourceList.find(DragDropHandle::Kit); map != this->dragDropSourceList.end()) {
-			const auto dragDropSourceTable = map->second->GetTableListPtr();
+			const auto& destination = map->second;
 
 			void* it = NULL;
 			ImGuiID id = 0;
@@ -440,14 +433,7 @@ namespace Modex
 				if (id < tableList.size() && id >= 0) {
 					const auto& item = this->tableList[id];
 
-					auto iter = std::find_if(dragDropSourceTable->begin(), dragDropSourceTable->end(),
-						[&item](const std::unique_ptr<BaseObject>& a_item) {
-							return a_item->GetEditorID() == item->GetEditorID();
-						});
-
-					if (iter == dragDropSourceTable->end()) {
-						dragDropSourceTable->emplace_back(std::make_unique<BaseObject>(*item));
-					}
+					destination->AddPayloadToTableList(item);
 				}
 			}
 		}
@@ -540,26 +526,7 @@ namespace Modex
 			}
 
 			this->UpdateImGuiTableIDs();
-			
-			// In-table kit view is disabled if there are no kits in the plugin.
-			if (this->pluginKitList.empty()) {
-				this->showPluginKitView = false;
-			}
 		}
-	}
-
-	void UITable::Reset()
-	{
-		this->tableList.clear();
-		this->itemPreview = nullptr;
-		this->selectedPlugin = Translate("SHOW_ALL");
-
-		this->tableTargetRef = Commands::GetConsoleReference();
-		ImFormatString(this->pluginSearchBuffer, IM_ARRAYSIZE(this->pluginSearchBuffer), "");
-
-		this->BuildPluginList();
-		this->Refresh();
-		this->LoadRecentList();
 	}
 
 	void UITable::Filter(const std::vector<BaseObject>& a_data)
@@ -733,30 +700,58 @@ namespace Modex
 
 	void UITable::UpdateLayout()
 	{
+		const auto& userdata = UserData::User();
 		const auto& config = UserConfig::Get();
-		const auto& user = UserData::User();
-		const float _width = ImGui::GetContentRegionAvail().x + user.Get<float>("Modex::Table::ItemWidth", 0.0f);
-		const float _height = (config.globalFontSize * 1.75f) + user.Get<float>("Modex::Table::ItemHeight", 0.0f); 
 
-		if (_width <= 0.0f) {
+		styleHeight = userdata.Get<float>("Modex::Table::ItemHeight", 0.0f);
+		styleWidth = userdata.Get<float>("Modex::Table::ItemWidth", 0.0f);
+		styleSpacing = userdata.Get<float>("Modex::Table::ItemSpacing", 0.0f);
+		styleFontSize = userdata.Get<float>("Modex::Table::FontSize", 0.0f); 
+		showAltRowBG = userdata.Get<bool>("Modex::Table::ShowAltRowBG", true);
+		showPluginIcon = userdata.Get<bool>("Modex::Table::ShowPluginIcon", true);
+		showPropertyColumn = userdata.Get<bool>("Modex::Table::ShowPropertyColumn", true);
+		showEditorID = userdata.Get<bool>("Modex::Table::ShowEditorID", false);
+		showFormType = userdata.Get<bool>("Modex::Table::ShowFormType", false);
+
+		if (styleFontSize == 0.0f) {
+			styleFontSize = config.globalFontSize;
+		}
+
+		// Constrained to the child window which we draw within.
+		const float full_width = ImGui::GetContentRegionAvail().x;
+		const float full_height = ImGui::GetContentRegionAvail().y;
+
+		// Magic number + user offset.
+		const float height = (styleFontSize * 1.75f) + styleHeight;
+		
+		// Spacing between each element.
+		LayoutRowSpacing = 3.0f + styleSpacing;
+		LayoutHitSpacing = 0.0f;
+
+		// Calculate whether a scrollbar is present based on which list we're viewing.
+		const int table_size = filterSystem->ShowRecent() ? recentList.size() : tableList.size();
+		const float total_height = table_size * (height) + ((table_size + 2) * LayoutRowSpacing);
+
+		// Offset Layout width if scrollbar is present
+		const float scroll_bar = total_height > full_height ? ImGui::GetStyle().ScrollbarSize : 0.0f;
+		const float width = full_width - scroll_bar;
+
+		if (width <= 0.0f) {
 			return;
 		}
 
 		// Each table item's width and height.
-		LayoutItemSize = ImVec2(_width, _height);
+		LayoutItemSize = ImVec2(width, height);
 
-		// Spacing
-		LayoutRowSpacing = 5.0f;
-		LayoutHitSpacing = 0.0f;
-
-		// Not used currently
 		LayoutColumnCount = 1;
+		LayoutColumnWidth = LayoutItemSize.x + styleWidth;
 
 		// Used to increment position for next table item.
 		LayoutItemStep = ImVec2(LayoutItemSize.x, LayoutItemSize.y + LayoutRowSpacing);
 
 		// Includes measurement for outline thickness!
-		LayoutOuterPadding = floorf(LayoutRowSpacing * 0.5f);
+		// LayoutOuterPadding = floorf(LayoutRowSpacing * 0.5f);
+		LayoutOuterPadding = 0.0f;
 	}
 
 	// bool UITable::SortFnKit(const std::unique_ptr<Kit>& lhs, const std::unique_ptr<Kit>& rhs)
@@ -778,27 +773,15 @@ namespace Modex
 
 	void UITable::SortListBySpecs()
 	{
-		if (!this->showPluginKitView) {
-			std::sort(tableList.begin(), tableList.end(), [this](const std::unique_ptr<BaseObject>& a, const std::unique_ptr<BaseObject>& b) {
-				return sortSystem->SortFn(a, b);
-			});
-		} else {
-			std::sort(pluginKitList.begin(), pluginKitList.end(), [this](const std::unique_ptr<Kit>& a, const std::unique_ptr<Kit>& b) {
-				return sortSystem->SortFnKit(a, b);
-			});
-		}
+		std::sort(tableList.begin(), tableList.end(), [this](const std::unique_ptr<BaseObject>& a, const std::unique_ptr<BaseObject>& b) {
+			return sortSystem->SortFn(a, b);
+		});
 	}
 
 	void UITable::UpdateImGuiTableIDs()
 	{
-		if (!this->showPluginKitView) {
-			for (int i = 0; i < std::ssize(tableList); i++) {
-				tableList[i]->m_tableID = i;
-			}
-		} else {
-			for (int i = 0; i < std::ssize(pluginKitList); i++) {
-				pluginKitList[i]->m_tableID = i;
-			}
+		for (int i = 0; i < std::ssize(tableList); i++) {
+			tableList[i]->m_tableID = i;
 		}
 	}
 
@@ -842,54 +825,16 @@ namespace Modex
 
 	void UITable::ShowSort()
 	{
-		const float full_width = ImGui::GetContentRegionAvail().x;
-
-		{
-			const std::string icon = ICON_LC_SIGNATURE;
-			const std::string tooltip = this->showEditorID ? Translate("EDITORID_DISABLE_TOOLTIP") : Translate("EDITORID_ENABLE_TOOLTIP");
-			ImGui::PushStyleColor(ImGuiCol_Text, this->showEditorID ? ThemeConfig::GetColor("TEXT") : ThemeConfig::GetColor("TEXT_DISABLED"));
-			if (UICustom::IconButton(icon.c_str(), tooltip.c_str(), this->showEditorID)) {
-				UserData::User().Set<bool>(this->data_id + "::ShowEditorID", this->showEditorID);
-			}
-			ImGui::PopStyleColor();
-		}
-
-		if (this->HasFlag(ModexTableFlag_EnablePluginKitView)) {
-			ImGui::SameLine();
-
-			const std::string icon = ICON_LC_BOX;
-			const std::string tooltip = this->showPluginKitView ? Translate("KITVIEW_DISABLE_TOOLTIP") : Translate("KITVIEW_ENABLE_TOOLTIP");
-			bool pluginHasKits = !this->pluginKitList.empty();
-
-			if (pluginHasKits && !this->showPluginKitView) {
-				float pulse = PulseMinMax((float)ImGui::GetTime(), 5.0f, 0.5f, 0.0f, 1.0f);
-				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, pulse));
-			} else if (pluginHasKits && this->showPluginKitView) {
-				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
-			} else {
-				ImGui::PushStyleColor(ImGuiCol_Text, ThemeConfig::GetColor("TEXT_DISABLED"));
-			}
-
-			if (UICustom::IconButton(icon.c_str(), tooltip.c_str(), this->showPluginKitView)) {
-				if (!pluginHasKits) {
-					this->showPluginKitView = false;
-				} else {
-					this->SortListBySpecs();
-					this->UpdateImGuiTableIDs();
-				}
-
-				UserData::User().Set<bool>(this->data_id + "::ShowPluginKitView", this->showPluginKitView);
-			}
-
-			ImGui::PopStyleColor();
-		}
-
 		ImGui::SameLine();
-
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
-		DrawFormSearchBar(ImVec2(full_width / 3.0f, 0.0f));
+		const ImVec2 window_padding = ImGui::GetStyle().WindowPadding;
+		const float frame_height = ImGui::GetFrameHeight();
+
+		const float search_width = ImGui::GetContentRegionAvail().x / 3.0f;
+		DrawFormSearchBar(ImVec2(search_width, 0.0f));
 
 		ImGui::SameLine();
+
 		ImGui::AlignTextToFramePadding();
 		ImGui::Text(" " ICON_LC_ARROW_RIGHT_TO_LINE " ");
 		if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort | ImGuiHoveredFlags_NoSharedDelay)) {
@@ -897,7 +842,8 @@ namespace Modex
 		}
 		ImGui::SameLine();
 		
-		DrawPluginSearchBar(ImVec2(ImGui::GetContentRegionAvail().x - ImGui::GetStyle().WindowPadding.x, 0.0f));
+		const float plugin_width = ImGui::GetContentRegionAvail().x - window_padding.x - frame_height;
+		DrawPluginSearchBar(ImVec2(plugin_width, 0.0f));
 		ImGui::PopStyleVar();
 
 		ImGui::SameLine();
@@ -906,13 +852,12 @@ namespace Modex
 		ImGui::SameLine();
 		
 		ImGui::SetNextItemAllowOverlap();
-		const ImVec2 _size = ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight());
-		ImGui::SetCursorPosX(ImGui::GetCursorPosX() - _size.x - ImGui::GetStyle().WindowPadding.x);
-		if (ImGui::InvisibleButton("##Table::Settings::Button", _size)) {
+		const ImVec2 button_size = ImVec2(frame_height, frame_height);
+		ImGui::SetCursorPosX(ImGui::GetCursorPosX() - button_size.x - window_padding.x); 
+		if (ImGui::InvisibleButton("##Table::Settings::IconButton", button_size)) {
 			ImGui::OpenPopup("TABLE_SETTINGS_POPUP");
 		}
 
-		// TODO: Table settings
 		ImGui::SetNextWindowSize(ImVec2(ImGui::GetWindowSize().x / 4.0f, 0.0f));
 		if (ImGui::BeginPopup("TABLE_SETTINGS_POPUP")) {
 			DrawTableSettingsPopup();
@@ -921,85 +866,12 @@ namespace Modex
 
 	}
 
-	// TODO: This is just a reminder, none line specific, that we need to setup persistent userdata for new stuff
-
-	// This is called when we select a plugin from the plugin list to alter the view. This updates the
-	// pluginKitList member to populate using a compare algorithm against all selected kits. So we also call it
-	// when updating changes to our current kit.
-
-	void UITable::LoadKitsFromSelectedPlugin()
-	{
-		if (this->HasFlag(ModexTableFlag_EnablePluginKitView)) {
-			// pluginKitList.clear();
-
-			// // We don't need to correlate kits to All Plugins since it's not a valid plugin.
-			// if (selectedPlugin == Translate("SHOW_ALL")) {
-			// 	return;
-			// }
-
-			// auto& equipment = EquipmentConfig::GetEquipmentList();
-
-			// This shit is kind of expensive
-
-			// auto& kits = EquipmentConfig::GetLoadedKits();
-
-			// int table_id = 0;
-			// for (auto& [name, kit] : kits) {
-			// 	bool kitExists = false;
-			// 	for (auto& existingKit : pluginKitList) {
-			// 		if (existingKit->m_name == kit.m_name) {
-			// 			kitExists = true;
-			// 			break;
-			// 		}
-			// 	}
-			// 	if (!kitExists) {
-			// 		// We first need to check if any item in any given kit is from the selected plugin.
-			// 		// We iterate over the items inside every kit to identify this. So far at 500+ kits this is not an issue.
-			// 		// Once we detected that this kit *should* show inside the Plugin Kit View, we then create
-			// 		// the meta data for the kit by iterating over its items again. The key point is that we
-			// 		// early out of the first iteration on the first item found. So we don't actually iterate
-			// 		// over the entire kit twice. We use one to match, then the other to build.
-
-			// 		for (auto& item : kit.m_items) {
-			// 			if (selectedPlugin == Translate("SHOW_ALL") || item->m_plugin == selectedPlugin) {
-			// 				kit.m_tableID = table_id;
-
-			// 				kit.m_weaponCount = 0;
-			// 				kit.m_armorCount = 0;
-			// 				kit.m_miscCount = 0;
-
-			// 				for (auto& found : kit.m_items) {
-			// 					const auto& form = RE::TESForm::LookupByEditorID(found->m_editorid);
-
-			// 					if (form) {
-			// 						if (form->IsWeapon()) {
-			// 							kit.m_weaponCount++;
-			// 						} else if (form->IsArmor()) {
-			// 							kit.m_armorCount++;
-			// 						} else {
-			// 							kit.m_miscCount++;
-			// 						}
-			// 					}
-			// 				}
-
-			// 				this->pluginKitList.emplace_back(std::make_unique<Kit>(kit));
-
-			// 				table_id++;
-			// 				break;
-			// 			}
-			// 		}
-			// 	}
-			// }
-		}
-	}
-
 	void UITable::DrawKit(const Kit& a_kit, const ImVec2& a_pos, const bool& a_selected)
 	{
 		(void)a_selected;  // If we want to handle selection visuals manually.
 
 		const auto& DrawList = ImGui::GetWindowDrawList();
-		const auto& config = UserConfig::Get();
-		const float fontSize = config.globalFontSize;
+		const float fontSize = ImGui::GetFontSize(); 
 
 		// Setup box and bounding box for positioning and drawing.
 		const ImVec2 box_min(a_pos.x - 1, a_pos.y - 1);
@@ -1023,7 +895,7 @@ namespace Modex
 		// Outline
 		DrawList->AddRect(bb.Min, bb.Max, outline_color, 0.0f, 0, 1.0f);
 
-		const float spacing = LayoutItemSize.x / 3.0f;
+		const float spacing = LayoutColumnWidth / 3.0f;
 		const float top_align = bb.Min.y + LayoutOuterPadding;
 		const float bot_align = bb.Max.y - LayoutOuterPadding - fontSize;
 		const float center_align = bb.Min.y + ((LayoutOuterPadding + LayoutItemSize.y) / 2) - (fontSize / 2.0f);
@@ -1061,93 +933,6 @@ namespace Modex
 			DrawList->AddText(bot_left_align, text_color, second_half.c_str());
 		} else {
 			DrawList->AddText(bot_left_align, text_color, desc_string.c_str());
-		}
-	}
-
-	void UITable::PluginKitView()
-	{
-		if (!this->HasFlag(ModexTableFlag_EnablePluginKitView)) {
-			return;
-		}
-
-		if (!pluginKitList.empty()) {
-			UpdateLayout();
-
-			const ImVec2 start_pos = ImGui::GetCursorScreenPos();
-			ImGui::SetCursorScreenPos(start_pos);
-
-			const int COLUMN_COUNT = 1;
-			const int ITEMS_COUNT = static_cast<int>(std::ssize(pluginKitList));
-
-			ImGuiListClipper clipper;
-			clipper.Begin(ITEMS_COUNT, LayoutItemStep.y);
-
-			while (clipper.Step()) {
-				const int item_start = clipper.DisplayStart;
-				const int item_end = clipper.DisplayEnd;
-
-				for (int line_idx = item_start; line_idx < item_end; line_idx++) {
-					const int item_min_idx_for_current_line = line_idx * COLUMN_COUNT;
-					const int item_max_idx_for_current_line = (std::min)((line_idx + 1) * COLUMN_COUNT, ITEMS_COUNT);
-
-					for (int kit_idx = item_min_idx_for_current_line; kit_idx < item_max_idx_for_current_line; ++kit_idx) {
-						auto& item_data = pluginKitList[kit_idx];
-						ImGui::PushID((int)item_data->m_tableID);
-
-						ImVec2 pos = ImVec2(start_pos.x, start_pos.y + line_idx * LayoutItemStep.y);
-						ImGui::SetCursorScreenPos(pos);
-
-						bool is_selected = false;
-						bool is_item_visible = ImGui::IsRectVisible(LayoutItemSize);
-						const float button_area = (LayoutItemSize.x * 0.10f) + LayoutItemSize.y * 2.0f;
-
-
-						ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.f, 0.f));
-						ImGui::Selectable("", is_selected, 0, ImVec2(LayoutItemSize.x - (button_area), LayoutItemSize.y));
-						ImGui::PopStyleVar();
-
-						if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
-							if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
-								this->AddKitItemsToInventory(*item_data);
-							}
-						}
-
-						if (is_item_visible) {
-							DrawKit(*item_data, pos, false);
-
-							const ImVec4 use_color = ThemeConfig::GetColor("KIT_USE");
-							const ImVec4 del_color = ThemeConfig::GetColor("KIT_DELETE");
-							const ImVec2 use_size = ImVec2(LayoutItemSize.x * 0.10f, LayoutItemSize.y);
-							const ImVec2 del_size = ImVec2(LayoutItemSize.y * 2.0f, LayoutItemSize.y);
-							const ImVec2 use_pos = ImVec2(pos.x + (LayoutItemSize.x - use_size.x - del_size.x), pos.y);
-							const ImVec2 del_pos = ImVec2(use_pos.x + use_size.x, use_pos.y);
-
-							ImGui::SetCursorScreenPos(use_pos);
-							ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, 0.0f));
-							ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
-
-							ImGui::PushStyleColor(ImGuiCol_Button, use_color);
-							if (ImGui::Button(ICON_LC_CHECK "Use", use_size)) {
-								this->AddKitItemsToInventory(*item_data);
-							}
-							ImGui::PopStyleColor();
-
-							ImGui::SameLine();
-
-							bool _unused = false;
-							// if (UICustom::IconButtonBg(ICON_LC_TRASH, Translate("KIT_DELETE_TOOLTIP"), _unused, del_size, del_color, 0.1f)) {
-								// TODO: Implement delete kit popup.
-							// }
-
-							ImGui::PopStyleVar(2);
-						}
-
-						ImGui::PopID();
-					}
-				}
-			}
-
-			clipper.End();
 		}
 	}
 
@@ -1198,7 +983,7 @@ namespace Modex
 					// Behavior based on source and destination types.
 					for (const auto& item : payload_items) {
 						if (destination->GetDragDropHandle() == DragDropHandle::Kit) {
-							destination->AddPayloadItemToKit(item);
+							destination->AddPayloadToTableList(item);
 						}	
 
 						if (destination->GetDragDropHandle() == DragDropHandle::Table) {
@@ -1207,12 +992,12 @@ namespace Modex
 							}
 
 							if (origin->GetDragDropHandle() == DragDropHandle::Inventory) {
-								origin->RemovePayloadItemFromInventory(item);
+								origin->RemovePayloadFromInventory(item);
 							}
 						}
 
 						if (destination->GetDragDropHandle() == DragDropHandle::Inventory) {
-							destination->AddPayloadItemToTable(item);
+							destination->AddPayloadToInventory(item);
 						}
 					}
 					
@@ -1289,7 +1074,7 @@ namespace Modex
 							Commands::RemoveItemFromInventory(tableTargetRef, a_item->GetEditorID(), click_amount);
 							AddItemToRecent(a_item);
 						} else {
-							RemoveSelectedFromInventory();
+							RemoveSelectionFromTargetInventory();
 						}
 
 						this->Refresh();
@@ -1303,7 +1088,7 @@ namespace Modex
 							AddItemToRecent(a_item);
 						} else {
 							PlaceSelectionOnGround(click_amount);
-							RemoveSelectedFromInventory();
+							RemoveSelectionFromTargetInventory();
 						}
 
 						this->Refresh();
@@ -1319,7 +1104,7 @@ namespace Modex
 							Commands::AddItemToRefInventory(tableTargetRef, a_item->GetEditorID(), click_amount);
 							AddItemToRecent(a_item);
 						} else {
-							AddSelectionToInventory(click_amount);
+							AddSelectionToTargetInventory(click_amount);
 						}
 					}
 
@@ -1329,7 +1114,7 @@ namespace Modex
 								Commands::AddAndEquipItemToInventory(tableTargetRef, a_item->GetEditorID());
 								AddItemToRecent(a_item);
 							} else {
-								EquipSelection();
+								EquipSelectionToTarget();
 							}
 						}
 					}
@@ -1358,45 +1143,35 @@ namespace Modex
 
 				if (HasFlag(ModexTableFlag_Kit)) { // Kit Table View Window
 					if (ImGui::MenuItem(Translate("KIT_REMOVE"))) {
-						if (GetSelectionCount() == 0) {
-							this->RemovePayloadItemFromKit(a_item);
-						} else {
-							this->RemoveSelectedFromKit();
-						}
+						if (GetSelectionCount() == 0)
+							RemovePayloadItemFromKit(a_item);
+						else
+							RemoveSelectedFromKit();
 
-						this->SyncChangesToKit();
-
-						if (auto it = dragDropSourceList.find(DragDropHandle::Kit); it != this->dragDropSourceList.end()) {
-							const auto dragDropSourceTable = it->second;
-
-							dragDropSourceTable->LoadKitsFromSelectedPlugin();
-						}
-
-						this->Refresh();
-						this->selectionStorage.Clear();
+						selectionStorage.Clear();
+						SyncChangesToKit();
+						Refresh();
 					}
 
 					ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 				}
 
 				// We use dragDropSourceList to find paired Kit table, since selectedKit is stored in the kit table.
-				if (HasFlag(ModexTableFlag_Base)) { // Main UITable Window
+				if (HasFlag(ModexTableFlag_Base)) {
 					if (auto it = dragDropSourceList.find(DragDropHandle::Kit); it != this->dragDropSourceList.end()) {						
-						const auto dragDropSourceTable = it->second;
-						if (const auto selected_kit = dragDropSourceTable->selectedKitPtr; selected_kit && !selected_kit->empty()) {
+						const auto destination = it->second;
+						if (const auto selected_kit = destination->selectedKitPtr; selected_kit && !selected_kit->empty()) {
 							if (ImGui::MenuItem(Translate("KIT_ADD"))) {
-								if (GetSelectionCount() == 0) {
-									dragDropSourceTable->AddPayloadItemToKit(a_item);
-									AddItemToRecent(a_item);
-								} else {
-									this->AddSelectedToKit();
-									AddItemToRecent(a_item);
-								}
+								if (GetSelectionCount() == 0)
+									destination->AddPayloadToTableList(a_item);
+								else
+									this->AddSelectionToActiveKit();
 
-								dragDropSourceTable->SyncChangesToKit();
-								this->LoadKitsFromSelectedPlugin();
+								AddItemToRecent(a_item);
 
-								dragDropSourceTable->Refresh();
+								destination->SyncChangesToKit();
+								destination->Refresh();
+
 								this->selectionStorage.Clear();
 							}
 
@@ -1559,7 +1334,6 @@ namespace Modex
 			return;
 		}
 
-		const auto& userdata = UserData::User();
 		const auto& DrawList = ImGui::GetWindowDrawList();
 
 		// Setup box and bounding box for positioning and drawing.
@@ -1609,7 +1383,7 @@ namespace Modex
 		bb.Min.x += type_pillar_width * 2.0f;
 		float spacing = LayoutItemSize.x / 6.0f;
 
-		const float fontSize = UserConfig::Get().globalFontSize;
+		const float fontSize = ImGui::GetFontSize();
 		const float top_align = bb.Min.y + LayoutOuterPadding;
 		const float bot_align = bb.Max.y - LayoutOuterPadding - fontSize;
 		const float center_align = bb.Min.y + ((LayoutOuterPadding + LayoutItemSize.y) / 2) - (fontSize / 2.0f);
@@ -1623,7 +1397,7 @@ namespace Modex
 		const ImVec2 center_right_align = ImVec2(right_align, center_align);
 
 		std::string name_string = a_item->GetName().empty() ? a_item->GetEditorID() : a_item->GetName();
-		float name_offset = 5.0f;  // initial offset
+		float name_offset = 5.0f;  // initial offset from pillar
 
 		if (showEditorID) {
 			name_string = TRUNCATE(a_item->GetEditorID(), spacing * 1.5f);
@@ -1631,22 +1405,12 @@ namespace Modex
 			name_string = TRUNCATE(name_string, spacing * 1.5f);
 		}
 
-		// TODO: Wtf was this doing
-		// const std::string plugin_name = Utils::GetFormTypeIcon(a_item->GetFormType()) + TRUNCATE(a_item->GetPluginName(), ((spacing * 1.5f) - fontSize * 2.0f) - name_offset);
-		// DrawList->AddText(center_left_align, text_color, plugin_name.c_str());
-		const std::string plugin_icon = userdata.Get<bool>("Modex::Table::ShowPluginIcon", true) ? a_item->GetItemIcon() : "";
+		const std::string plugin_icon = showPluginIcon ? a_item->GetItemIcon() : "";
 		const std::string plugin_name = TRUNCATE(plugin_icon + a_item->GetPluginName(), ((spacing * 1.5f) - fontSize * 2.0f) - name_offset);
 		DrawList->AddText(center_left_align, text_color, plugin_name.c_str());
 
 		const ImVec2 name_pos = ImVec2(bb.Min.x + (spacing * 1.5f) - name_offset, center_align);
 		DrawList->AddText(name_pos, text_color, name_string.c_str());
-
-		// I think this was used for the recent item list
-		// if (overrideLayout == 1) {
-		// 	const std::string item_id = std::to_string(a_item.m_tableID);
-		// 	const ImVec2 id_pos = ImVec2(bb.Max.x - ((ImGui::CalcTextSize(item_id.c_str()).x + (LayoutOuterPadding * 2.0f))), center_align);
-		// 	DrawList->AddText(id_pos, text_color, item_id.c_str());
-		// }
 
 		if (a_item->IsDummy()) {
 			return;
@@ -1700,22 +1464,16 @@ namespace Modex
 		}
 	}
 
-	void UITable::DrawItem(const BaseObject& a_item, const ImVec2& a_pos, const bool& a_selected)
+	void UITable::DrawItem(const std::unique_ptr<BaseObject>& a_item, const ImVec2& a_pos, const bool& a_selected)
 	{
 		(void)a_selected;  // If we want to handle selection visuals manually.
 
 		const auto& DrawList = ImGui::GetWindowDrawList();
-		const auto& config = UserConfig::Get();
-		const auto& userdata = UserData::User();
-		const float fontSize = config.globalFontSize;
-
-		auto test_tableRowBG = true;
-		bool showPropertyColumn = userdata.Get<bool>("Modex::Table::ShowProperty", true);
+		const float fontSize = ImGui::GetFontSize();
 
 		// Setup box and bounding box for positioning and drawing.
-		const ImVec2 box_min(a_pos.x - 1, a_pos.y - 1);
-		const float test_mod = userdata.Get<float>("Modex::Table::ItemWidth", 0.0f);
-		const ImVec2 box_max(box_min.x + LayoutItemSize.x + 2 - test_mod, box_min.y + LayoutItemSize.y + 2);  // Dubious
+		const ImVec2 box_min(a_pos.x, a_pos.y);
+		const ImVec2 box_max(box_min.x + LayoutItemSize.x, box_min.y + LayoutItemSize.y);
 		ImRect bb(box_min, box_max);
 
 		// Outline & Background
@@ -1728,8 +1486,8 @@ namespace Modex
 		bool is_enchanted = false;
 
 		// Background
-		if (test_tableRowBG) {
-			if (a_item.m_tableID % 2 == 0) {
+		if (showAltRowBG) {
+			if (a_item->m_tableID % 2 == 0) {
 				DrawList->AddRectFilled(bb.Min, bb.Max, bg_color);
 			} else {
 				DrawList->AddRectFilled(bb.Min, bb.Max, bg_color_alt);
@@ -1739,7 +1497,7 @@ namespace Modex
 		}
 
 		// Invalid / Missing plugin indicator
-		if (a_item.IsDummy()) {
+		if (a_item->IsDummy()) {
 			DrawList->AddRectFilled(bb.Min, bb.Max, err_color);
 		}
 
@@ -1751,21 +1509,21 @@ namespace Modex
 		DrawList->AddRectFilled(
 			ImVec2(bb.Min.x + LayoutOuterPadding, bb.Min.y + LayoutOuterPadding),
 			ImVec2(bb.Min.x + LayoutOuterPadding + type_pillar_width, bb.Max.y - LayoutOuterPadding),
-			GetFormTypeColor(a_item.GetFormType()));
+			GetFormTypeColor(a_item->GetFormType()));
 
 		// Type Pillar tooltip
 		if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows)) {
 			if (IsMouseHoveringRectDelayed(
 				ImVec2(bb.Min.x + LayoutOuterPadding, bb.Min.y + LayoutOuterPadding),
 				ImVec2(bb.Min.x + LayoutOuterPadding + type_pillar_width, bb.Max.y - LayoutOuterPadding))) {
-				ImGui::SetTooltip("%s", RE::FormTypeToString(a_item.GetFormType()).data());
+				ImGui::SetTooltip("%s", RE::FormTypeToString(a_item->GetFormType()).data());
 			}
 		}
 
 		// We need to adjust the bounding box to account for the type pillar.
 		bb.Min.x += type_pillar_width * 2.0f;
 
-		float spacing = (LayoutItemSize.x / 6.0f) * 1.5f;
+		float spacing = (LayoutColumnWidth / 6.0f) * 1.5f;
 		const float top_align = bb.Min.y + LayoutOuterPadding;
 		const float bot_align = bb.Max.y - LayoutOuterPadding - fontSize;
 		const float center_align = bb.Min.y + ((LayoutOuterPadding + LayoutItemSize.y) / 2) - (fontSize / 2.0f);
@@ -1779,21 +1537,20 @@ namespace Modex
 		const ImVec2 center_right_align = ImVec2(right_align, center_align);
 
 		std::string name_string = "";
-		const std::string quantity_string = a_item.GetQuantity() > 1 ? std::format(" ({})", std::to_string(a_item.GetQuantity())) : "";
+		const std::string quantity_string = a_item->GetQuantity() > 1 ? std::format(" ({})", std::to_string(a_item->GetQuantity())) : "";
 
-		// Initial name formatting based on valid name and width cutoff.
 		if (!showEditorID) {
-			if (a_item.GetName().empty()) {
-				name_string = TRUNCATE(a_item.GetEditorID(), spacing) + quantity_string;
+			if (a_item->GetName().empty()) {
+				name_string = TRUNCATE(a_item->GetEditorID(), spacing) + quantity_string;
 			} else {
-				name_string = TRUNCATE(a_item.GetName(), spacing) + quantity_string;
+				name_string = TRUNCATE(a_item->GetName(), spacing) + quantity_string;
 			}
 		} else {
-			name_string = TRUNCATE(a_item.GetEditorID(), spacing) + quantity_string;
+			name_string = TRUNCATE(a_item->GetEditorID(), spacing) + quantity_string;
 		}
 
-		if (a_item.GetFormType() == RE::FormType::NPC) {
-			if (const auto& npc = a_item.GetTESNPC(); npc.has_value()) {
+		if (a_item->GetFormType() == RE::FormType::NPC) {
+			if (const auto& npc = a_item->GetTESNPC(); npc.has_value()) {
 				const auto& npcData = npc.value();
 
 				if (npcData != nullptr) {
@@ -1881,8 +1638,8 @@ namespace Modex
 		const float property_text_spacing = spacing * 0.75f;
 
 
-		if (const auto& item = a_item; item.IsItem()) {
-			const std::string value_string = std::to_string(item.GetGoldValue()) + " " + ICON_LC_COINS;
+		if (const auto& item = a_item; item->IsItem()) {
+			const std::string value_string = std::to_string(item->GetGoldValue()) + " " + ICON_LC_COINS;
 			const float value_width = ImGui::CalcTextSize(value_string.c_str()).x;
 			const ImVec2 value_pos = ImVec2(center_right_align.x - value_width, center_right_align.y);
 			DrawList->AddText(value_pos, text_color, value_string.c_str());
@@ -1893,12 +1650,12 @@ namespace Modex
 				}
 			}
 
-			if (const auto& armor = item.GetTESArmor(); armor.has_value()) {
+			if (const auto& armor = item->GetTESArmor(); armor.has_value()) {
 				const auto& armorData = armor.value();
 
 				if (armorData != nullptr) {
-					const std::string rating_string = item.GetPropertyValueWithIcon(PropertyType::kArmorRating);
-					const std::string type_string = TRUNCATE(item.GetPropertyValueWithIcon(PropertyType::kArmorType), property_text_spacing);
+					const std::string rating_string = item->GetPropertyValueWithIcon(PropertyType::kArmorRating);
+					const std::string type_string = TRUNCATE(item->GetPropertyValueWithIcon(PropertyType::kArmorType), property_text_spacing);
 
 					if (armorData->formEnchanting != nullptr) {
 						is_enchanted = true;
@@ -1915,20 +1672,20 @@ namespace Modex
 				}
 			}
 
-			if (item.GetFormType() == RE::FormType::Book) {
-				if (const auto& book = item.GetTESForm()->As<RE::TESObjectBOOK>(); book != nullptr) {
+			if (item->GetFormType() == RE::FormType::Book) {
+				if (const auto& book = item->GetTESForm()->As<RE::TESObjectBOOK>(); book != nullptr) {
 					const auto teaches_skill = book->TeachesSkill();
 					const auto teaches_spell = book->TeachesSpell();
 
 
 					if (!showFormType && showPropertyColumn) {
 						if (teaches_skill || book->GetSkill() != RE::ActorValue::kNone) {
-							const std::string skill_string = TRUNCATE(item.GetPropertyValueWithIcon(PropertyType::kTomeSkill), property_text_spacing);
+							const std::string skill_string = TRUNCATE(item->GetPropertyValueWithIcon(PropertyType::kTomeSkill), property_text_spacing);
 							DrawList->AddText(property_text_pos, text_color, skill_string.c_str());
 						}
 						
 						if (teaches_spell || book->GetSpell() != nullptr) {
-							const std::string spell_string = TRUNCATE(item.GetPropertyValueWithIcon(PropertyType::kTomeSpell), property_text_spacing);
+							const std::string spell_string = TRUNCATE(item->GetPropertyValueWithIcon(PropertyType::kTomeSpell), property_text_spacing);
 							DrawList->AddText(property_text_pos, text_color, spell_string.c_str());
 						}
 						
@@ -1945,12 +1702,12 @@ namespace Modex
 				}
 			}
 
-			if (const auto& weapon = item.GetTESWeapon(); weapon.has_value()) {
+			if (const auto& weapon = item->GetTESWeapon(); weapon.has_value()) {
 				const auto& weaponData = weapon.value();
 
 				if (weaponData != nullptr) {
-					const std::string damage_string = item.GetPropertyValueWithIcon(PropertyType::kWeaponDamage);
-					const std::string skill_string = TRUNCATE(item.GetPropertyValueWithIcon(PropertyType::kWeaponSkill), property_text_spacing);
+					const std::string damage_string = item->GetPropertyValueWithIcon(PropertyType::kWeaponDamage);
+					const std::string skill_string = TRUNCATE(item->GetPropertyValueWithIcon(PropertyType::kWeaponSkill), property_text_spacing);
 					// const std::string type_string = item.GetPropertyValueWithIcon(PropertyType::kWeaponType);
 
 					if (weaponData->formEnchanting != nullptr) {
@@ -1971,15 +1728,15 @@ namespace Modex
 
 		// General Form Type display under Property column.
 		if (showFormType && showPropertyColumn) {
-			DrawList->AddText(property_text_pos, text_color, a_item.GetTypeName().data());
+			DrawList->AddText(property_text_pos, text_color, a_item->GetTypeName().data());
 		}
 
-		const std::string plugin_icon = userdata.Get<bool>("Modex::Table::ShowPluginIcon", true) ? a_item.GetItemIcon() : "";
-		const std::string plugin_name = TRUNCATE(plugin_icon + a_item.GetPluginName(), spacing - ImGui::GetFontSize());
+		const std::string plugin_icon = showPluginIcon ? a_item->GetItemIcon() : "";
+		const std::string plugin_name = TRUNCATE(plugin_icon + a_item->GetPluginName(), spacing - ImGui::GetFontSize());
 		DrawList->AddText(center_left_align, text_color, plugin_name.c_str());
 
 		const PropertyType& sort_property = this->sortSystem->GetCurrentSortFilter().GetPropertyType();
-		const std::string sort_text = TRUNCATE(a_item.GetPropertyValueWithIcon(sort_property), spacing * 0.75f);
+		const std::string sort_text = TRUNCATE(a_item->GetPropertyValueWithIcon(sort_property), spacing * 0.75f);
 
 		const ImVec2 name_pos = ImVec2(bb.Min.x + spacing, center_align);
 
@@ -2041,61 +1798,83 @@ namespace Modex
 	void UITable::DrawTableSettingsPopup()
 	{
 		auto& user = UserData::User();
-		UICustom::SubCategoryHeader(Translate("SETTINGS"));
+
+		if (UICustom::Popup_MenuHeader(Translate("SETTINGS"))) {
+			ImGui::CloseCurrentPopup();
+		}
 		
+		const float width = ImGui::GetContentRegionAvail().x;
 		ImGui::PushStyleVar(ImGuiStyleVar_SeparatorTextAlign, ImVec2(0.5f, 0.5f));
 
-		const float window_padding = ImGui::GetStyle().WindowPadding.x;
-		const float button_size = ImGui::GetContentRegionAvail().x / 4.0f;
-		const float _itemHeight = user.Get<float>("Modex::Table::ItemHeight", 0.0f);
-		const float _itemWidth = user.Get<float>("Modex::Table::ItemWidth", 0.0f);
-		const bool _showIcon = user.Get<bool>("Modex::Table::ShowPluginIcon");
-		const bool _showProperty = user.Get<bool>("Modex::Table::ShowProperty", true);
+		float font_size = styleFontSize;
+		ImGui::SeparatorText(Translate("TABLE_SETTINGS_FONT_SIZE"));
+		ImGui::SetNextItemWidth(width);
+		if (ImGui::SliderFloat("##Slider::FontSize", &font_size, 0.0f, 48.0f, "%.f")) {
+			user.Set<float>("Modex::Table::FontSize", font_size);
+			styleFontSize = font_size;
+		}
 
-		float item_height =  _itemHeight; 
-		float item_width = _itemWidth;
-		bool show_icon = _showIcon;
-		bool show_property= _showProperty;
-
-		ImGui::SeparatorText(Translate("TABLE_SETTING_HEIGHT"));
-		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-		if (ImGui::SliderFloat("##Table::Settings::ItemHeight", &item_height, -20.0f, 20.0f)) {
+		float item_height =  styleHeight; 
+		ImGui::SeparatorText(Translate("TABLE_SETTINGS_HEIGHT"));
+		ImGui::SetNextItemWidth(width);
+		if (ImGui::SliderFloat("##Slider::ItemHeight", &item_height, -20.0f, 20.0f, "%.2f")) {
 			user.Set<float>("Modex::Table::ItemHeight", item_height);
+			styleHeight = item_height;
 		}
 
-		ImGui::SeparatorText(Translate("TABLE_SETTING_WIDTH"));
-		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-		if (ImGui::SliderFloat("##Table::Settings::ItemWidth", &item_width, -300.0f, 300.0f)) {
+		float item_width = styleWidth;
+		ImGui::SeparatorText(Translate("TABLE_SETTINGS_WIDTH"));
+		ImGui::SetNextItemWidth(width);
+		if (ImGui::SliderFloat("##Slider::ItemWidth", &item_width, -300.0f, 300.0f, "%.2f")) {
 			user.Set<float>("Modex::Table::ItemWidth", item_width);
+			styleWidth = item_width;
 		}
 
-		ImGui::SeparatorText(Translate("TABLE_SETTING_SHOW_PROPERTY"));
-		ImGui::AlignTextToFramePadding();
-		ImGui::Text("%s", Translate("TABLE_SETTING_SHOW_HIDE"));
+		float item_spacing = styleSpacing;
+		ImGui::SeparatorText(Translate("TABLE_SETTINGS_SPACING"));
+		ImGui::SetNextItemWidth(width);
+		if (ImGui::SliderFloat("##Slider::ItemSpacing", &item_spacing, -20.0f, 20.0f, "%.2f")) {
+			user.Set<float>("Modex::Table::ItemSpacing", item_spacing);
+			styleSpacing = item_spacing;
+		}
 
-		const float distance = (ImGui::GetContentRegionAvail().x - button_size + window_padding); 
+		ImGui::SeparatorText(Translate("TABLE_SETTINGS_SHOW_BG"));
+		if (UICustom::ToggleButton("##Button::AltRowBG", showAltRowBG, width)) {
+			user.Set<bool>("Modex::Table::ShowAltRowBG", showAltRowBG);
+		}
 
-		ImGui::SameLine(distance);
-		// if (ImGui::ToggleButton("##Table::Settings::ShowProperty", &show_property, button_size)) {
-			// user.Set<bool>("Modex::Table::ShowProperty", show_property);
-		// }
+		ImGui::SeparatorText(Translate("TABLE_SETTINGS_SHOW_PROPERTY"));
+		if (UICustom::ToggleButton("##Button::PropertyColumn", showPropertyColumn, width)) {
+			user.Set<bool>("Modex::Table::ShowPropertyColumn", showPropertyColumn);
+		}
+
+		ImGui::SeparatorText(Translate("TABLE_SETTINGS_SHOW_FORMTYPE"));
+		if (UICustom::ToggleButton("##Button::FormType", showFormType, width)) {
+			user.Set<bool>("Modex::Table::ShowFormType", showFormType);
+		}
+
+		ImGui::SeparatorText(Translate("TABLE_SETTINGS_SHOW_EDITORID"));
+		if (UICustom::ToggleButton("##Button::EditorID", showEditorID, width)) {
+			user.Set<bool>("Modex::Table::ShowEditorID", showEditorID);
+		}
 
 		ImGui::SeparatorText(Translate("TABLE_SETTING_SHOW_ICON"));
-		ImGui::AlignTextToFramePadding();
-		ImGui::Text("%s", Translate("TABLE_SETTING_SHOW_HIDE"));
-
-		ImGui::SameLine(distance);
-		// if (ImGui::ToggleButton("##Table::Settings::PluginIcon", &show_icon, button_size)) {
-			// user.Set<bool>("Modex::Table::ShowPluginIcon", show_icon);
-		// }
+		if (UICustom::ToggleButton("##Button::PluginIcon", showPluginIcon, width)) {
+			user.Set<bool>("Modex::Table::ShowPluginIcon", showPluginIcon);
+		}
 
 		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 		const bool reset = ImGui::Selectable("Reset");
 
 		if (reset) {
+			user.Set<float>("Modex::Table""FontSize", 0.0f); 
 			user.Set<float>("Modex::Table::ItemHeight", 0.0f);
 			user.Set<float>("Modex::Table::ItemWidth", 0.0f);
-			user.Set<bool>("Modex::Table::ShowProperty", true);
+			user.Set<float>("Modex::Table::ItemSpacing", 0.0f);
+			user.Set<bool>("Modex::Table::ShowAltRowBG", true);
+			user.Set<bool>("Modex::Table::ShowEditorID", false);
+			user.Set<bool>("Modex::Table::ShowFormType", false);
+			user.Set<bool>("Modex::Table::ShowPropertyColumn", true);
 			user.Set<bool>("Modex::Table::ShowPluginIcon", true);
 		}
 
@@ -2307,7 +2086,6 @@ namespace Modex
 	// and also match it up to the sort system in the top right.
 	void UITable::DrawHeader()
 	{
-		const auto& userdata = UserData::User();
 		const static ImVec4 text_col = ThemeConfig::GetColor("HEADER_TEXT");
 		const static ImVec4 button_col = ThemeConfig::GetColor("HEADER_SEPARATOR");
 
@@ -2333,7 +2111,7 @@ namespace Modex
 		header_custom = is_custom_sorted ? sort_icon : "";
 
 		constexpr float name_offset = 4.0f;
-		const float spacing = name_offset + (LayoutItemSize.x / 6.0f) * 1.5f;
+		const float spacing = name_offset + (LayoutColumnWidth / 6.0f) * 1.5f;
 		const float name_spacing = 4.0f + spacing * 1.0f;
 		const float property_spacing = spacing * 2.0f;
 		const float custom_spacing = spacing * 2.75f;
@@ -2355,53 +2133,47 @@ namespace Modex
 		}
 		
 		if (!HasFlag(ModexTableFlag_Kit)) {
-			if (showPluginKitView) {
-				ImGui::TextColored(text_col, "%s", Translate("KIT"));
-				ImGui::SameLine(spacing);
-				ImGui::TextColored(text_col, "%s", Translate("PROPERTY"));
+			ImGui::TextColored(text_col, "%s", header_plugin.c_str());
+			if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
+				this->sortSystem->SetCurrentSortFilter(PropertyType::kPlugin);
+				this->sortSystem->ToggleAscending();
+				this->SortListBySpecs();
+				this->UpdateImGuiTableIDs();
+			}
+
+			ImGui::SameLine(name_spacing);
+			ImGui::TextColored(text_col, "%s", header_name.c_str());
+			if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
+				this->sortSystem->SetCurrentSortFilter(this->showEditorID ? PropertyType::kEditorID : PropertyType::kName);
+				this->sortSystem->ToggleAscending();
+				this->SortListBySpecs();
+				this->UpdateImGuiTableIDs();
+			}
+
+
+			if (showPropertyColumn) {
+				ImGui::SameLine(property_spacing);
+				ImGui::TextColored(text_col, "%s", header_property.c_str());
+				if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
+					showFormType = !showFormType;
+					UserData::User().Set<bool>(data_id + "::ShowFormType", showFormType);
+				}
+
+				ImGui::SameLine(custom_spacing);
 			} else {
-				ImGui::TextColored(text_col, "%s", header_plugin.c_str());
-				if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
-					this->sortSystem->SetCurrentSortFilter(PropertyType::kPlugin);
-					this->sortSystem->ToggleAscending();
-					this->SortListBySpecs();
-					this->UpdateImGuiTableIDs();
-				}
+				ImGui::SameLine(property_spacing);
+			}
 
-				ImGui::SameLine(name_spacing);
-				ImGui::TextColored(text_col, "%s", header_name.c_str());
-				if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
-					this->sortSystem->SetCurrentSortFilter(this->showEditorID ? PropertyType::kEditorID : PropertyType::kName);
-					this->sortSystem->ToggleAscending();
-					this->SortListBySpecs();
-					this->UpdateImGuiTableIDs();
-				}
+			DrawHeaderSortCombo(header_custom, value_width, is_custom_sorted);
 
-
-				if (userdata.Get<bool>("Modex::Table::ShowProperty", true)) {
-					ImGui::SameLine(property_spacing);
-					ImGui::TextColored(text_col, "%s", header_property.c_str());
-					if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
-						showFormType = !showFormType;
-					}
-
-					ImGui::SameLine(custom_spacing);
-				} else {
-					ImGui::SameLine(property_spacing);
-				}
-
-				DrawHeaderSortCombo(header_custom, value_width, is_custom_sorted);
-
-				ImGui::SameLine();
-				ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x - value_width);
-				ImGui::TextColored(text_col, "%s", header_value.c_str());
-				if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
-					this->sortSystem->SetCurrentSortFilter(PropertyType::kGoldValue);
-					this->sortSystem->ToggleAscending();
-					this->SortListBySpecs();
-					this->UpdateImGuiTableIDs();
-					
-				}
+			ImGui::SameLine();
+			ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x - value_width);
+			ImGui::TextColored(text_col, "%s", header_value.c_str());
+			if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
+				this->sortSystem->SetCurrentSortFilter(PropertyType::kGoldValue);
+				this->sortSystem->ToggleAscending();
+				this->SortListBySpecs();
+				this->UpdateImGuiTableIDs();
 			}
 		}
 		
@@ -2439,7 +2211,7 @@ namespace Modex
 		// DrawWarningBar();
 
 		if (HasFlag(ModexTableFlag_EnableDebugToolkit)) {
-			DrawDebugToolkit();
+			// DrawDebugToolkit();
 		}
 
 		if (HasFlag(ModexTableFlag_EnableCategoryTabs)) {
@@ -2452,12 +2224,6 @@ namespace Modex
 
 
 		if (ImGui::BeginChild("##UITable::Draw", ImVec2(0.0f, 0.0f), 0, ImGuiWindowFlags_NoMove)) {
-			if (this->showPluginKitView) {
-				PluginKitView();
-				ImGui::EndChild();
-				return;
-			}
-
 			// FIX: PluginList isn't deterministic of a module failing to load anymore due to
 			// polymorphic use of UITable's. Need to redefine what a failure to load looks like.
 
@@ -2482,8 +2248,8 @@ namespace Modex
 			}
 
 			// Calculate and store start position of table.
-			const ImVec2 start_pos = ImGui::GetCursorScreenPos();
-			ImGui::SetCursorScreenPos(start_pos);
+			ImVec2 start_pos = ImGui::GetCursorScreenPos();
+			start_pos.y += 2.0f;
 
 			// Build table meta data and structures
 			const int COLUMN_COUNT = LayoutColumnCount; // 1
@@ -2505,8 +2271,9 @@ namespace Modex
 			}
 
 			clipper.IncludeItemsByIndex(navPositionID - 1, navPositionID + 1);
-				
 			HandleKeyboardNavigation(_tableList);
+
+			ImGui::PushFont(NULL, styleFontSize);
 
 			while (clipper.Step()) {
 				const int item_start = clipper.DisplayStart;
@@ -2618,7 +2385,7 @@ namespace Modex
 							if (this->HasFlag(ModexTableFlag_Kit)) {
 								DrawKitItem(item_data, pos, is_item_selected);
 							} else {
-								DrawItem(*item_data, pos, is_item_selected);
+								DrawItem(item_data, pos, is_item_selected);
 							}
 						}
 
@@ -2627,6 +2394,8 @@ namespace Modex
 				}
 			}
 			clipper.End();
+
+			ImGui::PopFont();
 
 			ms_io = ImGui::EndMultiSelect();
 			selectionStorage.ApplyRequests(ms_io);

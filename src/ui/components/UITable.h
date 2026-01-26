@@ -14,11 +14,11 @@ namespace Modex
 		using TableList             = std::vector<std::unique_ptr<BaseObject>>;
 		using TableItem             = std::unique_ptr<BaseObject>;
 		using PluginList            = std::vector<std::string>;
-		using PluginKitList         = std::vector<std::unique_ptr<Kit>>;
 
 	private:
 		ImGuiMultiSelectFlags MULTI_SELECT_FLAGS = 
-		ImGuiMultiSelectFlags_ClearOnClickVoid  | ImGuiMultiSelectFlags_SelectOnClick | 
+		// ImGuiMultiSelectFlags_ClearOnClickVoid  | ImGuiMultiSelectFlags_SelectOnClick | 
+		ImGuiMultiSelectFlags_ClearOnClickVoid  | ImGuiMultiSelectFlags_SelectOnClickRelease |
 		ImGuiMultiSelectFlags_NoAutoSelect      | ImGuiMultiSelectFlags_BoxSelect1d | 
 		ImGuiMultiSelectFlags_ClearOnEscape     | ImGuiMultiSelectFlags_NoAutoClearOnReselect;
 			// ImGuiMultiSelectFlags_ClearOnClickVoid  | ImGuiMultiSelectFlags_SelectOnClickRelease | 
@@ -26,9 +26,6 @@ namespace Modex
 
 		TableList               tableList;
 		TableList               recentList;
-		TableList               searchList;
-		TableList               filterList;
-		PluginKitList           pluginKitList;
 
 		std::function<std::vector<BaseObject>()> generator;
 
@@ -57,15 +54,22 @@ namespace Modex
 		bool                    updateKeyboardNav;
 		bool                    updateRecentList;
 		
-		//                      internal flags
+		//                      user settings
+		float                   styleHeight;
+		float                   styleWidth;
+		float                   styleSpacing;
+		float                   styleFontSize;
+		bool                    showAltRowBG;
+		bool                    showPluginIcon;
 		bool                    showEditorID;
-		bool                    showPluginKitView;
 		bool                    showFormType;
+		bool                    showPropertyColumn;
 
 		//                      table layout parameters
-		float                   LayoutRowSpacing; // FIXME: Does default initializers here fix the bug?
+		float                   LayoutRowSpacing;
 		float                   LayoutOuterPadding;
 		float                   LayoutHitSpacing;
+		float                   LayoutColumnWidth;
 		int                     LayoutColumnCount;
 		ImVec2                  LayoutItemStep;
 		ImVec2                  LayoutItemSize;
@@ -80,11 +84,10 @@ namespace Modex
 			ModexTableFlag_Inventory = 1 << 1,
 			ModexTableFlag_Base = 1 << 2,
 			ModexTableFlag_EnableSearch = 1 << 3,
-			ModexTableFlag_EnablePluginKitView = 1 << 4,
-			ModexTableFlag_EnableCategoryTabs = 1 << 5,
-			ModexTableFlag_EnableHeader = 1 << 6,
-			ModexTableFlag_EnableDebugToolkit = 1 << 7,
-			ModexTableFlag_EnableItemPreviewOnHover = 1 << 8
+			ModexTableFlag_EnableCategoryTabs = 1 << 4,
+			ModexTableFlag_EnableHeader = 1 << 5,
+			ModexTableFlag_EnableDebugToolkit = 1 << 6,
+			ModexTableFlag_EnableItemPreviewOnHover = 1 << 7
 		};
 
 		enum class DragBehavior {
@@ -104,38 +107,20 @@ namespace Modex
 		void RemoveFlag(TableFlag flag) { flags &= ~flag; }
 		bool HasFlag(TableFlag flag) const { return (flags & flag) != 0; }
 
-		// TODO: Look at how we're constructing and reloading table objects for memory management before release.
-		
-		UITable() : 
-			filterSystem(nullptr), 
-			sortSystem(),
-
-			pluginType(Data::PLUGIN_TYPE::kTotal),
-			clickAmount(1),
-			updateKeyboardNav(false),
-			updateRecentList(false),
-
-			LayoutRowSpacing(5.0f),
-			LayoutOuterPadding(0.0f),
-			LayoutHitSpacing(0.0f),
-			LayoutColumnCount(1),
-			LayoutItemStep(ImVec2(0.0f, 0.0f)),
-			LayoutItemSize(ImVec2(0.0f, 0.0f)),
-			ItemSize(ImVec2(0.0f, 0.0f))
-		{}
-
-		~UITable() = default;
+		// ~UITable() = default;
+		// UITable(const UITable&) = delete;
+		// UITable(UITable&&) = delete;
+		// UITable& operator=(const UITable&) = delete;
+		// UITable& operator=(UITable&&) = delete;
 
 		//                      core behaviors
 		void                    Draw(const TableList& a_tableList);
 		void                    ShowSort();
 		void                    DrawWarningBar();
-		void                    PluginKitView();
 		void                    Refresh();
 		void                    Unload();
 		void                    Load();
 		void                    Init();
-		void                    Reset();
 		void                    SyncChangesToKit();
 		void                    BuildPluginList();
 		void                    LoadRecentList();
@@ -153,7 +138,6 @@ namespace Modex
 		void                    SetClickAmount(int a_amount) { clickAmount = a_amount; }
 		void                    SetUserDataID(const std::string& a_id) { data_id = a_id; }
 		void                    SetShowEditorID(bool a_show) { showEditorID = a_show; }
-		void                    SetShowPluginKitView(bool a_show) { showPluginKitView = a_show; }
 
 		void                    SetTableTargetRef(RE::TESObjectREFR* a_ref) { tableTargetRef = a_ref; }
 		RE::TESObjectREFR*      GetTableTargetRef() const { return tableTargetRef; }
@@ -165,20 +149,20 @@ namespace Modex
 		void                    SetDragDropTarget(DragDropHandle a_handle, UITable* a_view);
 		void                    AddDragDropTarget(DragDropHandle a_handle, UITable* a_view);
 		void                    RemoveDragDropTarget(DragDropHandle a_handle);
-		void                    AddPayloadItemToKit(const std::unique_ptr<BaseObject>& a_item);
-		void                    AddPayloadItemToTable(const std::unique_ptr<BaseObject>& a_item);
+		void                    AddPayloadToTableList(const std::unique_ptr<BaseObject>& a_item);
+		void                    AddPayloadToInventory(const std::unique_ptr<BaseObject>& a_item);
 		void                    RemovePayloadItemFromKit(const std::unique_ptr<BaseObject>& a_item);
-		void                    RemovePayloadItemFromInventory(const std::unique_ptr<BaseObject>& a_item);
+		void                    RemovePayloadFromInventory(const std::unique_ptr<BaseObject>& a_item);
 		const char*             GetDragDropHandleText(DragDropHandle a_handle) const { return magic_enum::enum_name(a_handle).data(); }
 		
 		//                      table action methods
 		void                    PlaceSelectionOnGround(int a_count);
-		void                    RemoveSelectedFromInventory();  
-		void                    AddSelectionToInventory(int a_count);
-		void                    AddKitItemsToInventory(const Kit& a_kit);
+		void                    RemoveSelectionFromTargetInventory();  
+		void                    AddSelectionToTargetInventory(int a_count);
+		void                    AddKitToTargetInventory(const Kit& a_kit);
 		void                    RemoveSelectedFromKit();
-		void                    AddSelectedToKit();
-		void                    EquipSelection();
+		void                    AddSelectionToActiveKit();
+		void                    EquipSelectionToTarget();
 		void                    PlaceAll();
 		void                    AddAll();
 
@@ -190,9 +174,6 @@ namespace Modex
 		void                    AddItemToRecent(const std::unique_ptr<BaseObject>& a_item);
 
 	private:
-		//                      plugin kit view impl
-		void                    LoadKitsFromSelectedPlugin();
-
 		//                      search and filter impl
 		void                    Filter(const std::vector<BaseObject>& a_data);
 		void                    UpdateImGuiTableIDs();
@@ -218,7 +199,7 @@ namespace Modex
 		//                      layout and drawing
 		void                    UpdateLayout();
 		void                    DrawDragDropPayload(const std::string& a_icon);
-		void                    DrawItem(const BaseObject& a_item, const ImVec2& a_pos, const bool& a_selected);
+		void                    DrawItem(const std::unique_ptr<BaseObject>& a_item, const ImVec2& a_pos, const bool& a_selected);
 		void                    DrawKitItem(const std::unique_ptr<BaseObject>& a_item, const ImVec2& a_pos, const bool& a_selected);
 		void                    DrawKit(const Kit& a_kit, const ImVec2& a_pos, const bool& a_selected);
 		void                    DrawDebugToolkit();

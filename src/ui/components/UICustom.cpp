@@ -249,6 +249,24 @@ namespace Modex::UICustom
 		}
 	};
 
+	bool ToggleButton(const char* a_id, bool& a_toggle, float a_width)
+	{
+		ImGui::PushID(a_id);
+		const ImVec4 button_color = a_toggle == true ? ThemeConfig::GetColor("BUTTON_CONFIRM") : ThemeConfig::GetColor("BUTTON_CANCEL");
+		const std::string button_text = a_toggle == true ? Translate("ON") : Translate("OFF"); 
+
+		ImGui::PushStyleColor(ImGuiCol_Button, button_color);
+		bool pressed = ImGui::Button(button_text.c_str(), ImVec2(a_width, 0));
+		ImGui::PopStyleColor();
+
+		if (pressed) {
+			a_toggle = !a_toggle;
+		}
+
+		ImGui::PopID();
+		return pressed;
+	}
+
 	bool Settings_ToggleButton(const char* a_localeString, bool& a_toggle)
 	{
 		ImGui::Indent();

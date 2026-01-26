@@ -10,6 +10,8 @@ namespace Modex
     {
         static inline char s_sharedInputSearchBuffer[256] = ""; // FIX: Go back to module ownership.
 
+		void DrawKitSelectionPanel(const ImVec2 &a_pos, const ImVec2 &a_size);
+		void DrawAddItemActionPanel(const ImVec2 &a_pos, const ImVec2 &a_size, std::unique_ptr<UITable> &a_view);
         void DrawItemSearchPanel(const ImVec2 &a_pos, const ImVec2 &a_size, std::unique_ptr<UITable> &a_view);
         void DrawKitActionsPanel(const ImVec2 &a_pos, const ImVec2 &a_size, std::unique_ptr<UITable> &a_kitView, std::unique_ptr<UITable> &a_mainView, Kit& a_kit);
         void DrawBasicTablePanel(const ImVec2 &a_pos, const ImVec2 &a_size, std::unique_ptr<UITable> &a_view);

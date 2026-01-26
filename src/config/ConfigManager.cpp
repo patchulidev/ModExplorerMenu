@@ -42,7 +42,7 @@ namespace Modex
 			file >> m_data;
 			return m_initialized = true;
 		} catch (std::exception& e) {
-			ASSERT_MSG(true, "Failed to load file '{}'", m_file_path.stem().string(), e.what());
+			ASSERT_MSG(true, "Failed to load file '{}'\n'{}'", m_file_path.stem().string(), e.what());
 			return m_initialized = false;
 		}
 

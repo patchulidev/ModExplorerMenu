@@ -1,5 +1,5 @@
 #include "UIBanner.h"
-#include "core/InputManager.h"
+#include "config/UserConfig.h"
 
 namespace Modex
 {
@@ -47,7 +47,7 @@ namespace Modex
 		if (ImGui::Begin("TestPopupForModexWindowGoesHere", nullptr, windowFlags)) {
 			const auto titleText = std::format("Mod Explorer Menu {}.{}.{}", SKSE::GetPluginVersion().major(), SKSE::GetPluginVersion().minor(), SKSE::GetPluginVersion().patch());
 			constexpr auto textA = "Press"sv;
-			const auto keyNameText = InputManager::GetSingleton()->GetShowMenuKeyAsText();
+			const auto keyNameText = UserConfig::GetShowMenuKeysAsText();
 			constexpr auto textB = "to open the in-game UI."sv;
 			const auto windowWidth = ImGui::GetWindowSize().x;
 			const auto titleTextWidth = ImGui::CalcTextSize(titleText.data()).x;
