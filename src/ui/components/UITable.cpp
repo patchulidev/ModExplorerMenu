@@ -941,6 +941,7 @@ namespace Modex
 	{
 
 		static std::string tooltip_icon = "";
+		static std::string tooltip_string = "";
 
 		// The UITable Widget rectangle acts as the drop target.
 		if (ImGui::BeginDragDropTarget()) {
@@ -957,15 +958,54 @@ namespace Modex
 				if (ImGui::AcceptDragDropPayload(handle_string, ImGuiDragDropFlags_AcceptPeekOnly)) {
 					if (destination->GetDragDropHandle() == DragDropHandle::Kit) {
 						tooltip_icon = ICON_LC_PLUS;
+						tooltip_string = Translate("KIT_ADD");
 					}
 
 					if (destination->GetDragDropHandle() == DragDropHandle::Inventory) {
 						tooltip_icon = ICON_LC_PLUS;
+						tooltip_string = Translate("ADD_SELECTION");
 					}
 
 					if (destination->GetDragDropHandle() == DragDropHandle::Table) {
 						tooltip_icon = ICON_LC_X;
+
+						if (origin->GetDragDropHandle() == DragDropHandle::Kit) {
+							tooltip_string = Translate("KIT_REMOVE");
+						}
+
+						if (origin->GetDragDropHandle() == DragDropHandle::Inventory) {
+							tooltip_string = Translate("REMOVE_SELECTION");
+						}
 					}
+
+					const auto& DrawList = ImGui::GetForegroundDrawList();
+					const auto table_size = ImGui::GetItemRectSize();
+					const auto window_size = ImGui::GetWindowSize();
+					const auto window_pos = ImGui::GetWindowPos();
+					const ImVec2 min = window_pos + ImVec2(0.0f, window_size.y - table_size.y);
+					const ImVec2 max = min + table_size;
+					const float font_size = 72.0f;
+					const float center_offset = font_size / 4.0f;
+
+					ImGui::PushFont(NULL, font_size);
+					const ImVec2 icon_size = ImGui::CalcTextSize(tooltip_icon.c_str());
+					ImGui::PopFont();
+
+					DrawList->AddRectFilled(min, max, ThemeConfig::GetColorU32("TABLE_FIELD_BG"));
+
+					DrawList->AddText(ImGui::GetFont(), font_size,
+							min + (table_size / 2.0f) - (icon_size / 2.0f) - ImVec2(0, center_offset),
+							ThemeConfig::GetColorU32("TEXT"),
+							tooltip_icon.c_str());
+
+					ImGui::PushFont(NULL, font_size / 2.0f);
+					const ImVec2 string_size = ImGui::CalcTextSize(tooltip_string.c_str());
+					ImGui::PopFont();
+
+					DrawList->AddText(ImGui::GetFont(), font_size / 2.0f,
+							min + (table_size / 2.0f) - (string_size / 2.0f) + ImVec2(0, icon_size.y / 1.5f) - ImVec2(0, center_offset),
+							ThemeConfig::GetColorU32("TEXT", 0.75f),
+							tooltip_string.c_str());
 				}
 
 				// Payload Data is contained in other table sources.

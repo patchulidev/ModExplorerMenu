@@ -39,8 +39,8 @@
 	"MODULE_EXIT": "Exit",
 
     "KIT": "Kit",
-	"KIT_ADD": "Add Selection to Active Kit",
-	"KIT_REMOVE": "Remove Selection",
+	"KIT_ADD": "Add Selection to Kit",
+	"KIT_REMOVE": "Remove Selection from Kit",
     "KIT_CREATE": "Create New Kit",
     "KIT_CREATE_TOOLTIP": "Create New Kit\n\nCreate a new empty kit to add items to.",
     "KIT_RENAME": "Rename",
@@ -109,6 +109,7 @@
     "ADD_KIT_NPC": "To Target",
     "ADD_KIT_NPC_TOOLTIP": "Add Kit To NPC\n\nAdd all items from the selected kit to the targeted NPC's inventory.",
 
+	"REMOVE_SELECTION": "Remove Selection from Inventory",
     "ADD_SELECTION": "Add Selection To Inventory",
     "ADD_SELECTION_TOOLTIP": "Add Selection\n\nAdd the selected item(s) from the table to an inventory.",
     "ADD_SELECTION_NPC": "Add Selection To Targeted NPC",
