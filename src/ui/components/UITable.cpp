@@ -1306,6 +1306,19 @@ namespace Modex
 			return;
 		}
 
+		// HACK: This is a result of IMenu impl key behavior. Could do ControlMap fixes, but nty.
+		if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_LeftArrow, ImGuiInputFlags_RouteFromRootWindow)) {
+			if (selectionStorage.Size > 0) {
+				selectionStorage.Clear();
+			} else {
+				for (auto& item : a_tableList) {
+					if (item != nullptr) {
+						selectionStorage.SetItemSelected(item->m_tableID, true);
+					}
+				}
+			}
+		}
+
 		if (ImGui::Shortcut(ImGuiKey_DownArrow | ImGuiMod_Shift, ImGuiInputFlags_RouteFromRootWindow | ImGuiInputFlags_Repeat) ||
     		ImGui::Shortcut(ImGuiKey_DownArrow, ImGuiInputFlags_RouteFromRootWindow | ImGuiInputFlags_Repeat)) {
 
