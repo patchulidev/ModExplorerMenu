@@ -177,10 +177,8 @@ namespace Modex
 		//                      search and filter impl
 		void                    Filter(const std::vector<BaseObject>& a_data);
 		void                    UpdateImGuiTableIDs();
-		void                    UpdateKitItemData();
 		
 		//                      sorting
-		bool                    SortFnKit(const std::unique_ptr<Kit>& a, const std::unique_ptr<Kit>& b);
 		bool                    SortFn(const std::unique_ptr<BaseObject>& a, const std::unique_ptr<BaseObject>& b);
 		void                    SortListBySpecs();
 

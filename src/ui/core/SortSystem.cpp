@@ -27,7 +27,7 @@ namespace Modex
 		ASSERT_MSG(a_create, "SortSystem::Load() - No SortProperty found in JSON. File: {}", m_file_path.string());
 		return m_initialized = !a_create;
 	}
-    
+
 	// Need special definitions for properties of int, float, or none string types.
 	bool SortSystem::SortFn(const std::unique_ptr<BaseObject>& a_lhs, const std::unique_ptr<BaseObject>& a_rhs) const
     {
@@ -44,9 +44,79 @@ namespace Modex
 		if (!lhs_empty && rhs_empty) return true;   // lhs goes before rhs
 		if (lhs_empty && rhs_empty) return false;   // both empty, maintain order
 
-		int delta = rhs_value.compare(lhs_value);
+		int delta = 0;
+
+		// NOTE: Better static analysis with switch-case for all property types.
 
 		switch (property) {
+			case PropertyType::kNone:
+			case PropertyType::kArmor:
+			case PropertyType::kBook:
+			case PropertyType::kKeyMaster:
+			case PropertyType::kIngredient:
+			case PropertyType::kAlchemy:
+			case PropertyType::kAmmo:
+			case PropertyType::kScroll:
+			case PropertyType::kMisc:
+			case PropertyType::kWeapon:
+			case PropertyType::kNPC:
+			case PropertyType::kContainer:
+			case PropertyType::kStatic:
+			case PropertyType::kLight:
+			case PropertyType::kDoor:
+			case PropertyType::kFurniture:
+			case PropertyType::kActivator:
+			case PropertyType::kTree:
+			case PropertyType::kFlower:
+			case PropertyType::kPlugin:
+			case PropertyType::kFormID:
+			case PropertyType::kName:
+			case PropertyType::kEditorID:
+			case PropertyType::kFormType:
+			case PropertyType::kWeaponType:
+			case PropertyType::kWeaponSkill:
+			case PropertyType::kArmorSlot:
+			case PropertyType::kArmorType:
+			case PropertyType::kReferenceID:
+			case PropertyType::kRace:
+			case PropertyType::kGender:
+			case PropertyType::kClass:
+			case PropertyType::kDefaultOutfit:
+			case PropertyType::kSleepOutfit:
+			case PropertyType::kKeywordList:
+			case PropertyType::kFactionList:
+			case PropertyType::kItemList:
+			case PropertyType::kSpellList:
+			case PropertyType::kSpellType:
+			case PropertyType::kSpellCastType:
+			case PropertyType::kSpellDelivery:
+			case PropertyType::kTomeSpell:
+			case PropertyType::kTomeSkill:
+			case PropertyType::kImGuiSeparator:
+			case PropertyType::kCell:
+			case PropertyType::kLand:
+			case PropertyType::kTotal: {
+				delta = rhs_value.compare(lhs_value);
+				break; // All direct string comparions.
+			}
+			case PropertyType::kIsWeapon: {
+				const auto lhs_is_weapon = (lhs_value == "true") ? 1 : 0;
+				const auto rhs_is_weapon = (rhs_value == "true") ? 1 : 0;
+				delta = lhs_is_weapon - rhs_is_weapon;
+				break;
+			} 
+			case PropertyType::kIsArmor: {
+				const auto lhs_is_armor = (lhs_value == "true") ? 1 : 0;
+				const auto rhs_is_armor = (rhs_value == "true") ? 1 : 0;
+				delta = lhs_is_armor - rhs_is_armor;
+				break;
+			}
+			case PropertyType::kKitItemCount: {
+				const auto lhs_count = std::stoi(lhs_value);
+				const auto rhs_count = std::stoi(rhs_value);
+				delta = lhs_count - rhs_count;
+				break;
+			}
 			case PropertyType::kWeaponDamage: {
 				const auto lhs_damage = std::stoi(lhs_value);
 				const auto rhs_damage = std::stoi(rhs_value);
@@ -161,8 +231,6 @@ namespace Modex
 				delta = lhs_cost - rhs_cost;
 				break;
 			}
-			default:
-				break;
 		}
 
 		// Both have valid values, sort normally
@@ -173,13 +241,5 @@ namespace Modex
 			return m_ascending ? true : false;
 
 		return false;
-	}
-
-	// TODO: Pending re-implementation if we intend to introduce this feature in v2.0
-	bool SortSystem::SortFnKit(const std::unique_ptr<Kit>& a_lhs, const std::unique_ptr<Kit>& a_rhs) const 
-	{
-		(void)a_lhs;
-		(void)a_rhs;
-		return true;
 	}
 }

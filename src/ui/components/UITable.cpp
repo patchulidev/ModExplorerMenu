@@ -14,6 +14,10 @@
 
 #include "pch.h"
 
+
+// BUG: Kit items are resorted every time the table is refreshed.
+// BUG: Inventory table doesn't initialize properly.
+
 namespace Modex
 {
 	float Pulse(float a_time, float a_frequency, float a_amplitude)
@@ -484,7 +488,7 @@ namespace Modex
 
 				if (!this->tableList.empty()) {
 					for (auto& item : this->tableList) {
-						selectedKitPtr->m_items.emplace(EquipmentConfig::CreateKitItem(*item));
+						selectedKitPtr->m_items.emplace_back(EquipmentConfig::CreateKitItem(*item));
 					}
 				}
 
@@ -495,37 +499,35 @@ namespace Modex
 
 	void UITable::Refresh()
 	{
-		// assert(this->generator);
-
 		selectionStorage.Clear();
 
-		if (this->HasFlag(ModexTableFlag_Kit)) {
-			this->Filter(this->generator());
+		this->Filter(this->generator());
+		this->SortListBySpecs();
+		this->UpdateImGuiTableIDs();
+	}
 
-			if (this->sortSystem->GetCurrentSortFilter().GetPropertyType() != PropertyType::kNone) {
-				this->SortListBySpecs();
-			}
-			
-			this->UpdateImGuiTableIDs();
-			this->UpdateKitItemData();
+	void UITable::SortListBySpecs()
+	{
+		std::sort(tableList.begin(), tableList.end(), [this](const std::unique_ptr<BaseObject>& a, const std::unique_ptr<BaseObject>& b) {
+			return sortSystem->SortFn(a, b);
+		});
+	}
+
+	void UITable::UpdateImGuiTableIDs()
+	{
+		for (int i = 0; i < std::ssize(tableList); i++) {
+			tableList[i]->m_tableID = i;
 		}
-		else if (this->HasFlag(ModexTableFlag_Inventory)) {
-			this->Filter(this->generator());
 
-			if (this->sortSystem->GetCurrentSortFilter().GetPropertyType() != PropertyType::kNone) {
-				this->SortListBySpecs();
+		if (selectedKitPtr && !selectedKitPtr->empty() && HasFlag(ModexTableFlag_Kit)) {
+			for (const auto& kit_item : selectedKitPtr->m_items) {
+				for (const auto& table_item : tableList) {
+					if (table_item->GetEditorID() == kit_item->m_editorid) {
+						table_item->kitAmount = kit_item->m_amount;
+						table_item->kitEquipped = kit_item->m_equipped;
+					}
+				}
 			}
-
-			this->UpdateImGuiTableIDs();
-		} 
-		else {
-			this->Filter(this->generator());
-
-			if (this->sortSystem->GetCurrentSortFilter().GetPropertyType() != PropertyType::kNone) {
-				this->SortListBySpecs();
-			}
-
-			this->UpdateImGuiTableIDs();
 		}
 	}
 
@@ -752,75 +754,6 @@ namespace Modex
 		// Includes measurement for outline thickness!
 		// LayoutOuterPadding = floorf(LayoutRowSpacing * 0.5f);
 		LayoutOuterPadding = 0.0f;
-	}
-
-	// bool UITable::SortFnKit(const std::unique_ptr<Kit>& lhs, const std::unique_ptr<Kit>& rhs)
-	// {
-	// 	int delta = 0;
-	// 	switch (sortBy) {
-	// 	case SortType::Name:
-	// 		delta = lhs->name.compare(rhs->name);
-	// 		break;
-	// 	}
-
-	// 	if (delta > 0)
-	// 		return sortAscending ? false : true;
-	// 	if (delta < 0)
-	// 		return sortAscending ? true : false;
-
-	// 	return false;
-	// }
-
-	void UITable::SortListBySpecs()
-	{
-		std::sort(tableList.begin(), tableList.end(), [this](const std::unique_ptr<BaseObject>& a, const std::unique_ptr<BaseObject>& b) {
-			return sortSystem->SortFn(a, b);
-		});
-	}
-
-	void UITable::UpdateImGuiTableIDs()
-	{
-		for (int i = 0; i < std::ssize(tableList); i++) {
-			tableList[i]->m_tableID = i;
-		}
-	}
-
-	void UITable::UpdateKitItemData()
-	{
-		if (!selectedKitPtr || selectedKitPtr->empty()) {
-			return;
-		}
-
-		if (!this->HasFlag(ModexTableFlag_Kit)) {
-			return;
-		}
-
-		for (const auto& kit_item : selectedKitPtr->m_items) {
-			for (const auto& table_item : tableList) {
-				if (table_item->GetEditorID() == kit_item->m_editorid) {
-					table_item->kitAmount = kit_item->m_amount;
-					table_item->kitEquipped = kit_item->m_equipped;
-				}
-			}
-		}
-
-		// if (auto kitOpt = EquipmentConfig::GetSingleton()->LoadKit(*selectedKitPtr); kitOpt.has_value()) {
-		// 	const auto& kit = kitOpt.value();
-
-		// 	if (kit.m_items.empty()) {
-		// 		return;
-		// 	}
-
-		// 	for (const auto& kit_item : kit.m_items) {
-		// 		for (const auto& table_item : tableList) {
-		// 			if (table_item->GetEditorID() == kit_item->m_editorid) {
-		// 				table_item->kitAmount = kit_item->m_amount;
-		// 				table_item->kitEquipped = kit_item->m_equipped;
-		// 			}
-		// 		}
-		// 	}
-		// }
-		
 	}
 
 	void UITable::ShowSort()
@@ -2170,18 +2103,44 @@ namespace Modex
 		const float custom_spacing = spacing * 2.75f;
 		const float value_width = ImGui::CalcTextSize(header_value.c_str()).x + ImGui::GetFontSize();
 
-
 		if (HasFlag(ModexTableFlag_Kit)) {
 			const std::string header_equip = Translate("EQUIP");
-			const std::string header_amount = Translate("AMOUNT");
+
+			std::string header_amount = Translate("AMOUNT");
+			const bool is_amount_sorted = current_sort == PropertyType::kKitItemCount;
+			header_amount = is_amount_sorted ? sort_icon + " " + header_amount : header_amount;
 
 			ImGui::TextColored(text_col, "%s", header_plugin.c_str());
+			if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
+				this->sortSystem->SetCurrentSortFilter(PropertyType::kPlugin);
+				this->sortSystem->ToggleAscending();
+				this->SortListBySpecs();
+				this->UpdateImGuiTableIDs();
+			}
+
 			ImGui::SameLine(4.0f + LayoutItemSize.x / 4.0f);
 			ImGui::TextColored(text_col, "%s", header_name.c_str());
+			if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
+				this->sortSystem->SetCurrentSortFilter(this->showEditorID ? PropertyType::kEditorID : PropertyType::kName);
+				this->sortSystem->ToggleAscending();
+				this->SortListBySpecs();
+				this->UpdateImGuiTableIDs();
+			}
+
 			ImGui::SameLine(LayoutItemSize.x / 1.50f);
 			ImGui::TextColored(text_col, "%s", header_equip.c_str());
+			{
+
+			}
+
 			ImGui::SameLine(LayoutItemSize.x / 1.50f + (LayoutItemSize.x / 7.0f) + 5.0f); // + equip_size
 			ImGui::TextColored(text_col, "%s", header_amount.c_str());
+			if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
+				this->sortSystem->SetCurrentSortFilter(PropertyType::kKitItemCount);
+				this->sortSystem->ToggleAscending();
+				this->SortListBySpecs();
+				this->UpdateImGuiTableIDs();
+			}
 
 		}
 		
@@ -2247,17 +2206,6 @@ namespace Modex
 			}
 		}
 
-		if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_A, ImGuiInputFlags_RouteFromRootWindow)) {
-			if (selectionStorage.Size > 0) {
-				selectionStorage.Clear();
-			} else {
-				for (auto& item : _tableList) {
-					if (item) {
-						selectionStorage.SetItemSelected(item->m_tableID, true);
-					}
-				}
-			}
-		}
 
 		UpdateLayout();
 

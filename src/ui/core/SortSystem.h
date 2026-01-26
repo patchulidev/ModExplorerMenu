@@ -12,6 +12,7 @@ namespace Modex
 	private:
 		ImGuiTableSortSpecs*        m_currentSpecs;
 		bool                        m_ascending;
+		int                         m_reset;
 
 		FilterProperty              m_currentSortFilter;
 		FilterPropertyList          m_availableSortFilters;
@@ -20,6 +21,7 @@ namespace Modex
 		SortSystem(const std::filesystem::path& a_path) :
 			m_currentSpecs(nullptr),
 			m_ascending(true),
+			m_reset(0),
 			m_currentSortFilter(PropertyType::kNone)
 		{
 			ConfigManager::m_file_path = a_path;
@@ -28,7 +30,6 @@ namespace Modex
 		virtual bool Load(bool a_create) override;
 		
 		bool                SortFn(const std::unique_ptr<BaseObject>& a_lhs, const std::unique_ptr<BaseObject>& a_rhs) const;
-		bool                SortFnKit(const std::unique_ptr<Kit>& a_lhs, const std::unique_ptr<Kit>& a_rhs) const;
 		const std::string   GetSortProperty(const BaseObject& a_object) const;
 		
 		void SetSortSpecs(ImGuiTableSortSpecs* a_specs) {
@@ -41,6 +42,13 @@ namespace Modex
 
 		void ToggleAscending() {
 			m_ascending = !m_ascending;
+			m_reset++;
+
+			if (m_reset > 2) {
+				m_reset = 0;
+				m_ascending = true;
+				m_currentSortFilter = PropertyType::kNone;
+			}
 		}
 
 		const FilterProperty& GetCurrentSortFilter() const {
@@ -52,7 +60,11 @@ namespace Modex
 		}
 
 		void SetCurrentSortFilter(FilterProperty a_filter) {
-			m_currentSortFilter = std::move(a_filter);
+			if (m_currentSortFilter != a_filter) {
+				m_reset = 0;
+				m_ascending = true;
+				m_currentSortFilter = std::move(a_filter);
+			}
 		}
 
 		void AddAvailableFilter(FilterProperty a_filter) {

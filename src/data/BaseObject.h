@@ -14,6 +14,8 @@ namespace Modex
 	using _GetFormEditorID = const char* (*)(std::uint32_t);
 	std::string po3_GetEditorID(RE::FormID a_formID);
 
+	class Kit;
+
 	enum class PropertyType : uint32_t
 	{
 		kNone = 0,
@@ -83,6 +85,7 @@ namespace Modex
 		kTomeSpell,
 		kTomeSkill,
 		kImGuiSeparator,        // Special ImGui Separator
+		kKitItemCount,          // Kit properties
 		kTotal
 	};
 
@@ -1415,6 +1418,8 @@ namespace Modex
 					return GetBookSpell();
 				case PropertyType::kTomeSkill:
 					return GetBookSkill();
+				case PropertyType::kKitItemCount:
+					return std::to_string(kitAmount); 
 			}
 
 			ASSERT_MSG(true, "BaseObject -> GetProperty(PropertyType a_property): Unhandled property type: " + std::to_string(static_cast<int>(a_property)));
@@ -1533,7 +1538,7 @@ namespace Modex
 	{
 	public:
 		std::string					m_desc;
-    	std::unordered_set<std::shared_ptr<KitItem>> m_items;
+		std::vector<std::shared_ptr<KitItem>> m_items;
 
 		// runtime
 		ImGuiID 					m_tableID = 0;

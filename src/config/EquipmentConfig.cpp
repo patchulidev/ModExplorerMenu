@@ -177,7 +177,7 @@ namespace Modex
 				item->m_amount = item_data.value("Amount", 1);
 				item->m_equipped = item_data.value("Equipped", false);
 
-				new_kit.m_items.emplace(item);
+				new_kit.m_items.emplace_back(item);
 			}
 		}
 
