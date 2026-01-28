@@ -72,7 +72,10 @@ namespace Modex
 				if (event.IsPressed()) {
 					if (!manager->IsMenuOpen()) {
 						if (event.keyCode == config.showMenuKey && IsBoundModifierDown() && event.IsDown()) {
-							manager->Open();
+							if (!manager->IsMenuOpen()) {
+								manager->Open();
+							}
+
 							return;
 						}
 					}

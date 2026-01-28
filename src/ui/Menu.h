@@ -16,9 +16,11 @@ namespace Modex
 		Menu& operator=(const Menu&) = delete;
 		Menu& operator=(Menu&&) = delete;
 
-		void Draw();
-		void OnOpen();
-		void OnClose();
+		void Draw() override;
+		void OnOpening() override;
+		void OnClosing() override;
+		void OnClosed() override;
+		void OnOpened() override;
 
 		void LoadModule(std::unique_ptr<UIModule>& a_module, uint8_t a_layoutIndex);
 		void NextWindow();

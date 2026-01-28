@@ -19,22 +19,25 @@
 
 namespace Modex
 {
-	void Menu::OnOpen()
+	void Menu::OnOpening()
 	{
 		uint8_t last_module = UserData::User().Get<uint8_t>("lastModule", 0);
 		uint8_t last_layout = UserData::User().Get<uint8_t>("lastLayout", 0);
 
 		auto& module = m_modules[last_module]; 
 
-		Trace("Menu Opened. Loading last module: {} (Layout: {})", module->GetName(), last_layout);
 		LoadModule(module, last_layout);
 
 		this->expand_sidebar = UserData::User().Get<bool>("Menu::Sidebar", true);
 		this->sidebar_initialized = false;
+	}
+
+	void Menu::OnOpened()
+	{
 		this->m_captureInput = true;
 	}
 
-	void Menu::OnClose()
+	void Menu::OnClosing()
 	{
 		uint8_t last_module = 0;
 		uint8_t last_layout = 0;
@@ -43,7 +46,6 @@ namespace Modex
 			if (module->IsLoaded()) {
 				last_module = static_cast<uint8_t>(&module - m_modules.data());
 				last_layout = module->GetActiveLayoutIndex();
-				module->Unload();
 				break;
 			}
 		}
@@ -51,12 +53,19 @@ namespace Modex
 		UserData::User().Set("lastModule", last_module);
 		UserData::User().Set("lastLayout", last_layout);
 
+	}
+
+	void Menu::OnClosed()
+	{
+		for (const auto& module : m_modules) {
+			module->Unload();
+		}
+
 		this->m_captureInput = false;
 	}
 
 	void Menu::LoadModule(std::unique_ptr<UIModule>& a_module, uint8_t a_layoutIndex)
 	{
-
 		for (auto& module : m_modules) {
 			if (module.get() == a_module.get()) {
 				continue;

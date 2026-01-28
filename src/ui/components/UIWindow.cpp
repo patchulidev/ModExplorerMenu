@@ -7,13 +7,13 @@ namespace Modex
 	{
 		manager = a_manager;
 		m_state = WindowState::Opening;
-		OnOpen();
+		OnOpening();
 	}
 
 	void UIWindow::CloseWindow() 
 	{
 		m_state = WindowState::Closing;
-		OnClose();
+		OnClosing();
 	}
     
 	void UIWindow::Update(float a_deltaTime) {
@@ -29,6 +29,7 @@ namespace Modex
 			if (m_alpha >= 1.0f) {
 				m_alpha = 1.0f;
 				m_state = WindowState::Open;
+				OnOpened();
 			}
 			break;
 		case WindowState::Closing:
@@ -37,6 +38,7 @@ namespace Modex
 				m_alpha = 0.0f;
 				m_state = WindowState::Closed;
 				m_close = true;
+				OnClosed();
 			}
 			break;
 		case WindowState::Closed:

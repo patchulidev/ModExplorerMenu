@@ -9,8 +9,10 @@ namespace Modex
 	public:
 		virtual ~UIWindow() = default;
 		virtual void Draw() = 0;
-		virtual void OnOpen() {}
-		virtual void OnClose() {}
+		virtual void OnOpening() {}
+		virtual void OnClosing() {}
+		virtual void OnOpened() {}
+		virtual void OnClosed() {}
 
 		virtual void OpenWindow(UIManager* a_manager);
 		virtual void CloseWindow();
