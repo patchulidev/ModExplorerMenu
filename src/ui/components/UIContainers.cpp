@@ -50,28 +50,6 @@ namespace Modex
 		return success;
 	}
 
-	// TODO: Move to UICustom.
-	// Buttons used for actions pane inside module windows (right-hand side).
-	bool UIContainers::ActionButton(const char* a_translate, const ImVec2& a_size, const bool a_condition, const ImVec4& a_color)
-	{
-		bool success = false;
-		ImGui::PushStyleColor(ImGuiCol_Button, ImGui::ColorConvertFloat4ToU32(a_color));
-		if (a_condition) {
-			success = ImGui::Button(Translate(a_translate), a_size);
-		} else {
-			ImGui::BeginDisabled();
-			ImGui::Button(Translate(a_translate), a_size);
-			ImGui::EndDisabled();
-		}
-		ImGui::PopStyleColor();
-
-		if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal | ImGuiHoveredFlags_NoSharedDelay | ImGuiHoveredFlags_AllowWhenDisabled)) {
-			UICustom::FancyTooltip(Translate((std::string(a_translate) + "_TOOLTIP").c_str()));
-		}
-
-		return success;
-	}
-
 	static inline uint32_t ADDITEM_MAX_QUERY = 100;
 	void UIContainers::DrawAddItemActionPanel(const ImVec2 &a_pos, const ImVec2 &a_size, std::unique_ptr<UITable> &a_view)
 	{
@@ -81,8 +59,6 @@ namespace Modex
 		bool valid_npc = false;
 
 		const int count = a_view->GetClickAmount() == nullptr ? 1 : *a_view->GetClickAmount();
-		const bool playerToggle = UserData::User().Get<bool>("Modex::TargetReference::IsPlayer", true);
-		const std::string toggle_text = playerToggle ? Translate("TARGET_PLAYER") : Translate("TARGET_NPC");
 
 		ImGui::SameLine();
         ImGui::SetCursorPos(a_pos);
@@ -97,26 +73,8 @@ namespace Modex
 			
 			ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 
-			if (!playerToggle) {
-				std::string npc_name = Translate("NO_CONSOLE_SELECTION");
-
-				if (a_view->GetTableTargetRef() != nullptr) {
-					npc_name = a_view->GetTableTargetRef()->GetName();
-					valid_npc = a_view->GetTableTargetRef()->GetFormType() == RE::FormType::ActorCharacter;
-				}
-
-				if (ImGui::BeginChild("Modex::AddItem::NPCHeader", ImVec2(max_width, button_height * 2.0f), true)) {
-					const float center_x = (max_width - ImGui::CalcTextSize(npc_name.c_str()).x) / 2.0f;
-					const float center_y = (button_height * 2.0f - ImGui::CalcTextSize(npc_name.c_str()).y) / 2.0f;
-					ImGui::SetCursorPos(ImVec2(center_x, center_y));
-					ImGui::Text("%s", npc_name.c_str());
-				}
-
-				ImGui::EndChild();
-			}
-
 			// TODO: Add QueryCheck implementation.
-			if (UIContainers::ActionButton("CONTAINER_VIEW", ImVec2(max_width, button_height), true, cont_color)) {
+			if (UICustom::ActionButton("CONTAINER_VIEW", ImVec2(max_width, button_height), true, cont_color)) {
 				if (a_view->GetSelectionCount() > 0) {
 					PlayerChestSpawn::GetSingleton()->PopulateChestWithItems(a_view->GetSelection());
 				} else {
@@ -124,80 +82,38 @@ namespace Modex
 				}
 			}
 
-			if (playerToggle) {
-				if (UIContainers::ActionButton("ADD_SELECTION", ImVec2(max_width, button_height), a_view->GetSelectionCount() > 0, button_color)) {
-					if (UIContainers::QueryCheck(a_view->GetSelectionCount() > 0)) {
-						a_view->AddSelectionToTargetInventory(count);
-					} else {
-						a_view->AddSelectionToTargetInventory(count);
-					}
+			if (UICustom::ActionButton("ADD_SELECTION", ImVec2(max_width, button_height), a_view->GetSelectionCount() > 0, button_color)) {
+				if (UIContainers::QueryCheck(a_view->GetSelectionCount() > 0)) {
+					a_view->AddSelectionToTargetInventory(count);
+				} else {
+					a_view->AddSelectionToTargetInventory(count);
 				}
-
-				if (UIContainers::ActionButton("PLACE_SELECTION", ImVec2(max_width, button_height), a_view->GetSelectionCount() > 0, button_color)) {
-					if (UIContainers::QueryCheck(a_view->GetSelectionCount() > 0)) {
-						a_view->PlaceSelectionOnGround(count);
-					} else {
-						a_view->PlaceSelectionOnGround(count);
-					}
-				}
-
-				if (UIContainers::ActionButton("EQUIP_SELECTION", ImVec2(max_width, 0), a_view->GetSelectionCount() > 0, button_color)) {
-					if (UIContainers::QueryCheck(a_view->GetSelectionCount() > 0)) {
-						a_view->EquipSelectionToTarget();
-					} else {
-						a_view->EquipSelectionToTarget();
-					}
-				}
-
-				if (UIContainers::ActionButton("CLEAR_INVENTORY", ImVec2(max_width, button_height), true, button_color)) {
-					UIManager::GetSingleton()->ShowWarning("Clear Inventory", Translate("GENERAL_CLEAR_INVENTORY_INSTRUCTION"), []() {
-						if (auto player = RE::PlayerCharacter::GetSingleton()->AsReference(); player) {
-							Commands::RemoveAllItemsFromInventory(player);
-						}
-					});
-				}
-			} else {
-				const bool is_enabled = valid_npc && a_view->GetSelectionCount() > 0;
-
-				if (UIContainers::ActionButton("ADD_SELECTION_NPC", ImVec2(max_width, button_height), is_enabled, button_color)) {
-					if (a_view->GetSelectionCount() >= ADDITEM_MAX_QUERY) {
-						UIManager::GetSingleton()->ShowWarning("Large Query", Translate("WARNING_LARGE_QUERY"), [&a_view, count]() {
-							a_view->AddSelectionToTargetInventory(count);
-						});
-					} else {
-						a_view->AddSelectionToTargetInventory(count);
-					}
-				}
-
-				if (UIContainers::ActionButton("EQUIP_SELECTION_NPC", ImVec2(max_width, 0), is_enabled, button_color)) {
-					if (a_view->GetSelectionCount() >= ADDITEM_MAX_QUERY) {
-						UIManager::GetSingleton()->ShowWarning("Large Query",Translate("WARNING_LARGE_QUERY"), [&a_view]() {
-							a_view->EquipSelectionToTarget();
-						});
-					} else {
-						a_view->EquipSelectionToTarget();
-					}
-				}
-
-				if (UIContainers::ActionButton("CLEAR_INVENTORY_NPC", ImVec2(max_width, button_height), valid_npc, button_color)) {
-					UIManager::GetSingleton()->ShowWarning("Clear Inventory", Translate("GENERAL_CLEAR_INVENTORY_INSTRUCTION"), [&a_view]() {
-						if (const auto ref = a_view->GetTableTargetRef(); ref != nullptr) {
-							Commands::RemoveAllItemsFromInventory(ref);
-						}
-					});
-				}
-
-				if (UIContainers::ActionButton("RESET_INVENTORY_NPC", ImVec2(max_width, button_height), valid_npc, button_color)) {
-					UIManager::GetSingleton()->ShowWarning("Reset Inventory", Translate("GENERAL_RESET_INVENTORY_INSTRUCTION"), [&a_view]() {
-						if (const auto ref = a_view->GetTableTargetRef(); ref != nullptr) {
-							Commands::ResetTargetInventory(ref);
-						}
-					});
-				}
-
 			}
 
-			ImGui::Spacing();
+			if (UICustom::ActionButton("PLACE_SELECTION", ImVec2(max_width, button_height), a_view->GetSelectionCount() > 0, button_color)) {
+				if (UIContainers::QueryCheck(a_view->GetSelectionCount() > 0)) {
+					a_view->PlaceSelectionOnGround(count);
+				} else {
+					a_view->PlaceSelectionOnGround(count);
+				}
+			}
+
+			if (UICustom::ActionButton("EQUIP_SELECTION", ImVec2(max_width, 0), a_view->GetSelectionCount() > 0, button_color)) {
+				if (UIContainers::QueryCheck(a_view->GetSelectionCount() > 0)) {
+					a_view->EquipSelectionToTarget();
+				} else {
+					a_view->EquipSelectionToTarget();
+				}
+			}
+
+			if (UICustom::ActionButton("CLEAR_INVENTORY", ImVec2(max_width, button_height), true, button_color)) {
+				UIManager::GetSingleton()->ShowWarning("Clear Inventory", Translate("GENERAL_CLEAR_INVENTORY_INSTRUCTION"), []() {
+					if (auto player = RE::PlayerCharacter::GetSingleton()->AsReference(); player) {
+						Commands::RemoveAllItemsFromInventory(player);
+					}
+				});
+			}
+
 			ImGui::Spacing();
 			ImGui::Spacing();
 
@@ -236,19 +152,19 @@ namespace Modex
 			static std::string target_name = targetRefr ? targetRefr->GetName() : Translate("NO_CONSOLE_SELECTION");
 			const bool action_allowed = targetRefr && targetRefr->GetFormType() == RE::FormType::ActorCharacter && !a_kit.empty();
 
-			if (ActionButton("CONTAINER_VIEW_KIT", ImVec2(half_width, button_height), action_allowed, cont_color)) {
+			if (UICustom::ActionButton("CONTAINER_VIEW_KIT", ImVec2(half_width, button_height), action_allowed, cont_color)) {
 				PlayerChestSpawn::GetSingleton()->PopulateChestWithKit(a_kit);
 			}
 
 			ImGui::SameLine();
 
 			const std::string action_text = playerToggle ? "ADD_KIT" : "ADD_KIT_NPC";
-			if (ActionButton(action_text.c_str(), ImVec2(half_width, button_height), action_allowed, button_color)) {
+			if (UICustom::ActionButton(action_text.c_str(), ImVec2(half_width, button_height), action_allowed, button_color)) {
 				a_kitView->AddKitToTargetInventory(a_kit);
 			}
 			
 
-			if (ActionButton("PLUGIN_DEPENDENCIES", ImVec2(max_width, button_height), action_allowed, button_color)) {
+			if (UICustom::ActionButton("PLUGIN_DEPENDENCIES", ImVec2(max_width, button_height), action_allowed, button_color)) {
 				std::unordered_set<std::string> dependencies;
 				std::string message;
 
@@ -273,11 +189,11 @@ namespace Modex
 				UIManager::GetSingleton()->ShowInfoBox(Translate("Plugin Dependencies"), message);
 			}
 
-			if (ActionButton("SET_START_EQUIP", ImVec2(max_width, button_height), action_allowed, button_color)) {
+			if (UICustom::ActionButton("SET_START_EQUIP", ImVec2(max_width, button_height), action_allowed, button_color)) {
 				// TODO: Implement starting equipment functionality
 			}
 
-			if (ActionButton("CLEAR_INVENTORY", ImVec2(max_width, button_height), true, button_color)) {
+			if (UICustom::ActionButton("CLEAR_INVENTORY", ImVec2(max_width, button_height), true, button_color)) {
 				UIManager::GetSingleton()->ShowWarning("Clear Inventory", Translate("GENERAL_CLEAR_INVENTORY_INSTRUCTION"), []() {
 					if (auto player = RE::PlayerCharacter::GetSingleton()->AsReference(); player) {
 						Commands::RemoveAllItemsFromInventory(player);
@@ -295,7 +211,7 @@ namespace Modex
 		ImGui::SameLine();
 		ImGui::SetCursorPos(a_pos);
 		if (ImGui::BeginChild("##Modex::AddItemTable", a_size, false, ImGuiWindowFlags_NoBringToFrontOnFocus)) {
-			a_view->DrawWarningBar();
+			a_view->DrawStatusBar();
 			a_view->ShowSort();
 			a_view->Draw(a_view->GetTableList());
 		}
@@ -307,7 +223,7 @@ namespace Modex
 		ImGui::SameLine();
 		ImGui::SetCursorPos(a_pos);
 		if (ImGui::BeginChild("##Modex::InventoryTable", a_size, false)) {
-			UICustom::SubCategoryHeader(Translate("HEADER_INVENTORY_TABLE"));
+			a_view->DrawStatusBar();
 			a_view->Draw(a_view->GetTableList());
 		}
 		ImGui::EndChild();
@@ -320,7 +236,7 @@ namespace Modex
 		ImGui::SameLine();
 		ImGui::SetCursorPos(a_pos);
 		if (ImGui::BeginChild("##Modex::KitTable", a_size, false)) {
-			a_view->DrawWarningBar();
+			a_view->DrawStatusBar();
 			a_view->ShowSort();
 			a_view->Draw(a_view->GetTableList());
 		}

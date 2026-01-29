@@ -7,6 +7,7 @@ namespace Modex::UICustom
 	bool ToggleButton(const char* a_id, bool& a_value, float a_width);
 	bool SidebarImageButton(const std::string& a_title, const std::string& a_icon, bool a_selected, ImVec2 a_buttonSize, float& a_textMod, bool a_expanded);
 	void SubCategoryHeader(const char* label, ImVec4 color = ImVec4(0.22f, 0.22f, 0.22f, 0.9f));
+	bool ActionButton(const char* a_translate, const ImVec2& a_size, const bool a_condition, const ImVec4& a_color);
 
 	void FancyTooltip(const char* a_localeString);
 	bool FancyInputText(const char* a_id, const char* a_hint, const char* a_tooltip, char* a_buffer, float a_width, ImGuiInputTextFlags a_flags = 0);

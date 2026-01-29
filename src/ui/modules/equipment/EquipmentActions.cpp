@@ -34,7 +34,7 @@ namespace Modex
 
 			ImGui::SameLine();
 
-			if (UIContainers::ActionButton("KIT_RENAME", ImVec2(rename_width, 0), !selectedKit.empty(), ThemeConfig::GetColor("BUTTON"))) {
+			if (UICustom::ActionButton("KIT_RENAME", ImVec2(rename_width, 0), !selectedKit.empty(), ThemeConfig::GetColor("BUTTON"))) {
 				UIManager::GetSingleton()->ShowInputBox(
 					Translate("POPUP_KIT_RENAME_TITLE"),
 					Translate("POPUP_KIT_RENAME_DESC"),
@@ -48,7 +48,7 @@ namespace Modex
 				);
 			}
 
-			if (UIContainers::ActionButton("KIT_COPY", ImVec2(button_width, button_height), !selectedKit.empty(), ThemeConfig::GetColor("BUTTON"))) {
+			if (UICustom::ActionButton("KIT_COPY", ImVec2(button_width, button_height), !selectedKit.empty(), ThemeConfig::GetColor("BUTTON"))) {
 				if (auto new_kit = EquipmentConfig::CopyKit(selectedKit); new_kit.has_value()) {
 					ImFormatString(m_searchBuffer, IM_ARRAYSIZE(m_searchBuffer), "");
 					selectedKit = std::move(new_kit.value());
@@ -56,7 +56,7 @@ namespace Modex
 				}
 			}
 
-			if (UIContainers::ActionButton("KIT_DELETE", ImVec2(button_width, button_height), !selectedKit.empty(), ThemeConfig::GetColor("BUTTON"))) {
+			if (UICustom::ActionButton("KIT_DELETE", ImVec2(button_width, button_height), !selectedKit.empty(), ThemeConfig::GetColor("BUTTON"))) {
 				UIManager::GetSingleton()->ShowWarning(
 					std::string(Translate("POPUP_KIT_DELETE_TITLE")) + " - " + selectedKit.GetNameTail(),
 					Translate("POPUP_KIT_DELETE_DESC"),
@@ -69,7 +69,7 @@ namespace Modex
 				);
 			}
 
-			if (UIContainers::ActionButton("KIT_CREATE", ImVec2(button_width, button_height), true, ThemeConfig::GetColor("BUTTON"))) {
+			if (UICustom::ActionButton("KIT_CREATE", ImVec2(button_width, button_height), true, ThemeConfig::GetColor("BUTTON"))) {
 				UIManager::GetSingleton()->ShowInputBox(
 					Translate("POPUP_KIT_CREATE_TITLE"),
 					Translate("POPUP_KIT_CREATE_DESC"),
@@ -84,7 +84,7 @@ namespace Modex
 				);
 			}
 
-			if (UIContainers::ActionButton("KIT_BROWSE", ImVec2(button_width, button_height), true, ThemeConfig::GetColor("BUTTON"))) {
+			if (UICustom::ActionButton("KIT_BROWSE", ImVec2(button_width, button_height), true, ThemeConfig::GetColor("BUTTON"))) {
 				UIManager::GetSingleton()->ShowBrowser(
 					Translate("POPUP_KIT_BROWSER_TITLE"),
 					equipment_keys,

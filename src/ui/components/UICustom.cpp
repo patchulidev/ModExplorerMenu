@@ -31,6 +31,26 @@ namespace Modex::UICustom
 		ImGui::PopStyleColor(3);
 	}
 
+	bool UICustom::ActionButton(const char* a_translate, const ImVec2& a_size, const bool a_condition, const ImVec4& a_color)
+	{
+		bool success = false;
+		ImGui::PushStyleColor(ImGuiCol_Button, ImGui::ColorConvertFloat4ToU32(a_color));
+		if (a_condition) {
+			success = ImGui::Button(Translate(a_translate), a_size);
+		} else {
+			ImGui::BeginDisabled();
+			ImGui::Button(Translate(a_translate), a_size);
+			ImGui::EndDisabled();
+		}
+		ImGui::PopStyleColor();
+
+		if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal | ImGuiHoveredFlags_NoSharedDelay | ImGuiHoveredFlags_AllowWhenDisabled)) {
+			UICustom::FancyTooltip(Translate((std::string(a_translate) + "_TOOLTIP").c_str()));
+		}
+
+		return success;
+	}
+
 	bool FancyInputText(const char* a_id, const char *a_hint, const char* a_tooltip, char* a_buffer, float a_width, ImGuiInputTextFlags a_flags)
 	{
 		auto bufferSize = IM_ARRAYSIZE(a_buffer);

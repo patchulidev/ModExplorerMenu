@@ -20,7 +20,6 @@ namespace Modex
         void DrawTableStatusPanel(const ImVec2 &a_pos, const ImVec2 &a_size, std::unique_ptr<UITable> &a_view);
         void DrawPopupBackground();
 
-        bool ActionButton(const char* a_label, const ImVec2& a_size, const bool a_condition, const ImVec4& a_color);
         bool TabButton(const char* a_label, const ImVec2& a_size, const bool a_condition, const ImVec4& a_color);
 
         bool QueryCheck(const bool a_condition);
