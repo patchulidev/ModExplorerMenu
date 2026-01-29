@@ -18,6 +18,7 @@
 - [ ] :construction: Outfit module allowing users to act on pre-defined outfits defined by the game. Assign, change, etc.  
 - [ ] :construction: Streamline plugin indexing and filtering. It's not very intuitive for users right now.
 - [ ] :construction: Reduce usage of favicons in unecessary menu panes. Item Preview for example.
+- [ ] :construction: Support for editorid lookup for table target references.
 - [ ] :bulb: Shout / Dragon Soul module to unify Modex as more of a cheat menu and debug tool.
 - [ ] :bulb: Peek / Popup inventory window for NPC references in Actor module.
 - [ ] :bulb: Manual Input / Popup for table/console reference selection.
@@ -35,7 +36,8 @@
 - [x] :art: design: Optional smooth scrolling animations.
 - [x] :zap: optimize: More robust Drag'n'Drop behavior implementation with new graphics and tooltips.
 - [x] :zap: optimize: Huge improvements to memory allocation and management for table and objects.
-- [x] :sparkles: feature: Tables now leverage console reference to add, remove, and modify inventories.
+- [x] :dizzy: add: Additional shortcuts and handling for table target references.
+- [x] :sparkles: feature: Tables now use target references that can be set by formid or console.
 - [x] :sparkles: feature: Support for additional search comparators including basic Regex.
 - [x] :sparkles: feature: Configurable Tree node style filter system for form types with multi-selection filtering.
 - [x] :bug: fixed: Table initialization failing, causing CTD unexpectedly.
