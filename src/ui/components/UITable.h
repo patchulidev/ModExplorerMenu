@@ -49,6 +49,7 @@ namespace Modex
 		bool                    generalSearchDirty;
 		std::string             selectedPlugin;
 		Kit*                    selectedKitPtr;
+		bool                    useSharedTarget;
 		
 		//                      lazy event callbacks
 		bool                    updateKeyboardNav;
@@ -137,10 +138,12 @@ namespace Modex
 		void                    SetDragDropHandle(DragDropHandle a_handle);
 		void                    SetClickAmount(int a_amount) { clickAmount = a_amount; }
 		void                    SetUserDataID(const std::string& a_id) { data_id = a_id; }
+		void                    SetUseSharedTarget(bool a_use) { useSharedTarget = a_use; }
 		void                    SetShowEditorID(bool a_show) { showEditorID = a_show; }
 
-		void                    SetTableTargetRef(RE::TESObjectREFR* a_ref) { tableTargetRef = a_ref; }
+		//                      target reference accessors
 		RE::TESObjectREFR*      GetTableTargetRef() const { return tableTargetRef; }
+		void                    SetTargetByReference(RE::TESObjectREFR* a_reference);
 
 		int*                    GetClickAmount() { return &clickAmount; }
 		
@@ -156,6 +159,7 @@ namespace Modex
 		const char*             GetDragDropHandleText(DragDropHandle a_handle) const { return magic_enum::enum_name(a_handle).data(); }
 		
 		//                      table action methods
+		void                    UpdateActiveInventoryTables();
 		void                    PlaceSelectionOnGround(int a_count);
 		void                    RemoveSelectionFromTargetInventory();  
 		void                    AddSelectionToTargetInventory(int a_count);
@@ -166,6 +170,7 @@ namespace Modex
 		void                    PlaceAll();
 		void                    AddAll();
 
+		std::vector<BaseObject> GetReferenceInventory();
 		std::vector<std::unique_ptr<BaseObject>> GetSelection();
 		uint32_t                GetSelectionCount() const;
 		TableItem&              GetItemPreview() { return itemPreview; }

@@ -38,6 +38,7 @@ namespace Modex
 		table->AddFlag(UITable::ModexTableFlag_EnableCategoryTabs);
 		table->AddFlag(UITable::ModexTableFlag_EnableHeader);
 		table->SetUserDataID("Object");
+		table->SetUseSharedTarget(true); // Do we really target anything?
 		table->SetShowEditorID(UserData::User().Get<bool>("Object::ShowEditorID", false));
 		table->Init();
 		m_tables.push_back(std::move(table));

@@ -27,6 +27,7 @@ namespace Modex
 		
 
 	public:
+		static inline RE::TESObjectREFR* s_targetReference = nullptr;
 
 		virtual ~UIModule() = default;
 		virtual void Draw() {};
@@ -40,8 +41,15 @@ namespace Modex
 		const std::string& GetName() const { return m_name; };
 		const std::string& GetIcon() const { return m_icon; };
 
+		void UpdateTableTargets(RE::TESObjectREFR* a_ref);
+
 		void SetOffset(float a_offset) { m_offset = a_offset; };
 		void SetActiveLayout(uint8_t a_layoutIndex);
 		uint8_t GetActiveLayoutIndex() const;
+
+		static RE::TESObjectREFR* GetTargetReference() { return s_targetReference; }
+		static void SetTargetReference(RE::TESObjectREFR* a_ref);
+		static std::optional<RE::TESObjectREFR*> LookupReferenceBySearch(const std::string& a_search);
+		static std::optional<RE::TESObjectREFR*> LookupReferenceByFormID(const RE::FormID& a_id);
 	};
 }

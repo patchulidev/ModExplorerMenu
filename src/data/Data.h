@@ -71,7 +71,6 @@ namespace Modex
 		static std::vector<std::string>					GetTypeString();
 		static std::vector<std::string>					GetSortStrings();
 
-		[[nodiscard]] inline std::vector<BaseObject>& 	GetInventoryList()	{ return m_inventory; 		}
 		[[nodiscard]] inline std::vector<BaseObject>& 	GetAddItemList() 	{ return m_cache; 			}
 		[[nodiscard]] inline std::vector<BaseObject>& 	GetNPCList() 		{ return m_npcCache; 		}
 		[[nodiscard]] inline std::vector<BaseObject>& 	GetObjectList() 	{ return m_staticCache;		}

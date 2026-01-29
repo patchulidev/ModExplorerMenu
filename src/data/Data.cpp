@@ -322,29 +322,6 @@ namespace Modex
 		}
 	}
 
-	void Data::GenerateInventoryList()
-	{
-		m_inventory.clear();
-
-		Debug("Generating Inventory List...");
-
-		auto player = RE::PlayerCharacter::GetSingleton();
-		if (!player) {
-			Warn("Unable to get player character singleton!");
-			return;
-		}
-
-		auto inventory = player->GetInventory();
-		for (auto& [obj, data] : inventory) {
-			auto& [count, entry] = data;
-			if (count > 0 && entry) {
-				uint32_t quantity = static_cast<std::uint32_t>(count);
-				m_inventory.emplace_back(BaseObject{ entry->object, 0, 0, quantity });
-			}
-		}
-
-		Debug("Cached {} inventory items.", m_inventory.size());
-	}
 
 	void Data::GenerateItemList()
 	{

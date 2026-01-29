@@ -4,6 +4,7 @@
 #include "config/ThemeConfig.h"
 #include "localization/Locale.h"
 #include "ui/components/UIContainers.h"
+#include "core/Commands.h"
 
 namespace Modex
 {
@@ -96,6 +97,7 @@ namespace Modex
 		table->SetGenerator([]() { return Data::GetSingleton()->GetAddItemList(); });
 		table->SetPluginType(Data::PLUGIN_TYPE::Item);
 		table->SetUserDataID("Equipment");
+		table->SetUseSharedTarget(true);
 		table->SetDragDropHandle(UITable::DragDropHandle::Table);
 		table->AddFlag(UITable::ModexTableFlag_Base);
 		table->AddFlag(UITable::ModexTableFlag_EnableCategoryTabs);
@@ -109,6 +111,7 @@ namespace Modex
 		kit->SetGenerator([]() { return EquipmentConfig::GetItems(m_selectedKit); });
 		kit->SetKitPointer(&m_selectedKit);
 		kit->SetUserDataID("Equipment");
+		kit->SetUseSharedTarget(true);
 		kit->SetDragDropHandle(UITable::DragDropHandle::Kit);
 		kit->AddFlag(UITable::ModexTableFlag_Kit);
 		kit->AddFlag(UITable::ModexTableFlag_EnableHeader);
@@ -117,8 +120,8 @@ namespace Modex
 
 		// TODO: Revisit generator impl so that it registers tableref instead of just player
 		auto inventory = std::make_unique<UITable>();
-		inventory->SetGenerator([]() { return Data::GetSingleton()->GetInventoryList(); });
 		inventory->SetUserDataID("Equipment");
+		inventory->SetUseSharedTarget(false);
 		inventory->SetDragDropHandle(UITable::DragDropHandle::Inventory);
 		inventory->AddFlag(UITable::ModexTableFlag_Inventory);
 		inventory->AddFlag(UITable::ModexTableFlag_EnableHeader);

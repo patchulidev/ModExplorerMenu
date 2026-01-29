@@ -12,6 +12,8 @@
 #include "config/UserData.h"
 #include "config/ThemeConfig.h"
 
+#include "ui/components/UIModule.h"
+
 #include "pch.h"
 
 
@@ -132,7 +134,6 @@ namespace Modex
 		searchSystem->SetupDefaultKey();
 
 		selectedPlugin = Translate("SHOW_ALL");
-
 	}
 
 	void UITable::Unload()
@@ -149,13 +150,71 @@ namespace Modex
 		tableTargetRef = nullptr;
 	}
 
+	// TEST: Need extreme nullptr safety when operating on references since we can't guarantee
+	// lifetime throughout Modex being open. Test and verify that methods calling tableTargetRef
+	// are always doing nullptr checks before release!!!
+	
 	void UITable::Load()
 	{
-		tableTargetRef = Commands::GetConsoleReference();
+		
+		if (useSharedTarget)
+		{
+			if (auto reference = UIModule::GetTargetReference(); reference) {
+				this->SetTargetByReference(reference);
+			}
+		}
+
+		if (!useSharedTarget) 
+		{
+			const auto formID = UserData::User().Get<RE::FormID>(data_id + "::LastTargetRef", 0);
+			if (const auto reference = UIModule::LookupReferenceByFormID(formID); reference.has_value()) {
+				if (*reference) {
+					this->SetTargetByReference(*reference);
+				}
+			}
+		}
+
 		BuildPluginList();
 		LoadRecentList();
 		Refresh();
 	}
+	
+	void UITable::SetTargetByReference(RE::TESObjectREFR* a_reference)
+	{
+		tableTargetRef = a_reference;
+
+		if (HasFlag(ModexTableFlag_Inventory)) {
+			this->Refresh();
+		}
+
+		if (useSharedTarget)
+		{
+			UIModule::SetTargetReference(a_reference);
+
+			// HACK: Cheap. Doesn't work if tables aren't linked. Although currently
+			// there is no instance of tables co-existing without drag linkage. This
+			// hack was used as an alternative to propogating changes through a
+			// hierarchy of Menu, UIModule, and UIManager instances.
+
+			for (const auto source : dragDropSourceList) {
+				if (source.second->useSharedTarget) {
+					source.second->SetTargetByReference(a_reference);
+				}
+			}
+		}
+
+		if (!useSharedTarget)
+		{
+			RE::FormID formID = 0;
+
+			if (tableTargetRef) {
+				formID = tableTargetRef->formID;
+			}
+
+			UserData::User().Set<RE::FormID>(data_id + "::LastTargetRef", formID);
+		}
+	}
+
 	void UITable::AddItemToRecent(const std::unique_ptr<BaseObject>& a_item)
 	{
 		UserData::Recent().Add(a_item->GetEditorID());
@@ -173,6 +232,7 @@ namespace Modex
 			return;
 
 		// TEST: Should we keep dummy objects in recent list?
+		// BUG: This is still broken. CTD if a dummy object is read due to icon.
 		for (const auto& editorID : recentItems) {
 			if (RE::TESForm* form = RE::TESForm::LookupByEditorID(editorID)) {
 				recentList.emplace_back(std::make_unique<BaseObject>(form, 0, 0));
@@ -186,6 +246,23 @@ namespace Modex
 		}
 
 		updateRecentList = false;
+	}
+
+	void UITable::UpdateActiveInventoryTables()
+	{
+		if (this->HasFlag(ModexTableFlag_Inventory) || this->GetDragDropHandle() == DragDropHandle::Inventory) {
+			this->Refresh();
+			return;
+		}
+
+		for (auto& pair : dragDropSourceList) {
+			const auto handle = pair.first;
+			const auto ptr = pair.second;
+
+			if (ptr->HasFlag(ModexTableFlag_Inventory) || handle == DragDropHandle::Inventory) {
+				ptr->Refresh();
+			}
+		}
 	}
 
 	void UITable::AddKitToTargetInventory(const Kit& a_kit)
@@ -202,6 +279,8 @@ namespace Modex
 		for (auto& kitItem : a_kit.m_items) {
 			Commands::AddItemToRefInventory(tableTargetRef, kitItem->m_editorid, static_cast<std::uint32_t>(kitItem->m_amount));
 		}
+
+		UpdateActiveInventoryTables();
     }
 
 	void UITable::RemoveSelectionFromTargetInventory()
@@ -227,6 +306,7 @@ namespace Modex
 		}
 
 		selectionStorage.Clear();
+		UpdateActiveInventoryTables();
 	}
 
 	void UITable::AddSelectionToTargetInventory(int a_count)
@@ -251,7 +331,7 @@ namespace Modex
 			}
 		}
 
-		selectionStorage.Clear();
+		UpdateActiveInventoryTables();
 	}
 
 	void UITable::EquipSelectionToTarget()
@@ -277,7 +357,9 @@ namespace Modex
 		}
 
 		selectionStorage.Clear();
+		UpdateActiveInventoryTables();
 	}
+
 
 	void UITable::PlaceSelectionOnGround(int a_count)
 	{
@@ -312,6 +394,7 @@ namespace Modex
 		}
 
 		selectionStorage.Clear();
+		UpdateActiveInventoryTables();
 	}
 
 	void UITable::PlaceAll()
@@ -351,6 +434,7 @@ namespace Modex
 		dragDropHandle = a_id;
 	}
 
+	// OPTIMIZE: Is std::vector<BaseObject> the best fit here?
 	void UITable::SetGenerator(std::function<std::vector<BaseObject>()> a_generator)
 	{
 		generator = a_generator;
@@ -401,10 +485,9 @@ namespace Modex
 
 		this->tableList.emplace_back(std::make_unique<BaseObject>(*a_item));
 
-		Data::GetSingleton()->GenerateInventoryList();
+		UpdateActiveInventoryTables();
 	}
 
-	// TODO: This doesn't make sense. Inventory != table.
 	void UITable::RemovePayloadFromInventory(const std::unique_ptr<BaseObject>& a_item)
 	{
 		if (this->tableList.empty()) {
@@ -465,6 +548,8 @@ namespace Modex
 		}
 	}
 
+	// OPTIMIZE: Potential room for optimization if we can perform lookups or something.
+
 	void UITable::RemovePayloadItemFromKit(const std::unique_ptr<BaseObject>& a_item)
 	{
 		if (this->tableList.empty()) {
@@ -500,8 +585,13 @@ namespace Modex
 	void UITable::Refresh()
 	{
 		selectionStorage.Clear();
+		
+		if (HasFlag(ModexTableFlag_Inventory)) {
+			this->Filter(GetReferenceInventory());
+		} else {
+			this->Filter(this->generator());
+		}
 
-		this->Filter(this->generator());
 		this->SortListBySpecs();
 		this->UpdateImGuiTableIDs();
 	}
@@ -529,6 +619,26 @@ namespace Modex
 				}
 			}
 		}
+	}
+
+	std::vector<BaseObject> UITable::GetReferenceInventory()
+	{
+		std::vector<BaseObject> m_inventory;
+
+		if (!tableTargetRef)
+			return m_inventory;
+
+		auto inventory = tableTargetRef->GetInventory();
+		for (auto& [obj, data] : inventory) {
+			auto& [count, entry] = data;
+			if (count > 0 && entry) {
+				uint32_t quantity = static_cast<std::uint32_t>(count);
+				m_inventory.emplace_back(entry->object, 0, 0, quantity);
+			}
+		}
+
+		Trace("Cached {} inventory items.", m_inventory.size());
+		return m_inventory;
 	}
 
 	void UITable::Filter(const std::vector<BaseObject>& a_data)
@@ -1867,121 +1977,154 @@ namespace Modex
 		ImGui::PopStyleVar();
 	}
 
-	void UITable::DrawWarningBar()
+	void UITable::DrawStatusBar()
 	{
-		static const std::string auxiliary_icon = HasFlag(ModexTableFlag_Kit) ? ICON_LC_BOX " " : ICON_LC_SEARCH " ";
-		static constexpr std::string user_icon = ICON_LC_USER " ";
-		static constexpr std::string warn_icon = ICON_LC_TRIANGLE_ALERT " ";
+		static constexpr std::string user_icon = ICON_LC_CHEVRON_RIGHT;
+		static constexpr std::string warn_icon = ICON_LC_TRIANGLE_ALERT;
 
 		ImVec4 user_color = ThemeConfig::GetColor("BUTTON"); // TODO: Unique Color Keys?
 
+		std::string search_text;
 		std::string user_text;
-		std::string auxiliary_text;
 		std::string warn_text;
 
 		if (HasFlag(ModexTableFlag_Kit)) {
-			if (selectedKitPtr != nullptr && !selectedKitPtr->empty()) {
-				auxiliary_text = auxiliary_icon + selectedKitPtr->GetNameTail();
-			} else {
+			if (selectedKitPtr == nullptr || (selectedKitPtr && selectedKitPtr->m_key.empty())) {
 				warn_text = Translate("ERROR_NO_KIT_SELECTED");
 			}
-		} else {
-			if (tableList.empty()) {
-				warn_text = Translate("WARNING_NO_ITEMS");
-			}
 
-			auxiliary_text = auxiliary_icon + searchSystem->GetLastSearchBuffer();
+			if (selectedKitPtr && !selectedKitPtr->m_key.empty()) {
+				search_text = selectedKitPtr->GetNameTail();
+			}
 		}
 
 		if (tableTargetRef == nullptr) {
 			warn_text = Translate("ERROR_MISSING_REFERENCE");
 		} else {
-			if (tableTargetRef->IsActor() == false) {
+			if (!tableTargetRef) {
 				warn_text = Translate("ERROR_INVALID_REFERENCE");
 			} else {
-				user_text = user_icon + tableTargetRef->GetName();
+				user_text = std::format("({:08X}) - '{}'", tableTargetRef->GetFormID(), tableTargetRef->GetName());
 
-				if (tableTargetRef->IsPlayer()) {
-					user_color = ThemeConfig::GetColor("BUTTON");
-				} else {
+				if (tableTargetRef->IsPlayerRef()) {
 					user_color = ThemeConfig::GetColor("CONTAINER_BUTTON");
+				} else {
+					user_color = ThemeConfig::GetColor("BUTTON");
 				}
 			}
 		}
 
-		bool _table_clicked_ 	= false;
-		bool _user_clicked_ 	= false;
-		bool _aux_clicked_ 		= false;
-		bool _warn_clicked_ 	= false;
+		bool user_clicked   = false;
+		bool search_clicked = false;
+		bool warn_clicked   = false;
 
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(ImGui::GetFontSize(), 3.0f));
 		ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.0f, 0.5f));
 		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal, 2.0f);
-
-		ImGui::PushStyleColor(ImGuiCol_Button, ImGuiCol_TableHeaderBg);
-		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGuiCol_TableHeaderBg);
-		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImGuiCol_TableHeaderBg);
-		_table_clicked_ = ImGui::Button((ICON_LC_TABLE + data_id).c_str());
-		ImGui::PopStyleColor(3);
-
-		if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort | ImGuiHoveredFlags_NoSharedDelay)) {
-			UICustom::FancyTooltip(Translate("STATUS_BAR_TABLE_TOOLTIP"));
-		}
 		
 		ImGui::SameLine();
-		_user_clicked_ = ImGui::Button(user_text.c_str());
 
+		ImGui::PushFontBold(ImGui::GetFontSize());
+		ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.5f, 0.5f));
+		const auto user_height = ImGui::GetFrameHeightWithSpacing();
+		const float padding = ImGui::GetFrameHeightWithSpacing() * 3.0f;
+		const float text_width = ImGui::CalcTextSize(user_text.c_str()).x;
+		const auto user_width = max(ImGui::GetContentRegionAvail().x / 4.0f, text_width + padding);
+
+		user_clicked = ImGui::Button(user_text.c_str(), ImVec2(user_width, user_height));
+		bool user_shift_clicked = user_clicked && ImGui::GetIO().KeyShift;
+		bool user_ctrl_clicked  = user_clicked && ImGui::GetIO().KeyCtrl;
+		bool user_default = ImGui::IsItemHovered() && ImGui::IsKeyPressed(ImGuiKey_T, false);
+
+		auto DrawList = ImGui::GetWindowDrawList();
+		
+
+		ImGui::PopStyleVar();
+		ImGui::PopFont();
+		
 		if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort | ImGuiHoveredFlags_NoSharedDelay)) {
 			UICustom::FancyTooltip(Translate("STATUS_BAR_TARGET_TOOLTIP"));
 		}
 
-		if (!auxiliary_text.empty() && warn_text.empty()) {
-			ImGui::SameLine();
-			ImGui::PushStyleColor(ImGuiCol_Button, ThemeConfig::GetColor("BUTTON_CONFIRM"));
-			_aux_clicked_ = ImGui::Button(auxiliary_text.c_str(), ImVec2(ImGui::GetContentRegionAvail().x, 0.0f));
-			ImGui::PopStyleColor();
+		ImGui::SameLine();
 
-			if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort | ImGuiHoveredFlags_NoSharedDelay)) {
-				UICustom::FancyTooltip(Translate("STATUS_BAR_AUX_TOOLTIP"));
-			}
-		} else {
-			ImGui::SameLine();
-			ImGui::PushStyleColor(ImGuiCol_Button, ThemeConfig::GetColor("BUTTON_CANCEL_HOVER"));
-			std::string _warn = TRUNCATE(warn_text, ImGui::GetContentRegionAvail().x * 0.75f);
-			_warn_clicked_ = ImGui::Button((warn_icon + _warn).c_str(), ImVec2(ImGui::GetContentRegionAvail().x, 0.0f));
-			ImGui::PopStyleColor();
+		const ImVec2 user_icon_offset = ImVec2(user_width - ImGui::GetStyle().WindowPadding.x / 2.0f, -3.0f);
+		ImGui::PushFont(NULL, ImGui::GetFontSize() + 2.0f);
+		DrawList->AddText(ImGui::GetCursorScreenPos() - user_icon_offset, ThemeConfig::GetColorU32("TEXT"), user_icon.c_str());
+		ImGui::PopFont();
+
+		const float search_width = ImGui::GetContentRegionAvail().x;
+		ImGui::SetNextItemWidth(search_width);
+		ImGui::PushStyleColor(ImGuiCol_Button, ThemeConfig::GetColor("BUTTON_CONFIRM"));
+		if (!warn_text.empty()) {
+			warn_clicked = ImGui::Button(TRUNCATE(warn_text, search_width).c_str(), ImVec2(search_width, user_height));
 
 			if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort | ImGuiHoveredFlags_NoSharedDelay)) {
 				UICustom::FancyTooltip(Translate("STATUS_BAR_WARN_TOOLTIP"));
 			}
+		} else {
+			search_clicked = ImGui::Button(search_text.c_str(), ImVec2(search_width, user_height));
+
+			if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort | ImGuiHoveredFlags_NoSharedDelay)) {
+				UICustom::FancyTooltip(Translate("STATUS_BAR_AUX_TOOLTIP"));
+			}
 		}
+		ImGui::PopStyleColor();
 		ImGui::PopStyleVar(3);
 
-		// This needs to be done outside of style push/pop stack:
-
-		if (_table_clicked_) {
-			UIManager::GetSingleton()->ShowInfoBox(
-				Translate("STATUS_BAR_TABLE_TITLE"),
-				Translate("STATUS_BAR_TABLE_DESC")
-			);
+		if (user_shift_clicked) {
+			auto* reference = UIModule::GetTargetReference();
+			this->SetTargetByReference(reference);
+		}
+			
+		if (user_ctrl_clicked && tableTargetRef) {
+			auto formID = tableTargetRef->GetFormID();
+			std::string hex = std::format("{:08X}", formID);
+			ImGui::SetClipboardText(hex.c_str());	
 		}
 
-		if (_user_clicked_) {
-			UIManager::GetSingleton()->ShowInfoBox(
+		// BUG: Please investigate why calling this commented func crashes.
+		// It might be due to pointer lifetime.
+
+		if (user_default) {
+			tableTargetRef = Commands::GetConsoleReference();
+			// this->SetTargetByReference(tableTargetRef);
+		}
+
+		if (user_clicked && !user_shift_clicked && !user_ctrl_clicked) {
+			UIManager::GetSingleton()->ShowInputBox(
 				Translate("STATUS_BAR_TARGET_TITLE"),
-				Translate("STATUS_BAR_TARGET_DESC")
+				Translate("STATUS_BAR_TARGET_DESC"),
+				"",
+				[this](const std::string& a_input) {
+					bool success = false;
+
+					if (auto reference = UIModule::LookupReferenceBySearch(a_input); reference.has_value()) {
+						this->SetTargetByReference(reference.value());
+
+
+						success = true;
+					}
+
+					if (!success) {
+						UIManager::GetSingleton()->ShowWarning(
+							Translate("INVALID_REFERENCE_POPUP_TITLE"),
+							Translate("INVALID_REFERENCE_POPUP_DESC")
+						);
+					}
+				}
 			);
 		}
 
-		if (_aux_clicked_) {
+		if (search_clicked) {
 			UIManager::GetSingleton()->ShowInfoBox(
 				Translate("STATUS_BAR_AUX_TITLE"),
 				Translate("STATUS_BAR_AUX_DESC")
 			);
 		}
 
-		if (_warn_clicked_) {
+		if (warn_clicked) {
 			UIManager::GetSingleton()->ShowInfoBox(
 				Translate("STATUS_BAR_WARN_TITLE"),
 				warn_text

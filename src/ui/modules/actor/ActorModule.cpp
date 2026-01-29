@@ -37,6 +37,7 @@ namespace Modex
 		table->SetGenerator([]() { return Data::GetSingleton()->GetNPCList(); });
 		table->SetPluginType(Data::PLUGIN_TYPE::Actor);
 		table->SetUserDataID("Actor");
+		table->SetUseSharedTarget(true);
 		table->AddFlag(UITable::ModexTableFlag_EnableCategoryTabs);
 		table->AddFlag(UITable::ModexTableFlag_EnableHeader);
 		table->SetShowEditorID(UserData::User().Get<bool>("NPC::ShowEditorID", false));

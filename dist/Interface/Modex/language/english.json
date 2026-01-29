@@ -202,15 +202,12 @@
 
     "TABLE_SEARCH_TOOLTIP": "Property <-> Search Field\n\nType to search within the currently shown Plugin, based on the Property specified on the left-hand side. Press 'Enter' to submit.\n\n E.g. 'Name' -> Iron Armor",
     "TABLE_PLUGIN_TOOLTIP": "Plugin Field\n\nSelect a plugin which you would like to explore. Optionally, you can include ALL plugins currently loaded (SHOW ALL). This helps refine the table results more precisely.",
-    "STATUS_BAR_TARGET_TITLE": "Table Status Bar - Targeted Actor",
-    "STATUS_BAR_TARGET_TOOLTIP": "Targeted Actor\n\nClick to show more information.",
-    "STATUS_BAR_TARGET_DESC": "The currently targeted Actor in the game world to act upon. If no Actor is targeted, actions will default to the Player character.",
+    "STATUS_BAR_TARGET_TITLE": "Table Status Bar - Targeted Reference",
+    "STATUS_BAR_TARGET_TOOLTIP": "Targeted Reference\n\nCurrently selected console reference to be used for table operations. Defaults to Player Character.\n\nClick to set manually.\nShift+Click to use shared target.\nCtrl+Click to copy FormID.",
+    "STATUS_BAR_TARGET_DESC": "The currently targeted reference in the game world to act upon. If no Actor is targeted, actions will default to the Player character.\n\nPlayer Character = 14\n\nOnly eight-digit Reference FormIDs are valid for manual selection. FormIDs can be shortened.",
     "STATUS_BAR_AUX_TITLE": "Table Status Bar - Auxiliary Info",
-    "STATUS_BAR_AUX_TOOLTIP": "Selected Kit\n\nClick to show more information.",
+    "STATUS_BAR_AUX_TOOLTIP": "Search / Status\n\nClick to show more information.",
     "STATUS_BAR_AUX_DESC": "This badge represents the currently selected kit, or the currently used search phrase for the underlying table.",
-    "STATUS_BAR_TABLE_TITLE": "Table Type",
-    "STATUS_BAR_TABLE_TOOLTIP": "Table Type\n\nClick to show more information.",
-    "STATUS_BAR_TABLE_DESC": "Indicates the type of table currently being displayed. Modex table vary in behavior depending on the module in use. For example, the Equipment screen has both an Item Table and Equipment Table.",
     "STATUS_BAR_WARN_TITLE": "Table Status Bar - Warning",
     "STATUS_BAR_WARN_TOOLTIP": "Warning\n\nClick to read entire warning message.",
 
@@ -277,10 +274,12 @@
     "kTomeSkill_TOOLTIP": "Skill\n\nThe skill that the item improves when used.",
     "kScrollSpell_TOOLTIP": "Scroll\n\nThe spell that the scroll casts when used.",
 
+	"INVALID_REFERENCE_POPUP_TITLE": "Could not locate FormID",
+	"INVALID_REFERENCE_POPUP_DESC": "Modex could not locate a valid target based on the FormID provided.\n\nConsider the following:\n - The FormID must be a reference, not base ID.\n - The actor, or container must be valid.\n - The reference must be active.\n - The reference must be a valid target.\n\nIn addition, here are the rules for inputing FormIDs:\n - Up to eight characters long (12345678).\n - Can be shorted. (e.g. Player = 14).\n - Hexadecimal.\n - Cannot contain special characters.\n\nIf all these conditions are met, and you're experiencing unexpected behavior. Please report this issue to the author!",
     "WARNING_NO_ITEMS": "No items found in the table matching the current criteria. If this is unexpected, check your search and plugin fields to confirm your query. It's likely you may be searching inside the wrong plugin, or searching by the wrong property (left-side drop-down box).",
 	"ERROR_PLUGIN_NAME": "ERROR: Invalid Plugin Name",
 	"ERROR_FORM_NAME": "ERROR: Invalid Form Name",
     "ERROR_NO_KIT_SELECTED": "No kit selected! Please select a kit from the selection panel above. Once a Kit is selected, you can use the actions panel to interact with it.",
-    "ERROR_MISSING_REFERENCE": "Target Actor not found! Please ensure you have an Actor targeted in-game via the console. A valid Actor is required to perform most actions in this module",
-    "ERROR_INVALID_REFERENCE": "Invalid Target Actor! The currently targeted Actor is either not an Actor or is otherwise invalid. Please confirm that you have properly selected an Actor NPC or Player Character using the console"
+    "ERROR_MISSING_REFERENCE": "Target Reference not found! Please ensure you have an Actor or Container targeted in-game via the console or enter one manually. A valid reference is required to perform most actions in this module",
+    "ERROR_INVALID_REFERENCE": "Invalid Target Reference! The currently targeted reference is not an Actor or Container. Please confirm that you have properly targeted an Actor, Container or Player using the console selection."
 }

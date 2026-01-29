@@ -1,13 +1,21 @@
 #pragma once
 
+#include "data/BaseObject.h"
 #include "localization/Locale.h"
+
 
 namespace Modex::Commands
 {
+
 	static inline RE::TESObjectREFR* GetConsoleReference()
 	{
+		// I have a feeling we'll be returning to this...
 		if (auto consoleRefr = RE::Console::GetSelectedRef().get(); consoleRefr != nullptr) {
 			if (consoleRefr->GetFormType() == RE::FormType::ActorCharacter) {
+				return consoleRefr;
+			}
+
+			if (consoleRefr->GetBaseObject()->GetFormType() == RE::FormType::Container) {
 				return consoleRefr;
 			}
 		}
@@ -23,6 +31,26 @@ namespace Modex::Commands
 			return nullptr;
 
 		return playerRefr;
+	}
+
+	static inline const std::vector<BaseObject> GetInventoryList(RE::TESObjectREFR* reference = nullptr) 
+	{
+		Trace("Generating Inventory List...");
+
+		reference = GetConsoleReference();
+		std::vector<BaseObject> m_inventory;
+
+		auto inventory = reference->GetInventory();
+		for (auto& [obj, data] : inventory) {
+			auto& [count, entry] = data;
+			if (count > 0 && entry) {
+				uint32_t quantity = static_cast<std::uint32_t>(count);
+				m_inventory.emplace_back(entry->object, 0, 0, quantity);
+			}
+		}
+
+		Trace("Cached {} inventory items.", m_inventory.size());
+		return m_inventory;
 	}
 
 	static inline void AddItemToInventory(RE::TESObjectREFR* a_targetRef, const std::string& a_editorID, uint32_t a_amount = 1)
@@ -287,16 +315,9 @@ namespace Modex::Commands
 
     // Source: Meridiano on Skyrim REx Discord! :)
     // https://discord.com/channels/535508975626747927/535530099475480596/1434769252094705725
-	static inline RE::TESObjectREFR* PlaceAtMe(const std::string& a_editorID, uint32_t a_count = 1, bool persistent = true, bool disabled = false) 
+	static inline RE::TESObjectREFR* PlaceAtMe(RE::TESObjectREFR* a_target, const std::string& a_editorID, uint32_t a_count = 1, bool persistent = true, bool disabled = false) 
 	{
-		auto player = RE::PlayerCharacter::GetSingleton();
-
-		if (!player)
-			return nullptr;
-
-		auto target = player->AsReference();
-		
-		if (target && !a_editorID.empty()) {
+		if (a_target && !a_editorID.empty()) {
 			RE::TESForm* object = RE::TESForm::LookupByEditorID(a_editorID);
 			if (object) {
 				if (object->GetFormType() == RE::FormType::Explosion && disabled) {
@@ -304,7 +325,7 @@ namespace Modex::Commands
 				} else {
 					using func_t = RE::TESObjectREFR*(*)(std::int64_t, std::int32_t, RE::TESObjectREFR*, RE::TESForm*, std::int32_t, bool, bool);
 					static REL::Relocation<func_t> func{ REL::RelocationID(55672, 56203, 55672) };
-					return func(NULL, NULL, target, object, a_count, persistent, disabled);
+					return func(NULL, NULL, a_target, object, a_count, persistent, disabled);
 				}
 			}
 		}

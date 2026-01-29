@@ -1,5 +1,6 @@
 #include "ui/components/UIModule.h"
 #include "ui/components/UICustom.h"
+#include "ui/Menu.h"
 #include "config/ThemeConfig.h"
 #include "localization/Locale.h"
 #include "localization/FontManager.h"
@@ -22,6 +23,13 @@ namespace Modex
 		}
 
 		return 0;
+	}
+
+	void UIModule::UpdateTableTargets(RE::TESObjectREFR* a_ref)
+	{
+		for (auto& table : m_tables) {
+			table->SetTargetByReference(a_ref);
+		}
 	}
 
 	void UIModule::Load()
@@ -98,6 +106,44 @@ namespace Modex
 			if (layout.selected) {
 				layout.DrawFunc(m_tables);
 			}
+		}
+	}
+
+	void UIModule::SetTargetReference(RE::TESObjectREFR* a_ref) {
+		s_targetReference = a_ref;
+	}
+
+	std::optional<RE::TESObjectREFR*> UIModule::LookupReferenceByFormID(const RE::FormID& a_formID) {
+		if (RE::TESForm* form = RE::TESForm::LookupByID(a_formID)) {
+			if (const auto refr = form->As<RE::TESObjectREFR>(); refr) {
+				return refr;
+			}
+		}
+
+		return std::nullopt;
+	}
+
+	std::optional<RE::TESObjectREFR*> UIModule::LookupReferenceBySearch(const std::string& a_search) {
+		if (a_search.length() > 8) {
+			return std::nullopt;
+		}
+
+		for (const char& c : a_search) {
+			if (std::isspace(c)) {
+				return std::nullopt;
+			}
+
+			if (!std::isxdigit(c)) {
+				return std::nullopt;
+			}
+		}
+
+		RE::FormID formID = 0;
+		auto [ptr, ec] = std::from_chars(a_search.c_str(), a_search.c_str() + a_search.size(), formID, 16);
+		if (ec == std::errc()) {
+			return LookupReferenceByFormID(formID);
+		} else {
+			return std::nullopt;
 		}
 	}
 }
