@@ -781,82 +781,60 @@ namespace Modex
 		}
 	}
 
-	// TODO: Swap over to new Fancy rounded widgets with Icons.
 	void UITable::DrawFormSearchBar(const ImVec2& a_size)
 	{
 		const float input_width = a_size.x;
-		const float key_width = a_size.x * 0.30f;
+		const float key_width = a_size.x * 0.45f;
+
+		uint32_t current_idx = searchSystem->GetSearchKeyIndex();
+		const std::string current_key_text = searchSystem->GetCurrentKeyString();
 
 		ImGui::PushStyleColor(ImGuiCol_FrameBg, ThemeConfig::GetColor("TABLE_FIELD_BG"));
-		ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5f, 0.5f));
-
-		const SearchItem current_key = searchSystem->GetSearchKey();
-		const std::string current_key_text = searchSystem->GetSearchKeyString(current_key);
-
-		ImGui::SetNextItemWidth(key_width);
-		if (ImGui::BeginCombo("##Search::Input::SearchKey", current_key_text.c_str(), ImGuiComboFlags_NoArrowButton)) {
-			for (SearchItem key : searchSystem->GetAvailableKeys()) {
-				const std::string& key_text = searchSystem->GetSearchKeyString(key);
-				if (ImGui::Selectable(key_text.c_str(), current_key == key)) {
-					searchSystem->SetSearchKey(key);
-					this->Refresh();
-				}
-				
-				if (current_key == key) {
-					ImGui::SetItemDefaultFocus();
-				}
-			}
-			
-			ImGui::EndCombo();
+		ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ThemeConfig::GetColor("TABLE_FIELD_BG_HOVER"));
+		ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ThemeConfig::GetColor("TABLE_FIELD_BG_HOVER"));
+		ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5f, 0.5f)); // TODO: Is this
+		const std::vector<std::string> available_keys = searchSystem->GetAvailableKeysVector();
+		if (UICustom::FancyDropdown("##Search::Input::Key", "TABLE_KEY_TOOLTIP", current_idx, available_keys, key_width)) {
+			searchSystem->SetSearchKeyByIndex(current_idx);
 		}
-
-		// ImGui::SetItemTooltip(Translate("TABLE_KEY_TOOLTIP"));
-		if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal | ImGuiHoveredFlags_NoSharedDelay)) {
-			UICustom::FancyTooltip(Translate("TABLE_KEY_TOOLTIP"));
-		}
+		ImGui::PopStyleVar();
+		ImGui::PopStyleColor(3);
 		
-		ImGui::SameLine();
 		ImGui::AlignTextToFramePadding();
 		ImGui::Text(" " ICON_LC_ARROW_LEFT_RIGHT " ");
-		if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort | ImGuiHoveredFlags_NoSharedDelay)) {
-			UICustom::FancyTooltip("TABLE_SEARCH_TOOLTIP")	;
-		}
 		ImGui::SameLine();
 		
-		bool _change = false;
-		ImGui::SetNextItemWidth(input_width);
-		if (ImGui::InputTextWithHint("##Search::Input::CompareField", Translate("TABLE_SEARCH_HINT"), searchSystem->GetSearchBuffer(), 256, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
+		static bool key_hovered;
+		ImGui::PushStyleColor(ImGuiCol_FrameBg, key_hovered ? ThemeConfig::GetColor("TABLE_FIELD_BG_HOVER") : ThemeConfig::GetColor("TABLE_FIELD_BG"));
+		if (UICustom::FancyInputText("##Search::Input::Compare", "TABLE_SEARCH_HINT", "TABLE_SEARCH_TOOLTIP", searchSystem->GetSearchBuffer(), input_width, flags)) {
 			this->Refresh();
-			_change = true;
 		}
+		ImGui::PopStyleColor();
+		key_hovered = ImGui::IsItemHovered();
 
-		if (ImGui::IsItemDeactivated() && !_change) {
-			const char* searchBuffer = searchSystem->GetSearchBuffer();
-			if (searchBuffer && std::strcmp(searchSystem->GetLastSearchBuffer(), searchBuffer) != 0) {
-				ImFormatString(searchSystem->GetSearchBuffer(), IM_ARRAYSIZE(searchSystem->GetLastSearchBuffer()), "%s", searchSystem->GetLastSearchBuffer());
-			}
-		}
-		
-		if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_F, ImGuiInputFlags_RouteFromRootWindow)) {
+		if (ImGui::Shortcut(ImGuiKey_Space, ImGuiInputFlags_RouteFromRootWindow)) {
 			ImGui::SetKeyboardFocusHere(-1);
 		}
 		
 		ImGui::SameLine();
-		
-		ImGui::PopStyleColor();
-		ImGui::PopStyleVar();
 	}
 
 	void UITable::DrawPluginSearchBar(const ImVec2& a_size)
 	{
-		ImGui::PushStyleColor(ImGuiCol_FrameBg, ThemeConfig::GetColor("TABLE_FIELD_BG"));
+		static bool hovered;
+		ImGui::PushStyleColor(ImGuiCol_FrameBg, hovered ? ThemeConfig::GetColor("TABLE_FIELD_BG_HOVER") : ThemeConfig::GetColor("TABLE_FIELD_BG"));
 
-		if (searchSystem->InputTextComboBox("##Search::Filter::PluginField", this->pluginSearchBuffer, this->selectedPlugin, IM_ARRAYSIZE(this->pluginSearchBuffer), this->pluginList, a_size.x, false)) {
+		if (searchSystem->InputTextComboBox("##Search::Filter::PluginField", this->pluginSearchBuffer, this->selectedPlugin, IM_ARRAYSIZE(this->pluginSearchBuffer), this->pluginList, a_size.x)) {
 			this->selectedPlugin = this->pluginSearchBuffer;
 			this->pluginSearchBuffer[0] = '\0';
 			
 			this->selectionStorage.Clear();
 			this->Refresh();
+		}
+
+		hovered = ImGui::IsItemHovered();
+		if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal | ImGuiHoveredFlags_NoSharedDelay)) {
+			UICustom::FancyTooltip("TABLE_PLUGIN_TOOLTIP");
 		}
 		
 		ImGui::PopStyleColor();
@@ -917,12 +895,11 @@ namespace Modex
 
 	void UITable::DrawSearchBar()
 	{
-		// ImGui::SameLine();
-		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
-		const ImVec2 window_padding = ImGui::GetStyle().WindowPadding;
-		const float frame_height = ImGui::GetFrameHeight();
+		// Nullify horizontal spacing. Horizontal spacing between table widgets handled here.
+		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, ImGui::GetFrameHeight() / 2.0f));
+		ImGui::Spacing();
 
-		const float search_width = ImGui::GetContentRegionAvail().x / 3.0f;
+		const float search_width = ImGui::GetContentRegionAvail().x / 2.5f;
 		DrawFormSearchBar(ImVec2(search_width, 0.0f));
 
 		ImGui::SameLine();
@@ -934,7 +911,7 @@ namespace Modex
 		}
 		ImGui::SameLine();
 		
-		const float plugin_width = ImGui::GetContentRegionAvail().x - window_padding.x - frame_height;
+		const float plugin_width = ImGui::GetContentRegionAvail().x;
 		DrawPluginSearchBar(ImVec2(plugin_width, 0.0f));
 		ImGui::PopStyleVar();
 

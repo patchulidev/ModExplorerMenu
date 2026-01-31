@@ -97,9 +97,7 @@ namespace Modex
 
 		auto& io = ImGui::GetIO();
 		io.ClearInputKeys();
-
-		// TEST: Clears Table shift+ctrl state, is this necessary? It seems like something else is causing shift/ctrl state reset in tables.
-		// io.ClearEventsQueue();
+		io.ClearEventsQueue();
 	}
 
 	static ImGuiMouseSource ImGui_ImplWin32_GetMouseSourceFromMessageExtraInfo()

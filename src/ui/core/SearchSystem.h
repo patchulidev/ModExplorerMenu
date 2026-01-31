@@ -38,8 +38,8 @@ namespace Modex
 	private:
 		SearchItem     m_searchKey;
 		ImGuiKey       m_lastNavKey;
-		char           m_searchBuffer[256];
-		char           m_lastSearchBuffer[256];
+		char           m_searchBuffer[MAX_PATH];
+		char           m_lastSearchBuffer[MAX_PATH];
 
 		bool           m_forceDropdown;
 		int            m_topComparisonIdx;
@@ -54,8 +54,8 @@ namespace Modex
 		SearchSystem(const std::filesystem::path& a_path) :
 			m_searchKey(PropertyType::kNone),
 			m_lastNavKey(ImGuiKey_None),
-			m_searchBuffer{ 0 },
-			m_lastSearchBuffer { 0 },
+			m_searchBuffer(),
+			m_lastSearchBuffer(),
 
 			m_forceDropdown(false),
 			m_topComparisonIdx(-1),
@@ -70,8 +70,22 @@ namespace Modex
 			return m_availableSearchKeys;
 		}
 
+		const std::vector<std::string> GetAvailableKeysVector() const {
+			std::vector<std::string> keys;
+
+			for (const auto& key : m_availableSearchKeys) {
+				keys.push_back(key.ToString());
+			}
+
+			return keys;
+		}
+
 		char* GetSearchBuffer() {
 			return m_searchBuffer;
+		}
+
+		std::string GetSearchBufferString() const {
+			return std::string(m_searchBuffer);
 		}
 
 		char* GetLastSearchBuffer() {
@@ -86,12 +100,32 @@ namespace Modex
 			return m_searchKey;
 		}
 
+		int GetSearchKeyIndex() const {
+			for (size_t i = 0; i < m_availableSearchKeys.size(); i++) {
+				if (m_availableSearchKeys[i] == m_searchKey) {
+					return static_cast<int>(i);
+				}
+			}
+
+			return -1;
+		}
+
 		void SetSearchKey(SearchItem a_key) {
 			m_searchKey = std::move(a_key);
 		}
 
+		void SetSearchKeyByIndex(int a_index) {
+			if (a_index >= 0 && a_index < static_cast<int>(m_availableSearchKeys.size())) {
+				m_searchKey = m_availableSearchKeys[a_index];
+			}
+		}
+
 		std::string GetSearchKeyString(const SearchItem& a_key) const {
 			return a_key.ToString();
+		}
+
+		std::string GetCurrentKeyString() const {
+			return m_searchKey.ToString();
 		}
 
 		void SetupDefaultKey()
@@ -106,7 +140,7 @@ namespace Modex
 		virtual bool Load(bool a_create) override;
 
 		bool CompareInputToObject(const BaseObject* a_object);
-		bool InputTextComboBox(const char* a_label, char* a_buffer, std::string& a_preview, size_t a_size, std::vector<std::string> a_items, float a_width, bool a_showArrow = true);
+		bool InputTextComboBox(const char* a_label, char* a_buffer, std::string& a_preview, size_t a_size, std::vector<std::string> a_items, float a_width);
 
 	private:
 		std::string ExtractDisplayName(const std::string& a_fullName);

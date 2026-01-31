@@ -1,6 +1,10 @@
 #include "SearchSystem.h"
 #include "imgui.h"
 
+#include "localization/Locale.h"
+#include "config/ThemeConfig.h"
+#include "ui/components/UICustom.h"
+
 namespace Modex
 {
 	bool SearchSystem::Load(bool a_create)
@@ -270,22 +274,33 @@ namespace Modex
 
 	// Source: https://github.com/ocornut/imgui/issues/718
 	// Modified with additional features to best fit our use-case.
-	bool SearchSystem::InputTextComboBox(const char* a_label, char* a_buffer, 
+	bool SearchSystem::InputTextComboBox(const char* a_label, char* a_buffer,
 		std::string& a_preview, 
 		size_t a_size, 
 		std::vector<std::string> a_items, 
-		float a_width, 
-		bool a_showArrow)
+		float a_width)
 	{
 		// Generate unique IDs for this widget instance
 		auto suffix = std::string("##InputTextCombo::") + a_label;
+		auto icon_pos = ImGui::GetCursorScreenPos();
 		auto popupID = suffix + "Popup";
 		bool result = false;
 
-		auto arrowSize = ImGui::GetFrameHeight();
-		ImGui::SetNextItemWidth(a_width - (a_showArrow ? arrowSize : 0));
-		
+		ImGui::SetNextItemWidth(a_width);
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 12.0f);
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 8.0f));
+
 		bool enterPressed = ImGui::InputTextWithHint(a_label, a_preview.c_str(), a_buffer, a_size, ImGuiInputTextFlags_EnterReturnsTrue);
+
+		// Draw Search Icon;
+		ImGui::PushFont(NULL, 18.0f);
+		const auto& DrawList = ImGui::GetWindowDrawList();
+		icon_pos.x += a_width - ImGui::GetFrameHeightWithSpacing() + ImGui::GetStyle().FramePadding.x;
+		icon_pos.y += (ImGui::GetItemRectSize().y / 2.0f) - (ImGui::GetFontSize() / 2.0f);
+
+		DrawList->AddText(icon_pos, ThemeConfig::GetColorU32("TEXT"), ICON_LC_SEARCH);
+		ImGui::PopFont();
+		ImGui::PopStyleVar(2);
 
 		ImGuiID inputTextID = ImGui::GetItemID();
 		const bool inputTextActive = ImGui::IsItemActive();
@@ -300,24 +315,6 @@ namespace Modex
 		auto prevItemRectMin = ImGui::GetItemRectMin();
 		auto prevItemRectMax = ImGui::GetItemRectMax();
 		auto prevItemRectSize = ImGui::GetItemRectSize();
-
-		// Arrow button (optional)
-		if (a_showArrow) {
-			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
-			ImGui::SameLine();
-			
-			if (ImGui::ArrowButton(suffix.c_str(), ImGuiDir_Down)) {
-				if (ImGui::IsPopupOpen(popupID.c_str())) {
-					ImGui::CloseCurrentPopup();
-					m_forceDropdown = false;
-				} else {
-					ImGui::OpenPopup(popupID.c_str());
-					m_forceDropdown = true;
-				}
-			}
-			
-			ImGui::PopStyleVar();
-		}
 
 		// Open popup when input is active
 		if (inputTextActive) {

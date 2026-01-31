@@ -1,6 +1,7 @@
 #include "UICustom.h"
 #include "core/Graphic.h"
 #include "external/icons/IconsLucide.h"
+#include "imgui.h"
 #include "ui/core/UIManager.h"
 #include "config/UserConfig.h"
 #include "config/ThemeConfig.h"
@@ -53,7 +54,6 @@ namespace Modex::UICustom
 
 	bool FancyInputText(const char* a_id, const char *a_hint, const char* a_tooltip, char* a_buffer, float a_width, ImGuiInputTextFlags a_flags)
 	{
-		auto bufferSize = IM_ARRAYSIZE(a_buffer);
 		bool changed = false;
 		auto pos = ImGui::GetCursorScreenPos();
 
@@ -61,7 +61,7 @@ namespace Modex::UICustom
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 8.0f));
 
 		ImGui::SetNextItemWidth(a_width);
-		if (ImGui::InputTextWithHint(a_id, a_hint, a_buffer, bufferSize, a_flags)) {
+		if (ImGui::InputTextWithHint(a_id, Translate(a_hint), a_buffer, MAX_PATH, a_flags)) {
 			changed = true;
 		}
 
@@ -95,6 +95,7 @@ namespace Modex::UICustom
 		return FancyDropdown(a_id, a_tooltip, tempIndex, a_items, a_width) && (a_currentItem = static_cast<uint32_t>(tempIndex), true);
 	}
 
+	// OPTIMIZE: Go over this one more time for handling vector out-of-range exceptions.
 	bool FancyDropdown(const char* a_id, const char* a_tooltip, int& a_currentItem, const std::vector<std::string>& a_items, float a_width)
 	{
 		bool changed = false;
@@ -107,11 +108,21 @@ namespace Modex::UICustom
 			a_width = ImGui::GetContentRegionAvail().x;
 		}
 
+		if (a_currentItem < 0 || a_currentItem >= static_cast<int>(a_items.size())) {
+			a_currentItem = 0;
+		}
+
+		std::string current_item = a_items.empty() ? "" : a_items[a_currentItem];
+
 		ImGui::SetNextItemWidth(a_width);
-		if (ImGui::BeginCombo(a_id, a_items[a_currentItem].c_str(), ImGuiComboFlags_NoArrowButton)) {
+		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, ImGui::GetFontSize()));
+		if (ImGui::BeginCombo(a_id, current_item.c_str(), ImGuiComboFlags_NoArrowButton)) {
+			ImGui::Spacing();
 			for (size_t i = 0; i < a_items.size(); i++) {
 				bool isSelected = (a_currentItem == static_cast<int>(i));
-				if (ImGui::Selectable(a_items[i].c_str(), isSelected)) {
+
+				auto flags = isSelected ? ImGuiSelectableFlags_Highlight : 0;
+				if (ImGui::Selectable(a_items[i].c_str(), isSelected, flags)) {
 					a_currentItem = static_cast<int>(i);
 					changed = true;
 				}
@@ -120,8 +131,10 @@ namespace Modex::UICustom
 					ImGui::SetItemDefaultFocus();
 				}
 			}
+			ImGui::Spacing();
 			ImGui::EndCombo();
 		}
+		ImGui::PopStyleVar();
 
 		if (Locale::GetSingleton()->HasTooltip(a_tooltip)) {
 			if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal | ImGuiHoveredFlags_NoSharedDelay)) {

@@ -33,7 +33,7 @@ namespace Modex
 
 		const float separator_width = ImGui::CalcTextSize(ICON_LC_ARROW_RIGHT).x + ImGui::GetStyle().ItemSpacing.x;
 		const float widget_width = ((ImGui::GetContentRegionAvail().x - (2.0f) * separator_width) / 3.0f);
-		UICustom::FancyInputText("##Blacklist::ModSearch", Translate("TABLE_SEARCH_HINT"), "PLUGIN_SEARCH_TOOLTIP", SettingsModule::m_modSearchBuffer, widget_width);
+		UICustom::FancyInputText("##Blacklist::Search", "", "BLACKLIST_SEARCH_TOOLTIP", SettingsModule::m_modSearchBuffer, widget_width);
 
 		if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_F, ImGuiInputFlags_RouteAlways)) {
 			ImGui::SetKeyboardFocusHere(-1);
@@ -45,7 +45,7 @@ namespace Modex
 		ImGui::SameLine();
 
 		std::vector<std::string> pluginOptions = Data::GetTypeString();
-		if (UICustom::FancyDropdown("##Blacklist::TypeDropdown", "PLUGIN_TYPE_TOOLTIP", SettingsModule::m_type, pluginOptions, widget_width)) {
+		if (UICustom::FancyDropdown("##Blacklist::TypeDropdown", "BLACKLIST_TYPE_TOOLTIP", SettingsModule::m_type, pluginOptions, widget_width)) {
 			BuildBlacklistPlugins();
 		}
 
@@ -55,7 +55,7 @@ namespace Modex
 		ImGui::SameLine();
 
 		std::vector<std::string> sortOptions = Data::GetSortStrings();
-		if (UICustom::FancyDropdown("##Blacklist::SortDropdown", "SORT_TYPE_TOOLTIP", SettingsModule::m_sort, sortOptions, 0.0f)) { 
+		if (UICustom::FancyDropdown("##Blacklist::SortDropdown", "BLACKLIST_SORT_TOOLTIP", SettingsModule::m_sort, sortOptions, 0.0f)) { 
 			BuildBlacklistPlugins();
 		}
 

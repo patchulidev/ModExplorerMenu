@@ -85,7 +85,6 @@ namespace Modex
 			case PropertyType::kSleepOutfit:
 			case PropertyType::kKeywordList:
 			case PropertyType::kFactionList:
-			case PropertyType::kItemList:
 			case PropertyType::kSpellList:
 			case PropertyType::kSpellType:
 			case PropertyType::kSpellCastType:

@@ -4,9 +4,10 @@
         "kEditorID",
         "kFormID",
         "kReferenceID",
-        "kPlugin"
+		"kKeywordList",
+		"kFactionList"
     ],
-    
+
     "SortProperty": [
         "kNone",
         "kFormType",
