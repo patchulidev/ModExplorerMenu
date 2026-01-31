@@ -149,9 +149,9 @@ namespace Modex
 		DragDropHandle          GetDragDropHandle() const { return dragDropHandle; }
 		void                    SetDragDropTarget(DragDropHandle a_handle, UITable* a_view);
 		void                    AddDragDropTarget(DragDropHandle a_handle, UITable* a_view);
-		void                    RemoveDragDropTarget(DragDropHandle a_handle);
-		void                    AddPayloadToTableList(const std::unique_ptr<BaseObject>& a_item);
+		void                    AddPayloadToKit(const std::unique_ptr<BaseObject>& a_item);
 		void                    AddPayloadToInventory(const std::unique_ptr<BaseObject>& a_item);
+		void                    RemoveDragDropTarget(DragDropHandle a_handle);
 		void                    RemovePayloadItemFromKit(const std::unique_ptr<BaseObject>& a_item);
 		void                    RemovePayloadFromInventory(const std::unique_ptr<BaseObject>& a_item);
 		const char*             GetDragDropHandleText(DragDropHandle a_handle) const { return magic_enum::enum_name(a_handle).data(); }
@@ -162,7 +162,7 @@ namespace Modex
 		void                    RemoveSelectionFromTargetInventory();  
 		void                    AddSelectionToTargetInventory(int a_count);
 		void                    AddKitToTargetInventory(const Kit& a_kit);
-		void                    RemoveSelectedFromKit();
+		void                    RemoveSelectionFromKit();
 		void                    AddSelectionToActiveKit();
 		void                    EquipSelectionToTarget();
 		void                    PlaceAll();

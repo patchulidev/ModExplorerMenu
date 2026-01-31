@@ -288,20 +288,27 @@ namespace Modex
 		if (tableList.empty())
 			return;
 
-		if (GetSelectionCount() <= 0)
-			return;
 
 		if (!tableTargetRef)
 			return;
 
-		void* it = NULL;
-		ImGuiID id = 0;
+		if (GetSelectionCount() == 0)
+		{
+			if (itemPreview && itemPreview->GetTESForm()->IsInventoryObject()) {
+				Commands::RemoveItemFromInventory(tableTargetRef, itemPreview->GetEditorID(), 1);
+				AddItemToRecent(itemPreview);
+			}
+		} 
+		else {
+			void* it = NULL;
+			ImGuiID id = 0;
 
-		while (selectionStorage.GetNextSelectedItem(&it, &id)) {
-			if (id < std::ssize(tableList) && id >= 0) {
-				const auto& item = tableList[id];
-				Commands::RemoveItemFromInventory(tableTargetRef, item->GetEditorID(), 1);
-				AddItemToRecent(item);
+			while (selectionStorage.GetNextSelectedItem(&it, &id)) {
+				if (id < std::ssize(tableList) && id >= 0) {
+					const auto& item = tableList[id];
+					Commands::RemoveItemFromInventory(tableTargetRef, item->GetEditorID(), 1);
+					AddItemToRecent(item);
+				}
 			}
 		}
 
@@ -314,20 +321,27 @@ namespace Modex
 		if (tableList.empty()) 
 			return;
 
-		if (GetSelectionCount() <= 0)
-			return;
-		
 		if (!tableTargetRef)
 			return;
 
-		void* it = NULL;
-		ImGuiID id = 0;
+		if (GetSelectionCount() == 0) {
+			if (itemPreview && itemPreview->GetTESForm()->IsInventoryObject()) {
+				Commands::AddItemToRefInventory(tableTargetRef, itemPreview->GetEditorID(), a_count);
+				AddItemToRecent(itemPreview);
+			}
+		} 
+		else {
+			void* it = NULL;
+			ImGuiID id = 0;
 
-		while (selectionStorage.GetNextSelectedItem(&it, &id)) {
-			if (id < std::ssize(tableList) && id >= 0) {
-				const auto& item = tableList[id];
-				Commands::AddItemToRefInventory(tableTargetRef, item->GetEditorID(), a_count);
-				AddItemToRecent(item);
+			while (selectionStorage.GetNextSelectedItem(&it, &id)) {
+				if (id < std::ssize(tableList) && id >= 0) {
+					const auto& item = tableList[id];
+					if (item && item->GetTESForm()->IsInventoryObject()) {
+						Commands::AddItemToRefInventory(tableTargetRef, item->GetEditorID(), a_count);
+						AddItemToRecent(item);
+					}
+				}
 			}
 		}
 
@@ -339,20 +353,27 @@ namespace Modex
 		if (tableList.empty()) 
 			return;
 
-		if (GetSelectionCount() <= 0)
-			return;
-		
 		if (!tableTargetRef)
 			return;
 
-		void* it = NULL;
-		ImGuiID id = 0;
+		if (GetSelectionCount() == 0) {
+			if (itemPreview && (itemPreview->IsArmor() || itemPreview->IsWeapon())) {
+				Commands::AddAndEquipItemToInventory(tableTargetRef, itemPreview->GetEditorID());
+				AddItemToRecent(itemPreview);
+			}
+		}
+		else {
+			void* it = NULL;
+			ImGuiID id = 0;
 
-		while (selectionStorage.GetNextSelectedItem(&it, &id)) {
-			if (id < std::ssize(tableList) && id >= 0) {
-				const auto& item = tableList[id];
-				Commands::AddAndEquipItemToInventory(tableTargetRef, item->GetEditorID());
-				AddItemToRecent(item);
+			while (selectionStorage.GetNextSelectedItem(&it, &id)) {
+				if (id < std::ssize(tableList) && id >= 0) {
+					const auto& item = tableList[id];
+					if (item && (item->IsArmor() || item->IsWeapon())) {
+						Commands::AddAndEquipItemToInventory(tableTargetRef, item->GetEditorID());
+						AddItemToRecent(item);
+					}
+				}
 			}
 		}
 
@@ -365,19 +386,30 @@ namespace Modex
 	{
 		if (tableList.empty()) 
 			return;
-		
-		void* it = NULL;
-		ImGuiID id = 0;
 
-		while (selectionStorage.GetNextSelectedItem(&it, &id)) {
-			if (id < std::ssize(tableList) && id >= 0) {
-				const auto& item = tableList[id];
-				Commands::PlaceAtMe(item->GetEditorID(), a_count);
-				AddItemToRecent(item);
+		if (!tableTargetRef)
+			return;
+
+		if (GetSelectionCount() == 0) {
+			if (itemPreview && itemPreview->GetTESForm()->HasWorldModel()) {
+				Commands::PlaceAtMe(tableTargetRef, itemPreview->GetEditorID(), a_count);
+				AddItemToRecent(itemPreview);
 			}
 		}
+		else {
+			void* it = NULL;
+			ImGuiID id = 0;
 
-		selectionStorage.Clear();
+			while (selectionStorage.GetNextSelectedItem(&it, &id)) {
+				if (id < std::ssize(tableList) && id >= 0) {
+					const auto& item = tableList[id];
+					if (item && item->GetTESForm()->HasWorldModel()) {
+						Commands::PlaceAtMe(tableTargetRef, item->GetEditorID(), a_count);
+						AddItemToRecent(item);
+					}
+				}
+			}
+		}
 	}
 
 	void UITable::AddAll()
@@ -389,8 +421,10 @@ namespace Modex
 			return;
 		
 		for (auto& item : tableList) {
-			Commands::AddItemToRefInventory(tableTargetRef, item->GetEditorID(), 1);
-			AddItemToRecent(item);
+			if (item && item->GetTESForm()->IsInventoryObject()) {
+				Commands::AddItemToRefInventory(tableTargetRef, item->GetEditorID(), 1);
+				AddItemToRecent(item);
+			}
 		}
 
 		selectionStorage.Clear();
@@ -402,9 +436,14 @@ namespace Modex
 		if (tableList.empty())
 			return;
 
+		if (!tableTargetRef)
+			return;
+
 		for (auto& item : tableList) {
-			Commands::PlaceAtMe(item->GetEditorID(), 1);
-			AddItemToRecent(item);
+			if (item && item->GetTESForm()->HasWorldModel()) {
+				Commands::PlaceAtMe(tableTargetRef, item->GetEditorID(), 1);
+				AddItemToRecent(item);
+			}
 		}
 
 		selectionStorage.Clear();
@@ -459,7 +498,38 @@ namespace Modex
 		return selectionStorage.Size;
 	}
 
-	void UITable::AddPayloadToTableList(const std::unique_ptr<BaseObject>& a_item)
+	// NOTE: Drag Drop specific helpers with additional inventory update callbacks.
+
+	void UITable::AddPayloadToInventory(const std::unique_ptr<BaseObject>& a_item)
+	{
+		if (!tableTargetRef)
+			return;
+
+		if (a_item && a_item->GetTESForm()->IsInventoryObject()) {
+			Commands::AddItemToRefInventory(this->tableTargetRef, a_item->GetEditorID(), 1);
+			AddItemToRecent(a_item);
+		}
+
+		UpdateActiveInventoryTables();
+	}
+
+	void UITable::RemovePayloadFromInventory(const std::unique_ptr<BaseObject>& a_item)
+	{
+		if (!tableTargetRef)
+			return;
+
+		if (a_item && a_item->GetTESForm()->IsInventoryObject()) {
+			Commands::RemoveItemFromInventory(this->tableTargetRef, a_item->GetEditorID());
+			AddItemToRecent(a_item);
+		}
+
+		UpdateActiveInventoryTables();
+	}
+
+	// NOTE: Kit's are not inventories, they're virtual containers in memory. So we handle them
+	// outside the use of Add/RemovePayloadFromTable. Although, maybe they should be containers?
+
+	void UITable::AddPayloadToKit(const std::unique_ptr<BaseObject>& a_item)
 	{
 		bool has_item = false;
 		for (auto& item : tableList) {
@@ -472,40 +542,8 @@ namespace Modex
 		if (!has_item) {
 			tableList.emplace_back(std::make_unique<BaseObject>(*a_item));
 		}
-	}
 
-	// TODO: Need a better way to manage inventory change callbacks
-	void UITable::AddPayloadToInventory(const std::unique_ptr<BaseObject>& a_item)
-	{
-		for (auto& item : this->tableList) {
-			if (item->GetEditorID() == a_item->GetEditorID()) {
-				return;
-			}
-		}
-
-		this->tableList.emplace_back(std::make_unique<BaseObject>(*a_item));
-
-		UpdateActiveInventoryTables();
-	}
-
-	void UITable::RemovePayloadFromInventory(const std::unique_ptr<BaseObject>& a_item)
-	{
-		if (this->tableList.empty()) {
-			return;
-		}
-
-		auto player = RE::PlayerCharacter::GetSingleton();
-		if (!player) {
-			return;
-		}
-
-		auto playerRef = player->AsReference();
-		if (!playerRef) {
-			return;
-		}
-
-		Commands::RemoveItemFromInventory(playerRef, a_item->GetEditorID());
-		Data::GetSingleton()->GenerateInventoryList();
+		AddItemToRecent(a_item);
 	}
 
 	void UITable::AddSelectionToActiveKit()
@@ -513,39 +551,58 @@ namespace Modex
 		if (auto map = dragDropSourceList.find(DragDropHandle::Kit); map != this->dragDropSourceList.end()) {
 			const auto& destination = map->second;
 
-			void* it = NULL;
-			ImGuiID id = 0;
+			if (GetSelectionCount() == 0)
+			{
+				if (itemPreview && itemPreview->GetTESForm()->IsInventoryObject()) {
+					destination->AddPayloadToKit(itemPreview);
+				}
+			}
+			else {
+				void* it = NULL;
+				ImGuiID id = 0;
 
-			while (selectionStorage.GetNextSelectedItem(&it, &id)) {
-				if (id < tableList.size() && id >= 0) {
-					const auto& item = this->tableList[id];
+				while (selectionStorage.GetNextSelectedItem(&it, &id)) {
+					if (id < tableList.size() && id >= 0) {
+						const auto& item = this->tableList[id];
 
-					destination->AddPayloadToTableList(item);
+						destination->AddPayloadToKit(item);
+					}
 				}
 			}
 		}
 	}
 
-	void UITable::RemoveSelectedFromKit()
+	void UITable::RemoveSelectionFromKit()
 	{
 		if (this->tableList.empty()) {
 			return;
 		}
 
-		void* it = NULL;
-		ImGuiID id = 0;
+		if (GetSelectionCount() == 0)
+		{
+			if (itemPreview) {
+				this->RemovePayloadItemFromKit(itemPreview);
+			}
+		}
+		else {
+			void* it = NULL;
+			ImGuiID id = 0;
 
-		std::vector<std::unique_ptr<BaseObject>> items_to_remove;
+			std::vector<std::unique_ptr<BaseObject>> items_to_remove;
 
-		while (selectionStorage.GetNextSelectedItem(&it, &id)) {
-			if (id < tableList.size() && id >= 0) {
-				items_to_remove.emplace_back(std::make_unique<BaseObject>(*this->tableList[id]));
+			// Alternative to remove_if to prevent iterator invalidation.
+			while (selectionStorage.GetNextSelectedItem(&it, &id)) {
+				if (id < tableList.size() && id >= 0) {
+					items_to_remove.emplace_back(std::make_unique<BaseObject>(*this->tableList[id]));
+				}
+			}
+
+			for (const auto& item : items_to_remove) {
+				this->RemovePayloadItemFromKit(item);
 			}
 		}
 
-		for (const auto& item : items_to_remove) {
-			this->RemovePayloadItemFromKit(item);
-		}
+		selectionStorage.Clear();
 	}
 
 	// OPTIMIZE: Potential room for optimization if we can perform lookups or something.
@@ -578,6 +635,7 @@ namespace Modex
 				}
 
 				equipmentConfig->SaveKit(*selectedKitPtr);
+				this->Refresh();
 			}
 		}
 	}
@@ -820,10 +878,7 @@ namespace Modex
 		styleSpacing = userdata.Get<float>("Modex::Table::ItemSpacing", 0.0f);
 		styleFontSize = userdata.Get<float>("Modex::Table::FontSize", 0.0f); 
 		showAltRowBG = userdata.Get<bool>("Modex::Table::ShowAltRowBG", true);
-		showPluginIcon = userdata.Get<bool>("Modex::Table::ShowPluginIcon", true);
-		showPropertyColumn = userdata.Get<bool>("Modex::Table::ShowPropertyColumn", true);
-		showEditorID = userdata.Get<bool>("Modex::Table::ShowEditorID", false);
-		showFormType = userdata.Get<bool>("Modex::Table::ShowFormType", false);
+		showItemIcon = userdata.Get<bool>("Modex::Table::ShowItemIcon", true);
 
 		if (styleFontSize == 0.0f) {
 			styleFontSize = config.globalFontSize;
@@ -866,9 +921,9 @@ namespace Modex
 		LayoutOuterPadding = 0.0f;
 	}
 
-	void UITable::ShowSort()
+	void UITable::DrawSearchBar()
 	{
-		ImGui::SameLine();
+		// ImGui::SameLine();
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
 		const ImVec2 window_padding = ImGui::GetStyle().WindowPadding;
 		const float frame_height = ImGui::GetFrameHeight();
@@ -889,23 +944,6 @@ namespace Modex
 		DrawPluginSearchBar(ImVec2(plugin_width, 0.0f));
 		ImGui::PopStyleVar();
 
-		ImGui::SameLine();
-		ImGui::AlignTextToFramePadding();
-		ImGui::Text(ICON_LC_SETTINGS);
-		ImGui::SameLine();
-		
-		ImGui::SetNextItemAllowOverlap();
-		const ImVec2 button_size = ImVec2(frame_height, frame_height);
-		ImGui::SetCursorPosX(ImGui::GetCursorPosX() - button_size.x - window_padding.x); 
-		if (ImGui::InvisibleButton("##Table::Settings::IconButton", button_size)) {
-			ImGui::OpenPopup("TABLE_SETTINGS_POPUP");
-		}
-
-		ImGui::SetNextWindowSize(ImVec2(ImGui::GetWindowSize().x / 4.0f, 0.0f));
-		if (ImGui::BeginPopup("TABLE_SETTINGS_POPUP")) {
-			DrawTableSettingsPopup();
-			ImGui::EndPopup();
-		}
 
 	}
 
@@ -1066,7 +1104,7 @@ namespace Modex
 					// Behavior based on source and destination types.
 					for (const auto& item : payload_items) {
 						if (destination->GetDragDropHandle() == DragDropHandle::Kit) {
-							destination->AddPayloadToTableList(item);
+							destination->AddPayloadToKit(item);
 						}	
 
 						if (destination->GetDragDropHandle() == DragDropHandle::Table) {
@@ -1132,8 +1170,11 @@ namespace Modex
 				Commands::AddItemToPlayerInventory(a_item->GetEditorID(), 1);
 			}
 
-			if (a_item->IsNPC()) {
-				Commands::PlaceAtMe(a_item->GetEditorID(), 1);
+			// TODO: Poll whether this is expected behavior or not. Should we always spawn on the
+			// player, or spawn on the targeted ref if available?
+
+			if (tableTargetRef && a_item->IsNPC()) {
+				Commands::PlaceAtMe(tableTargetRef, a_item->GetEditorID(), 1);
 			}
 
 			this->AddItemToRecent(a_item);
@@ -1146,6 +1187,9 @@ namespace Modex
 		static const int click_amount = 1; // TODO revisit this
 
 		if (ImGui::IsItemClicked(ImGuiMouseButton_Right)) {
+			if (!selectionStorage.Contains(a_item->m_tableID)) {
+				selectionStorage.Clear();
+			}
 			ImGui::OpenPopup("TableViewContextMenu");
 		}
 
@@ -1153,29 +1197,12 @@ namespace Modex
 			if (a_item->IsItem()) {
 				if (HasFlag(ModexTableFlag_Inventory)) {
 					if (ImGui::MenuItem(Translate("REMOVE_SELECTION"))) {
-						if (GetSelectionCount() == 0) {
-							Commands::RemoveItemFromInventory(tableTargetRef, a_item->GetEditorID(), click_amount);
-							AddItemToRecent(a_item);
-						} else {
-							RemoveSelectionFromTargetInventory();
-						}
-
-						this->Refresh();
-						this->selectionStorage.Clear();
+						this->RemoveSelectionFromTargetInventory();
 					}
 
 					if (ImGui::MenuItem(Translate("DROP_SELECTION"))) {
-						if (GetSelectionCount() == 0) {
-							Commands::PlaceAtMe(a_item->GetEditorID(), click_amount);
-							Commands::RemoveItemFromInventory(tableTargetRef, a_item->GetEditorID(), click_amount);
-							AddItemToRecent(a_item);
-						} else {
-							PlaceSelectionOnGround(click_amount);
-							RemoveSelectionFromTargetInventory();
-						}
-
-						this->Refresh();
-						this->selectionStorage.Clear();
+						this->PlaceSelectionOnGround(click_amount);
+						this->RemoveSelectionFromTargetInventory();
 					}
 
 					ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
@@ -1183,41 +1210,28 @@ namespace Modex
 
 				if (HasFlag(ModexTableFlag_Base)) {
 					if (ImGui::MenuItem(Translate("ADD_SELECTION"))) {
-						if (GetSelectionCount() == 0) {
-							Commands::AddItemToRefInventory(tableTargetRef, a_item->GetEditorID(), click_amount);
-							AddItemToRecent(a_item);
-						} else {
-							AddSelectionToTargetInventory(click_amount);
-						}
+						this->AddSelectionToTargetInventory(click_amount); 
 					}
 
 					if (a_item->IsArmor() || a_item->IsWeapon()) {
 						if (ImGui::MenuItem(Translate("EQUIP_SELECTION"))) {
-							if (GetSelectionCount() == 0) {
-								Commands::AddAndEquipItemToInventory(tableTargetRef, a_item->GetEditorID());
-								AddItemToRecent(a_item);
-							} else {
-								EquipSelectionToTarget();
-							}
+							this->EquipSelectionToTarget();
 						}
 					}
 
 					if (ImGui::MenuItem(Translate("PLACE_SELECTION"))) {
-						if (GetSelectionCount() == 0) {
-							Commands::PlaceAtMe(a_item->GetEditorID(), click_amount);
-							AddItemToRecent(a_item);
-						} else {
-							PlaceSelectionOnGround(click_amount);
-						}
+						this->PlaceSelectionOnGround(click_amount);
 					}
 
 					ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 
 					if (a_item->GetFormType() == RE::FormType::Book) {
-						if (ImGui::MenuItem(Translate("GENERAL_READ_ME"))) {
-							Commands::ReadBook(a_item->GetEditorID());
-							UIManager::GetSingleton()->Close();
-							AddItemToRecent(a_item);
+						if (GetSelectionCount() <= 1) {
+							if (ImGui::MenuItem(Translate("GENERAL_READ_ME"))) {
+								Commands::ReadBook(a_item->GetEditorID());
+								UIManager::GetSingleton()->Close();
+								AddItemToRecent(a_item);
+							}
 						}
 
 						ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
@@ -1226,36 +1240,21 @@ namespace Modex
 
 				if (HasFlag(ModexTableFlag_Kit)) { // Kit Table View Window
 					if (ImGui::MenuItem(Translate("KIT_REMOVE"))) {
-						if (GetSelectionCount() == 0)
-							RemovePayloadItemFromKit(a_item);
-						else
-							RemoveSelectedFromKit();
-
-						selectionStorage.Clear();
-						SyncChangesToKit();
-						Refresh();
+						this->RemoveSelectionFromKit();
+						this->SyncChangesToKit();
 					}
 
 					ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 				}
 
-				// We use dragDropSourceList to find paired Kit table, since selectedKit is stored in the kit table.
+				// We use dragDropSourceList to find paired Kit tables, since selectedKit is stored in the kit table.
 				if (HasFlag(ModexTableFlag_Base)) {
-					if (auto it = dragDropSourceList.find(DragDropHandle::Kit); it != this->dragDropSourceList.end()) {						
+					if (auto it = dragDropSourceList.find(DragDropHandle::Kit); it != this->dragDropSourceList.end()) {
 						const auto destination = it->second;
 						if (const auto selected_kit = destination->selectedKitPtr; selected_kit && !selected_kit->empty()) {
 							if (ImGui::MenuItem(Translate("KIT_ADD"))) {
-								if (GetSelectionCount() == 0)
-									destination->AddPayloadToTableList(a_item);
-								else
-									this->AddSelectionToActiveKit();
-
-								AddItemToRecent(a_item);
-
+								this->AddSelectionToActiveKit();
 								destination->SyncChangesToKit();
-								destination->Refresh();
-
-								this->selectionStorage.Clear();
 							}
 
 							ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
@@ -1266,12 +1265,7 @@ namespace Modex
 
 			if (a_item->IsNPC()) { // ModexTableFlag_Base (?)
 				if (ImGui::MenuItem(Translate("PLACE_SELECTION"))) {
-					if (GetSelectionCount() == 0) {
-						Commands::PlaceAtMe(a_item->GetEditorID(), click_amount);
-						AddItemToRecent(a_item);
-					} else {
-						PlaceSelectionOnGround(click_amount);
-					}
+					PlaceSelectionOnGround(click_amount);
 				}
 
 				if (a_item->m_refID != 0) {

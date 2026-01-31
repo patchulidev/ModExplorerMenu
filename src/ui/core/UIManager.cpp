@@ -21,6 +21,8 @@ namespace Modex
 {
 	void UIManager::OnShow()
 	{
+		UIModule::LoadSharedReference();
+
 		m_windowStack.clear();
 		m_windowStack.push_back(std::make_unique<Menu>());
 		m_gui = std::make_unique<ModexGUIMenu>();
@@ -38,6 +40,8 @@ namespace Modex
 
 	void UIManager::OnClose()
 	{
+		UIModule::SaveSharedReference();
+
 		m_gui = nullptr;
 		m_windowStack.clear();
 
