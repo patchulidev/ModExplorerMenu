@@ -65,6 +65,10 @@ namespace Modex::UICustom
 			changed = true;
 		}
 
+		if (ImGui::IsItemActivated()) {
+			ModexGUIMenu::FlushInputState();
+		}
+
 		if (Locale::GetSingleton()->HasTooltip(a_tooltip)) {
 			if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal | ImGuiHoveredFlags_NoSharedDelay)) {
 				UICustom::FancyTooltip(a_tooltip);
