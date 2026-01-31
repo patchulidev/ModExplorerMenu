@@ -74,7 +74,6 @@ namespace Modex
 		kSleepOutfit,
 		kKeywordList,
 		kFactionList,
-		kItemList,
 		kSpellList,
 		kCell,					// Location Properties
 		kLand,
@@ -249,8 +248,6 @@ namespace Modex
 				return ICON_LC_USERS_ROUND;
 			case PropertyType::kSpellList:
 				return ICON_LC_GRADUATION_CAP;
-			case PropertyType::kItemList:
-				return ICON_LC_BOX;
 			case PropertyType::kKeywordList:
 				return ICON_LC_TAG;
 			case PropertyType::kDefaultOutfit:
@@ -1132,6 +1129,17 @@ namespace Modex
 			return false;
 		}
 
+		inline std::string GetMergedString(const std::vector<std::string>& a_list) const
+		{
+			std::string out;
+
+			for (auto& entry : a_list) {
+				out += entry;
+			}
+
+			return out;
+		}
+
 		// TODO: Check for current vs base?
 		inline float GetActorValue(const RE::ActorValue a_value) const
 		{
@@ -1158,6 +1166,21 @@ namespace Modex
 			} else {
 				return std::nullopt;
 			}
+		}
+
+		inline std::vector<std::string> GetFactionList() const
+		{
+			std::vector<std::string> factions;
+
+			if (auto factionArray = GetFactions(); factionArray.has_value()) {
+				for (auto& factionRank : factionArray.value()) {
+					if (factionRank.faction != nullptr) {
+						factions.push_back(factionRank.faction->GetName());
+					}
+				}
+			}
+
+			return factions;
 		}
 
 		inline std::string GetBookSkill() const
@@ -1326,7 +1349,6 @@ namespace Modex
 				case PropertyType::kActivator:
 				case PropertyType::kTree:
 				case PropertyType::kFlower:
-				case PropertyType::kItemList:
 				case PropertyType::kCell:
 				case PropertyType::kLand:
 				case PropertyType::kImGuiSeparator:
@@ -1398,11 +1420,11 @@ namespace Modex
 				case PropertyType::kDisabled:
 					return IsDisabled() ? "true" : "false";
 				case PropertyType::kFactionList:
-					return ""; // TODO
+					return GetMergedString(GetFactionList());
 				case PropertyType::kSpellList:
-					return ""; // TODO'
-				case PropertyType::kKeywordList:
 					return ""; // TODO
+				case PropertyType::kKeywordList:
+					return GetMergedString(GetKeywordList());
 				case PropertyType::kDefaultOutfit:
 					return GetDefaultOutfit();
 				case PropertyType::kSleepOutfit:
