@@ -100,8 +100,9 @@ namespace Modex
 		table->SetUseSharedTarget(true);
 		table->SetDragDropHandle(UITable::DragDropHandle::Table);
 		table->AddFlag(UITable::ModexTableFlag_Base);
-		table->AddFlag(UITable::ModexTableFlag_EnableCategoryTabs);
+		table->AddFlag(UITable::ModexTableFlag_EnableFilterTree);
 		table->AddFlag(UITable::ModexTableFlag_EnableHeader);
+		table->AddFlag(UITable::ModexTableFlag_EnableSearch);
 		table->AddFlag(UITable::ModexTableFlag_EnableItemPreviewOnHover);
 		table->SetShowEditorID(UserData::User().Get<bool>("Equipment::ShowEditorID", false));
 		table->Init();
@@ -124,6 +125,7 @@ namespace Modex
 		inventory->SetUseSharedTarget(false);
 		inventory->SetDragDropHandle(UITable::DragDropHandle::Inventory);
 		inventory->AddFlag(UITable::ModexTableFlag_Inventory);
+		inventory->AddFlag(UITable::ModexTableFlag_EnableItemPreviewOnHover);
 		inventory->AddFlag(UITable::ModexTableFlag_EnableHeader);
 		inventory->Init();
 		m_tables.push_back(std::move(inventory));

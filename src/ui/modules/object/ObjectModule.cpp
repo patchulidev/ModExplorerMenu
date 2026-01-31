@@ -35,7 +35,8 @@ namespace Modex
 		auto table = std::make_unique<UITable>();
 		table->SetGenerator([]() { return Data::GetSingleton()->GetObjectList(); });
 		table->SetPluginType(Data::PLUGIN_TYPE::Object);
-		table->AddFlag(UITable::ModexTableFlag_EnableCategoryTabs);
+		table->AddFlag(UITable::ModexTableFlag_EnableFilterTree);
+		table->AddFlag(UITable::ModexTableFlag_EnableSearch);
 		table->AddFlag(UITable::ModexTableFlag_EnableHeader);
 		table->SetUserDataID("Object");
 		table->SetUseSharedTarget(true); // Do we really target anything?

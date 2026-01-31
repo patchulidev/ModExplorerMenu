@@ -39,7 +39,8 @@ namespace Modex
 		table->SetUseSharedTarget(true);
 		table->SetDragDropHandle(UITable::DragDropHandle::Table);
 		table->AddFlag(UITable::ModexTableFlag_Base);
-		table->AddFlag(UITable::ModexTableFlag_EnableCategoryTabs);
+		table->AddFlag(UITable::ModexTableFlag_EnableFilterTree);
+		table->AddFlag(UITable::ModexTableFlag_EnableSearch);
 		table->AddFlag(UITable::ModexTableFlag_EnableHeader);
 		table->SetShowEditorID(UserData::User().Get<bool>("AddItem::ShowEditorID", false));
 		table->Init();

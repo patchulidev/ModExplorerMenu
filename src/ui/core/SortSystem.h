@@ -29,8 +29,7 @@ namespace Modex
 
 		virtual bool Load(bool a_create) override;
 		
-		bool                SortFn(const std::unique_ptr<BaseObject>& a_lhs, const std::unique_ptr<BaseObject>& a_rhs) const;
-		const std::string   GetSortProperty(const BaseObject& a_object) const;
+		bool SortFn(const std::unique_ptr<BaseObject>& a_lhs, const std::unique_ptr<BaseObject>& a_rhs) const;
 		
 		void SetSortSpecs(ImGuiTableSortSpecs* a_specs) {
 			m_currentSpecs = a_specs;
@@ -38,6 +37,16 @@ namespace Modex
 
 		void SetAscending(bool a_ascending) {
 			m_ascending = a_ascending;
+		}
+
+		void ResetSort() {
+			m_currentSpecs = nullptr;
+			m_ascending = true;
+			m_currentSortFilter = PropertyType::kNone;
+		}
+
+		int GetClicks() {
+			return m_reset;
 		}
 
 		void ToggleAscending() {

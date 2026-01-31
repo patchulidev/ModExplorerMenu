@@ -182,7 +182,7 @@ namespace Modex
 			case PropertyType::kPlugin:
 				return ICON_LC_BOX;
 			case PropertyType::kFormID:
-				return ICON_LC_BINARY;
+				return ICON_LC_ASTERISK;
 			case PropertyType::kName:
 				return ICON_LC_FILE_TEXT;
 			case PropertyType::kEditorID:
@@ -337,11 +337,13 @@ namespace Modex
 			return TESFile->fileName;
 		}
 
+		// TEST: Changed to EditorID fallback. Verify stability.
+
 		std::string ValidateName() const
 		{
 			if (!IsValid()) return "Error";
-			if (m_form->GetName() == nullptr) return "Error";
-			if (m_form->GetName()[0] == '\0') return "Error";
+			if (m_form->GetName() == nullptr) return po3_GetEditorID(m_form->formID);
+			if (m_form->GetName()[0] == '\0') return po3_GetEditorID(m_form->formID);
 
 			return m_form->GetName();
 		}
@@ -1278,10 +1280,9 @@ namespace Modex
 				case RE::FormType::Flora:
 					return FilterProperty::GetIcon(PropertyType::kFlower);
 				default:
-					ASSERT_MSG(true, "Unhandled GetIcon() case in BaseObject.")
+					// ASSERT_MSG(true, "Unhandled GetIcon() case in BaseObject. '{}'", magic_enum::enum_name(formType));
 					return ICON_LC_TRIANGLE_ALERT;
 			}
-
 		}
 
 		std::string GetProperty(const FilterProperty& property) const

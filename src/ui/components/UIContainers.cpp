@@ -211,8 +211,6 @@ namespace Modex
 		ImGui::SameLine();
 		ImGui::SetCursorPos(a_pos);
 		if (ImGui::BeginChild("##Modex::AddItemTable", a_size, false, ImGuiWindowFlags_NoBringToFrontOnFocus)) {
-			a_view->DrawStatusBar();
-			a_view->ShowSort();
 			a_view->Draw(a_view->GetTableList());
 		}
 		ImGui::EndChild();
@@ -223,7 +221,6 @@ namespace Modex
 		ImGui::SameLine();
 		ImGui::SetCursorPos(a_pos);
 		if (ImGui::BeginChild("##Modex::InventoryTable", a_size, false)) {
-			a_view->DrawStatusBar();
 			a_view->Draw(a_view->GetTableList());
 		}
 		ImGui::EndChild();
@@ -236,8 +233,6 @@ namespace Modex
 		ImGui::SameLine();
 		ImGui::SetCursorPos(a_pos);
 		if (ImGui::BeginChild("##Modex::KitTable", a_size, false)) {
-			a_view->DrawStatusBar();
-			a_view->ShowSort();
 			a_view->Draw(a_view->GetTableList());
 		}
 		ImGui::EndChild();

@@ -61,10 +61,8 @@ namespace Modex
 		float                   styleSpacing;
 		float                   styleFontSize;
 		bool                    showAltRowBG;
-		bool                    showPluginIcon;
+		bool                    showItemIcon;
 		bool                    showEditorID;
-		bool                    showFormType;
-		bool                    showPropertyColumn;
 
 		//                      table layout parameters
 		float                   LayoutRowSpacing;
@@ -85,7 +83,7 @@ namespace Modex
 			ModexTableFlag_Inventory = 1 << 1,
 			ModexTableFlag_Base = 1 << 2,
 			ModexTableFlag_EnableSearch = 1 << 3,
-			ModexTableFlag_EnableCategoryTabs = 1 << 4,
+			ModexTableFlag_EnableFilterTree = 1 << 4,
 			ModexTableFlag_EnableHeader = 1 << 5,
 			ModexTableFlag_EnableDebugToolkit = 1 << 6,
 			ModexTableFlag_EnableItemPreviewOnHover = 1 << 7
@@ -116,8 +114,8 @@ namespace Modex
 
 		//                      core behaviors
 		void                    Draw(const TableList& a_tableList);
-		void                    ShowSort();
-		void                    DrawWarningBar();
+		void                    DrawSearchBar();
+		void                    DrawStatusBar();
 		void                    Refresh();
 		void                    Unload();
 		void                    Load();
@@ -172,6 +170,7 @@ namespace Modex
 
 		std::vector<BaseObject> GetReferenceInventory();
 		std::vector<std::unique_ptr<BaseObject>> GetSelection();
+
 		uint32_t                GetSelectionCount() const;
 		TableItem&              GetItemPreview() { return itemPreview; }
 
@@ -202,16 +201,16 @@ namespace Modex
 		//                      layout and drawing
 		void                    UpdateLayout();
 		void                    DrawDragDropPayload(const std::string& a_icon);
-		void                    DrawItem(const std::unique_ptr<BaseObject>& a_item, const ImVec2& a_pos, const bool& a_selected);
-		void                    DrawKitItem(const std::unique_ptr<BaseObject>& a_item, const ImVec2& a_pos, const bool& a_selected);
+		void                    DrawItem(const std::unique_ptr<BaseObject>& a_item, const ImVec2& a_pos);
+		void                    DrawKitItem(const std::unique_ptr<BaseObject>& a_item, const ImVec2& a_pos);
 		void                    DrawKit(const Kit& a_kit, const ImVec2& a_pos, const bool& a_selected);
 		void                    DrawDebugToolkit();
 		void                    DrawFormSearchBar(const ImVec2& a_size);
 		void                    DrawPluginSearchBar(const ImVec2& a_size);
 		void                    DrawTableSettingsPopup();
 		void                    DrawHeader();
-		void                    DrawHeaderSortCombo(std::string a_header, float a_valueWidth, bool a_sorted);
-		void                    DrawFormTypeTabs();
+		void                    CustomSortColumn(std::string a_header, float a_valueWidth, bool a_sorted);
+		void                    DrawFormFilterTree();
 
 		DragDropHandle                      dragDropHandle;
 		std::map<DragDropHandle, UITable*>     dragDropSourceList;

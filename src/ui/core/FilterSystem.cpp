@@ -245,6 +245,10 @@ namespace Modex
 			const float total_spacing = item_spacing * (total_nodes - 1.0f);
 			const float button_width = (a_width - total_spacing) / total_nodes;
 			
+			ImGui::PushStyleColor(ImGuiCol_Separator, ThemeConfig::GetColor("HEADER_SEPARATOR"));
+			ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal, 1.0f);
+			ImGui::PopStyleColor();
+
 			int _count = 0;
 			for (auto& child : a_node->children) {
 				if (_count >= MAX_BUTTONS_PER_LINE) {
@@ -283,11 +287,6 @@ namespace Modex
 				
 				_count++;
 			}
-
-			ImGui::PushStyleColor(ImGuiCol_Separator, ThemeConfig::GetColor("FILTER_SEPARATOR"));
-			ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal, 1.0f);
-			ImGui::PopStyleColor();
-
 		}
 		
 		// Recursively render selected children

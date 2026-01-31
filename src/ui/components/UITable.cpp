@@ -1422,10 +1422,8 @@ namespace Modex
 		}
 	}
 
-	void UITable::DrawKitItem(const std::unique_ptr<BaseObject>& a_item, const ImVec2& a_pos, const bool& a_selected)
+	void UITable::DrawKitItem(const std::unique_ptr<BaseObject>& a_item, const ImVec2& a_pos)
 	{
-		(void)a_selected;
-		
 		if (!a_item || a_item.get() == nullptr) {
 			return;
 		}
@@ -1501,7 +1499,7 @@ namespace Modex
 			name_string = TRUNCATE(name_string, spacing * 1.5f);
 		}
 
-		const std::string plugin_icon = showPluginIcon ? a_item->GetItemIcon() : "";
+		const std::string plugin_icon = showItemIcon ? a_item->GetItemIcon() : "";
 		const std::string plugin_name = TRUNCATE(plugin_icon + a_item->GetPluginName(), ((spacing * 1.5f) - fontSize * 2.0f) - name_offset);
 		DrawList->AddText(center_left_align, text_color, plugin_name.c_str());
 
@@ -1560,10 +1558,8 @@ namespace Modex
 		}
 	}
 
-	void UITable::DrawItem(const std::unique_ptr<BaseObject>& a_item, const ImVec2& a_pos, const bool& a_selected)
+	void UITable::DrawItem(const std::unique_ptr<BaseObject>& a_item, const ImVec2& a_pos)
 	{
-		(void)a_selected;  // If we want to handle selection visuals manually.
-
 		const auto& DrawList = ImGui::GetWindowDrawList();
 		const float fontSize = ImGui::GetFontSize();
 
@@ -1578,15 +1574,16 @@ namespace Modex
 		const ImU32 bg_color_alt = ThemeConfig::GetColorU32("TABLE_ROW_BG_ALT", global_alpha);
 		const ImU32 outline_color = ThemeConfig::GetColorU32("TABLE_ROW_BORDER", global_alpha);
 		const ImU32 text_color = ThemeConfig::GetColorU32("TEXT", global_alpha);
+		const ImU32 ench_color = ThemeConfig::GetColorU32("TEXT_ENCHANTED", global_alpha);
 		const ImU32 err_color = ThemeConfig::GetColorU32("ERROR", global_alpha);
 		bool is_enchanted = false;
 
 		// Background
 		if (showAltRowBG) {
 			if (a_item->m_tableID % 2 == 0) {
-				DrawList->AddRectFilled(bb.Min, bb.Max, bg_color);
-			} else {
 				DrawList->AddRectFilled(bb.Min, bb.Max, bg_color_alt);
+			} else {
+				DrawList->AddRectFilled(bb.Min, bb.Max, bg_color);
 			}
 		} else {
 			DrawList->AddRectFilled(bb.Min, bb.Max, bg_color);
@@ -1619,7 +1616,8 @@ namespace Modex
 		// We need to adjust the bounding box to account for the type pillar.
 		bb.Min.x += type_pillar_width * 2.0f;
 
-		float spacing = (LayoutColumnWidth / 6.0f) * 1.5f;
+		float spacing = (LayoutColumnWidth / 4.0f);
+		float padding = ImGui::GetFrameHeight();
 		const float top_align = bb.Min.y + LayoutOuterPadding;
 		const float bot_align = bb.Max.y - LayoutOuterPadding - fontSize;
 		const float center_align = bb.Min.y + ((LayoutOuterPadding + LayoutItemSize.y) / 2) - (fontSize / 2.0f);
@@ -1632,18 +1630,12 @@ namespace Modex
 		const ImVec2 center_left_align = ImVec2(left_align, center_align);
 		const ImVec2 center_right_align = ImVec2(right_align, center_align);
 
-		std::string name_string = "";
 		const std::string quantity_string = a_item->GetQuantity() > 1 ? std::format(" ({})", std::to_string(a_item->GetQuantity())) : "";
+		const std::string item_icon = showItemIcon ? (a_item->GetItemIcon() + " ").c_str() : "";
+		const float quantity_offset = ImGui::CalcTextSize(quantity_string.c_str()).x;
 
-		if (!showEditorID) {
-			if (a_item->GetName().empty()) {
-				name_string = TRUNCATE(a_item->GetEditorID(), spacing) + quantity_string;
-			} else {
-				name_string = TRUNCATE(a_item->GetName(), spacing) + quantity_string;
-			}
-		} else {
-			name_string = TRUNCATE(a_item->GetEditorID(), spacing) + quantity_string;
-		}
+		const std::string raw_name = showEditorID ? a_item->GetEditorID() : a_item->GetName();
+		const std::string name_string = TRUNCATE(item_icon + raw_name, (spacing * 1.5f) - padding - quantity_offset) + quantity_string;
 
 		if (a_item->GetFormType() == RE::FormType::NPC) {
 			if (const auto& npc = a_item->GetTESNPC(); npc.has_value()) {
@@ -1730,8 +1722,9 @@ namespace Modex
 			}
 		}
 
-		const ImVec2 property_text_pos = ImVec2(bb.Min.x + spacing + spacing, center_align);
-		const float property_text_spacing = spacing * 0.75f;
+		const PropertyType& sort_property = this->sortSystem->GetCurrentSortFilter().GetPropertyType();
+		const ImVec2 sort_pos = ImVec2(bb.Min.x + spacing * 2.5f, center_align);
+		const float sort_text_cutoff = spacing * 1.5f;
 
 
 		if (const auto& item = a_item; item->IsItem()) {
@@ -1751,16 +1744,16 @@ namespace Modex
 
 				if (armorData != nullptr) {
 					const std::string rating_string = item->GetPropertyValueWithIcon(PropertyType::kArmorRating);
-					const std::string type_string = TRUNCATE(item->GetPropertyValueWithIcon(PropertyType::kArmorType), property_text_spacing);
+					const std::string type_string = TRUNCATE(item->GetPropertyValueWithIcon(PropertyType::kArmorType), sort_text_cutoff);
 
 					if (armorData->formEnchanting != nullptr) {
 						is_enchanted = true;
 					}
 
-					if (!showFormType && showPropertyColumn) {
-						DrawList->AddText(property_text_pos, text_color, rating_string.c_str());
+					if (sort_property == PropertyType::kNone) {
+						DrawList->AddText(sort_pos, text_color, rating_string.c_str());
 						if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows)) {
-							if (IsMouseHoveringRectDelayed(property_text_pos, ImVec2(property_text_pos.x + fontSize, property_text_pos.y + fontSize))) {
+							if (IsMouseHoveringRectDelayed(sort_pos, ImVec2(sort_pos.x + fontSize, sort_pos.y + fontSize))) {
 								UICustom::FancyTooltip(FilterProperty::GetIconTooltipKey(PropertyType::kArmorRating).c_str());
 							}
 						}
@@ -1774,19 +1767,19 @@ namespace Modex
 					const auto teaches_spell = book->TeachesSpell();
 
 
-					if (!showFormType && showPropertyColumn) {
+					if (sort_property == PropertyType::kNone) {
 						if (teaches_skill || book->GetSkill() != RE::ActorValue::kNone) {
-							const std::string skill_string = TRUNCATE(item->GetPropertyValueWithIcon(PropertyType::kTomeSkill), property_text_spacing);
-							DrawList->AddText(property_text_pos, text_color, skill_string.c_str());
+							const std::string skill_string = TRUNCATE(item->GetPropertyValueWithIcon(PropertyType::kTomeSkill), sort_text_cutoff);
+							DrawList->AddText(sort_pos, text_color, skill_string.c_str());
 						}
 						
 						if (teaches_spell || book->GetSpell() != nullptr) {
-							const std::string spell_string = TRUNCATE(item->GetPropertyValueWithIcon(PropertyType::kTomeSpell), property_text_spacing);
-							DrawList->AddText(property_text_pos, text_color, spell_string.c_str());
+							const std::string spell_string = TRUNCATE(item->GetPropertyValueWithIcon(PropertyType::kTomeSpell), sort_text_cutoff);
+							DrawList->AddText(sort_pos, text_color, spell_string.c_str());
 						}
 						
 						if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows)) {
-							if (IsMouseHoveringRectDelayed(property_text_pos, ImVec2(property_text_pos.x + fontSize, property_text_pos.y + fontSize))) {
+							if (IsMouseHoveringRectDelayed(sort_pos, ImVec2(sort_pos.x + fontSize, sort_pos.y + fontSize))) {
 								if (teaches_skill) {
 									UICustom::FancyTooltip(FilterProperty::GetIconTooltipKey(PropertyType::kTomeSkill).c_str());
 								} else if (teaches_spell) {
@@ -1803,17 +1796,17 @@ namespace Modex
 
 				if (weaponData != nullptr) {
 					const std::string damage_string = item->GetPropertyValueWithIcon(PropertyType::kWeaponDamage);
-					const std::string skill_string = TRUNCATE(item->GetPropertyValueWithIcon(PropertyType::kWeaponSkill), property_text_spacing);
+					const std::string skill_string = TRUNCATE(item->GetPropertyValueWithIcon(PropertyType::kWeaponSkill), sort_text_cutoff);
 					// const std::string type_string = item.GetPropertyValueWithIcon(PropertyType::kWeaponType);
 
 					if (weaponData->formEnchanting != nullptr) {
 						is_enchanted = true;
 					}
 					
-					if (!showFormType && showPropertyColumn) {
-						DrawList->AddText(property_text_pos, text_color, damage_string.c_str());
+					if (sort_property == PropertyType::kNone) {
+						DrawList->AddText(sort_pos, text_color, damage_string.c_str());
 						if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows)) {
-							if (IsMouseHoveringRectDelayed(property_text_pos, ImVec2(property_text_pos.x + fontSize, property_text_pos.y + fontSize))) {
+							if (IsMouseHoveringRectDelayed(sort_pos, ImVec2(sort_pos.x + fontSize, sort_pos.y + fontSize))) {
 								UICustom::FancyTooltip(FilterProperty::GetIconTooltipKey(PropertyType::kWeaponDamage).c_str());
 							}
 						}
@@ -1822,30 +1815,14 @@ namespace Modex
 			}
 		}
 
-		// General Form Type display under Property column.
-		if (showFormType && showPropertyColumn) {
-			DrawList->AddText(property_text_pos, text_color, a_item->GetTypeName().data());
-		}
-
-		const std::string plugin_icon = showPluginIcon ? a_item->GetItemIcon() : "";
-		const std::string plugin_name = TRUNCATE(plugin_icon + a_item->GetPluginName(), spacing - ImGui::GetFontSize());
+		const std::string plugin_name = TRUNCATE(a_item->GetPluginName(), spacing - padding);
 		DrawList->AddText(center_left_align, text_color, plugin_name.c_str());
 
-		const PropertyType& sort_property = this->sortSystem->GetCurrentSortFilter().GetPropertyType();
-		const std::string sort_text = TRUNCATE(a_item->GetPropertyValueWithIcon(sort_property), spacing * 0.75f);
+		const ImVec2 name_pos = ImVec2(bb.Min.x + spacing - 5.0f, center_align);
+		DrawList->AddText(name_pos, is_enchanted ? ench_color : text_color, name_string.c_str());
 
-		const ImVec2 name_pos = ImVec2(bb.Min.x + spacing, center_align);
-
-		if (is_enchanted) {
-			DrawList->AddText(name_pos, IM_COL32(180, 255, 255, (int)(ImGui::GetStyle().Alpha * 255)), name_string.c_str());
-		} else {
-			DrawList->AddText(name_pos, text_color, name_string.c_str());
-		}
-
-		// Conditionally draw sort-by so we don't overlap when sorted using header buttons.
-		// This will need it's own function call soon if we expand it any more. A sort of "IsSortableProperty" check?
 		if (sort_property != PropertyType::kPlugin and sort_property != PropertyType::kName and sort_property != PropertyType::kGoldValue) {
-			const ImVec2 sort_pos = showPropertyColumn ? ImVec2(bb.Min.x + spacing * 2.75f, center_align) : property_text_pos;
+			const std::string sort_text = TRUNCATE(a_item->GetPropertyValueWithIcon(sort_property), spacing * 0.75f);
 			DrawList->AddText(sort_pos, text_color, sort_text.c_str());
 			
 			if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows)) {
@@ -1877,7 +1854,7 @@ namespace Modex
 				ImGui::SetCursorPosX(UICustom::GetCenterTextPosX(Translate("SELECTED")));
 				ImGui::Text("%s", Translate("SELECTED"));
 
-				auto DrawList = ImGui::GetWindowDrawList();
+				const auto& DrawList = ImGui::GetWindowDrawList();
 				float size = 24.0f;
 				float icon_x = ImGui::GetWindowWidth() - ImGui::GetFrameHeight() * 1.5f;
 				float icon_y = -5.0f;
@@ -1939,24 +1916,9 @@ namespace Modex
 			user.Set<bool>("Modex::Table::ShowAltRowBG", showAltRowBG);
 		}
 
-		ImGui::SeparatorText(Translate("TABLE_SETTINGS_SHOW_PROPERTY"));
-		if (UICustom::ToggleButton("##Button::PropertyColumn", showPropertyColumn, width)) {
-			user.Set<bool>("Modex::Table::ShowPropertyColumn", showPropertyColumn);
-		}
-
-		ImGui::SeparatorText(Translate("TABLE_SETTINGS_SHOW_FORMTYPE"));
-		if (UICustom::ToggleButton("##Button::FormType", showFormType, width)) {
-			user.Set<bool>("Modex::Table::ShowFormType", showFormType);
-		}
-
-		ImGui::SeparatorText(Translate("TABLE_SETTINGS_SHOW_EDITORID"));
-		if (UICustom::ToggleButton("##Button::EditorID", showEditorID, width)) {
-			user.Set<bool>("Modex::Table::ShowEditorID", showEditorID);
-		}
-
-		ImGui::SeparatorText(Translate("TABLE_SETTING_SHOW_ICON"));
-		if (UICustom::ToggleButton("##Button::PluginIcon", showPluginIcon, width)) {
-			user.Set<bool>("Modex::Table::ShowPluginIcon", showPluginIcon);
+		ImGui::SeparatorText(Translate("TABLE_SETTINGS_SHOW_ICON"));
+		if (UICustom::ToggleButton("##Button::ItemIcon", showItemIcon, width)) {
+			user.Set<bool>("Modex::Table::ShowItemIcon", showItemIcon);
 		}
 
 		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
@@ -1968,10 +1930,7 @@ namespace Modex
 			user.Set<float>("Modex::Table::ItemWidth", 0.0f);
 			user.Set<float>("Modex::Table::ItemSpacing", 0.0f);
 			user.Set<bool>("Modex::Table::ShowAltRowBG", true);
-			user.Set<bool>("Modex::Table::ShowEditorID", false);
-			user.Set<bool>("Modex::Table::ShowFormType", false);
-			user.Set<bool>("Modex::Table::ShowPropertyColumn", true);
-			user.Set<bool>("Modex::Table::ShowPluginIcon", true);
+			user.Set<bool>("Modex::Table::ShowItemIcon", true);
 		}
 
 		ImGui::PopStyleVar();
@@ -1979,27 +1938,17 @@ namespace Modex
 
 	void UITable::DrawStatusBar()
 	{
-		static constexpr std::string user_icon = ICON_LC_CHEVRON_RIGHT;
-		static constexpr std::string warn_icon = ICON_LC_TRIANGLE_ALERT;
+		static constexpr const char* valid_icon = ICON_LC_ASTERISK;
+		static constexpr const char* invalid_icon = ICON_LC_X;
+		static constexpr const char* warning_icon = ICON_LC_TRIANGLE_ALERT;
+		std::string status;
 
-		ImVec4 user_color = ThemeConfig::GetColor("BUTTON"); // TODO: Unique Color Keys?
-
-		std::string search_text;
-		std::string user_text;
-		std::string warn_text;
-
-		if (HasFlag(ModexTableFlag_Kit)) {
-			if (selectedKitPtr == nullptr || (selectedKitPtr && selectedKitPtr->m_key.empty())) {
-				warn_text = Translate("ERROR_NO_KIT_SELECTED");
-			}
-
-			if (selectedKitPtr && !selectedKitPtr->m_key.empty()) {
-				search_text = selectedKitPtr->GetNameTail();
-			}
-		}
-
-		if (tableTargetRef == nullptr) {
-			warn_text = Translate("ERROR_MISSING_REFERENCE");
+		bool valid_target = tableTargetRef != nullptr;
+		bool valid_type = valid_target && IsValidTargetReference(tableTargetRef);
+		bool warning = !valid_target || !valid_type;
+		
+		if (!valid_target) {
+			status = Translate("ERROR_MISSING_REFERENCE");
 		} else {
 			if (!tableTargetRef) {
 				warn_text = Translate("ERROR_INVALID_REFERENCE");
@@ -2117,26 +2066,25 @@ namespace Modex
 			);
 		}
 
-		if (search_clicked) {
-			UIManager::GetSingleton()->ShowInfoBox(
-				Translate("STATUS_BAR_AUX_TITLE"),
-				Translate("STATUS_BAR_AUX_DESC")
-			);
+		// Settings Button
+		ImGui::PushFont(NULL, ImGui::GetFontSize() + 2.0f);
+		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.f, 0.f));
+		ImGui::SameLine();
+		const ImVec2 button_size = ImVec2(ImGui::GetContentRegionAvail().x, user_height);
+		if (ImGui::Button(ICON_LC_SETTINGS, button_size)) {
+			ImGui::OpenPopup("TABLE_SETTINGS_POPUP");
 		}
+		ImGui::PopStyleVar();
+		ImGui::PopFont();
 
-		if (warn_clicked) {
-			UIManager::GetSingleton()->ShowInfoBox(
-				Translate("STATUS_BAR_WARN_TITLE"),
-				warn_text
-			);
+		ImGui::SetNextWindowSize(ImVec2(ImGui::GetWindowSize().x / 4.0f, 0.0f));
+		if (ImGui::BeginPopup("TABLE_SETTINGS_POPUP")) {
+			DrawTableSettingsPopup();
+			ImGui::EndPopup();
 		}
-
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal, 2.0f);
-		ImGui::Spacing();
 	}
 
-	// TODO: Could these be single click exclusive except when holding CTRL?
-	void UITable::DrawFormTypeTabs()
+	void UITable::DrawFormFilterTree()
 	{
 		ImGui::PushID("##Modex::Table::CategoryTabs");
 	
@@ -2148,20 +2096,25 @@ namespace Modex
 		ImGui::PopID();
 	}
 
-	void UITable::DrawHeaderSortCombo(std::string a_header, float a_valueWidth, bool a_sorted)
+	// a_valueWidth is to determine avaiable column space before EOL.
+	void UITable::CustomSortColumn(std::string a_header, float a_valueWidth, bool a_sorted)
 	{
 		const static ImVec4 text_col = ThemeConfig::GetColor("HEADER_TEXT");
 		
-		ImGui::TextColored(text_col, "%s", a_header.c_str());
-		if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
-			if (a_sorted) {
-				this->sortSystem->ToggleAscending();
-				this->SortListBySpecs();
-				this->UpdateImGuiTableIDs();
+		if (!a_header.empty()) {
+			ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 4.0f);
+			ImGui::AlignTextToFramePadding();
+			ImGui::TextColored(text_col, "%s", a_header.c_str());
+			if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
+				if (a_sorted) {
+					this->sortSystem->ToggleAscending();
+					this->SortListBySpecs();
+					this->UpdateImGuiTableIDs();
+				}
 			}
+			ImGui::SameLine();
+			ImGui::SetCursorPosX(ImGui::GetCursorPosX() - ImGui::GetFontSize() / 1.5f); // Adjust for icon size
 		}
-		ImGui::SameLine();
-		ImGui::SetCursorPosX(ImGui::GetCursorPosX() - ImGui::GetFontSize() / 2.0f); // Adjust for icon size
 
 		constexpr auto combo_flags = ImGuiComboFlags_NoArrowButton | ImGuiComboFlags_HeightLarge;
 		const ImVec4 prev_text_color = ThemeConfig::GetColor("TEXT");
@@ -2169,7 +2122,6 @@ namespace Modex
 		ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0, 0, 0, 0));
 		ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(0, 0, 0, 0));
 		ImGui::PushStyleColor(ImGuiCol_Text, text_col);
-		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2.0f, 1.0f));
 		
 		const float sortby_size = ImGui::GetContentRegionAvail().x - a_valueWidth - ImGui::GetStyle().ItemSpacing.x;				
 		const FilterProperty current_key = sortSystem->GetCurrentSortFilter();
@@ -2207,43 +2159,37 @@ namespace Modex
 		}
 
 		ImGui::PopStyleColor(4);
-		ImGui::PopStyleVar();
 	}
 
-	// TODO: Naturally clicking the header buttons implies sorting ascending/descending for that category
-	// So we should implement some kind of ability to click those labels, and append a sort icon next to it
-	// and also match it up to the sort system in the top right.
 	void UITable::DrawHeader()
 	{
-		const static ImVec4 text_col = ThemeConfig::GetColor("HEADER_TEXT");
-		const static ImVec4 button_col = ThemeConfig::GetColor("HEADER_SEPARATOR");
+		static const ImVec4 text_col = ThemeConfig::GetColor("HEADER_TEXT");
 
 		ImGui::PushID("##Modex::Table::Header");
-		ImGui::PushStyleColor(ImGuiCol_Separator, button_col);
+
+		ImGui::PushStyleColor(ImGuiCol_Separator, ThemeConfig::GetColor("HEADER_SEPARATOR"));
+		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal, 1.0f);
 
 		std::string header_plugin = Translate("PLUGIN");
 		std::string header_name = this->showEditorID ? Translate("EDITORID") : Translate("NAME");
-		std::string header_property = showFormType ? Translate("FORMTYPE") : Translate("PROPERTY");
 		std::string header_custom = this->sortSystem->GetCurrentSortFilter().ToString();
 		std::string header_value = Translate("VALUE");
 		std::string sort_icon = sortSystem->GetSortAscending()  == true ? ICON_LC_ARROW_DOWN_A_Z : ICON_LC_ARROW_UP_A_Z;
 		PropertyType current_sort = sortSystem->GetCurrentSortFilter().GetPropertyType();
 
 		const bool is_plugin_sorted = current_sort == PropertyType::kPlugin;
-		const bool is_name_sorted = current_sort == PropertyType::kName;
+		const bool is_name_sorted = current_sort == PropertyType::kName || current_sort == PropertyType::kEditorID;
 		const bool is_value_sorted = current_sort == PropertyType::kGoldValue;
-		const bool is_custom_sorted = !is_plugin_sorted && !is_name_sorted && !is_value_sorted;
+		const bool is_custom_sorted = !is_plugin_sorted && !is_name_sorted && !is_value_sorted && current_sort != PropertyType::kNone;
 
 		header_plugin = is_plugin_sorted ? sort_icon + " " + header_plugin : header_plugin;
 		header_name = is_name_sorted ? sort_icon + " " + header_name : header_name;
 		header_value = is_value_sorted ? sort_icon + " " + header_value : header_value;
-		header_custom = is_custom_sorted ? sort_icon : "";
+		header_custom = is_custom_sorted ? sort_icon + " " : "";
 
-		constexpr float name_offset = 4.0f;
-		const float spacing = name_offset + (LayoutColumnWidth / 6.0f) * 1.5f;
-		const float name_spacing = 4.0f + spacing * 1.0f;
-		const float property_spacing = spacing * 2.0f;
-		const float custom_spacing = spacing * 2.75f;
+		constexpr float name_offset = 4.0f; // pillar offset.
+		const float spacing = name_offset + (LayoutColumnWidth / 4.0f);
+		const float sort_spacing = spacing * 2.50f;
 		const float value_width = ImGui::CalcTextSize(header_value.c_str()).x + ImGui::GetFontSize();
 
 		if (HasFlag(ModexTableFlag_Kit)) {
@@ -2253,6 +2199,7 @@ namespace Modex
 			const bool is_amount_sorted = current_sort == PropertyType::kKitItemCount;
 			header_amount = is_amount_sorted ? sort_icon + " " + header_amount : header_amount;
 
+			ImGui::AlignTextToFramePadding();
 			ImGui::TextColored(text_col, "%s", header_plugin.c_str());
 			if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
 				this->sortSystem->SetCurrentSortFilter(PropertyType::kPlugin);
@@ -2262,21 +2209,32 @@ namespace Modex
 			}
 
 			ImGui::SameLine(4.0f + LayoutItemSize.x / 4.0f);
+			ImGui::AlignTextToFramePadding();
 			ImGui::TextColored(text_col, "%s", header_name.c_str());
 			if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
-				this->sortSystem->SetCurrentSortFilter(this->showEditorID ? PropertyType::kEditorID : PropertyType::kName);
 				this->sortSystem->ToggleAscending();
+
+				if (this->sortSystem->GetClicks() == 2) {
+					this->showEditorID = !this->showEditorID;
+					this->sortSystem->ResetSort();
+				} else {
+					this->sortSystem->SetCurrentSortFilter(this->showEditorID ? PropertyType::kEditorID : PropertyType::kName);
+				}
+
+				this->sortSystem->SetCurrentSortFilter(this->showEditorID ? PropertyType::kEditorID : PropertyType::kName);
 				this->SortListBySpecs();
 				this->UpdateImGuiTableIDs();
 			}
 
 			ImGui::SameLine(LayoutItemSize.x / 1.50f);
+			ImGui::AlignTextToFramePadding();
 			ImGui::TextColored(text_col, "%s", header_equip.c_str());
 			{
 
 			}
 
 			ImGui::SameLine(LayoutItemSize.x / 1.50f + (LayoutItemSize.x / 7.0f) + 5.0f); // + equip_size
+			ImGui::AlignTextToFramePadding();
 			ImGui::TextColored(text_col, "%s", header_amount.c_str());
 			if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
 				this->sortSystem->SetCurrentSortFilter(PropertyType::kKitItemCount);
@@ -2288,6 +2246,7 @@ namespace Modex
 		}
 		
 		if (!HasFlag(ModexTableFlag_Kit)) {
+			ImGui::AlignTextToFramePadding();
 			ImGui::TextColored(text_col, "%s", header_plugin.c_str());
 			if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
 				this->sortSystem->SetCurrentSortFilter(PropertyType::kPlugin);
@@ -2296,33 +2255,30 @@ namespace Modex
 				this->UpdateImGuiTableIDs();
 			}
 
-			ImGui::SameLine(name_spacing);
+			ImGui::SameLine(spacing);
+			ImGui::AlignTextToFramePadding();
 			ImGui::TextColored(text_col, "%s", header_name.c_str());
 			if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
-				this->sortSystem->SetCurrentSortFilter(this->showEditorID ? PropertyType::kEditorID : PropertyType::kName);
 				this->sortSystem->ToggleAscending();
+
+				if (this->sortSystem->GetClicks() == 2) {
+					this->showEditorID = !this->showEditorID;
+					this->sortSystem->ResetSort();
+				} else {
+					this->sortSystem->SetCurrentSortFilter(this->showEditorID ? PropertyType::kEditorID : PropertyType::kName);
+				}
+
 				this->SortListBySpecs();
 				this->UpdateImGuiTableIDs();
 			}
 
+			ImGui::SameLine(sort_spacing - name_offset);
 
-			if (showPropertyColumn) {
-				ImGui::SameLine(property_spacing);
-				ImGui::TextColored(text_col, "%s", header_property.c_str());
-				if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
-					showFormType = !showFormType;
-					UserData::User().Set<bool>(data_id + "::ShowFormType", showFormType);
-				}
-
-				ImGui::SameLine(custom_spacing);
-			} else {
-				ImGui::SameLine(property_spacing);
-			}
-
-			DrawHeaderSortCombo(header_custom, value_width, is_custom_sorted);
+			CustomSortColumn(header_custom, value_width, is_custom_sorted);
 
 			ImGui::SameLine();
-			ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x - value_width);
+			ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x - value_width - (ImGui::GetFrameHeight() / 2.0f));
+			ImGui::AlignTextToFramePadding();
 			ImGui::TextColored(text_col, "%s", header_value.c_str());
 			if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
 				this->sortSystem->SetCurrentSortFilter(PropertyType::kGoldValue);
@@ -2349,17 +2305,19 @@ namespace Modex
 			}
 		}
 
-
 		UpdateLayout();
+		DrawStatusBar();
 
-		// DrawWarningBar();
-
-		if (HasFlag(ModexTableFlag_EnableDebugToolkit)) {
-			// DrawDebugToolkit();
+		if (HasFlag(ModexTableFlag_EnableSearch)) {
+			DrawSearchBar();
 		}
 
-		if (HasFlag(ModexTableFlag_EnableCategoryTabs)) {
-			DrawFormTypeTabs();
+		if (HasFlag(ModexTableFlag_EnableDebugToolkit)) {
+			DrawDebugToolkit();
+		}
+
+		if (HasFlag(ModexTableFlag_EnableFilterTree)) {
+			DrawFormFilterTree();
 		}
 
 		if (HasFlag(ModexTableFlag_EnableHeader)) {
@@ -2370,13 +2328,6 @@ namespace Modex
 		if (ImGui::BeginChild("##UITable::Draw", ImVec2(0.0f, 0.0f), 0, ImGuiWindowFlags_NoMove)) {
 			// FIX: PluginList isn't deterministic of a module failing to load anymore due to
 			// polymorphic use of UITable's. Need to redefine what a failure to load looks like.
-
-			// if (std::ssize(this->pluginList) <= 1) {
-			// 	ImGui::TextColored(ImVec4(1.0f, 0.1f, 0.1f, 1.0f), "Error: Moduled failed to load. Try clicking the Sidebar Button for this module!");
-			// 	ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "If you don't see a button for this module in the sidebar, it's because it's disabled! You have to enable it in settings!");
-			// 	ImGui::EndChild();
-			// 	return;
-			// }
 
 			if (test_table_selection) {
 				Test_TableSelection();
@@ -2527,9 +2478,9 @@ namespace Modex
 						// if the item is visible, offload drawing item data to separate function
 						if (is_item_visible && item_data != nullptr) {
 							if (this->HasFlag(ModexTableFlag_Kit)) {
-								DrawKitItem(item_data, pos, is_item_selected);
+								DrawKitItem(item_data, pos);
 							} else {
-								DrawItem(item_data, pos, is_item_selected);
+								DrawItem(item_data, pos);
 							}
 						}
 
