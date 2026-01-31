@@ -41,15 +41,16 @@ namespace Modex
 		const std::string& GetName() const { return m_name; };
 		const std::string& GetIcon() const { return m_icon; };
 
-		void UpdateTableTargets(RE::TESObjectREFR* a_ref);
-
 		void SetOffset(float a_offset) { m_offset = a_offset; };
 		void SetActiveLayout(uint8_t a_layoutIndex);
 		uint8_t GetActiveLayoutIndex() const;
 
+		static void LoadSharedReference();
+		static void SaveSharedReference();
+
 		static RE::TESObjectREFR* GetTargetReference() { return s_targetReference; }
 		static void SetTargetReference(RE::TESObjectREFR* a_ref);
-		static std::optional<RE::TESObjectREFR*> LookupReferenceBySearch(const std::string& a_search);
-		static std::optional<RE::TESObjectREFR*> LookupReferenceByFormID(const RE::FormID& a_id);
+		static RE::TESObjectREFR* LookupReferenceBySearch(const std::string& a_search);
+		static RE::TESObjectREFR* LookupReferenceByFormID(const RE::FormID& a_id);
 	};
 }

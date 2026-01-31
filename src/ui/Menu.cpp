@@ -64,6 +64,17 @@ namespace Modex
 		this->m_captureInput = false;
 	}
 
+	std::unique_ptr<UIModule>& Menu::GetCurrentModule()
+	{
+		for (auto& module : m_modules) {
+			if (module->IsLoaded()) {
+				return module;
+			}
+		}
+
+		return m_modules[0];
+	}
+
 	void Menu::LoadModule(std::unique_ptr<UIModule>& a_module, uint8_t a_layoutIndex)
 	{
 		for (auto& module : m_modules) {

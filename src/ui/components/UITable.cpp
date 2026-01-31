@@ -1,6 +1,7 @@
 #include "UITable.h" 
 
 #include "core/Commands.h"
+#include "data/BaseObject.h"
 #include "localization/FontManager.h"
 #include "localization/Locale.h"
 #include "ui/core/UIManager.h"
@@ -30,6 +31,11 @@ namespace Modex
 	float PulseMinMax(float a_time, float a_frequency, float a_amplitude, float a_min, float a_max)
 	{
 		return a_min + (a_max - a_min) * (1.0f + Pulse(a_time, a_frequency, a_amplitude)) * 0.5f;
+	}
+
+	bool IsValidTargetReference(RE::TESObjectREFR* a_reference) {
+		const auto baseObject = a_reference != nullptr ? a_reference : nullptr;
+		return baseObject && (baseObject->IsActor() || baseObject->GetFormType() == RE::FormType::Container);
 	}
 
 	bool UITable::IsMouseHoveringRectDelayed(const ImVec2& a_min, const ImVec2& a_max)
@@ -150,28 +156,17 @@ namespace Modex
 		tableTargetRef = nullptr;
 	}
 
-	// TEST: Need extreme nullptr safety when operating on references since we can't guarantee
-	// lifetime throughout Modex being open. Test and verify that methods calling tableTargetRef
-	// are always doing nullptr checks before release!!!
-	
 	void UITable::Load()
 	{
-		
-		if (useSharedTarget)
-		{
-			if (auto reference = UIModule::GetTargetReference(); reference) {
-				this->SetTargetByReference(reference);
-			}
+		if (useSharedTarget) {
+			auto reference = UIModule::GetTargetReference();
+			this->SetTargetByReference(reference);
 		}
 
-		if (!useSharedTarget) 
-		{
+		if (!useSharedTarget) {
 			const auto formID = UserData::User().Get<RE::FormID>(data_id + "::LastTargetRef", 0);
-			if (const auto reference = UIModule::LookupReferenceByFormID(formID); reference.has_value()) {
-				if (*reference) {
-					this->SetTargetByReference(*reference);
-				}
-			}
+			auto reference = UIModule::LookupReferenceByFormID(formID);
+			this->SetTargetByReference(reference);
 		}
 
 		BuildPluginList();
@@ -191,14 +186,12 @@ namespace Modex
 		{
 			UIModule::SetTargetReference(a_reference);
 
-			// HACK: Cheap. Doesn't work if tables aren't linked. Although currently
-			// there is no instance of tables co-existing without drag linkage. This
-			// hack was used as an alternative to propogating changes through a
-			// hierarchy of Menu, UIModule, and UIManager instances.
-
+			// HACK: To avoid propogating changes up to UIModule/UIMenu.
 			for (const auto source : dragDropSourceList) {
 				if (source.second->useSharedTarget) {
-					source.second->SetTargetByReference(a_reference);
+					if (source.second->GetTableTargetRef() != this->GetTableTargetRef()) {
+						source.second->SetTargetByReference(a_reference);
+					}
 				}
 			}
 		}
@@ -612,6 +605,7 @@ namespace Modex
 		if (this->tableList.empty()) {
 			return;
 		}
+		
 
 		auto it = std::remove_if(this->tableList.begin(), this->tableList.end(),
 			[&a_item](const std::unique_ptr<BaseObject>& item) {
@@ -1944,77 +1938,77 @@ namespace Modex
 		if (!valid_target) {
 			status = Translate("ERROR_MISSING_REFERENCE");
 		} else {
-			if (!tableTargetRef) {
-				warn_text = Translate("ERROR_INVALID_REFERENCE");
-			} else {
-				user_text = std::format("({:08X}) - '{}'", tableTargetRef->GetFormID(), tableTargetRef->GetName());
+			const std::string name = tableTargetRef->GetName();
+			const std::string editorid = po3_GetEditorID(tableTargetRef->GetBaseObject()->formID);
 
-				if (tableTargetRef->IsPlayerRef()) {
-					user_color = ThemeConfig::GetColor("CONTAINER_BUTTON");
+			if (name.empty()) {
+				status = std::format("({:08X}) - '{}'", tableTargetRef->GetFormID(), editorid);
+			} else {
+				status = std::format("({:08X}) - '{}'", tableTargetRef->GetFormID(), name);
+			}
+
+			if (!valid_type) {
+				status += " - ";
+				status += Translate("ERROR_INVALID_REFERENCE");
+			} else if (HasFlag(ModexTableFlag_Kit)) {
+				if (selectedKitPtr == nullptr || (selectedKitPtr && selectedKitPtr->m_key.empty())) {
+					status = Translate("ERROR_NO_KIT_SELECTED");
+					warning = true;
 				} else {
-					user_color = ThemeConfig::GetColor("BUTTON");
+					status = selectedKitPtr->GetNameTail();
 				}
 			}
 		}
 
-		bool user_clicked   = false;
-		bool search_clicked = false;
-		bool warn_clicked   = false;
+		const auto status_icon = !valid_target ? invalid_icon : (!valid_type ? warning_icon : valid_icon);
+		const auto status_color = warning ? ThemeConfig::GetColor("BUTTON_DECLINE") : ThemeConfig::GetColor("BUTTON_CONFIRM");
 
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(ImGui::GetFontSize(), 3.0f));
-		ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.0f, 0.5f));
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal, 2.0f);
+		ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.5f, 0.5f));
+		ImGui::PushStyleColor(ImGuiCol_Button, status_color);
 		
 		ImGui::SameLine();
 
-		ImGui::PushFontBold(ImGui::GetFontSize());
-		ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.5f, 0.5f));
-		const auto user_height = ImGui::GetFrameHeightWithSpacing();
-		const float padding = ImGui::GetFrameHeightWithSpacing() * 3.0f;
-		const float text_width = ImGui::CalcTextSize(user_text.c_str()).x;
-		const auto user_width = max(ImGui::GetContentRegionAvail().x / 4.0f, text_width + padding);
+		if (valid_target && valid_type && !warning) {
+			ImGui::PushFontBold(ImGui::GetFontSize());
+		}
 
-		user_clicked = ImGui::Button(user_text.c_str(), ImVec2(user_width, user_height));
-		bool user_shift_clicked = user_clicked && ImGui::GetIO().KeyShift;
-		bool user_ctrl_clicked  = user_clicked && ImGui::GetIO().KeyCtrl;
+		const auto user_height = ImGui::GetFrameHeight() * 1.25f;
+		const auto user_width = ImGui::GetContentRegionAvail().x - ImGui::GetFrameHeight() * 1.25f;
+
+		bool clicked = ImGui::Button(TRUNCATE(status, user_width - ImGui::GetFrameHeight()).c_str(), ImVec2(user_width, user_height));
+		bool user_shift_clicked = clicked && ImGui::GetIO().KeyShift;
+		bool user_ctrl_clicked  = clicked && ImGui::GetIO().KeyCtrl;
+		bool user_console = ImGui::IsItemHovered() && ImGui::IsKeyPressed(ImGuiKey_C, false);
 		bool user_default = ImGui::IsItemHovered() && ImGui::IsKeyPressed(ImGuiKey_T, false);
 
-		auto DrawList = ImGui::GetWindowDrawList();
-		
+		ImGui::PopStyleVar(3);
+		ImGui::PopStyleColor();
 
-		ImGui::PopStyleVar();
-		ImGui::PopFont();
+		if (valid_target && valid_type && !warning) {
+			ImGui::PopFont();
+		}
 		
 		if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort | ImGuiHoveredFlags_NoSharedDelay)) {
-			UICustom::FancyTooltip(Translate("STATUS_BAR_TARGET_TOOLTIP"));
+			UICustom::FancyTooltip(Translate("STATUS_BAR_TOOLTIP"));
 		}
 
 		ImGui::SameLine();
 
-		const ImVec2 user_icon_offset = ImVec2(user_width - ImGui::GetStyle().WindowPadding.x / 2.0f, -3.0f);
+		const ImVec2 icon_position = ImVec2(
+				(ImGui::GetCursorScreenPos().x - user_width),
+				(ImGui::GetCursorScreenPos().y + 5.0f));
+
+		const ImVec2 link_position = ImVec2(
+				(ImGui::GetCursorScreenPos().x - ImGui::GetFrameHeightWithSpacing() * 1.5f),
+				(ImGui::GetCursorScreenPos().y + 5.0f));
+
 		ImGui::PushFont(NULL, ImGui::GetFontSize() + 2.0f);
-		DrawList->AddText(ImGui::GetCursorScreenPos() - user_icon_offset, ThemeConfig::GetColorU32("TEXT"), user_icon.c_str());
+		const auto& DrawList = ImGui::GetWindowDrawList();
+		DrawList->AddText(icon_position, ThemeConfig::GetColorU32("TEXT"), status_icon);
+		DrawList->AddText(link_position, ThemeConfig::GetColorU32("TEXT"), useSharedTarget ? ICON_LC_LINK : ICON_LC_UNLINK);
 		ImGui::PopFont();
-
-		const float search_width = ImGui::GetContentRegionAvail().x;
-		ImGui::SetNextItemWidth(search_width);
-		ImGui::PushStyleColor(ImGuiCol_Button, ThemeConfig::GetColor("BUTTON_CONFIRM"));
-		if (!warn_text.empty()) {
-			warn_clicked = ImGui::Button(TRUNCATE(warn_text, search_width).c_str(), ImVec2(search_width, user_height));
-
-			if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort | ImGuiHoveredFlags_NoSharedDelay)) {
-				UICustom::FancyTooltip(Translate("STATUS_BAR_WARN_TOOLTIP"));
-			}
-		} else {
-			search_clicked = ImGui::Button(search_text.c_str(), ImVec2(search_width, user_height));
-
-			if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort | ImGuiHoveredFlags_NoSharedDelay)) {
-				UICustom::FancyTooltip(Translate("STATUS_BAR_AUX_TOOLTIP"));
-			}
-		}
-		ImGui::PopStyleColor();
-		ImGui::PopStyleVar(3);
 
 		if (user_shift_clicked) {
 			auto* reference = UIModule::GetTargetReference();
@@ -2027,32 +2021,27 @@ namespace Modex
 			ImGui::SetClipboardText(hex.c_str());	
 		}
 
-		// BUG: Please investigate why calling this commented func crashes.
-		// It might be due to pointer lifetime.
-
 		if (user_default) {
-			tableTargetRef = Commands::GetConsoleReference();
-			// this->SetTargetByReference(tableTargetRef);
+			this->SetTargetByReference(Commands::GetPlayerReference());
 		}
 
-		if (user_clicked && !user_shift_clicked && !user_ctrl_clicked) {
+		if (user_console) {
+			this->SetTargetByReference(Commands::GetConsoleReference());
+		}
+
+		if (clicked && !user_shift_clicked && !user_ctrl_clicked) {
 			UIManager::GetSingleton()->ShowInputBox(
-				Translate("STATUS_BAR_TARGET_TITLE"),
-				Translate("STATUS_BAR_TARGET_DESC"),
+				Translate("STATUS_BAR_TITLE"),
+				Translate("STATUS_BAR_DESC"),
 				"",
 				[this](const std::string& a_input) {
-					bool success = false;
+					auto reference = UIModule::LookupReferenceBySearch(a_input);
 
-					if (auto reference = UIModule::LookupReferenceBySearch(a_input); reference.has_value()) {
-						this->SetTargetByReference(reference.value());
-
-
-						success = true;
-					}
-
-					if (!success) {
+					if (reference != nullptr) {
+						this->SetTargetByReference(reference);
+					} else {
 						UIManager::GetSingleton()->ShowWarning(
-							Translate("INVALID_REFERENCE_POPUP_TITLE"),
+							Translate("INVALID_REFERENCE_POPUP_TITLE") + a_input,
 							Translate("INVALID_REFERENCE_POPUP_DESC")
 						);
 					}

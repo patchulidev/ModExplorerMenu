@@ -23,6 +23,8 @@ namespace Modex
 		void OnOpened() override;
 
 		void LoadModule(std::unique_ptr<UIModule>& a_module, uint8_t a_layoutIndex);
+		std::unique_ptr<UIModule>& GetCurrentModule();
+
 		void NextWindow();
 
 		static constexpr ImGuiWindowFlags WINDOW_FLAGS =

@@ -225,7 +225,9 @@ namespace Modex
 			ImGui::NewLine();
 
 			ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-			ImGui::InputText("##Modex::InputBoxPopup::InputText", m_inputBuffer, IM_ARRAYSIZE(m_inputBuffer));
+			if (ImGui::InputText("##Modex::InputBoxPopup::InputText", m_inputBuffer, IM_ARRAYSIZE(m_inputBuffer), ImGuiInputTextFlags_EnterReturnsTrue)) {
+				AcceptInput();
+			}
 
 			if (ImGui::IsWindowAppearing()) {
 				ImGui::SetKeyboardFocusHere(-1);

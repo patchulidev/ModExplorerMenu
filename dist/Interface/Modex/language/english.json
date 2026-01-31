@@ -202,14 +202,10 @@
 
     "TABLE_SEARCH_TOOLTIP": "Property <-> Search Field\n\nType to search within the currently shown Plugin, based on the Property specified on the left-hand side. Press 'Enter' to submit.\n\n E.g. 'Name' -> Iron Armor",
     "TABLE_PLUGIN_TOOLTIP": "Plugin Field\n\nSelect a plugin which you would like to explore. Optionally, you can include ALL plugins currently loaded (SHOW ALL). This helps refine the table results more precisely.",
-    "STATUS_BAR_TARGET_TITLE": "Table Status Bar - Targeted Reference",
-    "STATUS_BAR_TARGET_TOOLTIP": "Targeted Reference\n\nCurrently selected console reference to be used for table operations. Defaults to Player Character.\n\nClick to set manually.\nShift+Click to use shared target.\nCtrl+Click to copy FormID.",
-    "STATUS_BAR_TARGET_DESC": "The currently targeted reference in the game world to act upon. If no Actor is targeted, actions will default to the Player character.\n\nPlayer Character = 14\n\nOnly eight-digit Reference FormIDs are valid for manual selection. FormIDs can be shortened.",
-    "STATUS_BAR_AUX_TITLE": "Table Status Bar - Auxiliary Info",
-    "STATUS_BAR_AUX_TOOLTIP": "Search / Status\n\nClick to show more information.",
-    "STATUS_BAR_AUX_DESC": "This badge represents the currently selected kit, or the currently used search phrase for the underlying table.",
-    "STATUS_BAR_WARN_TITLE": "Table Status Bar - Warning",
-    "STATUS_BAR_WARN_TOOLTIP": "Warning\n\nClick to read entire warning message.",
+	"STATUS_BAR_LINK": "Target Reference Shared\n\nIndicates whether this table shares a Target Reference or not.\n\nTables that don't share references need to be assigned separately",
+    "STATUS_BAR_TITLE": "Table Status Bar - Targeted Reference",
+	"STATUS_BAR_TOOLTIP": "Target Reference\n\nThis represents the targeted Actor or Container to operate upon. Click to manually enter.\n\n<T> Set to Player\n<C> Set to Console Reference\n<Shift> + <LMB> Copy FormID\n<Ctrl> + <LMB> Set to shared target.",
+	"STATUS_BAR_DESC": "Manually set the Target Reference by FormID.\n\n- Must be a 'Reference' FormID.\n\n- Hexidecimal (e.g. FF001234).\n\n- Can be Shortened (e.g. 14).\n\n- Must be 'loaded'.\n\nIf Modex is unable to locate the Target based on your input, a warning will appear with more details.",
 
     "ADD_AMOUNT_TOOLTIP": "Amount To Add\n\nThe number of items to be added upon activation of action.",
 
@@ -274,12 +270,13 @@
     "kTomeSkill_TOOLTIP": "Skill\n\nThe skill that the item improves when used.",
     "kScrollSpell_TOOLTIP": "Scroll\n\nThe spell that the scroll casts when used.",
 
-	"INVALID_REFERENCE_POPUP_TITLE": "Could not locate FormID",
-	"INVALID_REFERENCE_POPUP_DESC": "Modex could not locate a valid target based on the FormID provided.\n\nConsider the following:\n - The FormID must be a reference, not base ID.\n - The actor, or container must be valid.\n - The reference must be active.\n - The reference must be a valid target.\n\nIn addition, here are the rules for inputing FormIDs:\n - Up to eight characters long (12345678).\n - Can be shorted. (e.g. Player = 14).\n - Hexadecimal.\n - Cannot contain special characters.\n\nIf all these conditions are met, and you're experiencing unexpected behavior. Please report this issue to the author!",
+	"INVALID_REFERENCE_POPUP_TITLE": "Could not locate FormID: ",
+	"INVALID_REFERENCE_POPUP_DESC": "Modex could not resolve a valid Target Reference from your input. Try again, and ensure proper formatting is used.\n\nIf this is unexpected, you can use the in-game Console to select your target. Then press <C> while hovering the status bar to assign a Target Reference from your Console selection.\n\nIf all else fails, you can press <T> while hovering the status bar to quickly assign the Player reference.",
     "WARNING_NO_ITEMS": "No items found in the table matching the current criteria. If this is unexpected, check your search and plugin fields to confirm your query. It's likely you may be searching inside the wrong plugin, or searching by the wrong property (left-side drop-down box).",
 	"ERROR_PLUGIN_NAME": "ERROR: Invalid Plugin Name",
 	"ERROR_FORM_NAME": "ERROR: Invalid Form Name",
-    "ERROR_NO_KIT_SELECTED": "No kit selected! Please select a kit from the selection panel above. Once a Kit is selected, you can use the actions panel to interact with it.",
-    "ERROR_MISSING_REFERENCE": "Target Reference not found! Please ensure you have an Actor or Container targeted in-game via the console or enter one manually. A valid reference is required to perform most actions in this module",
-    "ERROR_INVALID_REFERENCE": "Invalid Target Reference! The currently targeted reference is not an Actor or Container. Please confirm that you have properly targeted an Actor, Container or Player using the console selection."
+
+    "ERROR_NO_KIT_SELECTED": "No Kit Selected: Select a kit to proceed.",
+	"ERROR_MISSING_REFERENCE": "No Target Reference: Hover for details.",
+	"ERROR_INVALID_REFERENCE": "Invalid Target: Must be an Actor or Container reference."
 }

@@ -6,31 +6,28 @@
 
 namespace Modex::Commands
 {
-
 	static inline RE::TESObjectREFR* GetConsoleReference()
 	{
-		// I have a feeling we'll be returning to this...
 		if (auto consoleRefr = RE::Console::GetSelectedRef().get(); consoleRefr != nullptr) {
-			if (consoleRefr->GetFormType() == RE::FormType::ActorCharacter) {
-				return consoleRefr;
-			}
-
-			if (consoleRefr->GetBaseObject()->GetFormType() == RE::FormType::Container) {
-				return consoleRefr;
-			}
+			return consoleRefr;
 		}
 
+		return nullptr;
+	}
+
+	static inline RE::TESObjectREFR* GetPlayerReference()
+	{
 		auto player = RE::PlayerCharacter::GetSingleton();
 
 		if (!player)
 			return nullptr;
 
-		auto playerRefr = player->AsReference();
+		auto playerReference = player->AsReference();
 
-		if (!playerRefr)
+		if (!playerReference)
 			return nullptr;
 
-		return playerRefr;
+		return playerReference;
 	}
 
 	static inline const std::vector<BaseObject> GetInventoryList(RE::TESObjectREFR* reference = nullptr) 

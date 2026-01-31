@@ -2,6 +2,7 @@
 #include "ui/components/UICustom.h"
 #include "ui/Menu.h"
 #include "config/ThemeConfig.h"
+#include "config/UserData.h"
 #include "localization/Locale.h"
 #include "localization/FontManager.h"
 
@@ -25,10 +26,19 @@ namespace Modex
 		return 0;
 	}
 
-	void UIModule::UpdateTableTargets(RE::TESObjectREFR* a_ref)
+	void UIModule::LoadSharedReference()
 	{
-		for (auto& table : m_tables) {
-			table->SetTargetByReference(a_ref);
+		RE::FormID targetReferenceID = UserData::User().Get<RE::FormID>("LastSharedTargetFormID", 0);
+		auto reference = UIModule::LookupReferenceByFormID(targetReferenceID);
+		UIModule::SetTargetReference(reference);
+	}
+
+	void UIModule::SaveSharedReference()
+	{
+		if (auto reference = UIModule::GetTargetReference(); reference) {
+			UserData::User().Set<RE::FormID>("LastSharedTargetFormID", reference->formID);
+		} else {
+			UserData::User().Set<RE::FormID>("LastSharedTargetFormID", 0);
 		}
 	}
 
@@ -113,37 +123,42 @@ namespace Modex
 		s_targetReference = a_ref;
 	}
 
-	std::optional<RE::TESObjectREFR*> UIModule::LookupReferenceByFormID(const RE::FormID& a_formID) {
-		if (RE::TESForm* form = RE::TESForm::LookupByID(a_formID)) {
-			if (const auto refr = form->As<RE::TESObjectREFR>(); refr) {
+	RE::TESObjectREFR* UIModule::LookupReferenceByFormID(const RE::FormID& a_formID) {
+		if (a_formID == 0) {
+			return nullptr;
+		}
+
+		if (RE::TESForm* form = RE::TESForm::LookupByID(a_formID); form != nullptr) {
+			if (auto refr = form->As<RE::TESObjectREFR>(); refr) {
 				return refr;
 			}
 		}
 
-		return std::nullopt;
+		return nullptr; 
 	}
 
-	std::optional<RE::TESObjectREFR*> UIModule::LookupReferenceBySearch(const std::string& a_search) {
+	RE::TESObjectREFR* UIModule::LookupReferenceBySearch(const std::string& a_search) {
 		if (a_search.length() > 8) {
-			return std::nullopt;
+			return nullptr;
 		}
 
 		for (const char& c : a_search) {
 			if (std::isspace(c)) {
-				return std::nullopt;
+				return nullptr;
 			}
 
 			if (!std::isxdigit(c)) {
-				return std::nullopt;
+				return nullptr;
 			}
 		}
 
 		RE::FormID formID = 0;
 		auto [ptr, ec] = std::from_chars(a_search.c_str(), a_search.c_str() + a_search.size(), formID, 16);
+
 		if (ec == std::errc()) {
 			return LookupReferenceByFormID(formID);
 		} else {
-			return std::nullopt;
+			return nullptr;
 		}
 	}
 }
