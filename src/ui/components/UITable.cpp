@@ -804,6 +804,9 @@ namespace Modex
 		ImGui::Text(" " ICON_LC_ARROW_LEFT_RIGHT " ");
 		ImGui::SameLine();
 		
+		const auto flags = useQuickSearch ? ImGuiInputTextFlags_AutoSelectAll :
+		ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue;
+
 		static bool key_hovered;
 		ImGui::PushStyleColor(ImGuiCol_FrameBg, key_hovered ? ThemeConfig::GetColor("TABLE_FIELD_BG_HOVER") : ThemeConfig::GetColor("TABLE_FIELD_BG"));
 		if (UICustom::FancyInputText("##Search::Input::Compare", "TABLE_SEARCH_HINT", "TABLE_SEARCH_TOOLTIP", searchSystem->GetSearchBuffer(), input_width, flags)) {
@@ -851,6 +854,7 @@ namespace Modex
 		styleFontSize = userdata.Get<float>("Modex::Table::FontSize", 0.0f); 
 		showAltRowBG = userdata.Get<bool>("Modex::Table::ShowAltRowBG", true);
 		showItemIcon = userdata.Get<bool>("Modex::Table::ShowItemIcon", true);
+		useQuickSearch = userdata.Get<bool>("Modex::Table::UseQuickSearch", false);
 
 		if (styleFontSize == 0.0f) {
 			styleFontSize = config.globalFontSize;
@@ -1886,6 +1890,11 @@ namespace Modex
 			user.Set<bool>("Modex::Table::ShowItemIcon", showItemIcon);
 		}
 
+		ImGui::SeparatorText(Translate("TABLE_SETTINGS_QUICK_SEARCH"));
+		if (UICustom::ToggleButton("##Button::QuickSearch", useQuickSearch, width)) {
+			user.Set<bool>("Modex::Table::UseQuickSearch", useQuickSearch);
+		}
+
 		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 		const bool reset = ImGui::Selectable("Reset");
 
@@ -1896,6 +1905,7 @@ namespace Modex
 			user.Set<float>("Modex::Table::ItemSpacing", 0.0f);
 			user.Set<bool>("Modex::Table::ShowAltRowBG", true);
 			user.Set<bool>("Modex::Table::ShowItemIcon", true);
+			user.Set<bool>("Modex::Table::UseQuickSearch", false);
 		}
 
 		ImGui::PopStyleVar();

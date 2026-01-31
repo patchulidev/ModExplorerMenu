@@ -63,6 +63,7 @@ namespace Modex
 		bool                    showAltRowBG;
 		bool                    showItemIcon;
 		bool                    showEditorID;
+		bool                    useQuickSearch;
 
 		//                      table layout parameters
 		float                   LayoutRowSpacing;
