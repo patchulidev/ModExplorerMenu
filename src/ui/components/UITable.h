@@ -175,8 +175,6 @@ namespace Modex
 		uint32_t                GetSelectionCount() const;
 		TableItem&              GetItemPreview() { return itemPreview; }
 
-		//                      Recently Used
-		void                    AddItemToRecent(const std::unique_ptr<BaseObject>& a_item);
 
 	private:
 		//                      search and filter impl

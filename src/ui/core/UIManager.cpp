@@ -40,8 +40,6 @@ namespace Modex
 
 	void UIManager::OnClose()
 	{
-		UIModule::SaveSharedReference();
-
 		m_gui = nullptr;
 		m_windowStack.clear();
 

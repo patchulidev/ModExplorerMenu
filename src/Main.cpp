@@ -26,7 +26,7 @@ namespace
 			Modex::Locale::GetSingleton()->Load(false);
 			Modex::PrettyLog::Debug("Localization Initialized.");
 
-			Modex::UserData::GetSingleton()->LoadAll();
+			Modex::UserData::Load();
 			Modex::PrettyLog::Debug("UserData Initialized.");
 
 			Modex::ThemeConfig::GetSingleton()->Load(true);

@@ -24,6 +24,11 @@ namespace Modex
 		virtual bool Load(bool a_create);
 		virtual bool Save();
 		virtual void Clear();
+
+		void LoadState(const std::string& a_key);
+		void SaveState(const std::string& a_key);
+		virtual nlohmann::json SerializeState() const;
+		virtual void DeserializeState(const nlohmann::json& a_state);
 		
 		void Add(const std::string& a_key);
 		bool Has(const std::string& a_key) const;
@@ -42,7 +47,7 @@ namespace Modex
 		const std::filesystem::path& GetFilePath() const { return m_file_path; }
 
 		nlohmann::json& GetData() { return m_data; }
-		const nlohmann::json& GetData() const { return m_data; }
+		// const nlohmann::json& GetData() const { return m_data; }
 	};
 }
 

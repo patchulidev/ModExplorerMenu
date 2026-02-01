@@ -28,6 +28,39 @@ namespace Modex
 		return m_initialized = !a_create;
 	}
 
+	nlohmann::json SortSystem::SerializeState() const
+	{
+		nlohmann::json j;
+
+		j["CurrentSortProperty"] = m_currentSortFilter.ToString();
+		j["Ascending"] = m_ascending;
+		j["Reset"] = m_reset;
+
+		return j;
+	}
+
+	void SortSystem::DeserializeState(const nlohmann::json& a_state)
+	{
+		if (a_state.contains("CurrentSortProperty") && a_state["CurrentSortProperty"].is_string()) {
+			std::string prop_str = a_state["CurrentSortProperty"].get<std::string>();
+			auto filter = FilterProperty::FromString(prop_str);
+
+			if (filter.has_value()) {
+				m_currentSortFilter = filter.value();
+			} else {
+				m_currentSortFilter = FilterProperty(PropertyType::kNone);
+			}
+		}
+
+		if (a_state.contains("Ascending") && a_state["Ascending"].is_boolean()) {
+			m_ascending = a_state["Ascending"].get<bool>();
+		}
+
+		if (a_state.contains("Reset") && a_state["Reset"].is_number_integer()) {
+			// m_reset = a_state["Reset"].get<int>();
+		}
+	}
+
 	// Need special definitions for properties of int, float, or none string types.
 	bool SortSystem::SortFn(const std::unique_ptr<BaseObject>& a_lhs, const std::unique_ptr<BaseObject>& a_rhs) const
     {

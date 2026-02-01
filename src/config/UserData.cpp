@@ -2,24 +2,37 @@
 
 namespace Modex
 {
-	UserData::UserData()
-	{
-		m_userDataConfig.SetFilePath(USERDATA_JSON_PATH);
-		m_favoriteConfig.SetFilePath(FAVORITES_JSON_PATH);
-		m_recentConfig.SetFilePath(RECENT_JSON_PATH);
-	}
-
 	void UserData::Save()
 	{
-		GetSingleton()->m_userDataConfig.Save();
-		GetSingleton()->m_favoriteConfig.Save();
-		GetSingleton()->m_recentConfig.Save();
+		m_userDataConfig.Save();
 	}
 
-	void UserData::LoadAll()
+	void UserData::Load()
 	{
-		GetSingleton()->m_userDataConfig.Load(true);
-		GetSingleton()->m_favoriteConfig.Load(true);
-		GetSingleton()->m_recentConfig.Load(true);
+		m_userDataConfig.SetFilePath(USERDATA_JSON_PATH);
+		m_userDataConfig.Load(true);
+	}
+
+	void UserData::AddRecent(const std::unique_ptr<BaseObject>& a_item)
+	{
+		if (!a_item) return;
+
+		const std::string edid = a_item->GetEditorID();
+		auto& recent = m_recent.items;
+
+		recent.erase(std::remove(recent.begin(), recent.end(), edid), recent.end());
+		recent.insert(recent.begin(), edid);
+
+		if (recent.size() > m_recent.maxSize) {
+			recent.resize(m_recent.maxSize);
+		}
+	}
+
+	void UserData::AddFavorite(const std::unique_ptr<BaseObject>& a_item)
+	{
+		if (!a_item) return;
+
+		const std::string edid = a_item->GetEditorID();
+		m_favorites.items.insert(edid);
 	}
 }

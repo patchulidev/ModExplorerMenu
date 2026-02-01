@@ -39,7 +39,7 @@ namespace Modex
 		SearchItem     m_searchKey;
 		ImGuiKey       m_lastNavKey;
 		char           m_searchBuffer[MAX_PATH];
-		char           m_lastSearchBuffer[MAX_PATH];
+		// char           m_lastSearchBuffer[MAX_PATH];
 
 		bool           m_forceDropdown;
 		int            m_topComparisonIdx;
@@ -55,7 +55,7 @@ namespace Modex
 			m_searchKey(PropertyType::kNone),
 			m_lastNavKey(ImGuiKey_None),
 			m_searchBuffer(),
-			m_lastSearchBuffer(),
+			// m_lastSearchBuffer(),
 
 			m_forceDropdown(false),
 			m_topComparisonIdx(-1),
@@ -65,7 +65,13 @@ namespace Modex
 		{
 			m_file_path = a_path;
 		}
+		
+		// overrides
+		virtual bool Load(bool a_create) override;
+		nlohmann::json SerializeState() const override;
+		void DeserializeState(const nlohmann::json& a_state) override;
 
+		//members
 		const SearchList& GetAvailableKeys() const {
 			return m_availableSearchKeys;
 		}
@@ -88,14 +94,6 @@ namespace Modex
 			return std::string(m_searchBuffer);
 		}
 
-		char* GetLastSearchBuffer() {
-			return m_lastSearchBuffer;
-		}
-
-		void ResetSearchBuffer() {
-			m_searchBuffer[0] = '\0';
-		}
-
 		const SearchItem& GetSearchKey() const {
 			return m_searchKey;
 		}
@@ -116,7 +114,7 @@ namespace Modex
 
 		void SetSearchKeyByIndex(int a_index) {
 			if (a_index >= 0 && a_index < static_cast<int>(m_availableSearchKeys.size())) {
-				m_searchKey = m_availableSearchKeys[a_index];
+				SetSearchKey(m_availableSearchKeys[a_index]);
 			}
 		}
 
@@ -136,8 +134,6 @@ namespace Modex
 				SetSearchKey(keys[0]);
 			}
 		}
-
-		virtual bool Load(bool a_create) override;
 
 		bool CompareInputToObject(const BaseObject* a_object);
 		bool InputTextComboBox(const char* a_label, char* a_buffer, std::string& a_preview, size_t a_size, std::vector<std::string> a_items, float a_width);

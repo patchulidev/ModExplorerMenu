@@ -5,6 +5,54 @@
 
 namespace Modex
 {
+	nlohmann::json FilterSystem::SerializeState() const
+	{
+		nlohmann::json state = nlohmann::json::object();
+		std::vector<std::string> selected_nodes;
+
+		if (m_rootNode) {
+			CollectSelectedNodesByID(m_rootNode.get(), selected_nodes);
+		}
+
+		state["activeNodes"] = selected_nodes;
+		state["showRecent"] = m_showRecentList;
+
+		return state;
+	}
+
+	void FilterSystem::DeserializeState(const nlohmann::json& a_state)
+	{
+		if (!m_rootNode) return;
+
+		ClearActiveNodes();
+
+		if (a_state.contains("activeNodes") && a_state["activeNodes"].is_array()) {
+			for (const auto& id : a_state["activeNodes"]) {
+				if (id.is_string()) {
+					ActivateNodeByID(id.get<std::string>(), true);
+				}
+			}
+		}
+
+		if (a_state.contains("showRecent") && a_state["showRecent"].is_boolean()) {
+			m_showRecentList = a_state["showRecent"].get<bool>();
+		}
+	}
+
+	// Recursively build a vector of selected node IDs for persistent state.
+	void FilterSystem::CollectSelectedNodesByID(FilterNode* a_node, std::vector<std::string>& a_out) const
+	{
+		if (!a_node) return;
+
+		if (a_node->isSelected && a_node->id != "__root__") {
+			a_out.push_back(a_node->id);
+		}
+
+		for (const auto& child : a_node->children) {
+			CollectSelectedNodesByID(child.get(), a_out);
+		}
+	}
+
 	bool FilterSystem::Load(bool a_create)
 	{
 		ASSERT_MSG(a_create && m_file_path.empty(), "FilterSystem::Load() called before setting file path!");
@@ -80,7 +128,6 @@ namespace Modex
 				while (current) {
 					current->isSelected = true;
 					current = current->parent;
-					m_filterChangeCallback();
 				}
 			}
 		}
@@ -200,6 +247,7 @@ namespace Modex
 		// If we deselect a root node, go back to show_all.
 		if (GetSelectedRootNode() == nullptr) {
 			ActivateNodeByID("show_all", true);
+			_change = true;
 			m_showRecentList = false;
 		}
 
@@ -214,7 +262,7 @@ namespace Modex
 		// Create a "Show All" node
 		auto showAllNode = std::make_shared<FilterNode>();
 		showAllNode->id = "show_all";
-		showAllNode->displayName = "Show All";
+		showAllNode->displayName = Translate("SHOW_ALL");
 		showAllNode->behavior = FilterBehavior::SINGLE_SELECT;
 		showAllNode->isSelected = true;  // Default to selected
 		showAllNode->colorIndex = -1;    // Default color

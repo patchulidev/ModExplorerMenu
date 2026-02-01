@@ -204,38 +204,27 @@ namespace Modex
 				formID = tableTargetRef->formID;
 			}
 
-			UserData::User().Set<RE::FormID>(data_id + "::LastTargetRef", formID);
+			UserData::Set<RE::FormID>(data_id + "::LastTargetRef", formID);
 		}
-	}
-
-	void UITable::AddItemToRecent(const std::unique_ptr<BaseObject>& a_item)
-	{
-		UserData::Recent().Add(a_item->GetEditorID());
-		updateRecentList = true;
 	}
 
 	void UITable::LoadRecentList()
 	{
-		std::vector<std::string> recentItems;
-		recentList.clear();
-
-		UserData::Recent().GetAsList(recentItems);
-
-		if (recentItems.empty())
-			return;
+		const auto recent = UserData::GetRecentAsVector();
+		if (recent.empty()) return;
 
 		// TEST: Should we keep dummy objects in recent list?
 		// BUG: This is still broken. CTD if a dummy object is read due to icon.
-		for (const auto& editorID : recentItems) {
-			if (RE::TESForm* form = RE::TESForm::LookupByEditorID(editorID)) {
-				recentList.emplace_back(std::make_unique<BaseObject>(form, 0, 0));
+		for (const auto& edid : recent) {
+			if (RE::TESForm* form = RE::TESForm::LookupByEditorID(edid)) {
+				this->recentList.emplace_back(std::make_unique<BaseObject>(form, 0, 0));
 			} else {
-				recentList.emplace_back(std::make_unique<BaseObject>(editorID, editorID, "Unknown", 0));
+				this->recentList.emplace_back(std::make_unique<BaseObject>(edid, edid, "Unknown", 0));
 			}
 		}
 
-		for (int i = 0; i < std::ssize(recentList); i++) {
-			recentList[i]->m_tableID = i;
+		for (int i = 0; i < std::ssize(this->recentList); i++) {
+			this->recentList[i]->m_tableID = i;
 		}
 
 		updateRecentList = false;
@@ -289,7 +278,7 @@ namespace Modex
 		{
 			if (itemPreview && itemPreview->GetTESForm()->IsInventoryObject()) {
 				Commands::RemoveItemFromInventory(tableTargetRef, itemPreview->GetEditorID(), 1);
-				AddItemToRecent(itemPreview);
+				UserData::AddRecent(itemPreview);
 			}
 		} 
 		else {
@@ -300,7 +289,7 @@ namespace Modex
 				if (id < std::ssize(tableList) && id >= 0) {
 					const auto& item = tableList[id];
 					Commands::RemoveItemFromInventory(tableTargetRef, item->GetEditorID(), 1);
-					AddItemToRecent(item);
+					UserData::AddRecent(item);
 				}
 			}
 		}
@@ -320,7 +309,7 @@ namespace Modex
 		if (GetSelectionCount() == 0) {
 			if (itemPreview && itemPreview->GetTESForm()->IsInventoryObject()) {
 				Commands::AddItemToRefInventory(tableTargetRef, itemPreview->GetEditorID(), a_count);
-				AddItemToRecent(itemPreview);
+				UserData::AddRecent(itemPreview);
 			}
 		} 
 		else {
@@ -332,7 +321,7 @@ namespace Modex
 					const auto& item = tableList[id];
 					if (item && item->GetTESForm()->IsInventoryObject()) {
 						Commands::AddItemToRefInventory(tableTargetRef, item->GetEditorID(), a_count);
-						AddItemToRecent(item);
+						UserData::AddRecent(item);
 					}
 				}
 			}
@@ -352,7 +341,7 @@ namespace Modex
 		if (GetSelectionCount() == 0) {
 			if (itemPreview && (itemPreview->IsArmor() || itemPreview->IsWeapon())) {
 				Commands::AddAndEquipItemToInventory(tableTargetRef, itemPreview->GetEditorID());
-				AddItemToRecent(itemPreview);
+				UserData::AddRecent(itemPreview);
 			}
 		}
 		else {
@@ -364,7 +353,7 @@ namespace Modex
 					const auto& item = tableList[id];
 					if (item && (item->IsArmor() || item->IsWeapon())) {
 						Commands::AddAndEquipItemToInventory(tableTargetRef, item->GetEditorID());
-						AddItemToRecent(item);
+						UserData::AddRecent(item);
 					}
 				}
 			}
@@ -386,7 +375,7 @@ namespace Modex
 		if (GetSelectionCount() == 0) {
 			if (itemPreview && itemPreview->GetTESForm()->HasWorldModel()) {
 				Commands::PlaceAtMe(tableTargetRef, itemPreview->GetEditorID(), a_count);
-				AddItemToRecent(itemPreview);
+				UserData::AddRecent(itemPreview);
 			}
 		}
 		else {
@@ -398,7 +387,7 @@ namespace Modex
 					const auto& item = tableList[id];
 					if (item && item->GetTESForm()->HasWorldModel()) {
 						Commands::PlaceAtMe(tableTargetRef, item->GetEditorID(), a_count);
-						AddItemToRecent(item);
+						UserData::AddRecent(item);
 					}
 				}
 			}
@@ -416,7 +405,7 @@ namespace Modex
 		for (auto& item : tableList) {
 			if (item && item->GetTESForm()->IsInventoryObject()) {
 				Commands::AddItemToRefInventory(tableTargetRef, item->GetEditorID(), 1);
-				AddItemToRecent(item);
+				UserData::AddRecent(item);
 			}
 		}
 
@@ -435,7 +424,7 @@ namespace Modex
 		for (auto& item : tableList) {
 			if (item && item->GetTESForm()->HasWorldModel()) {
 				Commands::PlaceAtMe(tableTargetRef, item->GetEditorID(), 1);
-				AddItemToRecent(item);
+				UserData::AddRecent(item);
 			}
 		}
 
@@ -500,7 +489,7 @@ namespace Modex
 
 		if (a_item && a_item->GetTESForm()->IsInventoryObject()) {
 			Commands::AddItemToRefInventory(this->tableTargetRef, a_item->GetEditorID(), 1);
-			AddItemToRecent(a_item);
+			UserData::AddRecent(a_item);
 		}
 
 		UpdateActiveInventoryTables();
@@ -513,7 +502,7 @@ namespace Modex
 
 		if (a_item && a_item->GetTESForm()->IsInventoryObject()) {
 			Commands::RemoveItemFromInventory(this->tableTargetRef, a_item->GetEditorID());
-			AddItemToRecent(a_item);
+			UserData::AddRecent(a_item);
 		}
 
 		UpdateActiveInventoryTables();
@@ -536,7 +525,7 @@ namespace Modex
 			tableList.emplace_back(std::make_unique<BaseObject>(*a_item));
 		}
 
-		AddItemToRecent(a_item);
+		UserData::AddRecent(a_item);
 	}
 
 	void UITable::AddSelectionToActiveKit()
@@ -629,7 +618,6 @@ namespace Modex
 				}
 
 				equipmentConfig->SaveKit(*selectedKitPtr);
-				this->Refresh();
 			}
 		}
 	}
@@ -845,16 +833,15 @@ namespace Modex
 
 	void UITable::UpdateLayout()
 	{
-		const auto& userdata = UserData::User();
 		const auto& config = UserConfig::Get();
 
-		styleHeight = userdata.Get<float>("Modex::Table::ItemHeight", 0.0f);
-		styleWidth = userdata.Get<float>("Modex::Table::ItemWidth", 0.0f);
-		styleSpacing = userdata.Get<float>("Modex::Table::ItemSpacing", 0.0f);
-		styleFontSize = userdata.Get<float>("Modex::Table::FontSize", 0.0f); 
-		showAltRowBG = userdata.Get<bool>("Modex::Table::ShowAltRowBG", true);
-		showItemIcon = userdata.Get<bool>("Modex::Table::ShowItemIcon", true);
-		useQuickSearch = userdata.Get<bool>("Modex::Table::UseQuickSearch", false);
+		styleHeight = UserData::Get<float>("Modex::Table::ItemHeight", 0.0f);
+		styleWidth = UserData::Get<float>("Modex::Table::ItemWidth", 0.0f);
+		styleSpacing = UserData::Get<float>("Modex::Table::ItemSpacing", 0.0f);
+		styleFontSize = UserData::Get<float>("Modex::Table::FontSize", 0.0f); 
+		showAltRowBG = UserData::Get<bool>("Modex::Table::ShowAltRowBG", true);
+		showItemIcon = UserData::Get<bool>("Modex::Table::ShowItemIcon", true);
+		useQuickSearch = UserData::Get<bool>("Modex::Table::UseQuickSearch", false);
 
 		if (styleFontSize == 0.0f) {
 			styleFontSize = config.globalFontSize;
@@ -1152,7 +1139,7 @@ namespace Modex
 				Commands::PlaceAtMe(tableTargetRef, a_item->GetEditorID(), 1);
 			}
 
-			this->AddItemToRecent(a_item);
+			UserData::AddRecent(a_item);
 		}
 	}
 
@@ -1205,7 +1192,7 @@ namespace Modex
 							if (ImGui::MenuItem(Translate("GENERAL_READ_ME"))) {
 								Commands::ReadBook(a_item->GetEditorID());
 								UIManager::GetSingleton()->Close();
-								AddItemToRecent(a_item);
+								UserData::AddRecent(a_item);
 							}
 						}
 
@@ -1246,13 +1233,13 @@ namespace Modex
 				if (a_item->m_refID != 0) {
 					if (ImGui::MenuItem(Translate("GOTO_NPC_REFERENCE"))) {
 						Commands::TeleportPlayerToNPC(a_item->m_refID);
-						AddItemToRecent(a_item);
+						UserData::AddRecent(a_item);
 						UIManager::GetSingleton()->Close();
 					}
 
 					if (ImGui::MenuItem(Translate("BRING_NPC_REFERENCE"))) {
 						Commands::TeleportNPCToPlayer(a_item->m_refID);
-						AddItemToRecent(a_item);
+						UserData::AddRecent(a_item);
 						UIManager::GetSingleton()->Close();
 					}
 
@@ -1260,14 +1247,14 @@ namespace Modex
 						if (ImGui::MenuItem(Translate("ENABLE_NPC_REFERENCE"))) {
 							if (auto* target = RE::TESForm::LookupByID<RE::Actor>(a_item->m_refID); target != nullptr) {
 								Commands::EnableRefr(target, false);
-								AddItemToRecent(a_item);
+								UserData::AddRecent(a_item);
 							}
 						}
 					} else {
 						if (ImGui::MenuItem(Translate("DISABLE_NPC_REFERENCE"))) {
 							if (auto* target = RE::TESForm::LookupByID<RE::Actor>(a_item->m_refID); target != nullptr) {
 								Commands::DisableRefr(target);
-								AddItemToRecent(a_item);
+								UserData::AddRecent(a_item);
 							}
 						}
 					}
@@ -1311,7 +1298,6 @@ namespace Modex
 	// is above my pay grade. I ended up with a good-e-enough result. Wouldn't recommend duplicating.
 	void UITable::HandleKeyboardNavigation(const TableList& a_tableList)
 	{
-		// TODO why the fuck is ImGuiEscape causing tab bug?
 		if (ImGui::Shortcut(ImGuiKey_Escape, ImGuiInputFlags_RouteFromRootWindow)) {
 			selectionStorage.Clear();
 			itemPreview = nullptr;
@@ -1385,6 +1371,7 @@ namespace Modex
 					if (is_previously_selected) {
 						selectionStorage.SetItemSelected(navPositionID + 1, false);
 					}
+
 					// itemPreview = std::make_unique<BaseObject>(*a_tableList[current_index - 1]);
 				}
 			}
@@ -1839,8 +1826,6 @@ namespace Modex
 
 	void UITable::DrawTableSettingsPopup()
 	{
-		auto& user = UserData::User();
-
 		if (UICustom::Popup_MenuHeader(Translate("SETTINGS"))) {
 			ImGui::CloseCurrentPopup();
 		}
@@ -1852,7 +1837,7 @@ namespace Modex
 		ImGui::SeparatorText(Translate("TABLE_SETTINGS_FONT_SIZE"));
 		ImGui::SetNextItemWidth(width);
 		if (ImGui::SliderFloat("##Slider::FontSize", &font_size, 0.0f, 48.0f, "%.f")) {
-			user.Set<float>("Modex::Table::FontSize", font_size);
+			UserData::Set<float>("Modex::Table::FontSize", font_size);
 			styleFontSize = font_size;
 		}
 
@@ -1860,7 +1845,7 @@ namespace Modex
 		ImGui::SeparatorText(Translate("TABLE_SETTINGS_HEIGHT"));
 		ImGui::SetNextItemWidth(width);
 		if (ImGui::SliderFloat("##Slider::ItemHeight", &item_height, -20.0f, 20.0f, "%.2f")) {
-			user.Set<float>("Modex::Table::ItemHeight", item_height);
+			UserData::Set<float>("Modex::Table::ItemHeight", item_height);
 			styleHeight = item_height;
 		}
 
@@ -1868,7 +1853,7 @@ namespace Modex
 		ImGui::SeparatorText(Translate("TABLE_SETTINGS_WIDTH"));
 		ImGui::SetNextItemWidth(width);
 		if (ImGui::SliderFloat("##Slider::ItemWidth", &item_width, -300.0f, 300.0f, "%.2f")) {
-			user.Set<float>("Modex::Table::ItemWidth", item_width);
+			UserData::Set<float>("Modex::Table::ItemWidth", item_width);
 			styleWidth = item_width;
 		}
 
@@ -1876,36 +1861,36 @@ namespace Modex
 		ImGui::SeparatorText(Translate("TABLE_SETTINGS_SPACING"));
 		ImGui::SetNextItemWidth(width);
 		if (ImGui::SliderFloat("##Slider::ItemSpacing", &item_spacing, -20.0f, 20.0f, "%.2f")) {
-			user.Set<float>("Modex::Table::ItemSpacing", item_spacing);
+			UserData::Set<float>("Modex::Table::ItemSpacing", item_spacing);
 			styleSpacing = item_spacing;
 		}
 
 		ImGui::SeparatorText(Translate("TABLE_SETTINGS_SHOW_BG"));
 		if (UICustom::ToggleButton("##Button::AltRowBG", showAltRowBG, width)) {
-			user.Set<bool>("Modex::Table::ShowAltRowBG", showAltRowBG);
+			UserData::Set<bool>("Modex::Table::ShowAltRowBG", showAltRowBG);
 		}
 
 		ImGui::SeparatorText(Translate("TABLE_SETTINGS_SHOW_ICON"));
 		if (UICustom::ToggleButton("##Button::ItemIcon", showItemIcon, width)) {
-			user.Set<bool>("Modex::Table::ShowItemIcon", showItemIcon);
+			UserData::Set<bool>("Modex::Table::ShowItemIcon", showItemIcon);
 		}
 
 		ImGui::SeparatorText(Translate("TABLE_SETTINGS_QUICK_SEARCH"));
 		if (UICustom::ToggleButton("##Button::QuickSearch", useQuickSearch, width)) {
-			user.Set<bool>("Modex::Table::UseQuickSearch", useQuickSearch);
+			UserData::Set<bool>("Modex::Table::UseQuickSearch", useQuickSearch);
 		}
 
 		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 		const bool reset = ImGui::Selectable("Reset");
 
 		if (reset) {
-			user.Set<float>("Modex::Table""FontSize", 0.0f); 
-			user.Set<float>("Modex::Table::ItemHeight", 0.0f);
-			user.Set<float>("Modex::Table::ItemWidth", 0.0f);
-			user.Set<float>("Modex::Table::ItemSpacing", 0.0f);
-			user.Set<bool>("Modex::Table::ShowAltRowBG", true);
-			user.Set<bool>("Modex::Table::ShowItemIcon", true);
-			user.Set<bool>("Modex::Table::UseQuickSearch", false);
+			UserData::Set<float>("Modex::Table""FontSize", 0.0f); 
+			UserData::Set<float>("Modex::Table::ItemHeight", 0.0f);
+			UserData::Set<float>("Modex::Table::ItemWidth", 0.0f);
+			UserData::Set<float>("Modex::Table::ItemSpacing", 0.0f);
+			UserData::Set<bool>("Modex::Table::ShowAltRowBG", true);
+			UserData::Set<bool>("Modex::Table::ShowItemIcon", true);
+			UserData::Set<bool>("Modex::Table::UseQuickSearch", false);
 		}
 
 		ImGui::PopStyleVar();
@@ -2116,7 +2101,7 @@ namespace Modex
 					this->SortListBySpecs();
 					this->UpdateImGuiTableIDs();
 					
-					UserData::User().Set<int>(this->data_id + "::SortBy", static_cast<int>(key.GetPropertyType()));
+					UserData::Set<int>(data_id + "::SortBy", static_cast<int>(key.GetPropertyType()));
 				}
 				
 				if (is_selected) {
@@ -2124,7 +2109,6 @@ namespace Modex
 				}
 			}
 			ImGui::PopStyleColor();
-
 			ImGui::EndCombo();
 		}
 
@@ -2212,7 +2196,6 @@ namespace Modex
 				this->SortListBySpecs();
 				this->UpdateImGuiTableIDs();
 			}
-
 		}
 		
 		if (!HasFlag(ModexTableFlag_Kit)) {
@@ -2512,11 +2495,11 @@ namespace Modex
 					FilterNode* node = *it;
 					if (node) {
 						this->filterSystem->ActivateNodeByID(node->id, true);
+						this->Refresh();
 					}
 					break;
 				}
 			}
-
 
 			// Move to the next index
 			current_index = (current_index + 1) % nodesSize;

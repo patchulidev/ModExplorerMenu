@@ -10,16 +10,15 @@ namespace Modex
 	class SortSystem : public ConfigManager
 	{
 	private:
-		ImGuiTableSortSpecs*        m_currentSpecs;
 		bool                        m_ascending;
 		int                         m_reset;
+		std::function<void()>       m_sortSystemCallback;
 
 		FilterProperty              m_currentSortFilter;
 		FilterPropertyList          m_availableSortFilters;
 
 	public:
 		SortSystem(const std::filesystem::path& a_path) :
-			m_currentSpecs(nullptr),
 			m_ascending(true),
 			m_reset(0),
 			m_currentSortFilter(PropertyType::kNone)
@@ -27,20 +26,19 @@ namespace Modex
 			ConfigManager::m_file_path = a_path;
 		}
 
+		// overrides
 		virtual bool Load(bool a_create) override;
+		nlohmann::json SerializeState() const override;
+		void DeserializeState(const nlohmann::json& a_state) override;
 		
+		// members
 		bool SortFn(const std::unique_ptr<BaseObject>& a_lhs, const std::unique_ptr<BaseObject>& a_rhs) const;
-		
-		void SetSortSpecs(ImGuiTableSortSpecs* a_specs) {
-			m_currentSpecs = a_specs;
-		}
 
 		void SetAscending(bool a_ascending) {
 			m_ascending = a_ascending;
 		}
 
 		void ResetSort() {
-			m_currentSpecs = nullptr;
 			m_ascending = true;
 			m_currentSortFilter = PropertyType::kNone;
 		}

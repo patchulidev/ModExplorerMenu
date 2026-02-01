@@ -21,14 +21,14 @@ namespace Modex
 {
 	void Menu::OnOpening()
 	{
-		uint8_t last_module = UserData::User().Get<uint8_t>("lastModule", 0);
-		uint8_t last_layout = UserData::User().Get<uint8_t>("lastLayout", 0);
+		uint8_t last_module = UserData::Get<uint8_t>("lastModule", 0);
+		uint8_t last_layout = UserData::Get<uint8_t>("lastLayout", 0);
 
 		auto& module = m_modules[last_module]; 
 
 		LoadModule(module, last_layout);
 
-		this->expand_sidebar = UserData::User().Get<bool>("Menu::Sidebar", true);
+		this->expand_sidebar = UserData::Get<bool>("Menu::Sidebar", true);
 		this->sidebar_initialized = false;
 	}
 

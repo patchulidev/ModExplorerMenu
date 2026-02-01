@@ -1,4 +1,5 @@
 #include "ConfigManager.h"
+#include "config/UserData.h"
 
 namespace Modex
 {
@@ -16,11 +17,42 @@ namespace Modex
 		}
 	}
 
+	// Derived classes override to provide state.
+	void ConfigManager::DeserializeState(const nlohmann::json& a_state)
+	{
+		(void)a_state;
+		ASSERT_MSG(true, "ConfigManager::DeserializeState() called but not overridden! {}");
+	}
+
+	// Derived classes override to provide state.
+	nlohmann::json ConfigManager::SerializeState() const
+	{
+		ASSERT_MSG(true, "ConfigManager::SerializeState() called but not overridden!");
+		return nlohmann::json::object();
+	}
+
+	// States are managed globably via UserData.
+	void ConfigManager::LoadState(const std::string& a_key)
+	{
+		auto& userdata = UserData::GetData();
+		if (userdata.contains(a_key)) {
+			DeserializeState(userdata[a_key]);
+		}
+	}
+
+	void ConfigManager::SaveState(const std::string& a_key)
+	{
+		auto& userdata = UserData::GetData();
+		auto serialized = SerializeState();
+		Info("SaveState({}) - Saving: {}", a_key, serialized.dump());
+		userdata[a_key] = serialized;
+	}
+
 	// a_create ensures json file is created to prevent CTD.
 	bool ConfigManager::Load(bool a_create)
-	{        
+	{
 		ASSERT_MSG(a_create && m_file_path.empty(), "ConfigManager::Load() Called before setting file path!");
-		Trace("ConfigManager Load called for file '{}", m_file_path.stem().string());
+		Trace("ConfigManager Load called for file '{}'", m_file_path.stem().string());
 			
 		m_data = nlohmann::json::object();
 

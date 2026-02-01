@@ -160,6 +160,10 @@ namespace Modex
 			node->id = j.at("id").get<std::string>();
 			node->displayName = j.at("displayName").get<std::string>();
 			
+			// NOTE: We don't treat displayName as a localeString. Translators will have to manually
+			// perform translations over filter JSON files if needed. We could expose this
+			// optionally I guess?
+			
 			// Optional toggle behavior
 			if (j.contains("behavior")) {
 				std::string behaviorStr = j.at("behavior").get<std::string>();
@@ -256,9 +260,13 @@ namespace Modex
 		{
 			ConfigManager::m_file_path = a_path;
 		}
-		
-		// bool Load(const std::string& a_path);
+
+		// overrides
 		virtual bool Load(bool a_create) override;
+		nlohmann::json SerializeState() const override;
+		void DeserializeState(const nlohmann::json& a_state) override;
+		
+		// members
 		FilterNode* FindNode(const std::string& a_id);
 		void HandleNodeClick(FilterNode* a_parent, FilterNode* a_clicked);
 		bool MatchesFilters(const BaseObject& a_item);
@@ -288,6 +296,7 @@ namespace Modex
 		bool HasAnySelectedDescendant(FilterNode* node) const;
 		void CollectActivePaths(FilterNode* node,std::vector<std::string> currentPath, std::vector<std::vector<std::string>>& outPaths) const;  
 		void CollectSelectedNodesByParent(FilterNode* node, std::map<FilterNode*, std::vector<FilterNode*>>& outMap) const;
+		void CollectSelectedNodesByID(FilterNode* a_node, std::vector<std::string>& a_out) const;
 
 		void AssignColorIndices();
 		void AssignColorIndicesToChildren(FilterNode *node);
