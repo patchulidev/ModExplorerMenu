@@ -4,6 +4,11 @@ namespace Modex
 {
 	void UserData::Save()
 	{
+		auto data = m_userDataConfig.GetData();
+
+		m_userDataConfig.Set<std::vector<std::string>>("Recent", m_recent.items);
+		m_userDataConfig.Set<std::unordered_set<std::string>>("Favorites", m_favorites.items);
+
 		m_userDataConfig.Save();
 	}
 
@@ -11,6 +16,9 @@ namespace Modex
 	{
 		m_userDataConfig.SetFilePath(USERDATA_JSON_PATH);
 		m_userDataConfig.Load(true);
+
+		m_recent.items = m_userDataConfig.Get<std::vector<std::string>>("Recent", {});
+		m_favorites.items = m_userDataConfig.Get<std::unordered_set<std::string>>("Favorites", {});
 	}
 
 	void UserData::AddRecent(const std::unique_ptr<BaseObject>& a_item)

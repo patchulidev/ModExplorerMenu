@@ -15,7 +15,6 @@ namespace Modex
 		}
 
 		state["activeNodes"] = selected_nodes;
-		state["showRecent"] = m_showRecentList;
 
 		return state;
 	}
@@ -32,10 +31,6 @@ namespace Modex
 					ActivateNodeByID(id.get<std::string>(), true);
 				}
 			}
-		}
-
-		if (a_state.contains("showRecent") && a_state["showRecent"].is_boolean()) {
-			m_showRecentList = a_state["showRecent"].get<bool>();
 		}
 	}
 
@@ -66,8 +61,6 @@ namespace Modex
 
 			SetupShowAllNode();
 			AssignColorIndices();
-
-			m_showRecentList = false;
 
 			m_nodeRegistry.clear();
 			RegisterNodeRecursive(m_rootNode.get());
@@ -119,8 +112,22 @@ namespace Modex
 
 	void FilterSystem::ActivateNodeByID(const std::string& a_id, bool a_select) {
 		FilterNode* node = FindNode(a_id);
+
+		bool force_recent = false;
+		if (a_id == "show_recent") {
+			node = FindNode("show_all");
+			force_recent = true;
+		}
+
 		if (node) {
 			node->isSelected = a_select;
+
+			if (force_recent) {
+				ClearActiveNodes();
+				node->id = "show_recent";
+				node->displayName = Translate("SHOW_RECENT");
+				node->isSelected = true;
+			}
 
 			if (node->parent) {
 				// Ensure parent nodes are selected to make this node visible
@@ -149,7 +156,7 @@ namespace Modex
 	bool FilterSystem::ShowRecent()
 	{
 		auto selected = GetSelectedRootNode();
-		return m_showRecentList && selected && selected->id == "show_recent";
+		return selected && selected->id == "show_recent";
 	}
 
 	void FilterSystem::HandleNodeClick(FilterNode* a_parent, FilterNode* a_clicked) {
@@ -166,7 +173,6 @@ namespace Modex
 				a_clicked->id = "show_recent";
 				a_clicked->displayName = Translate("SHOW_RECENT");
 				a_clicked->isSelected = true;
-				m_showRecentList = true;
 
 				if (m_filterChangeCallback) {
 					m_filterChangeCallback();
@@ -180,7 +186,6 @@ namespace Modex
 				a_clicked->id = "show_all";
 				a_clicked->displayName = Translate("SHOW_ALL");
 				a_clicked->isSelected = true;
-				m_showRecentList = false;
 
 				if (m_filterChangeCallback) {
 					m_filterChangeCallback();
@@ -192,7 +197,6 @@ namespace Modex
 				from->id = "show_all";
 				from->displayName = Translate("SHOW_ALL");
 				from->isSelected = false;
-				m_showRecentList = false;
 
 				a_clicked->isSelected = !a_clicked->isSelected;
 				if (m_filterChangeCallback) {
@@ -248,7 +252,6 @@ namespace Modex
 		if (GetSelectedRootNode() == nullptr) {
 			ActivateNodeByID("show_all", true);
 			_change = true;
-			m_showRecentList = false;
 		}
 
 		if (_change && m_filterChangeCallback) {
