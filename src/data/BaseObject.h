@@ -1,5 +1,6 @@
 #pragma once
 
+#include "localization/Locale.h"
 #include "pch.h"
 #include "external/magic_enum.hpp"
 #include "external/icons/IconsLucide.h"
@@ -119,24 +120,20 @@ namespace Modex
 			return std::string{name};
 		}
 
-		static std::string GetString(PropertyType a_type, bool a_prefix = false)
+		static std::string GetString(PropertyType a_type)
 		{
-			auto name = magic_enum::enum_name(a_type);
+			auto key = magic_enum::enum_name(a_type);
 
-			if (name.empty()) {
-				return "Unknown";
+			if (key.empty()) {
+				return "Modex Error";
 			}
 
-			if (!a_prefix && name.starts_with("k")) {
-				name.remove_prefix(1);
-			}
-
-			return std::string{ name };
+			return Translate(key.data());
 		}
 		
 		static std::string GetIconTooltipKey(PropertyType a_type)
 		{
-			return GetString(a_type, true) + "_TOOLTIP";
+			return std::string(magic_enum::enum_name(a_type).data()) + "_TOOLTIP";
 		}
 
 		static std::string GetIcon(PropertyType a_type)
@@ -284,7 +281,7 @@ namespace Modex
 		// Construct from string (returns nullopt on failure)
 		static std::optional<FilterProperty> FromString(const std::string& a_str)
 		{
-			auto enumOpt = magic_enum:: enum_cast<PropertyType>(a_str);
+			auto enumOpt = magic_enum::enum_cast<PropertyType>(a_str);
 			
 			if (enumOpt.has_value()) {
 				return FilterProperty{ enumOpt.value() };
