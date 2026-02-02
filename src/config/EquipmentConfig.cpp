@@ -423,8 +423,8 @@ namespace Modex
 		new_item->m_plugin 	= a_item.GetPluginName();
 		new_item->m_name 		= a_item.GetName();
 		new_item->m_editorid 	= a_item.GetEditorID();
-		new_item->m_amount 	= a_item.kitAmount;
-		new_item->m_equipped 	= a_item.kitEquipped;
+		new_item->m_amount 	= a_item.GetQuantity();
+		new_item->m_equipped 	= a_item.GetEquipped();
 		
 		return new_item;
 	}

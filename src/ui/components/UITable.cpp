@@ -649,16 +649,6 @@ namespace Modex
 			tableList[i]->m_tableID = i;
 		}
 
-		if (selectedKitPtr && !selectedKitPtr->empty() && HasFlag(ModexTableFlag_Kit)) {
-			for (const auto& kit_item : selectedKitPtr->m_items) {
-				for (const auto& table_item : tableList) {
-					if (table_item->GetEditorID() == kit_item->m_editorid) {
-						table_item->kitAmount = kit_item->m_amount;
-						table_item->kitEquipped = kit_item->m_equipped;
-					}
-				}
-			}
-		}
 	}
 
 	std::vector<BaseObject> UITable::GetReferenceInventory()
@@ -1470,9 +1460,9 @@ namespace Modex
 
 		ImGui::SetCursorScreenPos(equippable_pos);
 
-		const auto alpha = a_item->kitEquipped ? global_alpha * 1.0f : global_alpha * 0.25f;
-		const auto text = a_item->kitEquipped ? Translate("EQUIPPED") : Translate("EQUIP");
-		const auto icon = a_item->kitEquipped ? ICON_LC_CHECK : ICON_LC_X;
+		const auto alpha = a_item->GetEquipped() ? global_alpha * 1.0f : global_alpha * 0.25f;
+		const auto text = a_item->GetEquipped() ? Translate("EQUIPPED") : Translate("EQUIP");
+		const auto icon = a_item->GetEquipped() ? ICON_LC_CHECK : ICON_LC_X;
 		const auto equip_size = ImVec2(LayoutItemSize.x / 7.0f, LayoutItemSize.y);
 		const auto color = ThemeConfig::GetColorU32("BUTTON", alpha);
 		const auto padding = 5.0f;
@@ -1483,7 +1473,7 @@ namespace Modex
 
 		if (a_item->GetFormType() == RE::FormType::Armor || a_item->GetFormType() == RE::FormType::Weapon) {
 			if (ImGui::Button((std::string(icon) + text).c_str(), equip_size)) {
-				a_item->kitEquipped = !a_item->kitEquipped;
+				a_item->m_equipped = !a_item->m_equipped;
 				this->SyncChangesToKit();
 			}
 			

@@ -388,42 +388,47 @@ namespace Modex
 	public:
 		RE::FormID 			m_refID;
 		ImGuiID 			m_tableID = 0;
-		uint32_t			m_quantity = 1;
+		int					m_quantity = 1;
 
 		// TODO: Reference old comment as to why I should not move this to Kit class.
-		bool				kitEquipped = false;
-		int					kitAmount = 1;
+		// bool				kitEquipped = false;
+		// int				kitAmount = 1;
+		//
+		bool                m_equipped = false;
 
 		// Constructor from TESForm pointer
-		BaseObject(RE::TESForm* form, ImGuiID a_id = 0, RE:: FormID a_refID = 0, uint32_t a_quantity = 1) :
-			m_formWrapper{ form },
-			m_name{ m_formWrapper.WGetName() },
-			m_editorid{ m_formWrapper.WGetEditorID() },
-			m_plugin{ m_formWrapper.WGetPluginName() },
-			m_formid{ m_formWrapper. WGetFormID() },
-			m_baseid{ m_formWrapper.WGetBaseFormID() },
-			m_refID{ a_refID },
-			m_tableID{ a_id },
-			m_quantity{ a_quantity }
+		BaseObject(RE::TESForm* form, ImGuiID a_id = 0, RE:: FormID a_refID = 0, int a_quantity = 1, bool a_equipped = false)
+			: m_formWrapper{ form }
+			, m_name{ m_formWrapper.WGetName() }
+			, m_editorid{ m_formWrapper.WGetEditorID() }
+			, m_plugin{ m_formWrapper.WGetPluginName() }
+			, m_formid{ m_formWrapper. WGetFormID() }
+			, m_baseid{ m_formWrapper.WGetBaseFormID() }
+			, m_refID{ a_refID }
+			, m_tableID{ a_id }
+			, m_quantity{ a_quantity }
+			, m_equipped{ a_equipped }
 		{}
 
 		// Explicit dummy object constructor
-		BaseObject(std::string a_name, std::string a_editorid, std::string a_plugin, ImGuiID a_id = 0, uint32_t a_quantity = 1) :
-			m_formWrapper{ nullptr },
-			m_name{ a_name },
-			m_editorid{ a_editorid },
-			m_plugin{ a_plugin },
-			m_formid{ "" },
-			m_baseid{ 0 },
-			m_refID{ 0 },
-			m_tableID{ a_id },
-			m_quantity{ a_quantity }
+		BaseObject(std::string a_name, std::string a_editorid, std::string a_plugin, ImGuiID a_id = 0, int a_quantity = 1, bool a_equipped = false) 
+			: m_formWrapper{ nullptr }
+			, m_name{ a_name }
+			, m_editorid{ a_editorid }
+			, m_plugin{ a_plugin }
+			, m_formid{ "" }
+			, m_baseid{ 0 }
+			, m_refID{ 0 }
+			, m_tableID{ a_id }
+			, m_quantity{ a_quantity }
+			, m_equipped{ a_equipped }
 		{}
 
 		~BaseObject() = default;
 
 		inline bool 					IsDummy() const { return !m_formWrapper.IsValid(); }
-		inline int32_t					GetQuantity() const { return m_quantity; }		
+		inline int						GetQuantity() const { return m_quantity; }		
+		inline bool 					GetEquipped() const { return m_equipped; }
 		inline RE::TESForm* 			GetTESForm() const { return m_formWrapper.Get(); }
 		inline RE::FormID 				GetBaseFormID() const { return m_baseid; }
 		inline RE::FormID 				GetRefID() const { return m_refID; }
@@ -437,11 +442,6 @@ namespace Modex
 		inline const std::string_view 	GetEditorIDView() const { return m_editorid; }
 		inline const std::string_view	GetPluginNameView() const { return m_plugin; }
 
-		inline void ToggleKitEquipped() // this is smelly
-		{
-			kitEquipped = !kitEquipped;
-		}
-		
 		// std::optional for nullptr safety.
 		inline std::optional<RE::TESFile*> GetFile(int32_t a_idx = 0) const
 		{
@@ -1442,7 +1442,7 @@ namespace Modex
 				case PropertyType::kTomeSkill:
 					return GetBookSkill();
 				case PropertyType::kKitItemCount:
-					return std::to_string(kitAmount); 
+					return std::to_string(m_quantity); 
 			}
 
 			ASSERT_MSG(true, "BaseObject -> GetProperty(PropertyType a_property): Unhandled property type: " + std::to_string(static_cast<int>(a_property)));
