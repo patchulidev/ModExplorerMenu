@@ -8,14 +8,12 @@ namespace Modex
 	{
 	public:
 		ActorModule();
-		~ActorModule() = default;
+		~ActorModule();
 		ActorModule(const ActorModule&) = delete;
 		ActorModule(ActorModule&&) = delete;
 		ActorModule& operator=(const ActorModule&) = delete;
 		ActorModule& operator=(ActorModule&&) = delete;
 
 		void Draw() override;
-		// void Unload();
-		// void Load();
 	};
 }

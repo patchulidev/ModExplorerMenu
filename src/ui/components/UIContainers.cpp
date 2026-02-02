@@ -21,7 +21,6 @@ namespace Modex
 		}
 	}
 
-
 	// Used exclusively in the UITable renderer for the tree node filter buttons.
 	bool UIContainers::TabButton(const char* a_label, const ImVec2& a_size, const bool a_condition, const ImVec4& a_color)
 	{
@@ -56,20 +55,19 @@ namespace Modex
 		const float button_height = ImGui::GetFontSize() * 1.5f;
 		const ImVec4 button_color = ThemeConfig::GetColor("BUTTON");
 		const ImVec4 cont_color = ThemeConfig::GetColor("CONTAINER_BUTTON");
-		bool valid_npc = false;
 
-		const int count = a_view->GetClickAmount() == nullptr ? 1 : *a_view->GetClickAmount();
+		// BUG: Still haven't figured this out.
+		int count = a_view->GetClickAmount();
 
 		ImGui::SameLine();
         ImGui::SetCursorPos(a_pos);
 		if (ImGui::BeginChild("Modex::AddItemWindow::Actions", a_size)) {
 			const float max_width = ImGui::GetContentRegionAvail().x;
-			const float button_half_width = (max_width / 2.0f) - (ImGui::GetStyle().WindowPadding.x / 2.0f);
 
 			UICustom::SubCategoryHeader(Translate("HEADER_ACTIONS"));
 			
 			ImGui::SetNextItemWidth(a_size.x);
-			ImGui::InputInt("##AddItem::Count", a_view->GetClickAmount(), 1, 100, ImGuiInputTextFlags_CharsDecimal);
+			ImGui::InputInt("##AddItem::Count", &count, 1, 100, ImGuiInputTextFlags_CharsDecimal);
 			
 			ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 
@@ -130,23 +128,22 @@ namespace Modex
 		const float button_height = ImGui::GetFrameHeight();
 		const ImVec4 button_color = ThemeConfig::GetColor("BUTTON");
 		const ImVec4 cont_color = ThemeConfig::GetColor("CONTAINER_BUTTON");
-		
-		const bool playerToggle = UserData::User().Get<bool>("Modex::TargetReference::IsPlayer", true);
-		const std::string toggle_text = playerToggle ? Translate("TARGET_PLAYER") : Translate("TARGET_NPC");
 
-		// TODO: Previously used for dynamic height adjustment. Smelly code, remove.
-		const ImVec2 adjusted_size = ImVec2(a_size.x, !playerToggle ? a_size.y + (button_height) * 2.0f : a_size.y);
+		// BUG: This probably doesn't work.
+		const bool playerToggle = a_kitView->GetTableTargetRef() ? a_kitView->GetTableTargetRef()->IsPlayer() : true;
 		
 		ImGui::SameLine();
 		ImGui::SetCursorPos(a_pos);
-		if (ImGui::BeginChild("##Modex::KitActions", adjusted_size, false)) {
+		if (ImGui::BeginChild("##Modex::KitActions", a_size, false)) {
 			const float max_width = ImGui::GetContentRegionAvail().x;
 			const float half_width = (max_width - ImGui::GetStyle().ItemSpacing.x) / 2.0f;
 
 			UICustom::SubCategoryHeader(Translate("HEADER_KIT_ACTIONS"));
 
+			auto clickAmount = a_mainView->GetClickAmount();
+
 			ImGui::SetNextItemWidth(max_width);
-			ImGui::InputInt("##KitActions::Count", a_mainView->GetClickAmount(), 1, 100, ImGuiInputTextFlags_CharsDecimal);
+			ImGui::InputInt("##KitActions::Count", &clickAmount, 1, 100, ImGuiInputTextFlags_CharsDecimal);
 			
 			static auto targetRefr = a_kitView->GetTableTargetRef();
 			static std::string target_name = targetRefr ? targetRefr->GetName() : Translate("NO_CONSOLE_SELECTION");
@@ -174,7 +171,7 @@ namespace Modex
 					}
 				}
 
-				auto pluginList = Data::GetSingleton()->GetModulePluginListSorted(Data::PLUGIN_TYPE::All, Data::SORT_TYPE::Load_Order_Ascending);
+				auto pluginList = Data::GetSingleton()->GetModulePluginListSorted(Data::PluginType::All, Data::PluginSort::Load_Order_Ascending);
 				for (auto& plugin : pluginList) {
 					if (dependencies.contains(plugin->fileName)) {
 						message += std::format("[{}] - {}\n", Translate("Found"), plugin->fileName);

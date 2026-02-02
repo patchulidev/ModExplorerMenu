@@ -8,7 +8,7 @@ namespace Modex
 	{
 	public:
 
-		enum class PLUGIN_TYPE : uint32_t
+		enum class PluginType : uint8_t 
 		{
 			All = 0,
 			Item,
@@ -18,7 +18,7 @@ namespace Modex
 			kTotal,
 		};
 
-		enum class SORT_TYPE : uint32_t
+		enum class PluginSort : uint8_t 
 		{
 			Alphabetical = 0,
 			Load_Order_Ascending,
@@ -57,10 +57,10 @@ namespace Modex
 
 		void Run();
 	
-		std::unordered_set<const RE::TESFile*>			GetModulePluginList(PLUGIN_TYPE a_type);
-		std::vector<const RE::TESFile*> 				GetModulePluginListSorted(PLUGIN_TYPE a_type, SORT_TYPE a_sortType);
+		std::unordered_set<const RE::TESFile*>			GetModulePluginList(PluginType a_type);
+		std::vector<const RE::TESFile*> 				GetModulePluginListSorted(PluginType a_type, PluginSort a_sortType);
 		std::vector<std::string> 						GetSortedListOfPluginNames();
-		std::vector<std::string> 						GetFilteredListOfPluginNames(PLUGIN_TYPE a_type, SORT_TYPE a_sort);
+		std::vector<std::string> 						GetFilteredListOfPluginNames(PluginType a_type, PluginSort a_sort);
 		bool											IsFormTypeInPlugin(const RE::TESFile* a_plugin, RE::FormType a_formType);
 		void 											CacheNPCRefIds();
 		void 											GenerateNPCClassList();

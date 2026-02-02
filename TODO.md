@@ -12,6 +12,8 @@
 - [x] :bug: fixed: Unexpected CTD occurence related to Language file loading.
 - [x] :bug: fixed: Linux users experiencing issues with loading windows fonts.
 
+- [ ] :bug: Undefined behavior when opening Modex over existing game menus
+
 ## :sparkles: Planned Features / :bulb: Ideas
 
 - [ ] :construction: A welcome banner on startup.  
@@ -19,6 +21,7 @@
 - [ ] :construction: Streamline plugin indexing and filtering. It's not very intuitive for users right now.
 - [ ] :construction: Reduce usage of favicons in unecessary menu panes. Item Preview for example.
 - [ ] :construction: Support for editorid lookup for table target references.
+- [ ] :bulb: Direct keyword lookup in search field for tables. Would need to probably be exclusive.
 - [ ] :bulb: Shout / Dragon Soul module to unify Modex as more of a cheat menu and debug tool.
 - [ ] :bulb: Peek / Popup inventory window for NPC references in Actor module.
 - [ ] :bulb: Manual Input / Popup for table/console reference selection.
@@ -53,7 +56,7 @@
 - [x] :zap: optimize: Optimized module memory usage and loading for performance improvements.
 
 ##### - Add Item Module:
-- [x] :dizzy: add: Support for keyword lists on items in the preview pane.
+- [x] :dizzy: add: Direct lookup for items containing keyword(s).
 - [x] :sparkles: feature: Container View action allowing a quick legacy view of table items in-game.
 - [x] :bug: fixed: Weapon types not properly attributed in weapon item previews.
 
@@ -67,7 +70,7 @@
 
 ##### - Actor Module:
 - [x] :art: design: Renamed from NPCto Actor module.
-- [x] :dizzy: add: Support for keyword lists on actors in the preview pane.
+- [x] :dizzy: add: Direct lookup for actors containing keyword(s).
 - [x] :dizzy: add: Support for outfit lists on actors in the preview pane.
 
 ##### - Settings Module:

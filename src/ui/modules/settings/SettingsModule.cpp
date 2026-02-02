@@ -23,20 +23,6 @@ namespace Modex
 		DrawTabMenu();
 	}
 
-	void SettingsModule::Load()
-	{
-		UIModule::Load();
-
-		s_uiScaleVertical 	= UserConfig::Get().uiScaleVertical;
-		s_uiScaleHorizontal = UserConfig::Get().uiScaleHorizontal;
-		s_fontSize 			= (int)UserConfig::Get().globalFontSize;
-	}
-
-	void SettingsModule::Unload()
-	{
-		UIModule::Unload();
-	}
-
 	void DrawSettingsLayout(std::vector<std::unique_ptr<UITable>>& a_tables)
 	{
 		(void)a_tables;
@@ -154,23 +140,44 @@ namespace Modex
 		ImGui::EndChild();
 	}
 
-	void DrawBlacklistLayout(std::vector<std::unique_ptr<UITable>>& a_tables)
+	void SettingsModule::DrawBlacklistLayout(std::vector<std::unique_ptr<UITable>>& a_tables)
 	{
 		(void)a_tables;
 
 		if (ImGui::BeginChild("##Modex::Blacklist::Settings", ImVec2(0, 0), false)) {
-			SettingsModule::DrawBlacklistSettings();
+			DrawBlacklistSettings();
 		}
 
 		ImGui::EndChild();
 	}
 
-	SettingsModule::SettingsModule()
+	SettingsModule::~SettingsModule()
 	{
+		// Destructor
+	}
+
+	SettingsModule::SettingsModule()
+		: m_modSearchBuffer{ 0 }
+		, m_pluginList()
+		, m_pluginListVector()
+		, m_sort(0)
+		, m_type(0)
+	{
+		// overrides
 		m_name = Translate("MODULE_SETTINGS");
 		m_icon = ICON_LC_SETTINGS;
 
+		// static
+		s_uiScaleVertical 	= UserConfig::Get().uiScaleVertical;
+		s_uiScaleHorizontal = UserConfig::Get().uiScaleHorizontal;
+		s_fontSize 			= (int)UserConfig::Get().globalFontSize;
+
+		// layouts
 		m_layouts.push_back({"General Settings", true, DrawSettingsLayout});
-		m_layouts.push_back({"Blacklist Settings", false, DrawBlacklistLayout});
+
+		m_layouts.push_back({"Blacklist Settings", false, 
+			[this](std::vector<std::unique_ptr<UITable>>& a_tables) {
+				DrawBlacklistLayout(a_tables);
+		}});
 	}
 }

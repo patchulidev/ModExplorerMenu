@@ -18,25 +18,19 @@ namespace Modex
 		std::vector<std::unique_ptr<UITable>> m_tables;
 		std::vector<Layout> m_layouts;
 
-		float               m_offset;
-		bool                m_show;
+		float               m_offset = 0.0f;
+		float               m_sidebar = 0;
 
 		std::string         m_name;
 		std::string         m_icon;
-		float               m_sidebar;
-		
 
 	public:
 		static inline RE::TESObjectREFR* s_targetReference = nullptr;
 
-		virtual ~UIModule() = default;
+		virtual ~UIModule();
 		virtual void Draw() {};
-		virtual void Load();
-		virtual void Unload();
-
 		virtual void DrawTabMenu();
 
-		bool IsLoaded() const { return m_show; };
 		float& GetSidebarWidth() { return m_sidebar; };
 		const std::string& GetName() const { return m_name; };
 		const std::string& GetIcon() const { return m_icon; };

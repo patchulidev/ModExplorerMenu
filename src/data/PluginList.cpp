@@ -43,7 +43,7 @@ namespace Modex
 
 	std::vector<std::string> Data::GetTypeString()
 	{
-		auto enumNames = magic_enum::enum_names<PLUGIN_TYPE>();
+		auto enumNames = magic_enum::enum_names<PluginType>();
 		std::vector<std::string> strings;
 
 		for (auto& name : enumNames) {
@@ -61,7 +61,7 @@ namespace Modex
 
 	std::vector<std::string> Data::GetSortStrings()
 	{
-		auto enumNames = magic_enum::enum_names<SORT_TYPE>();
+		auto enumNames = magic_enum::enum_names<PluginSort>();
 		std::vector<std::string> strings;
 
 		for (auto& name : enumNames) {
@@ -77,24 +77,24 @@ namespace Modex
 		return strings;
 	}
 
-	// Returns an unordered set of TESFile pointers cached at startup based on PLUGIN_TYPE.
-	std::unordered_set<const RE::TESFile*> Data::GetModulePluginList(PLUGIN_TYPE a_type)
+	// Returns an unordered set of TESFile pointers cached at startup based on PluginType.
+	std::unordered_set<const RE::TESFile*> Data::GetModulePluginList(PluginType a_type)
 	{
 		switch (a_type) {
-		case PLUGIN_TYPE::Item:
+		case PluginType::Item:
 			return m_itemModList;
-		case PLUGIN_TYPE::Actor:
+		case PluginType::Actor:
 			return m_npcModList;
-		case PLUGIN_TYPE::Object:
+		case PluginType::Object:
 			return m_staticModList;
-		case PLUGIN_TYPE::Cell:
+		case PluginType::Cell:
 			return m_cellModList;
-		case PLUGIN_TYPE::kTotal:
-		case PLUGIN_TYPE::All:
+		case PluginType::kTotal:
+		case PluginType::All:
 			return m_modList;
 		}
 
-		ASSERT_MSG(true, "Invalid Data::PLUGIN_TYPE arg passed to Data::GetModulePluginList: '{}'", static_cast<uint32_t>(a_type));
+		ASSERT_MSG(true, "Invalid Data::PluginType arg passed to Data::GetModulePluginList: '{}'", static_cast<uint8_t>(a_type));
 
 		return m_modList;
 	}
@@ -111,8 +111,8 @@ namespace Modex
 		return modList;
 	}
 
-	// Returns a sorted vector of TESFile pointers cached at startup based on PLUGIN_TYPE.
-	std::vector<const RE::TESFile*> Data::GetModulePluginListSorted(PLUGIN_TYPE a_type, SORT_TYPE a_sortType)
+	// Returns a sorted vector of TESFile pointers cached at startup based on PluginType.
+	std::vector<const RE::TESFile*> Data::GetModulePluginListSorted(PluginType a_type, PluginSort a_sortType)
 	{
 		std::vector<const RE::TESFile*> copy;
 
@@ -126,36 +126,36 @@ namespace Modex
 
 		switch (a_type) 
 		{
-		case PLUGIN_TYPE::Item:
+		case PluginType::Item:
 			safeCopy(m_itemModList);
 			break;
-		case PLUGIN_TYPE::Actor:
+		case PluginType::Actor:
 			safeCopy(m_npcModList);
 			break;
-		case PLUGIN_TYPE::Object:
+		case PluginType::Object:
 			safeCopy(m_staticModList);
 			break;
-		case PLUGIN_TYPE::Cell:
+		case PluginType::Cell:
 			safeCopy(m_cellModList);
 			break;
-		case PLUGIN_TYPE::kTotal:
-		case PLUGIN_TYPE::All:
+		case PluginType::kTotal:
+		case PluginType::All:
 			safeCopy(m_modList);
 			break;
 		}
 
 		switch (a_sortType) 
 		{
-			case SORT_TYPE::Alphabetical:
+			case PluginSort::Alphabetical:
 				std::sort(copy.begin(), copy.end(), CaseInsensitiveCompareTESFile);
 				break;
-			case SORT_TYPE::Load_Order_Ascending:
+			case PluginSort::Load_Order_Ascending:
 				std::sort(copy.begin(), copy.end(), CompileIndexCompareTESFileAsc);
 				break;
-			case SORT_TYPE::Load_Order_Descending:
+			case PluginSort::Load_Order_Descending:
 				std::sort(copy.begin(), copy.end(), CompileIndexCompareTESFileDesc);
 				break;
-			case SORT_TYPE::kTotal:
+			case PluginSort::kTotal:
 				break;
 		}
 
@@ -219,7 +219,7 @@ namespace Modex
 	// 1245198 error code?
 
 	// Returns a sorted vector of plugin names filtered out by global blacklist config.
-	std::vector<std::string> Data::GetFilteredListOfPluginNames(PLUGIN_TYPE a_type, SORT_TYPE a_sort)
+	std::vector<std::string> Data::GetFilteredListOfPluginNames(PluginType a_type, PluginSort a_sort)
 	{
 		const auto& masterlist = GetModulePluginListSorted(a_type, a_sort);
 		const auto& blacklist = BlacklistConfig::Get();

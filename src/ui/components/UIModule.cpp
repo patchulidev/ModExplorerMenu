@@ -8,6 +8,13 @@
 
 namespace Modex
 {
+	UIModule::~UIModule()
+	{
+		Trace("UIModule Destructor Called - Tables: {}", m_tables.size());
+
+		m_tables.clear();
+	}
+
 	void UIModule::SetActiveLayout(uint8_t a_layoutIndex)
 	{
 		for (size_t i = 0; i < m_layouts.size(); i++) {
@@ -28,7 +35,7 @@ namespace Modex
 
 	void UIModule::LoadSharedReference()
 	{
-		RE::FormID targetReferenceID = UserData::User().Get<RE::FormID>("LastSharedTargetFormID", 0);
+		RE::FormID targetReferenceID = UserData::Get<RE::FormID>("LastSharedTargetFormID", 0);
 		auto reference = UIModule::LookupReferenceByFormID(targetReferenceID);
 		UIModule::SetTargetReference(reference);
 	}
@@ -36,28 +43,10 @@ namespace Modex
 	void UIModule::SaveSharedReference()
 	{
 		if (auto reference = UIModule::GetTargetReference(); reference) {
-			UserData::User().Set<RE::FormID>("LastSharedTargetFormID", reference->formID);
+			UserData::Set<RE::FormID>("LastSharedTargetFormID", reference->formID);
 		} else {
-			UserData::User().Set<RE::FormID>("LastSharedTargetFormID", 0);
+			UserData::Set<RE::FormID>("LastSharedTargetFormID", 0);
 		}
-	}
-
-	void UIModule::Load()
-	{
-		for (auto& table : m_tables) {
-			table->Load();
-		}
-
-		m_show = true;
-	}
-
-	void UIModule::Unload()
-	{
-		for (auto& table : m_tables) {
-			table->Unload();
-		}
-
-		m_show = false;
 	}
 
 	void UIModule::DrawTabMenu()

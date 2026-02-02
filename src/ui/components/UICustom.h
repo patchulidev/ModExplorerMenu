@@ -11,7 +11,7 @@ namespace Modex::UICustom
 
 	void FancyTooltip(const char* a_localeString);
 	bool FancyInputText(const char* a_id, const char* a_hint, const char* a_tooltip, char* a_buffer, float a_width, ImGuiInputTextFlags a_flags = 0);
-	bool FancyDropdown(const char* a_id, const char* a_tooltip, uint32_t& a_currentItem, const std::vector<std::string>& a_items, float a_width);
+	bool FancyDropdown(const char* a_id, const char* a_tooltip, uint8_t& a_currentItem, const std::vector<std::string>& a_items, float a_width);
 	bool FancyDropdown(const char* a_id, const char* a_tooltip, int& a_currentItem, const std::vector<std::string>& a_items, float a_width);
 
 	bool BeginTabBar(const char* a_id, float a_height, float a_offset, ImVec2& a_start);

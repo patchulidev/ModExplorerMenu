@@ -10,6 +10,7 @@ namespace Modex
 	public:
 
 		Menu();
+		~Menu();
 
 		Menu(const Menu&) = delete;
 		Menu(Menu&&) = delete;
@@ -22,8 +23,7 @@ namespace Modex
 		void OnClosed() override;
 		void OnOpened() override;
 
-		void LoadModule(std::unique_ptr<UIModule>& a_module, uint8_t a_layoutIndex);
-		std::unique_ptr<UIModule>& GetCurrentModule();
+		void LoadModule(uint8_t a_module, uint8_t a_layoutIndex);
 
 		void NextWindow();
 
@@ -60,15 +60,34 @@ namespace Modex
 		float min_sidebar_w;
 		float max_sidebar_w;
 
-		float home_w       = 0.0f;
-		float additem_w    = 0.0f;
-		float equipment_w  = 0.0f;
-		float npc_w        = 0.0f;
-		float object_w     = 0.0f;
-		float teleport_w   = 0.0f;
-		float settings_w   = 0.0f;
-		float exit_w       = 0.0f;
+		float exit_w = 0;
 
-		std::vector<std::unique_ptr<UIModule>> m_modules;
+		enum class ModuleType : uint8_t
+		{
+			Home = 0,
+			AddItem,
+			Equipment,
+			Actor,
+			Object,
+			Teleport,
+			Settings,
+			Count
+		};
+
+		struct ModuleInfo
+		{
+			std::string name;
+			std::string icon;
+			float       width;
+			ModuleType  type;
+		};
+
+		std::vector<ModuleInfo>   m_moduleInfo;
+		std::unique_ptr<UIModule> m_activeModule;
+		uint8_t                   m_activeModuleIndex; 
+
+		// Helpers
+		std::unique_ptr<UIModule> CreateModule(ModuleType a_type);
+		std::unique_ptr<UIModule> CreateModule(uint8_t a_index);
 	};
 }

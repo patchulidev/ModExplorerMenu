@@ -25,6 +25,11 @@ namespace Modex
 		// TODO: Re-implement object action panel
 	}
 
+	ObjectModule::~ObjectModule()
+	{
+		// Destructor
+	}
+
 	ObjectModule::ObjectModule()
 	{
 		m_name = Translate("MODULE_OBJECTS");
@@ -32,16 +37,12 @@ namespace Modex
 
 		m_layouts.push_back({"Table View", true, DrawTableView}); // TODO: Locale
 
-		auto table = std::make_unique<UITable>();
-		table->SetGenerator([]() { return Data::GetSingleton()->GetObjectList(); });
-		table->SetPluginType(Data::PLUGIN_TYPE::Object);
-		table->AddFlag(UITable::ModexTableFlag_EnableFilterTree);
-		table->AddFlag(UITable::ModexTableFlag_EnableSearch);
-		table->AddFlag(UITable::ModexTableFlag_EnableHeader);
-		table->SetUserDataID("Object");
-		table->SetUseSharedTarget(true); // Do we really target anything?
-		table->SetShowEditorID(UserData::User().Get<bool>("Object::ShowEditorID", false));
-		table->Init();
+		constexpr auto table_flags =
+		UITable::ModexTableFlag_EnableFilterTree |
+		UITable::ModexTableFlag_EnableSearch |
+		UITable::ModexTableFlag_EnableHeader;
+
+		auto table = std::make_unique<UITable>("Object", true, 0, table_flags);
 		m_tables.push_back(std::move(table));
 	}
 }

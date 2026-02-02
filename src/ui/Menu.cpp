@@ -24,12 +24,10 @@ namespace Modex
 		uint8_t last_module = UserData::Get<uint8_t>("lastModule", 0);
 		uint8_t last_layout = UserData::Get<uint8_t>("lastLayout", 0);
 
-		auto& module = m_modules[last_module]; 
-
-		LoadModule(module, last_layout);
-
 		this->expand_sidebar = UserData::Get<bool>("Menu::Sidebar", true);
 		this->sidebar_initialized = false;
+
+		LoadModule(last_module, last_layout);
 	}
 
 	void Menu::OnOpened()
@@ -39,69 +37,39 @@ namespace Modex
 
 	void Menu::OnClosing()
 	{
-		uint8_t last_module = 0;
-		uint8_t last_layout = 0;
+		Trace("Menu::OnClosing() - Saving Module and Layout state");
 
-		for (const auto& module : m_modules) {
-			if (module->IsLoaded()) {
-				last_module = static_cast<uint8_t>(&module - m_modules.data());
-				last_layout = module->GetActiveLayoutIndex();
-				break;
-			}
+		if (m_activeModule) {
+			UserData::Set("lastModule", m_activeModuleIndex);
+			UserData::Set("lastLayout", m_activeModule->GetActiveLayoutIndex());
 		}
-
-		UserData::User().Set("lastModule", last_module);
-		UserData::User().Set("lastLayout", last_layout);
-
 	}
 
 	void Menu::OnClosed()
 	{
-		for (const auto& module : m_modules) {
-			module->Unload();
-		}
-
+		m_activeModule.reset();
 		this->m_captureInput = false;
 	}
 
-	std::unique_ptr<UIModule>& Menu::GetCurrentModule()
+
+	void Menu::LoadModule(uint8_t a_moduleIndex, uint8_t a_layoutIndex)
 	{
-		for (auto& module : m_modules) {
-			if (module->IsLoaded()) {
-				return module;
-			}
+		Trace("Menu::LoadModule() - Loading module index: %d, layout index: %d", a_moduleIndex, a_layoutIndex);
+
+		m_activeModule.reset();
+
+		m_activeModule = CreateModule(a_moduleIndex);
+		m_activeModuleIndex = a_moduleIndex;
+
+		if (m_activeModule) {
+			m_activeModule->SetActiveLayout(a_layoutIndex);
 		}
-
-		return m_modules[0];
-	}
-
-	void Menu::LoadModule(std::unique_ptr<UIModule>& a_module, uint8_t a_layoutIndex)
-	{
-		for (auto& module : m_modules) {
-			if (module.get() == a_module.get()) {
-				continue;
-			}
-
-			module->Unload();
-		}
-
-		a_module->Load();
-		a_module->SetActiveLayout(a_layoutIndex);
 	}
 
 	void Menu::NextWindow()
 	{
-		// uint8_t index = m_activeModule + 1;
-		// auto& next_module = m_modules[index % std::ssize(m_modules)];
-		// LoadModule(next_module, 0);
-		for (const auto& module : m_modules) {
-			if (module->IsLoaded()) {
-				uint8_t index = (static_cast<uint8_t>(&module - m_modules.data()) + 1) % std::ssize(m_modules);
-				auto& next_module = m_modules[index];
-				LoadModule(next_module, 0);
-				break;
-			}
-		}
+		uint8_t next_index = (m_activeModuleIndex + 1) % static_cast<uint8_t>(ModuleType::Count);
+		LoadModule(next_index, 0);
 	}
 
 	void Menu::Draw()
@@ -188,12 +156,9 @@ namespace Modex
 
 	void Menu::DrawModule()
 	{
-		for (const auto& module : m_modules) {
-			if (module->IsLoaded()) {
-				module->SetOffset(sidebar_w);
-				module->Draw();
-				break;
-			}
+		if (m_activeModule) {
+			m_activeModule->SetOffset(sidebar_w);
+			m_activeModule->Draw();
 		}
 	}
 
@@ -213,7 +178,6 @@ namespace Modex
 				// Using a fixed image width and height, since the sidebar is also a fixed width and height.
 				constexpr float image_height = 54.0f;
 				const float image_width = max_sidebar_w - ImGui::GetStyle().WindowPadding.x;
-				const ImVec2 backup_pos = ImGui::GetCursorPos();
 
 				// Calculate the UV for the image based on the sidebar width.
 				float uv_x = 1.0f - (std::min)(0.35f, 1.0f - (sidebar_w / max_sidebar_w));
@@ -229,7 +193,7 @@ namespace Modex
 
 				if (ImGui::ImageButton("Modex::Sidebar::Expand", texture, ImVec2(image_width * (sidebar_w / image_width) - 15.0f, image_height), ImVec2(0, 0), ImVec2(uv_x, 1.0f))) {
 					this->expand_sidebar = !this->expand_sidebar;
-					UserData::User().Set<bool>("Menu::Sidebar", this->expand_sidebar);
+					UserData::Set<bool>("Menu::Sidebar", this->expand_sidebar);
 				}
 
 				ImGui::PopStyleColor(5);
@@ -246,16 +210,20 @@ namespace Modex
 
 			ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 
-			for (auto& module : m_modules) {
-				const bool is_active = module->IsLoaded();
-				const std::string& module_name = module->GetName();
-				const std::string& module_icon = module->GetIcon();
+			for (uint8_t i = 0; i < m_moduleInfo.size(); i++) {
+				auto& info = m_moduleInfo[i];
+				const bool is_active = (m_activeModule != nullptr && i == m_activeModuleIndex);
 
-				if (UICustom::SidebarImageButton(module_name.c_str(), module_icon.c_str(), is_active, ImVec2(button_width, button_height), module->GetSidebarWidth(), expand_sidebar)) {
-					LoadModule(module, module->GetActiveLayoutIndex());
+				if (UICustom::SidebarImageButton(info.name, info.icon, is_active, ImVec2(button_width, button_height), info.width, expand_sidebar)) {
+					if (m_activeModule) {
+						LoadModule(i, m_activeModule->GetActiveLayoutIndex());
+					} else {
+						LoadModule(i, 0);
+					}
 				}
 			}
 
+			// TODO: Turn this into a module which closes menu on RAII
 			static constexpr std::string exit_icon = ICON_LC_LOG_OUT;
 			if (UICustom::SidebarImageButton(Translate("MODULE_EXIT"), exit_icon, false, ImVec2(button_width, button_height), exit_w, expand_sidebar)) {
 				UIManager::GetSingleton()->Close();
@@ -281,17 +249,65 @@ namespace Modex
 		ImGui::EndChild();
 		ImGui::SameLine();
 	}
-	
-	Menu::Menu()
+
+	std::unique_ptr<UIModule> Menu::CreateModule(ModuleType a_type)
 	{
-		m_modules.push_back(std::make_unique<HomeModule>());
-		m_modules.push_back(std::make_unique<AddItemModule>());
-		m_modules.push_back(std::make_unique<EquipmentModule>());
-		m_modules.push_back(std::make_unique<ActorModule>());
-		m_modules.push_back(std::make_unique<ObjectModule>());
-		m_modules.push_back(std::make_unique<TeleportModule>());
-		m_modules.push_back(std::make_unique<SettingsModule>());
+		switch (a_type) {
+		case ModuleType::Home:
+			return std::make_unique<HomeModule>();
+		case ModuleType::AddItem:
+			return std::make_unique<AddItemModule>();
+		case ModuleType::Equipment:
+			return std::make_unique<EquipmentModule>();
+		case ModuleType::Actor:
+			return std::make_unique<ActorModule>();
+		case ModuleType::Object:
+			return std::make_unique<ObjectModule>();
+		case ModuleType::Teleport:
+			return std::make_unique<TeleportModule>();
+		case ModuleType::Settings:
+			return std::make_unique<SettingsModule>();
+		case ModuleType::Count:
+			break;
+		}
+
+		return std::make_unique<HomeModule>();
 	}
 
+	std::unique_ptr<UIModule> Menu::CreateModule(uint8_t a_index)
+	{
+		if (a_index >= static_cast<uint8_t>(ModuleType::Count)) {
+			ASSERT_MSG(true, "Menu::CreateModule() - Invalid module index: %d", a_index);
+			return std::make_unique<HomeModule>();
+		}
+
+		return CreateModule(static_cast<ModuleType>(a_index));
+	}
+
+	Menu::~Menu()
+	{
+		Trace("Menu::~Menu() - Destructed");
+	}
+	
+	Menu::Menu()
+		: expand_sidebar(false)
+		, sidebar_initialized(false)
+		, m_activeModule(nullptr)
+		, m_activeModuleIndex(0)
+	{
+		Trace("Menu::Menu() - Constructing");
+
+		m_moduleInfo = {
+			{Translate("MODULE_HOME"), ICON_LC_HOUSE, .0f, ModuleType::Home},
+			{Translate("MODULE_ADDITEM"), ICON_LC_PLUS, .0f, ModuleType::AddItem},
+			{Translate("MODULE_EQUIPMENT"), ICON_LC_PACKAGE, .0f, ModuleType::Equipment},
+			{Translate("MODULE_ACTOR"), ICON_LC_USER, .0f, ModuleType::Actor},
+			{Translate("MODULE_OBJECT"), ICON_LC_BLOCKS, .0f, ModuleType::Object},
+			{Translate("MODULE_TELEPORT"), ICON_LC_MAP_PIN, .0f, ModuleType::Teleport},
+			{Translate("MODULE_SETTINGS"), ICON_LC_COG, .0f, ModuleType::Settings}
+		};
+
+		Trace("Menu::Menu() - Constructed");
+	}
 
 }

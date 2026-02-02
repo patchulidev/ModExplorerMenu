@@ -16,6 +16,11 @@ namespace Modex
 		ImGui::Text("Hello!");
 	}
 
+	TeleportModule::~TeleportModule()
+	{
+		// Destructor
+	}
+
 	TeleportModule::TeleportModule() {
 		m_name = Translate("MODULE_TELEPORT");
 		m_icon = ICON_LC_MAP_PIN;

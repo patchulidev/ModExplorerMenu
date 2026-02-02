@@ -5,38 +5,13 @@
 #include "localization/Locale.h"
 #include "ui/components/UIContainers.h"
 #include "core/Commands.h"
+#include "ui/components/UITable.h"
 
 namespace Modex
 {
 	void EquipmentModule::Draw()
 	{
 		DrawTabMenu();
-	}
-
-	void EquipmentModule::Load()
-	{
-		UIModule::Load();
-
-		auto& table = m_tables[0];
-		auto& kitTable = m_tables[1];
-		auto& invTable = m_tables[2];
-
-		// TEST: Can we setup targets without layout conditions now?
-		table->AddDragDropTarget(kitTable->GetDragDropHandle(), kitTable.get());
-		kitTable->AddDragDropTarget(table->GetDragDropHandle(), table.get());
-
-		table->AddDragDropTarget(invTable->GetDragDropHandle(), invTable.get());
-		invTable->AddDragDropTarget(table->GetDragDropHandle(), table.get());
-
-		auto last_kit = UserData::User().Get<std::string>("lastSelectedKit", "");
-		m_selectedKit = EquipmentConfig::KitLookup(last_kit).value_or(Kit());
-		kitTable->Refresh();
-	}
-
-	void EquipmentModule::Unload()
-	{
-		UIModule::Unload();
-		UserData::User().Set<std::string>("lastSelectedKit", m_selectedKit.m_key);
 	}
 
 	static inline void DrawEquipmentLayout(std::vector<std::unique_ptr<UITable>>& a_tables)
@@ -81,53 +56,66 @@ namespace Modex
 		UIContainers::DrawInventoryTablePanel(inventory_pos, ImVec2(table_width - window_padding.x, table_height), invTable);
 	}
 
+	EquipmentModule::~EquipmentModule()
+	{
+		UserData::Set<std::string>("lastSelectedKit", m_selectedKit.m_key);
+		m_searchSystem->SaveState("EquipmentModule::KitSelection");
+	}
+
 	EquipmentModule::EquipmentModule() 
 	{
+		// overrides
 		m_name = Translate("MODULE_EQUIPMENT");
 		m_icon = ICON_LC_PACKAGE;
 
+		// static
 		m_selectedKit = Kit();
 		m_searchSystem = std::make_unique<SearchSystem>(std::filesystem::path());
 		m_searchSystem->Load(false);
+		m_searchSystem->LoadState("EquipmentModule::KitSelection");
 
-		m_layouts.push_back({"Equipment Layout", true, DrawEquipmentLayout});
-		m_layouts.push_back({"Inventory Layout", false, DrawInventoryLayout});
+		// Setup available layouts for this module.
+		m_layouts.push_back({"Equipment Layout", true, DrawEquipmentLayout}); // TODO: Locale
+		m_layouts.push_back({"Inventory Layout", false, DrawInventoryLayout}); // TODO Locale
 
-		auto table = std::make_unique<UITable>();
-		table->SetGenerator([]() { return Data::GetSingleton()->GetAddItemList(); });
-		table->SetPluginType(Data::PLUGIN_TYPE::Item);
-		table->SetUserDataID("Equipment");
-		table->SetUseSharedTarget(true);
+		constexpr auto table_flags =
+		UITable::ModexTableFlag_Base |
+		UITable::ModexTableFlag_EnableFilterTree |
+		UITable::ModexTableFlag_EnableHeader |
+		UITable::ModexTableFlag_EnableSearch |
+		UITable::ModexTableFlag_EnableItemPreviewOnHover;
+
+		auto table = std::make_unique<UITable>("AddItem", true, 0, table_flags);
 		table->SetDragDropHandle(UITable::DragDropHandle::Table);
-		table->AddFlag(UITable::ModexTableFlag_Base);
-		table->AddFlag(UITable::ModexTableFlag_EnableFilterTree);
-		table->AddFlag(UITable::ModexTableFlag_EnableHeader);
-		table->AddFlag(UITable::ModexTableFlag_EnableSearch);
-		table->AddFlag(UITable::ModexTableFlag_EnableItemPreviewOnHover);
-		table->SetShowEditorID(UserData::User().Get<bool>("Equipment::ShowEditorID", false));
-		table->Init();
-		m_tables.push_back(std::move(table));
 
-		auto kit = std::make_unique<UITable>();
-		kit->SetGenerator([]() { return EquipmentConfig::GetItems(m_selectedKit); });
+		constexpr auto kit_flags = 
+		UITable::ModexTableFlag_Kit |
+		UITable::ModexTableFlag_EnableHeader;
+
+		auto last_kit = UserData::Get<std::string>("lastSelectedKit", "");
+		m_selectedKit = EquipmentConfig::KitLookup(last_kit).value_or(Kit());
+
+		auto kit = std::make_unique<UITable>("Equipment", true, 0, kit_flags);
 		kit->SetKitPointer(&m_selectedKit);
-		kit->SetUserDataID("Equipment");
-		kit->SetUseSharedTarget(true);
 		kit->SetDragDropHandle(UITable::DragDropHandle::Kit);
-		kit->AddFlag(UITable::ModexTableFlag_Kit);
-		kit->AddFlag(UITable::ModexTableFlag_EnableHeader);
-		kit->Init();
-		m_tables.push_back(std::move(kit));
+		kit->Refresh();
 
-		// TODO: Revisit generator impl so that it registers tableref instead of just player
-		auto inventory = std::make_unique<UITable>();
-		inventory->SetUserDataID("Equipment");
-		inventory->SetUseSharedTarget(false);
+		constexpr auto inventory_flags = 
+		UITable::ModexTableFlag_EnableHeader | 
+		UITable::ModexTableFlag_EnableItemPreviewOnHover |
+		UITable::ModexTableFlag_Inventory;
+
+		auto inventory = std::make_unique<UITable>("Inventory", false, 0, inventory_flags);
 		inventory->SetDragDropHandle(UITable::DragDropHandle::Inventory);
-		inventory->AddFlag(UITable::ModexTableFlag_Inventory);
-		inventory->AddFlag(UITable::ModexTableFlag_EnableItemPreviewOnHover);
-		inventory->AddFlag(UITable::ModexTableFlag_EnableHeader);
-		inventory->Init();
+
+		// Setup drag and drop target linkage.
+		table->AddDragDropTarget(kit->GetDragDropHandle(), kit.get());
+		kit->AddDragDropTarget(table->GetDragDropHandle(), table.get());
+		table->AddDragDropTarget(inventory->GetDragDropHandle(), inventory.get());
+		inventory->AddDragDropTarget(table->GetDragDropHandle(), table.get());
+
+		m_tables.push_back(std::move(table));
+		m_tables.push_back(std::move(kit));
 		m_tables.push_back(std::move(inventory));
 	}
 }

@@ -8,14 +8,12 @@ namespace Modex
 	{
 	public:
 		ObjectModule();
-		~ObjectModule() = default;
+		~ObjectModule();
 		ObjectModule(const ObjectModule&) = delete;
 		ObjectModule(ObjectModule&&) = delete;
 		ObjectModule& operator=(const ObjectModule&) = delete;
 		ObjectModule& operator=(ObjectModule&&) = delete;
 
 		void Draw() override;
-		// void Unload();
-		// void Load();
 	};
 }

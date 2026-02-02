@@ -89,10 +89,10 @@ namespace Modex::UICustom
 		return changed;
 	}
 
-	bool FancyDropdown(const char* a_id, const char* a_tooltip, uint32_t& a_currentItem, const std::vector<std::string>& a_items, float a_width)
+	bool FancyDropdown(const char* a_id, const char* a_tooltip, uint8_t& a_currentItem, const std::vector<std::string>& a_items, float a_width)
 	{
 		auto tempIndex = static_cast<int>(a_currentItem);
-		return FancyDropdown(a_id, a_tooltip, tempIndex, a_items, a_width) && (a_currentItem = static_cast<uint32_t>(tempIndex), true);
+		return FancyDropdown(a_id, a_tooltip, tempIndex, a_items, a_width) && (a_currentItem = static_cast<uint8_t>(tempIndex), true);
 	}
 
 	// OPTIMIZE: Go over this one more time for handling vector out-of-range exceptions.
@@ -454,10 +454,10 @@ namespace Modex::UICustom
 		ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth);
 		ImGui::SetNextItemWidth(s_widgetWidth);
 		if (ImGui::BeginCombo(id.c_str(), Translate(a_options[a_value].c_str()))) {
-			for (size_t i = 0; i < a_options.size(); ++i) {
+			for (uint8_t i = 0; i < a_options.size(); ++i) {
 				const char* entry = a_localizeList ? Translate(a_options[i].c_str()) : a_options[i].c_str();
 				if (ImGui::Selectable(entry)) {
-					a_value = static_cast<uint32_t>(i); // WARN: size_t to uint32_t conversion
+					a_value = i;
 					result = true;
 				}
 			}

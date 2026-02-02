@@ -25,6 +25,11 @@ namespace Modex
 		UIContainers::DrawAddItemActionPanel(action_pos, ImVec2(full_width - table_width - window_padding.x, 0.0f), a_tables[0]);
 	}
 
+	AddItemModule::~AddItemModule()
+	{
+		// Destructor
+	}
+
 	AddItemModule::AddItemModule()
 	{
 		m_name = Translate("MODULE_ADD_ITEM");
@@ -32,18 +37,15 @@ namespace Modex
 
 		m_layouts.push_back({"Table View", true, DrawTableView}); // TODO: Locale
 		
-		auto table = std::make_unique<UITable>();
-		table->SetGenerator([]() { return Data::GetSingleton()->GetAddItemList(); });
-		table->SetPluginType(Data::PLUGIN_TYPE::Item);
-		table->SetUserDataID("AddItem");
-		table->SetUseSharedTarget(true);
+		constexpr auto table_flags =
+		UITable::ModexTableFlag_Base |
+		UITable::ModexTableFlag_EnableFilterTree |
+		UITable::ModexTableFlag_EnableSearch |
+		UITable::ModexTableFlag_EnableHeader;
+
+		auto table = std::make_unique<UITable>("AddItem", true, 0, table_flags);
 		table->SetDragDropHandle(UITable::DragDropHandle::Table);
-		table->AddFlag(UITable::ModexTableFlag_Base);
-		table->AddFlag(UITable::ModexTableFlag_EnableFilterTree);
-		table->AddFlag(UITable::ModexTableFlag_EnableSearch);
-		table->AddFlag(UITable::ModexTableFlag_EnableHeader);
-		table->SetShowEditorID(UserData::User().Get<bool>("AddItem::ShowEditorID", false));
-		table->Init();
+
 		m_tables.push_back(std::move(table));
 	}
 }

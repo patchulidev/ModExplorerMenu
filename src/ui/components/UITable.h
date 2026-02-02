@@ -17,17 +17,12 @@ namespace Modex
 
 	private:
 		ImGuiMultiSelectFlags MULTI_SELECT_FLAGS = 
-		// ImGuiMultiSelectFlags_ClearOnClickVoid  | ImGuiMultiSelectFlags_SelectOnClick | 
 		ImGuiMultiSelectFlags_ClearOnClickVoid  | ImGuiMultiSelectFlags_SelectOnClickRelease |
 		ImGuiMultiSelectFlags_NoAutoSelect      | ImGuiMultiSelectFlags_BoxSelect1d | 
 		ImGuiMultiSelectFlags_ClearOnEscape     | ImGuiMultiSelectFlags_NoAutoClearOnReselect;
-			// ImGuiMultiSelectFlags_ClearOnClickVoid  | ImGuiMultiSelectFlags_SelectOnClickRelease | 
-			// ImGuiMultiSelectFlags_NoAutoSelect      | ImGuiMultiSelectFlags_BoxSelect1d;
 
 		TableList               tableList;
 		TableList               recentList;
-
-		std::function<std::vector<BaseObject>()> generator;
 
 		std::unique_ptr<FilterSystem>       filterSystem;
 		std::unique_ptr<SortSystem>         sortSystem;
@@ -36,20 +31,17 @@ namespace Modex
 		PluginList                              pluginList;
 		std::unordered_set<const RE::TESFile*>  pluginSet;
 
-		uint32_t                flags = 0;
-		Data::PLUGIN_TYPE       pluginType;
 		std::string             data_id;
-		int                     clickAmount;
+		uint32_t                pluginType;
+		uint32_t                flags = 0;
 		
 		//                      core
 		TableItem               itemPreview;
 		RE::TESObjectREFR*      tableTargetRef;
 		char                    pluginSearchBuffer[256];
-		char                    lastSearchBuffer[256];
-		bool                    generalSearchDirty;
 		std::string             selectedPlugin;
 		Kit*                    selectedKitPtr;
-		bool                    useSharedTarget;
+		int                     clickAmount;
 		
 		//                      lazy event callbacks
 		bool                    updateKeyboardNav;
@@ -64,6 +56,7 @@ namespace Modex
 		bool                    showItemIcon;
 		bool                    showEditorID;
 		bool                    useQuickSearch;
+		bool                    useSharedTarget;
 
 		//                      table layout parameters
 		float                   LayoutRowSpacing;
@@ -90,6 +83,13 @@ namespace Modex
 			ModexTableFlag_EnableItemPreviewOnHover = 1 << 7
 		};
 
+		UITable(const std::string& a_dataID, bool a_shared, uint8_t a_type, uint32_t a_flags);
+		~UITable();
+		UITable(const UITable&) = delete;
+		UITable& operator=(const UITable&) = delete;
+		UITable(UITable&&) noexcept = default;
+		UITable& operator=(UITable&&) noexcept = default;
+
 		enum class DragBehavior {
 			None,
 			Invalid,
@@ -107,44 +107,25 @@ namespace Modex
 		void RemoveFlag(TableFlag flag) { flags &= ~flag; }
 		bool HasFlag(TableFlag flag) const { return (flags & flag) != 0; }
 
-		// ~UITable() = default;
-		// UITable(const UITable&) = delete;
-		// UITable(UITable&&) = delete;
-		// UITable& operator=(const UITable&) = delete;
-		// UITable& operator=(UITable&&) = delete;
-
 		//                      core behaviors
 		void                    Draw(const TableList& a_tableList);
-		void                    DrawSearchBar();
-		void                    DrawStatusBar();
 		void                    Refresh();
-		void                    Unload();
-		void                    Load();
-		void                    Init();
-		void                    SyncChangesToKit();
-		void                    BuildPluginList();
-		void                    LoadRecentList();
 
 		TableList*              GetTableListPtr() { return &tableList; }
 		TableList&              GetTableListRef() { return tableList; }
 		const PluginList&       GetPluginList() const { return pluginList; };
 		const TableList&        GetTableList() const { return tableList; }
+		const TableList         GetSelection() const;
+		const TableItem&        GetItemPreview() { return itemPreview; }
 
 		//                      class builder methods
-		void                    SetGenerator(std::function<std::vector<BaseObject>()> a_generator);
-		void                    SetPluginType(Data::PLUGIN_TYPE a_type) { pluginType = a_type; }
 		void                    SetKitPointer(Kit* a_kit) { selectedKitPtr = a_kit; }
 		void                    SetDragDropHandle(DragDropHandle a_handle);
-		void                    SetClickAmount(int a_amount) { clickAmount = a_amount; }
-		void                    SetUserDataID(const std::string& a_id) { data_id = a_id; }
-		void                    SetUseSharedTarget(bool a_use) { useSharedTarget = a_use; }
-		void                    SetShowEditorID(bool a_show) { showEditorID = a_show; }
 
 		//                      target reference accessors
 		RE::TESObjectREFR*      GetTableTargetRef() const { return tableTargetRef; }
 		void                    SetTargetByReference(RE::TESObjectREFR* a_reference);
 
-		int*                    GetClickAmount() { return &clickAmount; }
 		
 		//                      drag n drop behaviors
 		DragDropHandle          GetDragDropHandle() const { return dragDropHandle; }
@@ -158,28 +139,40 @@ namespace Modex
 		const char*             GetDragDropHandleText(DragDropHandle a_handle) const { return magic_enum::enum_name(a_handle).data(); }
 		
 		//                      table action methods
-		void                    UpdateActiveInventoryTables();
-		void                    PlaceSelectionOnGround(int a_count);
-		void                    RemoveSelectionFromTargetInventory();  
+		uint32_t                GetSelectionCount() const;
+		void                    SetClickAmount(int a_amount) { clickAmount = a_amount; }
+		int                     GetClickAmount() { return clickAmount; }
+		void                    AddSelectionToActiveKit();
 		void                    AddSelectionToTargetInventory(int a_count);
 		void                    AddKitToTargetInventory(const Kit& a_kit);
 		void                    RemoveSelectionFromKit();
-		void                    AddSelectionToActiveKit();
+		void                    RemoveSelectionFromTargetInventory();  
+		void                    PlaceSelectionOnGround(int a_count);
 		void                    EquipSelectionToTarget();
 		void                    PlaceAll();
 		void                    AddAll();
 
-		std::vector<BaseObject> GetReferenceInventory();
-		std::vector<std::unique_ptr<BaseObject>> GetSelection();
-
-		uint32_t                GetSelectionCount() const;
-		TableItem&              GetItemPreview() { return itemPreview; }
-
-
 	private:
+		//                      core
+		void                    Setup();
+		void                    LoadRecentList();
+		void                    InitializeSystems();
+		void                    LoadSystemState();
+		void                    SaveSystemState();
+		void                    CleanupResources();
+		void                    UpdateLayout();
+
 		//                      search and filter impl
 		void                    Filter(const std::vector<BaseObject>& a_data);
+		void                    FilterRecentImpl();
+		void                    FilterKitImpl();
+		void                    FilterInventoryImpl();
+		void                    UpdateActiveInventoryTables();
 		void                    UpdateImGuiTableIDs();
+		void                    SyncChangesToKit();
+		void                    BuildPluginList();
+
+		std::vector<BaseObject> GetReferenceInventory();
 		
 		//                      sorting
 		bool                    SortFn(const std::unique_ptr<BaseObject>& a, const std::unique_ptr<BaseObject>& b);
@@ -198,18 +191,21 @@ namespace Modex
 		void                    Test_TableFilters();
 		
 		//                      layout and drawing
-		void                    UpdateLayout();
 		void                    DrawDragDropPayload(const std::string& a_icon);
 		void                    DrawItem(const std::unique_ptr<BaseObject>& a_item, const ImVec2& a_pos);
 		void                    DrawKitItem(const std::unique_ptr<BaseObject>& a_item, const ImVec2& a_pos);
-		void                    DrawKit(const Kit& a_kit, const ImVec2& a_pos, const bool& a_selected);
-		void                    DrawDebugToolkit();
-		void                    DrawFormSearchBar(const ImVec2& a_size);
+		void                    DrawKit(const Kit& a_kit, const ImVec2& a_pos);
 		void                    DrawPluginSearchBar(const ImVec2& a_size);
-		void                    DrawTableSettingsPopup();
-		void                    DrawHeader();
+		void                    DrawFormSearchBar(const ImVec2& a_size);
 		void                    CustomSortColumn(std::string a_header, float a_valueWidth, bool a_sorted);
+
+		//                      widget groups
+		void                    DrawTableSettingsPopup();
+		void                    DrawDebugToolkit();
 		void                    DrawFormFilterTree();
+		void                    DrawSearchBar();
+		void                    DrawStatusBar();
+		void                    DrawHeader();
 
 		DragDropHandle                      dragDropHandle;
 		std::map<DragDropHandle, UITable*>     dragDropSourceList;

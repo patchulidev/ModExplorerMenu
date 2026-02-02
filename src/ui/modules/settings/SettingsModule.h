@@ -7,23 +7,22 @@ namespace Modex
 	class SettingsModule : public UIModule
 	{
 	public:
-		static inline char                            m_modSearchBuffer[256];
-		static inline std::vector<const RE::TESFile*> m_pluginList;
-		static inline std::vector<std::string>        m_pluginListVector;
-		static inline uint32_t                        m_sort;
-		static inline uint32_t                        m_type;
+		char                            m_modSearchBuffer[256];
+		std::vector<const RE::TESFile*> m_pluginList;
+		std::vector<std::string>        m_pluginListVector;
+		uint8_t                         m_sort;
+		uint8_t                         m_type;
 
 		SettingsModule();
-		~SettingsModule() = default;
+		~SettingsModule();
 		SettingsModule(const SettingsModule&) = delete;
 		SettingsModule(SettingsModule&&) = delete;
 		SettingsModule& operator=(const SettingsModule&) = delete;
 		SettingsModule& operator=(SettingsModule&&) = delete;
 
 		void Draw() override;
-		void Load() override;
-		void Unload() override;
-
-		static void DrawBlacklistSettings();
+		void DrawBlacklistLayout(std::vector<std::unique_ptr<UITable>>& a_tables);
+		void DrawBlacklistSettings();
+		void BuildBlacklistPlugins();
 	};
 }

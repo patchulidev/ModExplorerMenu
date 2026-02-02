@@ -8,14 +8,12 @@ namespace Modex
 	{
 	public:
 		TeleportModule();
-		~TeleportModule() = default;
+		~TeleportModule();
 		TeleportModule(const TeleportModule&) = delete;
 		TeleportModule(TeleportModule&&) = delete;
 		TeleportModule& operator=(const TeleportModule&) = delete;
 		TeleportModule& operator=(TeleportModule&&) = delete;
 
 		void Draw() override;
-		// void Load();
-		// void Unload();
 	};
 }

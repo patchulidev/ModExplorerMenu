@@ -2,6 +2,7 @@
 
 #include "core/Commands.h"
 #include "data/BaseObject.h"
+#include "imgui.h"
 #include "localization/FontManager.h"
 #include "localization/Locale.h"
 #include "ui/core/UIManager.h"
@@ -17,22 +18,8 @@
 
 #include "pch.h"
 
-
-// BUG: Kit items are resorted every time the table is refreshed.
-// BUG: Inventory table doesn't initialize properly.
-
 namespace Modex
 {
-	float Pulse(float a_time, float a_frequency, float a_amplitude)
-	{
-		return a_amplitude * sin(a_time * a_frequency);
-	}
-
-	float PulseMinMax(float a_time, float a_frequency, float a_amplitude, float a_min, float a_max)
-	{
-		return a_min + (a_max - a_min) * (1.0f + Pulse(a_time, a_frequency, a_amplitude)) * 0.5f;
-	}
-
 	bool IsValidTargetReference(RE::TESObjectREFR* a_reference) {
 		const auto baseObject = a_reference != nullptr ? a_reference : nullptr;
 		return baseObject && (baseObject->IsActor() || baseObject->GetFormType() == RE::FormType::Container);
@@ -40,8 +27,9 @@ namespace Modex
 
 	bool UITable::IsMouseHoveringRectDelayed(const ImVec2& a_min, const ImVec2& a_max)
 	{
-		if (HasFlag(ModexTableFlag_EnableItemPreviewOnHover))
-			return false;
+		// BUG: This broke somehow.
+		// if (HasFlag(ModexTableFlag_EnableItemPreviewOnHover))
+			// return false;
 
 		const auto& g = *GImGui;
 		if (ImGui::IsMouseHoveringRect(a_min, a_max)) {
@@ -122,62 +110,115 @@ namespace Modex
 		return a_text;
 	}
 
-	void UITable::Init()
+	UITable::UITable(const std::string& a_dataID, bool a_shared, uint8_t a_type, uint32_t a_flags)
+		: data_id(a_dataID)
+		, pluginType(a_type)
+		, flags(a_flags)
+		, itemPreview(nullptr)
+		, tableTargetRef(nullptr)
+		, selectedKitPtr(nullptr)
+		, clickAmount(1)
+		, updateKeyboardNav(false)
+		, showEditorID(false)
+		, useSharedTarget(a_shared)
+		, navPositionID(0)
 	{
-		const auto filename = ConfigManager::FILTER_DIRECTORY / (this->data_id + ".json");
+		memset(pluginSearchBuffer, 0, sizeof(pluginSearchBuffer));
 
-		filterSystem = std::make_unique<FilterSystem>(filename);
-		filterSystem->Load(true);
-		filterSystem->SetSystemCallback([this]() {
-			Refresh();
-		});
-
-		sortSystem = std::make_unique<SortSystem>(filename);
-		sortSystem->Load(true);
-
-		searchSystem = std::make_unique<SearchSystem>(filename);
-		searchSystem->Load(true);
-		searchSystem->SetupDefaultKey();
-
-		selectedPlugin = Translate("SHOW_ALL");
+		InitializeSystems();
+		LoadSystemState();
+		Setup();
 	}
 
-	void UITable::Unload()
+	UITable::~UITable()
 	{
-		tableList.clear();
-		recentList.clear();
-
-		pluginList.clear();
-		pluginSet.clear();
-		selectionStorage.Clear();
-		dragDropSourceList.clear();
-
-		itemPreview = nullptr;
-		tableTargetRef = nullptr;
+		SaveSystemState();
+		CleanupResources();
 	}
 
-	void UITable::Load()
+	void UITable::Setup()
 	{
+		filterSystem->SetSystemCallback([this]() { Refresh(); });
+
 		if (useSharedTarget) {
-			auto reference = UIModule::GetTargetReference();
-			this->SetTargetByReference(reference);
+			auto target = UIModule::GetTargetReference();
+			SetTargetByReference(target);
+		} else {
+			const auto formID = UserData::Get<RE::FormID>(data_id + "::LastTargetRef", 0);
+			auto target = UIModule::LookupReferenceByFormID(formID);
+			SetTargetByReference(target);
 		}
 
-		if (!useSharedTarget) {
-			const auto formID = UserData::User().Get<RE::FormID>(data_id + "::LastTargetRef", 0);
-			auto reference = UIModule::LookupReferenceByFormID(formID);
-			this->SetTargetByReference(reference);
-		}
+		selectedPlugin = UserData::Get<std::string>(data_id + "::LastSelectedPlugin", Translate("SHOW_ALL"));
 
 		BuildPluginList();
 		LoadRecentList();
 		Refresh();
 	}
+
+	void UITable::InitializeSystems()
+	{
+		const auto filename = ConfigManager::FILTER_DIRECTORY / (this->data_id + ".json");
+		const bool forceCreate = HasFlag(ModexTableFlag_Inventory) || HasFlag(ModexTableFlag_Kit) ? false : true;
+
+		filterSystem = std::make_unique<FilterSystem>(filename);
+		filterSystem->Load(forceCreate);
+
+		sortSystem = std::make_unique<SortSystem>(filename);
+		sortSystem->Load(forceCreate);
+
+		searchSystem = std::make_unique<SearchSystem>(filename);
+		searchSystem->Load(forceCreate);
+	}
+
+	void UITable::SaveSystemState()
+	{
+		filterSystem->SaveState(data_id + "::FilterState");
+		sortSystem->SaveState(data_id + "::SortState");
+		searchSystem->SaveState(data_id + "::SearchState");
+
+		UserData::Set<std::string>(data_id + "::LastSelectedPlugin", selectedPlugin);
+	}
+
+	void UITable::LoadSystemState()
+	{
+		filterSystem->LoadState(data_id + "::FilterState");
+		sortSystem->LoadState(data_id + "::SortState");
+		searchSystem->LoadState(data_id + "::SearchState");
+	}
+
+	void UITable::CleanupResources()
+	{
+		if (filterSystem) {
+			filterSystem->SetSystemCallback(nullptr);
+		}
+
+		// Reset systems
+		filterSystem.reset();
+		sortSystem.reset();
+		searchSystem.reset();
+
+		// Clear containers
+		tableList.clear();
+		recentList.clear();
+		pluginList.clear();
+		pluginSet.clear();
+
+		selectionStorage.Clear();
+		dragDropSourceList.clear();
+
+		// Clear raw pointers
+		itemPreview = nullptr;
+		tableTargetRef = nullptr;
+		selectedKitPtr = nullptr;
+	}
 	
+	// BUG: Called twice during instantiation for Inventories.
 	void UITable::SetTargetByReference(RE::TESObjectREFR* a_reference)
 	{
 		tableTargetRef = a_reference;
 
+		// Inventory has in-method generator.
 		if (HasFlag(ModexTableFlag_Inventory)) {
 			this->Refresh();
 		}
@@ -186,7 +227,7 @@ namespace Modex
 		{
 			UIModule::SetTargetReference(a_reference);
 
-			// HACK: To avoid propogating changes up to UIModule/UIMenu.
+			// HACK: To avoid a higher level callback system.
 			for (const auto source : dragDropSourceList) {
 				if (source.second->useSharedTarget) {
 					if (source.second->GetTableTargetRef() != this->GetTableTargetRef()) {
@@ -455,13 +496,7 @@ namespace Modex
 		dragDropHandle = a_id;
 	}
 
-	// OPTIMIZE: Is std::vector<BaseObject> the best fit here?
-	void UITable::SetGenerator(std::function<std::vector<BaseObject>()> a_generator)
-	{
-		generator = a_generator;
-	}
-
-	std::vector<std::unique_ptr<BaseObject>> UITable::GetSelection()
+	const std::vector<std::unique_ptr<BaseObject>> UITable::GetSelection() const
 	{
 		std::vector<std::unique_ptr<BaseObject>> selectedItems;
 
@@ -516,7 +551,7 @@ namespace Modex
 		bool has_item = false;
 		for (auto& item : tableList) {
 			if (item->GetEditorID() == a_item->GetEditorID()) {
-				item->kitAmount++;
+				item->m_quantity++;
 				has_item = true;
 			}
 		}
@@ -587,8 +622,6 @@ namespace Modex
 		selectionStorage.Clear();
 	}
 
-	// OPTIMIZE: Potential room for optimization if we can perform lookups or something.
-
 	void UITable::RemovePayloadItemFromKit(const std::unique_ptr<BaseObject>& a_item)
 	{
 		if (this->tableList.empty()) {
@@ -609,9 +642,10 @@ namespace Modex
 		if (this->HasFlag(ModexTableFlag_Kit)) {
 			if (selectedKitPtr && !selectedKitPtr->empty()) {
 				auto equipmentConfig = EquipmentConfig::GetSingleton();
-				selectedKitPtr->m_items.clear();
 
 				if (!this->tableList.empty()) {
+					selectedKitPtr->m_items.clear();
+
 					for (auto& item : this->tableList) {
 						selectedKitPtr->m_items.emplace_back(EquipmentConfig::CreateKitItem(*item));
 					}
@@ -620,20 +654,6 @@ namespace Modex
 				equipmentConfig->SaveKit(*selectedKitPtr);
 			}
 		}
-	}
-
-	void UITable::Refresh()
-	{
-		selectionStorage.Clear();
-		
-		if (HasFlag(ModexTableFlag_Inventory)) {
-			this->Filter(GetReferenceInventory());
-		} else {
-			this->Filter(this->generator());
-		}
-
-		this->SortListBySpecs();
-		this->UpdateImGuiTableIDs();
 	}
 
 	void UITable::SortListBySpecs()
@@ -671,50 +691,92 @@ namespace Modex
 		return m_inventory;
 	}
 
+	void UITable::Refresh()
+	{
+		selectionStorage.Clear();
+		tableList.clear();
+		
+		if (filterSystem && filterSystem->ShowRecent()) {
+			return FilterRecentImpl();
+		}
+
+		if (this->HasFlag(ModexTableFlag_Kit)) {
+			return FilterKitImpl();
+		}
+
+		if (this->HasFlag(ModexTableFlag_Inventory)) {
+			return FilterInventoryImpl();
+		}
+
+		if (tableList.empty()) 
+		{
+			if (pluginType == 0)
+				return Filter(Data::GetSingleton()->GetAddItemList());
+			if (pluginType == 1)
+				return Filter(Data::GetSingleton()->GetNPCList());
+			if (pluginType == 2)
+				return Filter(Data::GetSingleton()->GetObjectList());
+			// if (pluginType == 3)
+		}
+	}
+
+	void UITable::FilterRecentImpl()
+	{
+		const auto recent = UserData::GetRecentAsVector();
+
+		for (const auto& edid : recent) {
+			RE::TESForm* form = RE::TESForm::LookupByEditorID(edid);
+			tableList.emplace_back(std::make_unique<BaseObject>(form, 0, 0));
+		}
+
+		for (int i = 0; i < std::ssize(this->tableList); i++) {
+			this->tableList[i]->m_tableID = i;
+		}
+
+		SortListBySpecs();
+		UpdateImGuiTableIDs();
+	}
+
+	void UITable::FilterKitImpl()
+	{
+		if (!selectedKitPtr)
+			return;
+
+		const auto& kit = selectedKitPtr->m_items;
+
+		for (const auto& item : kit) {
+			RE::TESForm* form = RE::TESForm::LookupByEditorID(item->m_editorid);
+
+			if (form) {
+				tableList.emplace_back(std::make_unique<BaseObject>(form, 0, 0, item->m_amount, item->m_equipped));
+			} else {
+				tableList.emplace_back(std::make_unique<BaseObject>(item->m_name, item->m_editorid, item->m_plugin));
+			}
+		}
+
+		SortListBySpecs();
+		UpdateImGuiTableIDs();
+	}
+
+	void UITable::FilterInventoryImpl()
+	{
+		const auto inventory = GetReferenceInventory();
+
+		for (const auto& item : inventory) {
+			this->tableList.emplace_back(std::make_unique<BaseObject>(item.GetTESForm(), 0, 0, item.GetQuantity()));
+		}
+
+		SortListBySpecs();
+		UpdateImGuiTableIDs();
+	}
+
 	void UITable::Filter(const std::vector<BaseObject>& a_data)
 	{
-		tableList.clear();
-		tableList.reserve(std::ssize(a_data));
-		
-		this->generalSearchDirty = false;
-		ImFormatString(searchSystem->GetLastSearchBuffer(), IM_ARRAYSIZE(searchSystem->GetLastSearchBuffer()), "%s", searchSystem->GetSearchBuffer());
-
-		if (filterSystem && filterSystem->ShowRecent()) {
-			std::vector<std::string> recently_used;
-			UserData::Recent().GetAsList(recently_used);
-			
-			for (const auto& recent_item : recently_used) {
-				RE::TESForm* form = RE::TESForm::LookupByEditorID(recent_item);
-				tableList.emplace_back(std::make_unique<BaseObject>(form, 0, 0));
-			}
-
+		if (a_data.empty()) {
 			return;
 		}
 
 		for (const auto& item : a_data) {
-			if (this->HasFlag(ModexTableFlag_Kit) || this->HasFlag(ModexTableFlag_Inventory)) {
-				if (auto form = item.GetTESForm(); form) {
-					this->tableList.emplace_back(
-						std::make_unique<BaseObject>(
-							form, 
-							item.GetTableID(), 
-							item.GetRefID(), 
-							item.GetQuantity()
-						));	
-				} else {
-					this->tableList.emplace_back(
-						std::make_unique<BaseObject>(
-							item.GetName(), 
-							item.GetEditorID(), 
-							item.GetPluginName(), 
-							item.GetTableID(), 
-							item.GetQuantity()
-						));
-				}
-				
-				continue;
-			}
-
 			if (searchSystem->CompareInputToObject(&item) == false) {
 				continue;
 			}
@@ -731,32 +793,33 @@ namespace Modex
 					if (BlacklistConfig::GetSingleton()->Has(file)) {
 						continue;
 					}
-
-					// if (BlacklistConfig::GetBlacklist().contains(file)) {
-					// 	continue;
-					// }
 				}
 			}
 
+			// Filter Tree Node system
 			if (filterSystem && !filterSystem->ShouldShowItem(&item)) {
 				continue;
 			}
 
 			this->tableList.emplace_back(std::make_unique<BaseObject>(item.GetTESForm(), 0, item.m_refID));
 		}
+
+		SortListBySpecs();
+		UpdateImGuiTableIDs();
 	}
 
-	// TODO: Take another look at this post 2.0 changes. We're not really using the full features of Filtered plugin
-	// lists since we changed to the dynamic tree filter node system.
 
+	// TODO: Currently set to 0 = ALL. Need to reconsider this implementation.
 	void UITable::BuildPluginList()
 	{
-		if (pluginType != Data::PLUGIN_TYPE::kTotal) {
-			const auto& config = UserConfig::Get();
-			this->pluginList = Data::GetSingleton()->GetFilteredListOfPluginNames(this->pluginType, (Data::SORT_TYPE)config.modListSort);
-			this->pluginSet = Data::GetSingleton()->GetModulePluginList(this->pluginType);
-			pluginList.insert(pluginList.begin(), Translate("SHOW_ALL"));
-		}
+		const auto& config = UserConfig::Get();
+		const auto type = static_cast<Data::PluginType>(this->pluginType);
+		const auto sort = static_cast<Data::PluginSort>(config.modListSort);
+
+		this->pluginList = Data::GetSingleton()->GetFilteredListOfPluginNames(type, sort); 
+		this->pluginSet = Data::GetSingleton()->GetModulePluginList(type);
+
+		pluginList.insert(pluginList.begin(), Translate("SHOW_ALL"));
 	}
 
 	void UITable::DrawFormSearchBar(const ImVec2& a_size)
@@ -764,17 +827,20 @@ namespace Modex
 		const float input_width = a_size.x;
 		const float key_width = a_size.x * 0.45f;
 
-		uint32_t current_idx = searchSystem->GetSearchKeyIndex();
+		int current_idx = searchSystem->GetSearchKeyIndex();
 		const std::string current_key_text = searchSystem->GetCurrentKeyString();
 
 		ImGui::PushStyleColor(ImGuiCol_FrameBg, ThemeConfig::GetColor("TABLE_FIELD_BG"));
 		ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ThemeConfig::GetColor("TABLE_FIELD_BG_HOVER"));
 		ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ThemeConfig::GetColor("TABLE_FIELD_BG_HOVER"));
-		ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5f, 0.5f)); // TODO: Is this
+		ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5f, 0.5f));
+
 		const std::vector<std::string> available_keys = searchSystem->GetAvailableKeysVector();
 		if (UICustom::FancyDropdown("##Search::Input::Key", "TABLE_KEY_TOOLTIP", current_idx, available_keys, key_width)) {
 			searchSystem->SetSearchKeyByIndex(current_idx);
+			Refresh();
 		}
+
 		ImGui::PopStyleVar();
 		ImGui::PopStyleColor(3);
 		
@@ -791,8 +857,8 @@ namespace Modex
 			this->Refresh();
 		}
 		ImGui::PopStyleColor();
-		key_hovered = ImGui::IsItemHovered();
 
+		key_hovered = ImGui::IsItemHovered();
 		if (ImGui::Shortcut(ImGuiKey_Space, ImGuiInputFlags_RouteFromRootWindow)) {
 			ImGui::SetKeyboardFocusHere(-1);
 		}
@@ -805,7 +871,7 @@ namespace Modex
 		static bool hovered;
 		ImGui::PushStyleColor(ImGuiCol_FrameBg, hovered ? ThemeConfig::GetColor("TABLE_FIELD_BG_HOVER") : ThemeConfig::GetColor("TABLE_FIELD_BG"));
 
-		if (searchSystem->InputTextComboBox("##Search::Filter::PluginField", this->pluginSearchBuffer, this->selectedPlugin, IM_ARRAYSIZE(this->pluginSearchBuffer), this->pluginList, a_size.x)) {
+		if (searchSystem->InputTextComboBox("##Search::Filter::PluginField", pluginSearchBuffer, selectedPlugin, IM_ARRAYSIZE(pluginSearchBuffer), pluginList, a_size.x)) {
 			this->selectedPlugin = this->pluginSearchBuffer;
 			this->pluginSearchBuffer[0] = '\0';
 			
@@ -895,14 +961,10 @@ namespace Modex
 		const float plugin_width = ImGui::GetContentRegionAvail().x;
 		DrawPluginSearchBar(ImVec2(plugin_width, 0.0f));
 		ImGui::PopStyleVar();
-
-
 	}
 
-	void UITable::DrawKit(const Kit& a_kit, const ImVec2& a_pos, const bool& a_selected)
+	void UITable::DrawKit(const Kit& a_kit, const ImVec2& a_pos)
 	{
-		(void)a_selected;  // If we want to handle selection visuals manually.
-
 		const auto& DrawList = ImGui::GetWindowDrawList();
 		const float fontSize = ImGui::GetFontSize(); 
 
@@ -969,10 +1031,8 @@ namespace Modex
 		}
 	}
 
-	// TODO: Try adding that + or - or Trash icon background thing again.
 	void UITable::HandleDragDropBehavior()
 	{
-
 		static std::string tooltip_icon = "";
 		static std::string tooltip_string = "";
 
@@ -1100,13 +1160,13 @@ namespace Modex
 		itemPreview = std::make_unique<BaseObject>(*a_item);
 		if (HasFlag(ModexTableFlag_EnableItemPreviewOnHover)) {
 			if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort | ImGuiHoveredFlags_NoSharedDelay)) {
-				ImGui::SetNextWindowSize(ImVec2(300.0f, 0));
-				ImGui::SetNextWindowPos(ImVec2(ImGui::GetMousePos().x - 300.0f, ImGui::GetMousePos().y));
+				const auto size = ImVec2(ImGui::GetWindowSize().x / 3.0f, 0.f);
+				// ImGui::SetNextWindowPos(ImVec2(ImGui::GetMousePos().x - size.x, ImGui::GetMousePos().y));
 				if (ImGui::BeginTooltip()) {
 					if (a_item->IsDummy()) {
 						ShowMissingPlugin(a_item);
 					} else {
-						ShowItemPreview(a_item);
+						ShowItemPreview(a_item, true);
 					}
 
 					ImGui::EndTooltip();
@@ -1410,13 +1470,11 @@ namespace Modex
 			GetFormTypeColor(a_item->GetFormType()));
 
 		// Type Pillar tooltip
-		if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows)) {
 			if (IsMouseHoveringRectDelayed(
 				ImVec2(bb.Min.x + LayoutOuterPadding, bb.Min.y + LayoutOuterPadding),
 				ImVec2(bb.Min.x + LayoutOuterPadding + type_pillar_width, bb.Max.y - LayoutOuterPadding))) {
 				ImGui::SetTooltip("%s", RE::FormTypeToString(a_item->GetFormType()).data());
 			}
-		}
 	
 
 		// We need to adjust the bounding box to account for the type pillar.
@@ -1494,7 +1552,7 @@ namespace Modex
 
 		if (!a_item->IsDummy()) {
 			ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - LayoutOuterPadding);
-			if (ImGui::InputInt("##EquipCount", &a_item->kitAmount, 1, 10)) {
+			if (ImGui::InputInt("##EquipCount", &a_item->m_quantity, 1, 10)) {
 				this->SyncChangesToKit();
 			}
 			
@@ -2242,12 +2300,6 @@ namespace Modex
 
 	void UITable::Draw(const TableList& _tableList)
 	{
-		if (!this->generalSearchDirty) {
-			if (strcmp(searchSystem->GetSearchBuffer(), searchSystem->GetLastSearchBuffer()) != 0) {
-				this->generalSearchDirty = true;
-			}
-		}
-
 		UpdateLayout();
 		DrawStatusBar();
 
@@ -2437,10 +2489,6 @@ namespace Modex
 
 			ms_io = ImGui::EndMultiSelect();
 			selectionStorage.ApplyRequests(ms_io);
-
-			if (this->updateRecentList) {
-				this->LoadRecentList();
-			}
 		}
 		
 		ImGui::EndChild();

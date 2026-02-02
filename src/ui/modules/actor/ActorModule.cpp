@@ -26,6 +26,11 @@ namespace Modex
 		//TODO: Re-implmement NPC Actions Panel. Apparently this is long gone?
 	}
 
+	ActorModule::~ActorModule()
+	{
+		// Destructor
+	}
+
 	ActorModule::ActorModule()
 	{
 		m_name = Translate("MODULE_ACTOR");
@@ -33,16 +38,13 @@ namespace Modex
 
 		m_layouts.push_back({"Table View", true, DrawTableLayout}); // TODO: Locale
 
-		auto table = std::make_unique<UITable>();
-		table->SetGenerator([]() { return Data::GetSingleton()->GetNPCList(); });
-		table->SetPluginType(Data::PLUGIN_TYPE::Actor);
-		table->SetUserDataID("Actor");
-		table->SetUseSharedTarget(true);
-		table->AddFlag(UITable::ModexTableFlag_EnableFilterTree);
-		table->AddFlag(UITable::ModexTableFlag_EnableSearch);
-		table->AddFlag(UITable::ModexTableFlag_EnableHeader);
-		table->SetShowEditorID(UserData::User().Get<bool>("NPC::ShowEditorID", false));
-		table->Init();
+		constexpr auto table_flags =
+		UITable::ModexTableFlag_EnableFilterTree |
+		UITable::ModexTableFlag_EnableSearch |
+		UITable::ModexTableFlag_EnableHeader;
+
+		auto table = std::make_unique<UITable>("Actor", true, 1, table_flags);
+
 		m_tables.push_back(std::move(table));
 	}
 }

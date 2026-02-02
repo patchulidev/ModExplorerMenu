@@ -8,17 +8,16 @@
 
 namespace Modex
 {
-	void BuildBlacklistPlugins()
+	void SettingsModule::BuildBlacklistPlugins()
 	{
-		SettingsModule::m_pluginList.clear();
-		SettingsModule::m_pluginListVector.clear();
+		m_pluginList.clear();
+		m_pluginListVector.clear();
 
-		// BUG: When are these two member variables being set?
-		const auto sortType = static_cast<Data::SORT_TYPE>(SettingsModule::m_sort);
-		const auto pluginType = static_cast<Data::PLUGIN_TYPE>(SettingsModule::m_type);
+		const auto sortType = static_cast<Data::PluginSort>(m_sort);
+		const auto pluginType = static_cast<Data::PluginType>(m_type);
 
-		SettingsModule::m_pluginList = Data::GetSingleton()->GetModulePluginListSorted(pluginType, sortType);
-		SettingsModule::m_pluginListVector = Data::GetSingleton()->GetFilteredListOfPluginNames(pluginType, sortType);
+		m_pluginList = Data::GetSingleton()->GetModulePluginListSorted(pluginType, sortType);
+		m_pluginListVector = Data::GetSingleton()->GetFilteredListOfPluginNames(pluginType, sortType);
 	}
 
 	void SettingsModule::DrawBlacklistSettings()
@@ -33,7 +32,7 @@ namespace Modex
 
 		const float separator_width = ImGui::CalcTextSize(ICON_LC_ARROW_RIGHT).x + ImGui::GetStyle().ItemSpacing.x;
 		const float widget_width = ((ImGui::GetContentRegionAvail().x - (2.0f) * separator_width) / 3.0f);
-		UICustom::FancyInputText("##Blacklist::Search", "", "BLACKLIST_SEARCH_TOOLTIP", SettingsModule::m_modSearchBuffer, widget_width);
+		UICustom::FancyInputText("##Blacklist::Search", "", "BLACKLIST_SEARCH_TOOLTIP", m_modSearchBuffer, widget_width);
 
 		if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_F, ImGuiInputFlags_RouteAlways)) {
 			ImGui::SetKeyboardFocusHere(-1);
@@ -45,7 +44,7 @@ namespace Modex
 		ImGui::SameLine();
 
 		std::vector<std::string> pluginOptions = Data::GetTypeString();
-		if (UICustom::FancyDropdown("##Blacklist::TypeDropdown", "BLACKLIST_TYPE_TOOLTIP", SettingsModule::m_type, pluginOptions, widget_width)) {
+		if (UICustom::FancyDropdown("##Blacklist::TypeDropdown", "BLACKLIST_TYPE_TOOLTIP", m_type, pluginOptions, widget_width)) {
 			BuildBlacklistPlugins();
 		}
 
@@ -55,11 +54,11 @@ namespace Modex
 		ImGui::SameLine();
 
 		std::vector<std::string> sortOptions = Data::GetSortStrings();
-		if (UICustom::FancyDropdown("##Blacklist::SortDropdown", "BLACKLIST_SORT_TOOLTIP", SettingsModule::m_sort, sortOptions, 0.0f)) { 
+		if (UICustom::FancyDropdown("##Blacklist::SortDropdown", "BLACKLIST_SORT_TOOLTIP", m_sort, sortOptions, 0.0f)) { 
 			BuildBlacklistPlugins();
 		}
 
-		std::string pluginFilter = SettingsModule::m_modSearchBuffer;
+		std::string pluginFilter = m_modSearchBuffer;
 		std::transform(pluginFilter.begin(), pluginFilter.end(), pluginFilter.begin(),
 			[](unsigned char c) { return static_cast<char>(std::tolower(c)); });
 
@@ -75,7 +74,7 @@ namespace Modex
 
 			ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 
-			for (const auto& plugin : SettingsModule::m_pluginList) {
+			for (const auto& plugin : m_pluginList) {
 				const std::string pluginName = plugin->GetFilename().data();
 				auto pluginNameLower = pluginName;
 
@@ -109,7 +108,7 @@ namespace Modex
 
 			ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 
-			for (const auto& plugin : SettingsModule::m_pluginList) {
+			for (const auto& plugin : m_pluginList) {
 				const std::string pluginName = plugin->GetFilename().data();
 				auto pluginNameLower = pluginName;
 
