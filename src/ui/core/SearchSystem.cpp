@@ -84,7 +84,7 @@ namespace Modex
 			[](unsigned char c) { return static_cast<char>(std::tolower(c)); });
 
 		if (!input.empty()) {
-			compareString = a_object->GetProperty(m_searchKey);
+			compareString = a_object->GetPropertyByFilter(m_searchKey);
 
 			std::transform(compareString.begin(), compareString.end(), compareString.begin(),
 				[](unsigned char c) { return static_cast<char>(std::tolower(c)); });

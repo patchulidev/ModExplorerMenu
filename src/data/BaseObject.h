@@ -37,7 +37,7 @@ namespace Modex
 		kFurniture,
 		kActivator,
 		kTree,
-		kFlower,
+		kFlora,
 		kPlugin, 				// General
 		kFormID,
 		kName,
@@ -73,8 +73,11 @@ namespace Modex
 		kLevel,
 		kDefaultOutfit,
 		kSleepOutfit,
+		kKeyword,
 		kKeywordList,
+		kFaction,
 		kFactionList,
+		kSpell,
 		kSpellList,
 		kCell,					// Location Properties
 		kLand,
@@ -131,9 +134,9 @@ namespace Modex
 			return Translate(key.data());
 		}
 		
-		static std::string GetIconTooltipKey(PropertyType a_type)
+		static std::string GetPropertyTooltipKey(PropertyType a_property)
 		{
-			return std::string(magic_enum::enum_name(a_type).data()) + "_TOOLTIP";
+			return std::string(magic_enum::enum_name(a_property).data()) + "_TOOLTIP";
 		}
 
 		static std::string GetIcon(PropertyType a_type)
@@ -173,7 +176,7 @@ namespace Modex
 				return ICON_LC_TARGET;
 			case PropertyType::kTree:
 				return ICON_LC_TREE_PINE;
-			case PropertyType::kFlower:
+			case PropertyType::kFlora:
 				return ICON_LC_FLOWER;
 			case PropertyType::kPlugin:
 				return ICON_LC_BOX;
@@ -245,12 +248,16 @@ namespace Modex
 				return ICON_LC_USERS_ROUND;
 			case PropertyType::kSpellList:
 				return ICON_LC_GRADUATION_CAP;
+			case PropertyType::kKeyword:
+				return ICON_LC_TAG;
 			case PropertyType::kKeywordList:
 				return ICON_LC_TAG;
 			case PropertyType::kDefaultOutfit:
 				return ICON_LC_SHIRT;
 			case PropertyType::kSleepOutfit:
 				return ICON_LC_SHIRT;
+			case PropertyType::kSpell:
+				return ICON_LC_WAND; // TODO: Verify if this is a good fit?
 			case PropertyType::kSpellCost:
 				return ICON_LC_ZAP;
 			case PropertyType::kSpellType:
@@ -1048,13 +1055,30 @@ namespace Modex
 			return 0;
 		}
 
-		inline std::optional<RE::TESSpellList::SpellData*> GetSpellList() const
+		inline std::vector<std::string> GetSpellList() const
 		{
+			std::vector<std::string> spells;
+
 			if (auto npc = GetTESNPC(); npc.has_value()) {
-				return npc.value()->GetSpellList();
+				const auto spellList = npc.value()->GetSpellList();
+
+				if (spellList != nullptr && spellList->numSpells > 0) {
+					for (uint32_t i = 0; i < spellList->numSpells; i++) {
+						if (spellList->spells[i] == nullptr)
+							continue;
+
+						const auto* spell = spellList->spells[i];
+
+						if (spell != nullptr) {
+							if (spell->GetName() != nullptr) {
+								spells.push_back(spell->GetName());
+							}
+						}
+					}
+				}
 			}
 
-			return std::nullopt;
+			return spells;
 		}
 
 		inline std::string GetDefaultOutfit() const
@@ -1124,6 +1148,24 @@ namespace Modex
 			}
 
 			return false;
+		}
+
+		inline bool HasFaction(const std::string& a_faction) const
+		{
+			const auto factions = GetMergedString(GetFactionList());
+			return factions.find(a_faction) != std::string::npos ? "true" : "false";
+		}
+
+		inline bool HasSpell(const std::string& a_spell) const
+		{
+			const auto spells = GetMergedString(GetSpellList());
+			return spells.find(a_spell) != std::string::npos ? "true" : "false";
+		}
+
+		inline bool HasKeyword(const std::string& a_keyword) const
+		{
+			const auto keywords = GetMergedString(GetKeywordList());
+			return keywords.find(a_keyword) != std::string::npos ? "true" : "false";
 		}
 
 		inline std::string GetMergedString(const std::vector<std::string>& a_list) const
@@ -1242,79 +1284,85 @@ namespace Modex
 				return "";
 
 			std::string icon = FilterProperty::GetIcon(a_property);
-			std::string value = GetProperty(a_property);
+			std::string value = GetPropertyByValue(a_property);
 
 			if (value.empty() or value == "None" or value == "0" or value == "0.0")
 				return "";
 
 			return icon + " " + value;
 		}
+
+		// Maps Skyrim FormType's to Modex PropertyType system.
+		PropertyType GetItemPropertyType() const {
+			auto formType = GetFormType();
+			switch (formType)
+			{
+				case RE::FormType::Armor:
+					return (PropertyType::kArmor);
+				case RE::FormType::AlchemyItem:
+					return (PropertyType::kAlchemy);
+				case RE::FormType::Ammo:
+					return (PropertyType::kAmmo);
+				case RE::FormType::Book:
+					return (PropertyType::kBook);
+				case RE::FormType::Ingredient:
+					return (PropertyType::kIngredient);
+				case RE::FormType::KeyMaster:
+					return (PropertyType::kKeyMaster);
+				case RE::FormType::Misc:
+					return (PropertyType::kMisc);
+				case RE::FormType::Scroll:
+					return (PropertyType::kScroll);
+				case RE::FormType::Weapon:
+					return (PropertyType::kWeapon);
+				case RE::FormType::NPC:
+					return (PropertyType::kNPC);
+				case RE::FormType::Class:
+					return (PropertyType::kClass);
+				case RE::FormType::Race:
+					return (PropertyType::kRace);
+				case RE::FormType::Faction:
+					return (PropertyType::kFactionList);
+				case RE::FormType::Spell:
+					return (PropertyType::kSpellType);
+				case RE::FormType::Tree:
+					return (PropertyType::kTree);
+				case RE::FormType::Static:
+					return (PropertyType::kStatic);
+				case RE::FormType::Container:
+					return (PropertyType::kContainer);
+				case RE::FormType::Activator:
+					return (PropertyType::kActivator);
+				case RE::FormType::Light:
+					return (PropertyType::kLight);
+				case RE::FormType::Door:
+					return (PropertyType::kDoor);
+				case RE::FormType::Furniture:
+					return (PropertyType::kFurniture);
+				case RE::FormType::Flora:
+					return (PropertyType::kFlora);
+				default: ASSERT_MSG(true, "Unhandled GetItemPropertyType() case in BaseObject. '{}'", magic_enum::enum_name(formType));
+					return PropertyType::kNone;
+			}
+		}
 		
 		std::string GetItemIcon() const
 		{
-			auto formType = GetFormType();
-			switch(formType)
-			{
-				case RE::FormType::Armor:
-					return FilterProperty::GetIcon(PropertyType::kArmor);
-				case RE::FormType::AlchemyItem:
-					return FilterProperty::GetIcon(PropertyType::kAlchemy);
-				case RE::FormType::Ammo:
-					return FilterProperty::GetIcon(PropertyType::kAmmo);
-				case RE::FormType::Book:
-					return FilterProperty::GetIcon(PropertyType::kBook);
-				case RE::FormType::Ingredient:
-					return FilterProperty::GetIcon(PropertyType::kIngredient);
-				case RE::FormType::KeyMaster:
-					return FilterProperty::GetIcon(PropertyType::kKeyMaster);
-				case RE::FormType::Misc:
-					return FilterProperty::GetIcon(PropertyType::kMisc);
-				case RE::FormType::Scroll:
-					return FilterProperty::GetIcon(PropertyType::kScroll);
-				case RE::FormType::Weapon:
-					return FilterProperty::GetIcon(PropertyType::kWeapon);
-				case RE::FormType::NPC:
-					return FilterProperty::GetIcon(PropertyType::kNPC);
-				case RE::FormType::Class:
-					return FilterProperty::GetIcon(PropertyType::kClass);
-				case RE::FormType::Race:
-					return FilterProperty::GetIcon(PropertyType::kRace);
-				case RE::FormType::Faction:
-					return FilterProperty::GetIcon(PropertyType::kFactionList);
-				case RE::FormType::Spell:
-					return FilterProperty::GetIcon(PropertyType::kSpellType);
-				case RE::FormType::Tree:
-					return FilterProperty::GetIcon(PropertyType::kTree);
-				case RE::FormType::Static:
-					return FilterProperty::GetIcon(PropertyType::kStatic);
-				case RE::FormType::Container:
-					return FilterProperty::GetIcon(PropertyType::kContainer);
-				case RE::FormType::Activator:
-					return FilterProperty::GetIcon(PropertyType::kActivator);
-				case RE::FormType::Light:
-					return FilterProperty::GetIcon(PropertyType::kLight);
-				case RE::FormType::Door:
-					return FilterProperty::GetIcon(PropertyType::kDoor);
-				case RE::FormType::Furniture:
-					return FilterProperty::GetIcon(PropertyType::kFurniture);
-				case RE::FormType::Flora:
-					return FilterProperty::GetIcon(PropertyType::kFlower);
-				default:
-					// ASSERT_MSG(true, "Unhandled GetIcon() case in BaseObject. '{}'", magic_enum::enum_name(formType));
-					return ICON_LC_TRIANGLE_ALERT;
-			}
+			return FilterProperty::GetIcon(GetItemPropertyType());
 		}
 
-		std::string GetProperty(const FilterProperty& property) const
+		// Helper for retrieving Property value by FilterProperty.
+		std::string GetPropertyByFilter(const FilterProperty& property) const
 		{
-			return GetProperty(property.GetPropertyType());
+			return GetPropertyByValue(property.GetPropertyType());
 		}
 
-		std::string GetProperty(const std::string& a_name) const
+		// For JSON rule evaluation. Convert string to desired PropertyType.
+		std::string GetPropertyByString(const std::string& a_name) const
 		{
 			auto propertyType = magic_enum::enum_cast<PropertyType>(a_name);
 			if (propertyType.has_value()) {
-				return GetProperty(propertyType.value());
+				return GetPropertyByValue(propertyType.value());
 			} else {
 				ASSERT_MSG(true, "BaseObject -> GetProperty(const std::string& a_name): Unhandled property name: " + a_name);
 			}
@@ -1322,8 +1370,8 @@ namespace Modex
 			return "";
 		}
 
-		 // Should I use enums instead of property name?
-		std::string GetProperty(PropertyType a_property) const {
+		// Returns the value of the objects specified property as a string.
+		std::string GetPropertyByValue(PropertyType a_property, const std::string& a_arg = "") const {
 			switch (a_property)
 			{
 				case PropertyType::kNone:
@@ -1345,7 +1393,7 @@ namespace Modex
 				case PropertyType::kFurniture:
 				case PropertyType::kActivator:
 				case PropertyType::kTree:
-				case PropertyType::kFlower:
+				case PropertyType::kFlora:
 				case PropertyType::kCell:
 				case PropertyType::kLand:
 				case PropertyType::kImGuiSeparator:
@@ -1416,16 +1464,22 @@ namespace Modex
 					return IsEssential() ? "true" : "false";
 				case PropertyType::kDisabled:
 					return IsDisabled() ? "true" : "false";
+				case PropertyType::kFaction:
+					return HasFaction(a_arg) ? "true" : "false";
 				case PropertyType::kFactionList:
 					return GetMergedString(GetFactionList());
 				case PropertyType::kSpellList:
-					return ""; // TODO
+					return GetMergedString(GetSpellList());
+				case PropertyType::kKeyword:
+					return HasKeyword(a_arg) ? "true" : "false";
 				case PropertyType::kKeywordList:
 					return GetMergedString(GetKeywordList());
 				case PropertyType::kDefaultOutfit:
 					return GetDefaultOutfit();
 				case PropertyType::kSleepOutfit:
 					return GetSleepOutfit();
+				case PropertyType::kSpell:
+					return HasSpell(a_arg) ? "true" : "false";
 				case PropertyType::kSpellCost:
 					return ""; // TODO: Needs actor context
 				case PropertyType::kSpellDelivery:

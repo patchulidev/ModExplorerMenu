@@ -14,7 +14,7 @@ namespace Modex
 	{
 		const ImVec2 window_padding = ImGui::GetStyle().WindowPadding;
 		const float table_width = ImGui::GetContentRegionAvail().x * 0.75f + window_padding.x;
-		const float table_height = ImGui::GetContentRegionAvail().y - (window_padding.y * 2.0f);
+		const float table_height = ImGui::GetContentRegionAvail().y - window_padding.y;
 		const float full_width = ImGui::GetContentRegionAvail().x;
 
 		ImVec2 table_pos = ImGui::GetCursorPos();

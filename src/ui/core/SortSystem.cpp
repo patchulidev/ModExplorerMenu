@@ -65,8 +65,8 @@ namespace Modex
 	bool SortSystem::SortFn(const std::unique_ptr<BaseObject>& a_lhs, const std::unique_ptr<BaseObject>& a_rhs) const
     {
 		const auto property = m_currentSortFilter.GetPropertyType();
-		const auto lhs_value = a_lhs->GetProperty(property);
-		const auto rhs_value = a_rhs->GetProperty(property);
+		const auto lhs_value = a_lhs->GetPropertyByValue(property);
+		const auto rhs_value = a_rhs->GetPropertyByValue(property);
 
 		// Check if properties are empty/invalid - these should always go to the bottom
 		const bool lhs_empty = lhs_value.empty() || lhs_value == "0";
@@ -100,7 +100,7 @@ namespace Modex
 			case PropertyType::kFurniture:
 			case PropertyType::kActivator:
 			case PropertyType::kTree:
-			case PropertyType::kFlower:
+			case PropertyType::kFlora:
 			case PropertyType::kPlugin:
 			case PropertyType::kFormID:
 			case PropertyType::kName:

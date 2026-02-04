@@ -52,7 +52,7 @@ namespace Modex
 			}
 			
 			// Get the property value from the item
-			std::string itemValue = item->GetProperty(property);
+			std::string itemValue = item->GetPropertyByString(property);
 			std::transform(itemValue.begin(), itemValue.end(), itemValue.begin(), ::tolower);
 
 			std::string valueLower = value;

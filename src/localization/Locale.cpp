@@ -81,6 +81,34 @@ namespace Modex
 		return "";
 	}
 
+	std::string Locale::TruncateText(const std::string& a_text, float a_width)
+	{
+		const float textWidth = ImGui::CalcTextSize(a_text.c_str()).x;
+
+		if (textWidth > a_width) {
+			const float ellipsisWidth = ImGui::CalcTextSize("...").x;
+
+			std::string result = "";
+			float resultWidth = 0.0f;
+
+			for (const auto& c : a_text) {
+				const float charWidth = ImGui::CalcTextSize(std::string(1, c).c_str()).x;
+
+				if (resultWidth + charWidth + ellipsisWidth > a_width) {
+					result += "...";
+					break;
+				}
+
+				result += c;
+				resultWidth += charWidth;
+			}
+
+			return result;
+		}
+
+		return a_text;
+	}
+
 	std::filesystem::path Locale::GetFilepath(const std::string& a_stem)
 	{
 		Debug("Conducting Lookup for Locale file '{}' in '{}'", a_stem, LOCALE_JSON_DIR.string());

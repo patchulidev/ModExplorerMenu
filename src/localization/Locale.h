@@ -30,8 +30,11 @@ namespace Modex
 		const char* GetTranslation(const char* fallback_text) const;
 		const char* GetTooltip(const char* a_localeString) const;
 		bool HasTooltip(const char* a_localeString) const;
+
+		std::string TruncateText(const std::string& a_text, float a_maxLength);
     };
 
+    #define TRUNCATE(text, maxLength) Locale::GetSingleton()->TruncateText(text, maxLength)
 	#define Translate(text) Locale::GetSingleton()->GetTranslation(text)
     #define TranslateFormat(text, suffix) (std::string(Translate(text)) + suffix).c_str()
     #define TranslateIcon(icon, text) ((std::string(icon) + Translate(text)).c_str())
