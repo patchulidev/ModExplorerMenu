@@ -2,6 +2,7 @@
 #include "localization/Locale.h"
 #include "ui/core/UIManager.h"
 #include "ui/components/UICustom.h"
+#include "ui/components/UINotification.h"
 #include "ui/modules/actor/ActorModule.h"
 #include "ui/modules/home/HomeModule.h"
 #include "ui/modules/object/ObjectModule.h"
@@ -105,8 +106,12 @@ namespace Modex
 			sidebar_w = expand_sidebar ? max_sidebar_w : min_sidebar_w;
 			sidebar_initialized = true;
 		}
-
 		
+		
+		// TODO: Add a configurable option to draw tooltip below window instead?
+		UINotification::DrawMessageContainer(ImVec2(center_x, center_y), ImVec2(sidebar_w, sidebar_h), expand_sidebar); 
+		UINotification::DrawTooltipContainer(ImVec2(center_x + sidebar_w, center_y), ImVec2(window_w - sidebar_w, window_h));
+
 		// Push style for Modex Menu window
 		ImGui::PushStyleColor(ImGuiCol_WindowBg, ThemeConfig::GetColor("WINDOW_BACKGROUND", m_alpha));
 		ImGui::PushStyleColor(ImGuiCol_TableRowBg, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
@@ -164,8 +169,10 @@ namespace Modex
 
 	void Menu::DrawSidebar()
 	{
+		sidebar_h = ImGui::GetContentRegionAvail().y + ImGui::GetStyle().WindowPadding.y;
+
 		ImGui::SetNextItemAllowOverlap();
-		if (ImGui::BeginChild("##Modex::Menu::SideBar", ImVec2(sidebar_w, ImGui::GetContentRegionAvail().y + ImGui::GetStyle().WindowPadding.y), ImGuiChildFlags_Borders, WINDOW_FLAGS)) {
+		if (ImGui::BeginChild("##Modex::Menu::SideBar", ImVec2(sidebar_w, sidebar_h), ImGuiChildFlags_Borders, WINDOW_FLAGS)) {
 			const float button_width = ImGui::GetContentRegionAvail().x;
 			const float button_height = ImGui::GetFontSize() * 2.0f;
 
@@ -304,7 +311,7 @@ namespace Modex
 			{Translate("MODULE_ACTOR"), ICON_LC_USER, .0f, ModuleType::Actor},
 			{Translate("MODULE_OBJECT"), ICON_LC_BLOCKS, .0f, ModuleType::Object},
 			{Translate("MODULE_TELEPORT"), ICON_LC_MAP_PIN, .0f, ModuleType::Teleport},
-			{Translate("MODULE_SETTINGS"), ICON_LC_COG, .0f, ModuleType::Settings}
+			{Translate("MODULE_SETTINGS"), ICON_LC_SETTINGS, .0f, ModuleType::Settings}
 		};
 
 		Trace("Menu::Menu() - Constructed");

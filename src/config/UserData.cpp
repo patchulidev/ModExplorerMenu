@@ -1,5 +1,7 @@
 #include "UserData.h"
 
+#include "ui/components/UINotification.h"
+
 namespace Modex
 {
 	void UserData::Save()
@@ -30,6 +32,8 @@ namespace Modex
 
 		recent.erase(std::remove(recent.begin(), recent.end(), edid), recent.end());
 		recent.insert(recent.begin(), edid);
+
+		UINotification::ShowAdd(a_item);
 
 		if (recent.size() > m_recent.maxSize) {
 			recent.resize(m_recent.maxSize);

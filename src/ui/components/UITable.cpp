@@ -8,6 +8,7 @@
 #include "ui/core/UIManager.h"
 #include "ui/components/UICustom.h"
 #include "ui/components/ItemPreview.h"
+#include "ui/components/UINotification.h"
 #include "config/EquipmentConfig.h"
 #include "config/BlacklistConfig.h"
 #include "config/UserConfig.h"
@@ -25,15 +26,13 @@ namespace Modex
 		return baseObject && (baseObject->IsActor() || baseObject->GetFormType() == RE::FormType::Container);
 	}
 
-	bool UITable::IsMouseHoveringRectDelayed(const ImVec2& a_min, const ImVec2& a_max)
+	bool UITable::IsMouseHoveringRect(const ImVec2& a_min, const ImVec2& a_max)
 	{
-		// BUG: This broke somehow.
-		// if (HasFlag(ModexTableFlag_EnableItemPreviewOnHover))
-			// return false;
+		if (HasFlag(ModexTableFlag_EnableItemPreviewOnHover))
+			return false;
 
-		const auto& g = *GImGui;
 		if (ImGui::IsMouseHoveringRect(a_min, a_max)) {
-			return (g.MouseStationaryTimer>= ImGui::GetStyle().HoverDelayNormal);
+			return ImGui::IsItemHovered(ImGuiHoveredFlags_NoSharedDelay | ImGuiHoveredFlags_DelayNone);
 		}
 
 		return false;
@@ -1470,11 +1469,11 @@ namespace Modex
 			GetFormTypeColor(a_item->GetFormType()));
 
 		// Type Pillar tooltip
-			if (IsMouseHoveringRectDelayed(
-				ImVec2(bb.Min.x + LayoutOuterPadding, bb.Min.y + LayoutOuterPadding),
-				ImVec2(bb.Min.x + LayoutOuterPadding + type_pillar_width, bb.Max.y - LayoutOuterPadding))) {
-				ImGui::SetTooltip("%s", RE::FormTypeToString(a_item->GetFormType()).data());
-			}
+		if (IsMouseHoveringRect(
+			ImVec2(bb.Min.x + LayoutOuterPadding, bb.Min.y + LayoutOuterPadding),
+			ImVec2(bb.Min.x - LayoutOuterPadding + type_pillar_width, bb.Max.y - LayoutOuterPadding))) {
+			UINotification::ShowObjectTooltip(a_item);
+		}
 	
 
 		// We need to adjust the bounding box to account for the type pillar.
@@ -1556,9 +1555,10 @@ namespace Modex
 				this->SyncChangesToKit();
 			}
 			
-			if (ImGui::IsItemHovered(ImGuiHoveredFlags_Stationary)) {
-				ImGui::SetTooltip("%s", Translate("ADD_AMOUNT_TOOLTIP"));
-			}
+			// if (ImGui::IsItemHovered(ImGuiHoveredFlags_Stationary)) {
+				// ImGui::SetTooltip("%s", Translate("ADD_AMOUNT_TOOLTIP"));
+				// UINotification::ShowTooltip(Translate("ADD_AMOUNT_TOOLTIP"));
+			// }
 		}
 	}
 
@@ -1609,12 +1609,10 @@ namespace Modex
 			GetFormTypeColor(a_item->GetFormType()));
 
 		// Type Pillar tooltip
-		if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows)) {
-			if (IsMouseHoveringRectDelayed(
-				ImVec2(bb.Min.x + LayoutOuterPadding, bb.Min.y + LayoutOuterPadding),
-				ImVec2(bb.Min.x + LayoutOuterPadding + type_pillar_width, bb.Max.y - LayoutOuterPadding))) {
-				ImGui::SetTooltip("%s", RE::FormTypeToString(a_item->GetFormType()).data());
-			}
+		if (IsMouseHoveringRect(
+			ImVec2(bb.Min.x + LayoutOuterPadding, bb.Min.y + LayoutOuterPadding),
+			ImVec2(bb.Min.x + LayoutOuterPadding + type_pillar_width, bb.Max.y - LayoutOuterPadding))) {
+			UINotification::ShowObjectTooltip(a_item);
 		}
 
 		// We need to adjust the bounding box to account for the type pillar.
@@ -1700,24 +1698,19 @@ namespace Modex
 					// 	}
 					// }
 
-					if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows)) {
-						if (IsMouseHoveringRectDelayed(unique_pos, ImVec2(unique_pos.x + fontSize, unique_pos.y + fontSize))) {
-							if (npcData->IsUnique()) {
-								// ImGui::SetTooltip(Translate("TOOLTIP_UNIQUE"));
-								UICustom::FancyTooltip(Translate("TOOLTIP_UNIQUE"));
-							} else if (npcData->IsEssential()) {
-								// ImGui::SetTooltip(Translate("TOOLTIP_ESSENTIAL"));
-								UICustom::FancyTooltip(Translate("TOOLTIP_ESSENTIAL"));
-							}
-						}
-
-						if (IsMouseHoveringRectDelayed(essential_pos, ImVec2(essential_pos.x + fontSize, essential_pos.y + fontSize))) {
-							if (npcData->IsEssential()) {
-								// ImGui::SetTooltip(Translate("TOOLTIP_ESSENTIAL"));
-								UICustom::FancyTooltip(Translate("TOOLTIP_ESSENTIAL"));
-							}
-						}
-					}
+					// if (IsMouseHoveringRectDelayed(unique_pos, ImVec2(unique_pos.x + fontSize, unique_pos.y + fontSize))) {
+					// 	if (npcData->IsUnique()) {
+					// 		UICustom::FancyTooltip("TOOLTIP_UNIQUE");
+					// 	} else if (npcData->IsEssential()) {
+					// 		UICustom::FancyTooltip("TOOLTIP_ESSENTIAL");
+					// 	}
+					// }
+					//
+					// if (IsMouseHoveringRectDelayed(essential_pos, ImVec2(essential_pos.x + fontSize, essential_pos.y + fontSize))) {
+					// 	if (npcData->IsEssential()) {
+					// 		UICustom::FancyTooltip("TOOLTIP_ESSENTIAL");
+					// 	}
+					// }
 
 					// if (a_item.m_refID != 0) {
 					// 	name_string = TRUNCATE(Utils::IconMap["REFID"] + name_string, spacing);
@@ -1737,10 +1730,8 @@ namespace Modex
 			const ImVec2 value_pos = ImVec2(center_right_align.x - value_width, center_right_align.y);
 			DrawList->AddText(value_pos, text_color, value_string.c_str());
 
-			if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows)) {
-				if (IsMouseHoveringRectDelayed(value_pos, ImVec2(value_pos.x + value_width, value_pos.y + fontSize))) {
-					UICustom::FancyTooltip(FilterProperty::GetIconTooltipKey(PropertyType::kGoldValue).c_str());
-				}
+			if (IsMouseHoveringRect(value_pos, ImVec2(value_pos.x + value_width, value_pos.y + fontSize))) {
+				UINotification::ShowPropertyTooltip(PropertyType::kGoldValue);
 			}
 
 			if (const auto& armor = item->GetTESArmor(); armor.has_value()) {
@@ -1756,10 +1747,8 @@ namespace Modex
 
 					if (sort_property == PropertyType::kNone) {
 						DrawList->AddText(sort_pos, text_color, rating_string.c_str());
-						if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows)) {
-							if (IsMouseHoveringRectDelayed(sort_pos, ImVec2(sort_pos.x + fontSize, sort_pos.y + fontSize))) {
-								UICustom::FancyTooltip(FilterProperty::GetIconTooltipKey(PropertyType::kArmorRating).c_str());
-							}
+						if (IsMouseHoveringRect(sort_pos, ImVec2(sort_pos.x + fontSize, sort_pos.y + fontSize))) {
+							UINotification::ShowPropertyTooltip(PropertyType::kArmorRating);
 						}
 					}
 				}
@@ -1782,13 +1771,11 @@ namespace Modex
 							DrawList->AddText(sort_pos, text_color, spell_string.c_str());
 						}
 						
-						if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows)) {
-							if (IsMouseHoveringRectDelayed(sort_pos, ImVec2(sort_pos.x + fontSize, sort_pos.y + fontSize))) {
-								if (teaches_skill) {
-									UICustom::FancyTooltip(FilterProperty::GetIconTooltipKey(PropertyType::kTomeSkill).c_str());
-								} else if (teaches_spell) {
-									UICustom::FancyTooltip(FilterProperty::GetIconTooltipKey(PropertyType::kTomeSpell).c_str());
-								}
+						if (IsMouseHoveringRect(sort_pos, ImVec2(sort_pos.x + fontSize, sort_pos.y + fontSize))) {
+							if (teaches_skill) {
+								UINotification::ShowPropertyTooltip(PropertyType::kTomeSkill);
+							} else if (teaches_spell) {
+								UINotification::ShowPropertyTooltip(PropertyType::kTomeSpell);
 							}
 						}
 					}
@@ -1809,10 +1796,8 @@ namespace Modex
 					
 					if (sort_property == PropertyType::kNone) {
 						DrawList->AddText(sort_pos, text_color, damage_string.c_str());
-						if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows)) {
-							if (IsMouseHoveringRectDelayed(sort_pos, ImVec2(sort_pos.x + fontSize, sort_pos.y + fontSize))) {
-								UICustom::FancyTooltip(FilterProperty::GetIconTooltipKey(PropertyType::kWeaponDamage).c_str());
-							}
+						if (IsMouseHoveringRect(sort_pos, ImVec2(sort_pos.x + fontSize, sort_pos.y + fontSize))) {
+							UINotification::ShowPropertyTooltip(PropertyType::kWeaponDamage);
 						}
 					}
 				}
@@ -1825,14 +1810,16 @@ namespace Modex
 		const ImVec2 name_pos = ImVec2(bb.Min.x + spacing - 5.0f, center_align);
 		DrawList->AddText(name_pos, is_enchanted ? ench_color : text_color, name_string.c_str());
 
+		if (IsMouseHoveringRect(name_pos, ImVec2(name_pos.x + fontSize, name_pos.y + fontSize))) {
+			UINotification::ShowObjectTooltip(a_item);
+		}
+
 		if (sort_property != PropertyType::kPlugin and sort_property != PropertyType::kName and sort_property != PropertyType::kGoldValue) {
 			const std::string sort_text = TRUNCATE(a_item->GetPropertyValueWithIcon(sort_property), spacing * 0.75f);
 			DrawList->AddText(sort_pos, text_color, sort_text.c_str());
 			
-			if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows)) {
-				if (IsMouseHoveringRectDelayed(sort_pos, ImVec2(sort_pos.x + ImGui::CalcTextSize(sort_text.c_str()).x, sort_pos.y + fontSize))) {
-					UICustom::FancyTooltip(Translate(FilterProperty::GetIconTooltipKey(sort_property).c_str()));
-				}
+			if (IsMouseHoveringRect(sort_pos, ImVec2(sort_pos.x + ImGui::CalcTextSize(sort_text.c_str()).x, sort_pos.y + fontSize))) {
+				UINotification::ShowPropertyTooltip(sort_property);
 			}
 		}
 	}
@@ -2011,7 +1998,7 @@ namespace Modex
 		}
 		
 		if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort | ImGuiHoveredFlags_NoSharedDelay)) {
-			UICustom::FancyTooltip(Translate("STATUS_BAR_TOOLTIP"));
+			UICustom::FancyTooltip("STATUS_BAR_TOOLTIP");
 		}
 
 		ImGui::SameLine();
@@ -2318,7 +2305,6 @@ namespace Modex
 		if (HasFlag(ModexTableFlag_EnableHeader)) {
 			DrawHeader();
 		}
-
 
 		if (ImGui::BeginChild("##UITable::Draw", ImVec2(0.0f, 0.0f), 0, ImGuiWindowFlags_NoMove)) {
 			// FIX: PluginList isn't deterministic of a module failing to load anymore due to

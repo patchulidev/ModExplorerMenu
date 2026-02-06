@@ -184,7 +184,7 @@ namespace Modex
 		void                    HandleItemHoverPreview(const std::unique_ptr<BaseObject>& a_item);
 		void                    HandleLeftClickBehavior(const std::unique_ptr<BaseObject>& a_item);
 		void                    HandleRightClickBehavior(const std::unique_ptr<BaseObject>& a_item);
-		bool                    IsMouseHoveringRectDelayed(const ImVec2& a_min, const ImVec2& a_max);
+		bool                    IsMouseHoveringRect(const ImVec2& a_min, const ImVec2& a_max);
 		
 		//                      debug
 		void                    Test_TableSelection();
