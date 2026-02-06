@@ -23,6 +23,49 @@ namespace Modex::UICustom
 		return GetCenterTextPosX(a_string.c_str());
 	}
 
+	ImU32 GetFormTypeColor(const RE::FormType& a_type)
+	{
+		auto alpha = ImGui::GetStyle().Alpha;
+		switch (a_type) {
+		case RE::FormType::Armor:
+			return ThemeConfig::GetColorU32("ARMO", alpha);
+		case RE::FormType::AlchemyItem:
+			return ThemeConfig::GetColorU32("ALCH", alpha);
+		case RE::FormType::Ammo:
+			return ThemeConfig::GetColorU32("AMMO", alpha);
+		case RE::FormType::Book:
+			return ThemeConfig::GetColorU32("BOOK", alpha);
+		case RE::FormType::Ingredient:
+			return ThemeConfig::GetColorU32("INGR", alpha);
+		case RE::FormType::KeyMaster:
+			return ThemeConfig::GetColorU32("KEYM", alpha);
+		case RE::FormType::Misc:
+			return ThemeConfig::GetColorU32("MISC", alpha);
+		case RE::FormType::Scroll:
+			return ThemeConfig::GetColorU32("SCRL", alpha);
+		case RE::FormType::Weapon:
+			return ThemeConfig::GetColorU32("WEAP", alpha);
+		case RE::FormType::NPC:
+			return ThemeConfig::GetColorU32("NPC_", alpha);
+		case RE::FormType::Tree:
+			return ThemeConfig::GetColorU32("TREE", alpha);
+		case RE::FormType::Static:
+			return ThemeConfig::GetColorU32("STAT", alpha);
+		case RE::FormType::Container:
+			return ThemeConfig::GetColorU32("CONT", alpha);
+		case RE::FormType::Activator:
+			return ThemeConfig::GetColorU32("ACTI", alpha);
+		case RE::FormType::Light:
+			return ThemeConfig::GetColorU32("LIGH", alpha);
+		case RE::FormType::Door:
+			return ThemeConfig::GetColorU32("DOOR", alpha);
+		case RE::FormType::Furniture:
+			return ThemeConfig::GetColorU32("FURN", alpha);
+		default:
+			return IM_COL32(169, 169, 169, 100 * alpha);  // Dark Gray
+		}
+	}
+
 	void SubCategoryHeader(const char* a_label, ImVec4 a_color)
 	{
 		ImGui::PushStyleColor(ImGuiCol_Button, a_color);
@@ -32,7 +75,7 @@ namespace Modex::UICustom
 		ImGui::PopStyleColor(3);
 	}
 
-	bool UICustom::ActionButton(const char* a_translate, const ImVec2& a_size, const bool a_condition, const ImVec4& a_color)
+	bool ActionButton(const char* a_translate, const ImVec2& a_size, const bool a_condition, const ImVec4& a_color)
 	{
 		bool success = false;
 		ImGui::PushStyleColor(ImGuiCol_Button, ImGui::ColorConvertFloat4ToU32(a_color));
@@ -156,20 +199,24 @@ namespace Modex::UICustom
 		return changed;
 	}
 
-
-	// OPTIMIZE: Can we also include hovering logic? Check references.
-	void FancyTooltip(const char* a_text)
+	void FancyTooltip(const char* a_localeString)
 	{
 		const float width = ImGui::GetIO().DisplaySize.x * 0.20f;
 
+		float window_pos_x = ImGui::GetMousePos().x - width;
+		float window_pos_y = ImGui::GetMousePos().y + ImGui::GetFrameHeight();
+
+		if (window_pos_x < 0.0f) window_pos_x = 0.0f;
+
 		ImGui::SetNextWindowSize(ImVec2(width, 0.0f));
+		ImGui::SetNextWindowPos(ImVec2(window_pos_x, window_pos_y));
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 5.0f);
 		if (ImGui::BeginTooltip()) {
 			const auto& drawList = ImGui::GetWindowDrawList();
 			const ImVec2 pos = ImGui::GetCursorScreenPos();
 			const ImVec2 size = ImGui::GetWindowSize();
 			
-			ImGui::TextWrapped("%s", Translate(a_text));
+			ImGui::TextWrapped("%s", Translate(a_localeString));
 
 			drawList->AddRectFilled(
 				ImVec2(pos.x - ImGui::GetStyle().WindowPadding.x, pos.y + (ImGui::GetFontSize() * 1.5f)),

@@ -3,6 +3,7 @@
 namespace Modex::UICustom
 {
 	// These methods can be used anywhere.
+	ImU32 GetFormTypeColor(const RE::FormType& a_type);
 	bool IconButton(const char* a_icon, const char* a_tooltip, bool& condition);
 	bool ToggleButton(const char* a_id, bool& a_value, float a_width);
 	bool SidebarImageButton(const std::string& a_title, const std::string& a_icon, bool a_selected, ImVec2 a_buttonSize, float& a_textMod, bool a_expanded);

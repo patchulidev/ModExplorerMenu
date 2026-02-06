@@ -44,7 +44,7 @@ namespace Modex
 			bool disableAlt			= false;
 			bool welcomeBanner 		= true;
 			bool smoothScroll 		= true;
-			bool basePlugin			= true;
+			bool basePlugin			= false;
 
 			std::string language 		= "English";
 			std::string theme 			= "default";

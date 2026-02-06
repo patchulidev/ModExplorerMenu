@@ -38,77 +38,6 @@ namespace Modex
 		return false;
 	}
 
-	ImU32 GetFormTypeColor(const RE::FormType& a_type)
-	{
-		auto alpha = ImGui::GetStyle().Alpha;
-		switch (a_type) {
-		case RE::FormType::Armor:
-			return ThemeConfig::GetColorU32("ARMO", alpha);
-		case RE::FormType::AlchemyItem:
-			return ThemeConfig::GetColorU32("ALCH", alpha);
-		case RE::FormType::Ammo:
-			return ThemeConfig::GetColorU32("AMMO", alpha);
-		case RE::FormType::Book:
-			return ThemeConfig::GetColorU32("BOOK", alpha);
-		case RE::FormType::Ingredient:
-			return ThemeConfig::GetColorU32("INGR", alpha);
-		case RE::FormType::KeyMaster:
-			return ThemeConfig::GetColorU32("KEYM", alpha);
-		case RE::FormType::Misc:
-			return ThemeConfig::GetColorU32("MISC", alpha);
-		case RE::FormType::Scroll:
-			return ThemeConfig::GetColorU32("SCRL", alpha);
-		case RE::FormType::Weapon:
-			return ThemeConfig::GetColorU32("WEAP", alpha);
-		case RE::FormType::NPC:
-			return ThemeConfig::GetColorU32("NPC_", alpha);
-		case RE::FormType::Tree:
-			return ThemeConfig::GetColorU32("TREE", alpha);
-		case RE::FormType::Static:
-			return ThemeConfig::GetColorU32("STAT", alpha);
-		case RE::FormType::Container:
-			return ThemeConfig::GetColorU32("CONT", alpha);
-		case RE::FormType::Activator:
-			return ThemeConfig::GetColorU32("ACTI", alpha);
-		case RE::FormType::Light:
-			return ThemeConfig::GetColorU32("LIGH", alpha);
-		case RE::FormType::Door:
-			return ThemeConfig::GetColorU32("DOOR", alpha);
-		case RE::FormType::Furniture:
-			return ThemeConfig::GetColorU32("FURN", alpha);
-		default:
-			return IM_COL32(169, 169, 169, 100 * alpha);  // Dark Gray
-		}
-	}
-
-	std::string TRUNCATE(const std::string& a_text, const float& a_width)
-	{
-		const float textWidth = ImGui::CalcTextSize(a_text.c_str()).x;
-
-		if (textWidth > a_width) {
-			const float ellipsisWidth = ImGui::CalcTextSize("...").x;
-
-			std::string result = "";
-			float resultWidth = 0.0f;
-
-			for (const auto& c : a_text) {
-				const float charWidth = ImGui::CalcTextSize(std::string(1, c).c_str()).x;
-
-				if (resultWidth + charWidth + ellipsisWidth > a_width) {
-					result += "...";
-					break;
-				}
-
-				result += c;
-				resultWidth += charWidth;
-			}
-
-			return result;
-		}
-
-		return a_text;
-	}
-
 	UITable::UITable(const std::string& a_dataID, bool a_shared, uint8_t a_type, uint32_t a_flags)
 		: data_id(a_dataID)
 		, pluginType(a_type)
@@ -1153,7 +1082,6 @@ namespace Modex
 		}
 	}
 
-	// BUG: Issue with auto sizing item preview card, or just item preview card in general.
 	void UITable::HandleItemHoverPreview(const std::unique_ptr<BaseObject>& a_item)
 	{
 		itemPreview = std::make_unique<BaseObject>(*a_item);
@@ -1464,9 +1392,9 @@ namespace Modex
 		// Type Color Identifier
 		const float type_pillar_width = 5.0f;
 		DrawList->AddRectFilled(
-			ImVec2(bb.Min.x + LayoutOuterPadding, bb.Min.y + LayoutOuterPadding),
-			ImVec2(bb.Min.x + LayoutOuterPadding + type_pillar_width, bb.Max.y - LayoutOuterPadding),
-			GetFormTypeColor(a_item->GetFormType()));
+			ImVec2(bb.Min.x, bb.Min.y),
+			ImVec2(bb.Min.x + type_pillar_width, bb.Max.y),
+			UICustom::GetFormTypeColor(a_item->GetFormType()));
 
 		// Type Pillar tooltip
 		if (IsMouseHoveringRect(
@@ -1606,7 +1534,7 @@ namespace Modex
 		DrawList->AddRectFilled(
 			ImVec2(bb.Min.x + LayoutOuterPadding, bb.Min.y + LayoutOuterPadding),
 			ImVec2(bb.Min.x + LayoutOuterPadding + type_pillar_width, bb.Max.y - LayoutOuterPadding),
-			GetFormTypeColor(a_item->GetFormType()));
+			UICustom::GetFormTypeColor(a_item->GetFormType()));
 
 		// Type Pillar tooltip
 		if (IsMouseHoveringRect(

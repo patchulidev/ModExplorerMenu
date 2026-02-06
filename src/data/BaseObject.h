@@ -358,6 +358,7 @@ namespace Modex
 			return m_form ? po3_GetEditorID(m_form->GetFormID()) : "[NULL FORM]";
 		}
 		
+		// BUG: If users change this at runtime, we need to regenerate all objects!!
 		[[nodiscard]] const std::string WGetPluginName() const {
 			const int32_t idx = UserConfig::GetCompileIndex();
 			return m_form ? ValidateFilename(idx) : "[NULL FORM]";
