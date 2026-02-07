@@ -84,24 +84,65 @@ namespace DescriptionFramework_Impl
 			FormatHTMLTag(desc, '<', '>');
 		}
 
-		// Additionally, fallback to the Base MGEF description on enchanted weapons.
+		RE::MagicItem* magicItemPtr = nullptr;
+
+
 		if (const auto enchantable = form->As<RE::TESEnchantableForm>(); enchantable != nullptr) {
-			if (enchantable->formEnchanting == nullptr) return desc;
+			magicItemPtr = enchantable->formEnchanting ? enchantable->formEnchanting->As<RE::MagicItem>() : nullptr;
+		}
 
-			if (const auto magicItem = enchantable->formEnchanting->As<RE::MagicItem>(); magicItem != nullptr) {
-				if (const auto effectItem = magicItem->GetAVEffect(); effectItem != nullptr) {
-					auto costliest = magicItem->GetCostliestEffectItem();
-					int magnitude = costliest ? static_cast<int>(costliest->GetMagnitude()) : 0;
-					int duration = costliest ? costliest->GetDuration() : 0;
+		if (const auto magicItem = form->As<RE::MagicItem>(); magicItem != nullptr) {
+			magicItemPtr = magicItem;
+		}
 
-					desc = effectItem->magicItemDescription.c_str();
-					FormatSpellTag(desc, "<mag>", magnitude);
-					FormatSpellTag(desc, "<dur>", duration);
+		if (magicItemPtr) {
+			if (const auto effectItem = magicItemPtr->GetAVEffect(); effectItem != nullptr) {
+				auto costliest = magicItemPtr->GetCostliestEffectItem();
+				int magnitude = costliest ? static_cast<int>(costliest->GetMagnitude()) : 0;
+				int duration = costliest ? costliest->GetDuration() : 0;
 
-					return desc;
-				}
+				desc = effectItem->magicItemDescription.c_str();
+				FormatSpellTag(desc, "<mag>", magnitude);
+				FormatSpellTag(desc, "<dur>", duration);
+
+				return desc;
 			}
 		}
+
+
+		// Fallback for AlchemyItems
+		// if (const auto magicItem = form->As<RE::MagicItem>(); magicItem != nullptr) {
+		// 	if (const auto effectItem = magicItem->GetAVEffect(); effectItem != nullptr) {
+		// 		auto costliest = magicItem->GetCostliestEffectItem();
+		// 		int magnitude = costliest ? static_cast<int>(costliest->GetMagnitude()) : 0;
+		// 		int duration = costliest ? costliest->GetDuration() : 0;
+		//
+		// 		desc = effectItem->magicItemDescription.c_str();
+		// 		FormatSpellTag(desc, "<mag>", magnitude);
+		// 		FormatSpellTag(desc, "<dur>", duration);
+		//
+		// 		return desc;
+		// 	}
+		// }
+		//
+		// // Additionally, fallback to the Base MGEF description on enchanted weapons.
+		// if (const auto enchantable = form->As<RE::TESEnchantableForm>(); enchantable != nullptr) {
+		// 	if (enchantable->formEnchanting == nullptr) return desc;
+		//
+		// 	if (const auto magicItem = enchantable->formEnchanting->As<RE::MagicItem>(); magicItem != nullptr) {
+		// 		if (const auto effectItem = magicItem->GetAVEffect(); effectItem != nullptr) {
+		// 			auto costliest = magicItem->GetCostliestEffectItem();
+		// 			int magnitude = costliest ? static_cast<int>(costliest->GetMagnitude()) : 0;
+		// 			int duration = costliest ? costliest->GetDuration() : 0;
+		//
+		// 			desc = effectItem->magicItemDescription.c_str();
+		// 			FormatSpellTag(desc, "<mag>", magnitude);
+		// 			FormatSpellTag(desc, "<dur>", duration);
+		//
+		// 			return desc;
+		// 		}
+		// 	}
+		// }
 
 		return desc;
 	}
