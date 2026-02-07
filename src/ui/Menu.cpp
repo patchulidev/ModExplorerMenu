@@ -59,7 +59,7 @@ namespace Modex
 
 		m_activeModule.reset();
 
-		m_activeModule = CreateModule(a_moduleIndex);
+		m_activeModule = CreateModule(m_moduleInfo[a_moduleIndex].type);
 		m_activeModuleIndex = a_moduleIndex;
 
 		if (m_activeModule) {
@@ -69,7 +69,7 @@ namespace Modex
 
 	void Menu::NextWindow()
 	{
-		uint8_t next_index = (m_activeModuleIndex + 1) % static_cast<uint8_t>(ModuleType::Count);
+		uint8_t next_index = (m_activeModuleIndex + 1) % static_cast<uint8_t>(m_moduleInfo.size());
 		LoadModule(next_index, 0);
 	}
 
@@ -223,9 +223,7 @@ namespace Modex
 
 				if (UICustom::SidebarImageButton(info.name, info.icon, is_active, ImVec2(button_width, button_height), info.width, expand_sidebar)) {
 					if (m_activeModule) {
-						LoadModule(i, m_activeModule->GetActiveLayoutIndex());
-					} else {
-						LoadModule(i, 0);
+						LoadModule(i, 0); // m_activeModule->GetActiveLayoutIndex();
 					}
 				}
 			}
@@ -250,7 +248,6 @@ namespace Modex
 					sidebar_w = min_sidebar_w;
 				}
 			}
-			
 		}
 
 		ImGui::EndChild();
@@ -308,9 +305,9 @@ namespace Modex
 			{Translate("MODULE_HOME"), ICON_LC_HOUSE, .0f, ModuleType::Home},
 			{Translate("MODULE_ADDITEM"), ICON_LC_PLUS, .0f, ModuleType::AddItem},
 			{Translate("MODULE_EQUIPMENT"), ICON_LC_PACKAGE, .0f, ModuleType::Equipment},
-			{Translate("MODULE_ACTOR"), ICON_LC_USER, .0f, ModuleType::Actor},
-			{Translate("MODULE_OBJECT"), ICON_LC_BLOCKS, .0f, ModuleType::Object},
-			{Translate("MODULE_TELEPORT"), ICON_LC_MAP_PIN, .0f, ModuleType::Teleport},
+			// {Translate("MODULE_ACTOR"), ICON_LC_USER, .0f, ModuleType::Actor},
+			// {Translate("MODULE_OBJECT"), ICON_LC_BLOCKS, .0f, ModuleType::Object},
+			// {Translate("MODULE_TELEPORT"), ICON_LC_MAP_PIN, .0f, ModuleType::Teleport},
 			{Translate("MODULE_SETTINGS"), ICON_LC_SETTINGS, .0f, ModuleType::Settings}
 		};
 

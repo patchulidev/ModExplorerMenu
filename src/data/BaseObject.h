@@ -1154,19 +1154,19 @@ namespace Modex
 		inline bool HasFaction(const std::string& a_faction) const
 		{
 			const auto factions = GetMergedString(GetFactionList());
-			return factions.find(a_faction) != std::string::npos ? "true" : "false";
+			return factions.find(a_faction) != std::string::npos ? true : false;
 		}
 
 		inline bool HasSpell(const std::string& a_spell) const
 		{
 			const auto spells = GetMergedString(GetSpellList());
-			return spells.find(a_spell) != std::string::npos ? "true" : "false";
+			return spells.find(a_spell) != std::string::npos ? true : false;
 		}
 
 		inline bool HasKeyword(const std::string& a_keyword) const
 		{
 			const auto keywords = GetMergedString(GetKeywordList());
-			return keywords.find(a_keyword) != std::string::npos ? "true" : "false";
+			return keywords.find(a_keyword) != std::string::npos ? true : false;
 		}
 
 		inline std::string GetMergedString(const std::vector<std::string>& a_list) const
@@ -1342,7 +1342,7 @@ namespace Modex
 					return (PropertyType::kFurniture);
 				case RE::FormType::Flora:
 					return (PropertyType::kFlora);
-				default: ASSERT_MSG(true, "Unhandled GetItemPropertyType() case in BaseObject. '{}'", magic_enum::enum_name(formType));
+				default: ASSERT_MSG(true, "Unhandled GetItemPropertyType() case in BaseObject. '{}' '{}'", magic_enum::enum_name(formType), GetEditorID());
 					return PropertyType::kNone;
 			}
 		}

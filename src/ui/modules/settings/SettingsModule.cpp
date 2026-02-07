@@ -179,5 +179,7 @@ namespace Modex
 			[this](std::vector<std::unique_ptr<UITable>>& a_tables) {
 				DrawBlacklistLayout(a_tables);
 		}});
+
+		BuildBlacklistPlugins();
 	}
 }
