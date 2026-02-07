@@ -18,13 +18,13 @@
 
 - [ ] :construction: A welcome banner on startup.  
 - [ ] :construction: Outfit module allowing users to act on pre-defined outfits defined by the game. Assign, change, etc.  
-- [ ] :construction: Streamline plugin indexing and filtering. It's not very intuitive for users right now.
+- [x] :construction: Streamline plugin indexing and filtering. It's not very intuitive for users right now.
 - [ ] :construction: Reduce usage of favicons in unecessary menu panes. Item Preview for example.
 - [ ] :construction: Support for editorid lookup for table target references.
-- [ ] :bulb: Direct keyword lookup in search field for tables. Would need to probably be exclusive.
+- [x] :bulb: Direct keyword lookup in search field for tables. Would need to probably be exclusive.
 - [ ] :bulb: Shout / Dragon Soul module to unify Modex as more of a cheat menu and debug tool.
 - [ ] :bulb: Peek / Popup inventory window for NPC references in Actor module.
-- [ ] :bulb: Manual Input / Popup for table/console reference selection.
+- [x] :bulb: Manual Input / Popup for table/console reference selection.
 - [ ] :bulb: Inventory Swap / Trade module for quickly swapping between two inventories.
 - [ ] :bulb: Do something with the home module already...
 - [ ] :bulb: Skyprompt integration for quicker menu interactions, reference selection, and more.
@@ -40,6 +40,7 @@
 - [x] :zap: optimize: More robust Drag'n'Drop behavior implementation with new graphics and tooltips.
 - [x] :zap: optimize: Huge improvements to memory allocation and management for table and objects.
 - [x] :dizzy: add: Additional shortcuts and handling for table target references.
+- [x] :sparkles: feature: New message log, and tooltip container for portraying hints and events.
 - [x] :sparkles: feature: Tables now use target references that can be set by formid or console.
 - [x] :sparkles: feature: Support for additional search comparators including basic Regex.
 - [x] :sparkles: feature: Configurable Tree node style filter system for form types with multi-selection filtering.
