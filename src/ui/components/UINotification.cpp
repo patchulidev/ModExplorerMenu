@@ -16,7 +16,7 @@ namespace Modex
 		s_tooltip.icon = a_icon.empty() ? ICON_LC_INFO : a_icon;
 		s_tooltip.type = UIMessageType::Tooltip;
 		s_tooltip.active = true;
-		s_tooltip.duration = 0.0f;
+		s_tooltip.duration = 1.0f; // Linger Time
 		s_tooltip.timestamp = std::chrono::steady_clock::now();
 	}
 
@@ -162,9 +162,15 @@ namespace Modex
 	{
 		if (!s_tooltip.active) return;
 
+		if (s_tooltip.IsExpired()) {
+			ClearTooltip();
+			return;
+		}
+
 		const float msg_height = ImGui::GetFrameHeight() * 1.5f;
 		const float window_width = a_parentSize.x;
 
+		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, s_tooltip.GetAlpha());
 		const ImVec2 pos(a_parentPos.x, a_parentPos.y + a_parentSize.y - msg_height);
 		auto config = SetupContainer(pos, ImVec2(window_width, msg_height), 1);
 
@@ -173,7 +179,7 @@ namespace Modex
 		}
 		
 		ImGui::End();
-		ImGui::PopStyleVar();
+		ImGui::PopStyleVar(2);
 	}
 
 	void UINotification::DrawMessageRow(const UIMessage &a_msg, size_t a_index, float a_height, float a_width)

@@ -72,7 +72,7 @@ namespace Modex
 			float GetAlpha() const {
 				if (!active) return 0.0f;
 
-				if (type == UIMessageType::Tooltip) return 1.0f;
+				// if (type == UIMessageType::Tooltip) return 1.0f;
 
 				float progress = GetProgress();
 
