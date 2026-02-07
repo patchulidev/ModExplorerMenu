@@ -170,7 +170,7 @@
 	"SETTINGS_UI_SCALE_HORIZONTAL": "Horizontal Menu Scale (Left/Right)",
 	"SETTINGS_FULLSCREEN": "Fullscreen Mode",
 	"SETTINGS_BASE_PLUGIN": "Plugin List - Use Base Plugin",
-	"SETTINGS_BASE_PLUGIN_TOOLTIP": "Plugin List - Use Base Plugin\n\nWhen enabled, forms will be indexed by their BASE plugin instead of the LAST plugin to modify them.\n\nE.g. 'Banded Iron Armor' will always be located in 'Skyrim.esm' even if 'Update.esm' modifies it. If this option is disabled, then it will be categorized under the last plugin that modified the form.",
+	"SETTINGS_BASE_PLUGIN_TOOLTIP": "Plugin List - Use Base Plugin\n\n(REQUIRES RESTART)\n\nWhen enabled, forms will be indexed by their BASE plugin instead of the LAST plugin to modify them.\n\nE.g. 'Banded Iron Armor' will always be located in 'Skyrim.esm' even if 'Update.esm' modifies it. If this option is disabled, then it will be categorized under the last plugin that modified the form.",
 	"SETTINGS_PAUSE_GAME": "Pause Game while Open",
 	"SETTINGS_DISABLE_IN_MENU": "Prevent Modex from Opening over Skyrim Menu's",
 	"SETTINGS_DISABLE_IN_MENU_TOOLTIP": "Disable Inside Menu(s)\n\nThis setting will disable Modex from opening while any other Skyrim Game menu is open. E.g.\n\n- Journal Menu\n- Console\n- Time Skip Menu\n- Inventory\n- System Menu",
@@ -334,5 +334,6 @@
 
     "ERROR_NO_KIT_SELECTED": "No Kit Selected: Select a kit to proceed.",
 	"ERROR_MISSING_REFERENCE": "No Target Reference: Hover for details.",
+	"ERROR_MISSING_PLUGIN": "Missing Plugin: ",
 	"ERROR_INVALID_REFERENCE": "Invalid Target: Must be an Actor or Container reference."
 }
