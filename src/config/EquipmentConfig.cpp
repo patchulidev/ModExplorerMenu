@@ -67,27 +67,36 @@ namespace Modex
 
 		int loaded_count = 0;
 		for (auto& entry : std::filesystem::recursive_directory_iterator(EQUIPMENT_JSON_PATH)) {
-			if (entry.is_regular_file() && entry.path().extension() == ".json") {
-				KitData metadata;
-				
-				metadata.m_filepath = entry.path().string();
-				
-				auto relativePath = std::filesystem::relative(entry.path(), EQUIPMENT_JSON_PATH);
-				auto parentPath = relativePath.parent_path();
-				metadata.m_key = relativePath.string();
-				
-				if (parentPath.empty()) {
-					metadata.m_collection = "";
-				} else {
-					metadata.m_collection = parentPath.string();
-				}
-				
-				// Cache metadata as KitData
-				cache[metadata.m_key] = metadata;
-				loaded_count++;
-				
-				Trace("  [{}] Key: '{}' | Collection: '{}'", loaded_count, metadata.m_key, metadata.m_collection);
+			if (!entry.is_regular_file() || entry.path().extension() != ".json") {
+				continue;
 			}
+
+			auto relativePath = std::filesystem::relative(entry.path(), EQUIPMENT_JSON_PATH);
+			auto parentPath = relativePath.parent_path();
+
+			// Validate the relative path doesn't escape. Otherwise our m_key will be invalid
+			// annd result in weird behavior when renaming, copying, and saving.
+
+			if (relativePath.string().starts_with("..")) {
+				Trace("  Skipping file outside base path: '{}'", entry.path().string());
+				continue;
+			}
+
+			KitData metadata;
+			metadata.m_filepath = entry.path().string();
+			metadata.m_key = relativePath.string();
+			
+			if (parentPath.empty()) {
+				metadata.m_collection = "";
+			} else {
+				metadata.m_collection = parentPath.string();
+			}
+			
+			// Cache metadata as KitData
+			cache[metadata.m_key] = metadata;
+			loaded_count++;
+			
+			Trace("  [{}] Key: '{}' | Collection: '{}'", loaded_count, metadata.m_key, metadata.m_collection);
 		}
 		
 		Debug("Loaded {} kits metadata from '{}'", cache.size(), EQUIPMENT_JSON_PATH.string());
@@ -198,13 +207,17 @@ namespace Modex
 		data[json_key]["Collection"] = a_kit.m_collection;
 		data[json_key]["Description"] = a_kit.m_desc;
 
-		for (auto& item : a_kit.m_items) {
-			data[json_key]["Items"][item->m_editorid] = {
-				{ "Plugin", item->m_plugin },
-				{ "Name", item->m_name },
-				{ "Amount", item->m_amount },
-				{ "Equipped", item->m_equipped }
-			};
+		if (a_kit.m_items.empty()) {
+			data[json_key]["Items"] = nlohmann::json::object();
+		} else {
+			for (auto& item : a_kit.m_items) {
+				data[json_key]["Items"][item->m_editorid] = {
+					{ "Plugin", item->m_plugin },
+					{ "Name", item->m_name },
+					{ "Amount", item->m_amount },
+					{ "Equipped", item->m_equipped }
+				};
+			}
 		}
 
 		try {
@@ -246,7 +259,6 @@ namespace Modex
 		}
 
 		if (!SaveKit(new_kit)) {
-			ASSERT_MSG(true, "Failed to save copied kit: {}", new_kit.m_key);
 			return std::nullopt;
 		}
 
