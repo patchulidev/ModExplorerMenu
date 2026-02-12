@@ -11,10 +11,10 @@ namespace nlohmann {
 
         static void from_json(const json& j, ImVec4& vec) {
             if (j.is_array() && j.size() == 4) {
-                vec.x = j[0].get<float>();
-                vec. y = j[1].get<float>();
-                vec.z = j[2].get<float>();
-                vec.w = j[3].get<float>();
+                vec.x = static_cast<float>(j[0].get<int>() / 255.0f);
+                vec.y = static_cast<float>(j[1].get<int>() / 255.0f);
+                vec.z = static_cast<float>(j[2].get<int>() / 255.0f);
+                vec.w = static_cast<float>(j[3].get<int>() / 255.0f);
             } else {
                 vec = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
             }

@@ -16,6 +16,19 @@ namespace Modex
 		using PluginList            = std::vector<std::string>;
 
 	private:
+		struct Colors
+		{
+			float alpha;
+			ImU32 background;
+			ImU32 backgroundAlt;
+			ImU32 selected;
+			ImU32 hover;
+			ImU32 outline;
+			ImU32 text;
+			ImU32 textEnchanted;
+			ImU32 error;
+		};
+
 		ImGuiMultiSelectFlags MULTI_SELECT_FLAGS = 
 		ImGuiMultiSelectFlags_ClearOnClickVoid  | ImGuiMultiSelectFlags_SelectOnClickRelease |
 		ImGuiMultiSelectFlags_NoAutoSelect      | ImGuiMultiSelectFlags_BoxSelect1d | 
@@ -34,6 +47,9 @@ namespace Modex
 		std::string             data_id;
 		uint32_t                pluginType;
 		uint32_t                flags = 0;
+		uint32_t                tableID;
+		uint32_t                tableMode;
+		Colors                  colors;
 		
 		//                      core
 		TableItem               itemPreview;

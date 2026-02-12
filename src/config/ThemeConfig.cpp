@@ -1,6 +1,7 @@
 #include "ThemeConfig.h"
 #include "config/UserConfig.h"
 #include "external/json_serializers.cpp"
+#include "imgui.h"
 
 namespace Modex
 {
@@ -16,6 +17,18 @@ namespace Modex
 		}
 
 		return ImVec4(0.8f, 0.2f, 0.2f, 0.5f); // Default to RED if key not found
+	}
+
+	ImVec4 ThemeConfig::GetHover(const std::string& a_key, float a_alphaMult)
+	{
+		ImVec4 color = GetColor(a_key, a_alphaMult);
+		return ImVec4(color.x + 0.05f, color.y + 0.05f, color.z + 0.10f, color.w);
+	}
+
+	ImVec4 ThemeConfig::GetActive(const std::string& a_key, float a_alphaMult)
+	{
+		ImVec4 color = GetColor(a_key, a_alphaMult);
+		return ImVec4(color.x + 0.10f, color.y + 0.10f, color.z + 0.15f, color.w);
 	}
 
 	ImU32 ThemeConfig::GetColorU32(const std::string& a_key, float a_alphaMult)
@@ -79,7 +92,8 @@ namespace Modex
 			UserConfig::Get().theme = "default";
 			theme_found = ConfigManager::Load(true);
 		}
-		
+
+		ApplyThemeToImGui();
 		return theme_found;
 	}
 
@@ -89,6 +103,46 @@ namespace Modex
 
 		SetFilePath(a_theme.m_filePath);
 		return ConfigManager::Load(false);
+	}
+
+	void ThemeConfig::ApplyThemeToImGui()
+	{
+		auto& style = ImGui::GetStyle();
+		style.Colors[ImGuiCol_FrameBg] = ThemeConfig::GetColor("BG");
+		style.Colors[ImGuiCol_FrameBgHovered] = ThemeConfig::GetHover("BG");
+		style.Colors[ImGuiCol_FrameBgActive] = ThemeConfig::GetActive("BG");
+
+		style.Colors[ImGuiCol_Button] = ThemeConfig::GetColor("PRIMARY");
+		style.Colors[ImGuiCol_ButtonHovered] = ThemeConfig::GetHover("PRIMARY");
+		style.Colors[ImGuiCol_ButtonActive] = ThemeConfig::GetActive("PRIMARY");
+
+		style.Colors[ImGuiCol_Header] = ThemeConfig::GetColor("PRIMARY");
+		style.Colors[ImGuiCol_HeaderHovered] = ThemeConfig::GetHover("PRIMARY");
+		style.Colors[ImGuiCol_HeaderActive] = ThemeConfig::GetActive("PRIMARY");
+
+		style.Colors[ImGuiCol_SliderGrab] = ThemeConfig::GetColor("PRIMARY");
+		style.Colors[ImGuiCol_SliderGrabActive] = ThemeConfig::GetActive("PRIMARY");
+
+		style.Colors[ImGuiCol_ScrollbarBg] = ThemeConfig::GetColor("BG");
+		style.Colors[ImGuiCol_ScrollbarGrab] = ThemeConfig::GetColor("PRIMARY");
+		style.Colors[ImGuiCol_ScrollbarGrabHovered] = ThemeConfig::GetHover("PRIMARY");
+		style.Colors[ImGuiCol_ScrollbarGrabActive] = ThemeConfig::GetActive("PRIMARY");
+
+		style.Colors[ImGuiCol_Separator] = ThemeConfig::GetColor("PRIMARY");
+		style.Colors[ImGuiCol_SeparatorHovered] = ThemeConfig::GetHover("PRIMARY");
+		style.Colors[ImGuiCol_SeparatorActive] = ThemeConfig::GetActive("PRIMARY");
+
+		style.Colors[ImGuiCol_ChildBg] = ThemeConfig::GetColor("NONE");
+		style.Colors[ImGuiCol_WindowBg] = ThemeConfig::GetColor("FRAME");
+		style.Colors[ImGuiCol_PopupBg] = ThemeConfig::GetColor("FRAME");
+
+		style.Colors[ImGuiCol_Text] = ThemeConfig::GetColor("TEXT");
+		style.Colors[ImGuiCol_TextDisabled] = ThemeConfig::GetColor("TEXT_DISABLED");
+
+		style.Colors[ImGuiCol_TableRowBg] = ThemeConfig::GetColor("BG");
+		style.Colors[ImGuiCol_TableRowBgAlt] = ThemeConfig::GetHover("BG_LIGHT");
+
+		style.Colors[ImGuiCol_Border] = ThemeConfig::GetColor("BORDER");
 	}
 
 	ThemeConfig::ThemeConfig()

@@ -34,12 +34,17 @@ namespace Modex
 
 		virtual bool Load(bool a_create) override;
 		bool LoadTheme(const ModexTheme& a_theme);
+		void ApplyThemeToImGui();
 
 		ThemeConfig();
 
 		static std::optional<GraphicManager::Image> GetSplashLogo();
 
+		// Could generate and cache a struct to handle this behavior...
 		static ImVec4 GetColor(const std::string& a_key, float a_alphaMult = 1.0f);
+		static ImVec4 GetHover(const std::string& a_key, float a_alphaMult = 1.0f);
+		static ImVec4 GetActive(const std::string& a_key, float a_alphaMult = 1.0f);
+
 		static ImU32 GetColorU32(const std::string& a_key, float a_alphaMult = 1.0f);
 
 		static const std::vector<ModexTheme>& GetAvailableThemes() { return GetSingleton()->m_availableThemes; }
