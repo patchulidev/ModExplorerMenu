@@ -234,29 +234,10 @@ namespace Modex
 		std::shared_ptr<FilterNode>                     m_rootNode;
 		std::unordered_map<std::string, FilterNode*>    m_nodeRegistry;
 		std::function<void()>                           m_filterChangeCallback;
-		bool                                            m_showRecentList;
-
-		// NOTE: Do we expose colors to themes?
-		// Fixed color palette (10 colors for up to 10 first-level children)
-		static constexpr ImVec4 COLOR_PALETTE[10] = {
-			ImVec4(0.8f, 0.3f, 0.3f, 0.6f),  // Red
-			ImVec4(0.3f, 0.8f, 0.3f, 0.6f),  // Green
-			ImVec4(0.3f, 0.5f, 0.8f, 0.6f),  // Blue
-			ImVec4(0.8f, 0.7f, 0.3f, 0.6f),  // Yellow
-			ImVec4(0.7f, 0.3f, 0.8f, 0.6f),  // Purple
-			ImVec4(0.3f, 0.8f, 0.8f, 0.6f),  // Cyan
-			ImVec4(0.8f, 0.5f, 0.3f, 0.6f),  // Orange
-			ImVec4(0.8f, 0.3f, 0.6f, 0.6f),  // Pink
-			ImVec4(0.5f, 0.8f, 0.5f, 0.6f),  // Light Green
-			ImVec4(0.6f, 0.6f, 0.8f, 0.6f),  // Lavender
-		};
-
-		static constexpr ImVec4 DEFAULT_COLOR = ImVec4(0.26f, 0.59f, 0.98f, 0.6f);
 
 	public:
 		FilterSystem(const std::filesystem::path& a_path) :
-			m_rootNode(nullptr),
-			m_showRecentList(false)
+			m_rootNode(nullptr)
 		{
 			ConfigManager::m_file_path = a_path;
 		}
@@ -273,7 +254,6 @@ namespace Modex
 		void RenderNodeAndChildren(FilterNode* node, const float& a_width, int a_depth = 0);
 		bool ShouldShowItem(const BaseObject* a_item) const;
 
-		bool ShowRecent();
 		void ClearActiveNodes();
 		void ActivateNodeByID(const std::string& a_id, bool a_select);
 		

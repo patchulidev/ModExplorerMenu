@@ -1,5 +1,7 @@
 #include "EquipmentConfig.h"
 
+// TODO: Cache all kits at startup.
+
 namespace Modex
 {
 	// Helper to open and parse JSON file.

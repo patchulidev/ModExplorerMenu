@@ -17,11 +17,11 @@ namespace Modex
 		};
 
 		struct FavoriteData {
-			std::unordered_set<std::string> items;
+			std::vector<std::string> items;
 		};
 
 		static inline RecentData m_recent{ {}, 50 };
-		static inline FavoriteData m_favorites;
+		static inline FavoriteData m_favorites{ {} };
 
 		static inline ConfigManager m_userDataConfig;
 
@@ -38,6 +38,7 @@ namespace Modex
 		static RecentData& GetRecent() { return m_recent; }
 
 		static void AddFavorite(const std::unique_ptr<BaseObject>& a_item);
+		static std::vector<std::string> GetFavoritesAsVector() { return m_favorites.items; }
 		static FavoriteData& GetFavorites() { return m_favorites; }
 
 		static nlohmann::json& GetData() { return m_userDataConfig.GetData(); }

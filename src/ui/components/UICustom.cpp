@@ -66,19 +66,52 @@ namespace Modex::UICustom
 		}
 	}
 
-	void SubCategoryHeader(const char* a_label, ImVec4 a_color)
+	// A helper function to dispatch custom input box for action amounts.
+	void InputAmountHandler(bool a_condition, std::function<void (uint32_t)> a_onAmountEntered)
 	{
-		ImGui::PushStyleColor(ImGuiCol_Button, a_color);
-		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, a_color);
-		ImGui::PushStyleColor(ImGuiCol_ButtonActive, a_color);
-		ImGui::Button(a_label, ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetFrameHeightWithSpacing()));
-		ImGui::PopStyleColor(3);
+		if (a_condition) {
+			UIManager::GetSingleton()->ShowInputBox(
+				Translate("AMOUNT"),
+				Translate("ADD_AMOUNT_DESC"),
+				"1",
+				[a_onAmountEntered](const std::string& a_input) {
+					uint32_t amount = 0;
+					auto [ptr, ec] = std::from_chars(a_input.data(), a_input.data() + a_input.size(), amount);
+					if (ec == std::errc() && amount > 0) {
+						a_onAmountEntered(amount);
+					} else {
+						UIManager::GetSingleton()->ShowWarning(
+							Translate("INVALID"),
+							Translate("INVALID_AMOUNT_DESC")
+						);
+					}
+				}
+			);
+		} else {
+			a_onAmountEntered(1);
+		}
 	}
 
-	bool ActionButton(const char* a_translate, const ImVec2& a_size, const bool a_condition, const ImVec4& a_color)
+	void SubCategoryHeader(const char* a_label, ImVec4 a_color)
+	{
+		// ImGui::PushStyleColor(ImGuiCol_Button, a_color);
+		// ImGui::PushStyleColor(ImGuiCol_ButtonHovered, a_color);
+		// ImGui::PushStyleColor(ImGuiCol_ButtonActive, a_color);
+		// ImGui::Button(a_label, ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetFrameHeightWithSpacing()));
+		// ImGui::PopStyleColor(3);
+		
+		ImGui::Spacing();
+		ImGui::PushFontBold(ImGui::GetFontSize());
+		const float center_x = UICustom::GetCenterTextPosX(a_label);
+		ImGui::SetCursorPosX(center_x);
+		ImGui::Text("%s", a_label);
+		ImGui::PopFont();
+		ImGui::Spacing();
+	}
+
+	bool ActionButton(const char* a_translate, const ImVec2& a_size, const bool a_condition)
 	{
 		bool success = false;
-		ImGui::PushStyleColor(ImGuiCol_Button, ImGui::ColorConvertFloat4ToU32(a_color));
 		if (a_condition) {
 			success = ImGui::Button(Translate(a_translate), a_size);
 		} else {
@@ -86,10 +119,12 @@ namespace Modex::UICustom
 			ImGui::Button(Translate(a_translate), a_size);
 			ImGui::EndDisabled();
 		}
-		ImGui::PopStyleColor();
 
 		if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal | ImGuiHoveredFlags_NoSharedDelay | ImGuiHoveredFlags_AllowWhenDisabled)) {
-			UICustom::FancyTooltip(Translate((std::string(a_translate) + "_TOOLTIP").c_str()));
+			const auto tooltip_key = std::string(a_translate) + "_TOOLTIP";
+			if (Locale::GetSingleton()->HasTooltip(tooltip_key.c_str())) {
+				UICustom::FancyTooltip(tooltip_key.c_str());
+			}
 		}
 
 		return success;
@@ -138,6 +173,7 @@ namespace Modex::UICustom
 		return FancyDropdown(a_id, a_tooltip, tempIndex, a_items, a_width) && (a_currentItem = static_cast<uint8_t>(tempIndex), true);
 	}
 
+	// TODO: Go back and localize string vectors sent to this.
 	// OPTIMIZE: Go over this one more time for handling vector out-of-range exceptions.
 	bool FancyDropdown(const char* a_id, const char* a_tooltip, int& a_currentItem, const std::vector<std::string>& a_items, float a_width)
 	{
@@ -155,7 +191,8 @@ namespace Modex::UICustom
 			a_currentItem = 0;
 		}
 
-		std::string current_item = a_items.empty() ? "" : a_items[a_currentItem];
+		std::string current_item = Translate(a_items.empty() ? "" : a_items[a_currentItem].c_str());
+		current_item = TRUNCATE(current_item, a_width * 0.8f);
 
 		ImGui::SetNextItemWidth(a_width);
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, ImGui::GetFontSize()));
@@ -163,9 +200,8 @@ namespace Modex::UICustom
 			ImGui::Spacing();
 			for (size_t i = 0; i < a_items.size(); i++) {
 				bool isSelected = (a_currentItem == static_cast<int>(i));
-
 				auto flags = isSelected ? ImGuiSelectableFlags_Highlight : 0;
-				if (ImGui::Selectable(a_items[i].c_str(), isSelected, flags)) {
+				if (ImGui::Selectable(Translate(a_items[i].c_str()), isSelected, flags)) {
 					a_currentItem = static_cast<int>(i);
 					changed = true;
 				}
@@ -221,7 +257,7 @@ namespace Modex::UICustom
 			drawList->AddRectFilled(
 				ImVec2(pos.x - ImGui::GetStyle().WindowPadding.x, pos.y + (ImGui::GetFontSize() * 1.5f)),
 				ImVec2(pos.x + size.x, pos.y + (ImGui::GetFontSize() * 1.5f) + 1.0f),
-				ThemeConfig::GetColorU32("TOOLTIP_SEPARATOR"));
+				ThemeConfig::GetColorU32("PRIMARY"));
 
 			ImGui::EndTooltip();
 		}
@@ -336,12 +372,14 @@ namespace Modex::UICustom
 	bool ToggleButton(const char* a_id, bool& a_toggle, float a_width)
 	{
 		ImGui::PushID(a_id);
-		const ImVec4 button_color = a_toggle == true ? ThemeConfig::GetColor("BUTTON_CONFIRM") : ThemeConfig::GetColor("BUTTON_CANCEL");
+		const std::string& button_color = a_toggle == true ? "CONFIRM" : "DECLINE";
 		const std::string button_text = a_toggle == true ? Translate("ON") : Translate("OFF"); 
 
-		ImGui::PushStyleColor(ImGuiCol_Button, button_color);
+		ImGui::PushStyleColor(ImGuiCol_Button, ThemeConfig::GetColor(button_color));
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ThemeConfig::GetColor(button_color));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ThemeConfig::GetColor(button_color));
 		bool pressed = ImGui::Button(button_text.c_str(), ImVec2(a_width, 0));
-		ImGui::PopStyleColor();
+		ImGui::PopStyleColor(3);
 
 		if (pressed) {
 			a_toggle = !a_toggle;
@@ -358,7 +396,7 @@ namespace Modex::UICustom
 		auto id = "##Settings::ToggleButton::" + std::string(a_localeString);
 		
 		ImGui::PushID(id.c_str());
-		const ImVec4 button_color = a_toggle == true ? ThemeConfig::GetColor("BUTTON_CONFIRM") : ThemeConfig::GetColor("BUTTON_CANCEL");
+		const std::string& button_color = a_toggle == true ? "CONFIRM" : "DECLINE";
 		const std::string button_text = a_toggle == true ? Translate("ON") : Translate("OFF"); 
 
 		ImGui::AlignTextToFramePadding();
@@ -366,9 +404,11 @@ namespace Modex::UICustom
 		ImGui::HelpMarker(a_localeString);
 
 		ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth);
-		ImGui::PushStyleColor(ImGuiCol_Button, button_color);
+		ImGui::PushStyleColor(ImGuiCol_Button, ThemeConfig::GetColor(button_color));
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ThemeConfig::GetHover(button_color));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ThemeConfig::GetActive(button_color));
 		bool pressed = ImGui::Button(button_text.c_str(), ImVec2(s_widgetWidth, 0.0f));
-		ImGui::PopStyleColor();
+		ImGui::PopStyleColor(3);
 
 		if (pressed) {
 			a_toggle = !a_toggle;
@@ -620,7 +660,7 @@ namespace Modex::UICustom
 	void Settings_Header(const char* a_localeString)
 	{
 		ImGui::PushFontBold();
-		ImGui::PushStyleColor(ImGuiCol_Text, ThemeConfig::GetColor("HEADER"));
+		ImGui::PushStyleColor(ImGuiCol_Text, ThemeConfig::GetColor("PRIMARY"));
 		ImGui::SeparatorText(Translate(a_localeString));
 		ImGui::PopStyleColor();
 		ImGui::PopFont();
@@ -672,7 +712,7 @@ namespace Modex::UICustom
 		const float button_width = (ImGui::GetContentRegionAvail().x - ImGui::GetStyle().ItemSpacing.x) * 0.5f;
 
 		ImGui::PushStyleColor(ImGuiCol_Button, 
-			m_navAccept ? ThemeConfig::GetColor("BUTTON_CONFIRM_HOVER") : ThemeConfig::GetColor("BUTTON_CONFIRM")
+			m_navAccept ? ThemeConfig::GetHover("CONFIRM") : ThemeConfig::GetColor("CONFIRM")
 		);
 		bool confirm = ImGui::Button(Translate("CONFIRM"), ImVec2(button_width, ImGui::GetFrameHeightWithSpacing()));
 		ImGui::PopStyleColor();
@@ -680,7 +720,7 @@ namespace Modex::UICustom
 		ImGui::SameLine();
 
 		ImGui::PushStyleColor(ImGuiCol_Button, 
-			m_navAccept ? ThemeConfig::GetColor("BUTTON_CANCEL") : ThemeConfig::GetColor("BUTTON_CANCEL_HOVER")
+			m_navAccept ? ThemeConfig::GetColor("CONFIRM") : ThemeConfig::GetHover("CONFIRM")
 		);
 		bool decline = ImGui::Button(Translate("CANCEL"), ImVec2(button_width, ImGui::GetFrameHeightWithSpacing()));
 		ImGui::PopStyleColor();

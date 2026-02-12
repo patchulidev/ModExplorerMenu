@@ -331,7 +331,7 @@ namespace Modex
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 12.0f);
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 8.0f));
 
-		bool enterPressed = ImGui::InputTextWithHint(a_label, a_preview.c_str(), a_buffer, a_size, ImGuiInputTextFlags_EnterReturnsTrue);
+		bool enterPressed = ImGui::InputTextWithHint(a_label, TRUNCATE(a_preview, a_width * 0.8f).c_str(), a_buffer, a_size, ImGuiInputTextFlags_EnterReturnsTrue);
 
 		// Draw Search Icon;
 		ImGui::PushFont(NULL, 18.0f);

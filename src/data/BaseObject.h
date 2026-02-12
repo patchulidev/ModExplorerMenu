@@ -275,7 +275,7 @@ namespace Modex
 			case PropertyType::kTomeSkill:
 				return ICON_LC_BOOK_USER;
 			default:
-				ASSERT_MSG(true, "Unhandled PropertyType in GetIcon()");
+				// ASSERT_MSG(true, "Unhandled PropertyType in GetIcon()");
 				return ICON_LC_MESSAGE_CIRCLE_QUESTION;
 			}
 		}
@@ -495,6 +495,31 @@ namespace Modex
 			if (!m_formWrapper.IsValid()) return "0";
 			return std::format("{:d}", GetGoldValue());
 		}
+
+		// NOTE: There might be a need for this type of parse on equipment slots. Arch-mage robes is
+		// a horrendous example of where it is assigned EquipSlot three times? Otherwise we can
+		// usually derive the slot based on the first index.
+
+		// inline const std::string GetEquipSlot() const
+		// {
+		// 	// TODO: This needs to be merged into JSON file.
+		// 	static const std::unordered_map<std::string_view, std::string_view> keyword_to_slot = {
+		// 		{"ArmorHelmet", "Helmet"},
+		// 		{"ArmorCuirass", "Cuirass"},
+		// 		{"ArmorGauntlets", "Gauntlets"},
+		// 		{"ArmorBoots", "Boots"},
+		// 		{"ArmorShield", "Shield"},
+		// 		{"WeapTypeSword", "Sword"},
+		// 	};
+		//
+		// 	for (const auto& keyword : GetKeywordList()) {
+		// 		if (auto it = keyword_to_slot.find(keyword); it != keyword_to_slot.end()) {
+		// 			return std::string(it->second);
+		// 		}
+		// 	}
+		//
+		// 	return "Unknown";
+		// }
 
 		// Returns empty vector if not armor, or no slots are found.
 		inline const std::vector<std::string> GetArmorSlots() const
@@ -1342,7 +1367,8 @@ namespace Modex
 					return (PropertyType::kFurniture);
 				case RE::FormType::Flora:
 					return (PropertyType::kFlora);
-				default: ASSERT_MSG(true, "Unhandled GetItemPropertyType() case in BaseObject. '{}' '{}'", magic_enum::enum_name(formType), GetEditorID());
+				// default: ASSERT_MSG(true, "Unhandled GetItemPropertyType() case in BaseObject. '{}' '{}'", magic_enum::enum_name(formType), GetEditorID());
+				default:
 					return PropertyType::kNone;
 			}
 		}

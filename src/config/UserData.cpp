@@ -9,7 +9,7 @@ namespace Modex
 		auto data = m_userDataConfig.GetData();
 
 		m_userDataConfig.Set<std::vector<std::string>>("Recent", m_recent.items);
-		m_userDataConfig.Set<std::unordered_set<std::string>>("Favorites", m_favorites.items);
+		m_userDataConfig.Set<std::vector<std::string>>("Favorites", m_favorites.items);
 
 		m_userDataConfig.Save();
 	}
@@ -20,14 +20,14 @@ namespace Modex
 		m_userDataConfig.Load(true);
 
 		m_recent.items = m_userDataConfig.Get<std::vector<std::string>>("Recent", {});
-		m_favorites.items = m_userDataConfig.Get<std::unordered_set<std::string>>("Favorites", {});
+		m_favorites.items = m_userDataConfig.Get<std::vector<std::string>>("Favorites", {});
 	}
 
 	void UserData::AddRecent(const std::unique_ptr<BaseObject>& a_item)
 	{
 		if (!a_item) return;
 
-		const std::string edid = a_item->GetEditorID();
+		const std::string& edid = a_item->GetEditorID();
 		auto& recent = m_recent.items;
 
 		recent.erase(std::remove(recent.begin(), recent.end(), edid), recent.end());
@@ -44,7 +44,10 @@ namespace Modex
 	{
 		if (!a_item) return;
 
-		const std::string edid = a_item->GetEditorID();
-		m_favorites.items.insert(edid);
+		const std::string& edid = a_item->GetEditorID();
+		auto& favorites = m_favorites.items;
+
+		favorites.erase(std::remove(favorites.begin(), favorites.end(), edid), favorites.end());
+		favorites.insert(favorites.begin(), edid);
 	}
 }

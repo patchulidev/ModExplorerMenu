@@ -62,7 +62,7 @@ namespace
 		const float max_width = ImGui::GetContentRegionAvail().x;
 		const std::string& icon = a_item->GetPropertyTypeWithIcon(a_property);
 		const std::string& tooltip = FilterProperty::GetPropertyTooltipKey(a_property);
-		const std::string& text = TRUNCATE(a_item->GetPropertyByValue(a_property).c_str(), max_width * 0.60f);
+		const std::string& text = TRUNCATE(a_item->GetPropertyByValue(a_property).c_str(), max_width * 0.75f);
 		const float text_width = ImGui::CalcTextSize(text.c_str()).x;
 		const float width = (std::max)(max_width - text_width, ImGui::GetContentRegionAvail().x - text_width);
 
@@ -100,6 +100,7 @@ namespace
 	{
 		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 		ImGui::Spacing();
+		inlineText(a_object, PropertyType::kPlugin);
 		inlineText(a_object, PropertyType::kEditorID);
 	}
 
@@ -349,14 +350,13 @@ namespace
 
 	inline float getDesiredWidth(const std::unique_ptr<BaseObject>& a_item, float a_min)
 	{
-		const auto& name = a_item->GetName();
 		const auto& edid = a_item->GetEditorID();
+		const auto& plugin = a_item->GetPluginName();
 
-		// Represents approx. width of left-aligned text.
+		const bool  use_plugin = plugin.length() > edid.length();
 		const float desc = ImGui::CalcTextSize(FilterProperty::GetString(PropertyType::kEditorID).c_str()).x;
 		const float padding = ImGui::GetFontSize() * 5.0f;
-		const bool use_name = name.length() > edid.length();
-		const float text_width = use_name ? ImGui::CalcTextSize(name.c_str()).x : ImGui::CalcTextSize(edid.c_str()).x;
+		const float text_width = use_plugin ? ImGui::CalcTextSize(plugin.c_str()).x : ImGui::CalcTextSize(edid.c_str()).x;
 
 		return max(padding + desc + text_width, a_min);
 	}
@@ -396,7 +396,7 @@ namespace
 		// Tooltips don't play well with autosizing child windows.
 		if (!a_tooltip) ImGui::BeginChild("##ItemPreview::ScrollArea", ImVec2(0, 0), false, false);
 		{
-			ImGui::PushStyleColor(ImGuiCol_Separator, ThemeConfig::GetColorU32("HEADER_SEPARATOR"));
+			ImGui::PushStyleColor(ImGuiCol_Separator, ThemeConfig::GetColorU32("PRIMARY"));
 			drawBasePreview(a_item);
 
 			if (auto npc = a_item->GetTESNPC(); npc.has_value()) {

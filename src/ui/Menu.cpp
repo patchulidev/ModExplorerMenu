@@ -10,6 +10,7 @@
 #include "ui/modules/teleport/TeleportModule.h"
 #include "ui/modules/equipment/EquipmentModule.h"
 #include "ui/modules/settings/SettingsModule.h"
+#include "ui/modules/inventory/InventoryModule.h"
 
 #include "config/UserData.h"
 #include "config/UserConfig.h"
@@ -114,8 +115,6 @@ namespace Modex
 
 		// Push style for Modex Menu window
 		ImGui::PushStyleColor(ImGuiCol_WindowBg, ThemeConfig::GetColor("WINDOW_BACKGROUND", m_alpha));
-		ImGui::PushStyleColor(ImGuiCol_TableRowBg, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
-		ImGui::PushStyleColor(ImGuiCol_TableRowBgAlt, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
 
 		ImGui::SetNextWindowSize(ImVec2(window_w, window_h));
 		ImGui::SetNextWindowPos(ImVec2(center_x, center_y));
@@ -128,7 +127,7 @@ namespace Modex
 		}
 
 		ImGui::End();
-		ImGui::PopStyleColor(3);
+		ImGui::PopStyleColor();
 
 		DrawBackground(displaySize);
 
@@ -263,6 +262,8 @@ namespace Modex
 			return std::make_unique<AddItemModule>();
 		case ModuleType::Equipment:
 			return std::make_unique<EquipmentModule>();
+		case ModuleType::Inventory:
+			return std::make_unique<InventoryModule>();
 		case ModuleType::Actor:
 			return std::make_unique<ActorModule>();
 		case ModuleType::Object:
@@ -305,6 +306,7 @@ namespace Modex
 			{Translate("MODULE_HOME"), ICON_LC_HOUSE, .0f, ModuleType::Home},
 			{Translate("MODULE_ADDITEM"), ICON_LC_PLUS, .0f, ModuleType::AddItem},
 			{Translate("MODULE_EQUIPMENT"), ICON_LC_PACKAGE, .0f, ModuleType::Equipment},
+			{Translate("MODULE_INVENTORY"), ICON_LC_PACKAGE, .0f, ModuleType::Inventory},
 			// {Translate("MODULE_ACTOR"), ICON_LC_USER, .0f, ModuleType::Actor},
 			// {Translate("MODULE_OBJECT"), ICON_LC_BLOCKS, .0f, ModuleType::Object},
 			// {Translate("MODULE_TELEPORT"), ICON_LC_MAP_PIN, .0f, ModuleType::Teleport},

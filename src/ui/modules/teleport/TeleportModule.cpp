@@ -22,10 +22,7 @@ namespace Modex
 	}
 
 	TeleportModule::TeleportModule() {
-		m_name = Translate("MODULE_TELEPORT");
-		m_icon = ICON_LC_MAP_PIN;
-
-		m_layouts.push_back({ "Teleport View", true, DrawTeleportLayout }); // TODO: Locale
+		m_layouts.push_back({ Translate("TAB_TELEPORT"), true, DrawTeleportLayout });
 
 		// auto table = std::make_unique<UITable>();
 	}

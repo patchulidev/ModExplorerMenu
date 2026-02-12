@@ -18,7 +18,7 @@ namespace Modex
 		const float full_width = ImGui::GetContentRegionAvail().x;
 
 		ImVec2 table_pos = ImGui::GetCursorPos();
-		UIContainers::DrawBasicTablePanel(table_pos, ImVec2(table_width, table_height), a_tables[0]);
+		UIContainers::DrawBasicTablePanel("TABLE_ITEM", table_pos, ImVec2(table_width, table_height), a_tables[0]);
 
 		ImVec2 action_pos = table_pos;
 		action_pos.x += table_width + window_padding.x;
@@ -32,10 +32,7 @@ namespace Modex
 
 	AddItemModule::AddItemModule()
 	{
-		m_name = Translate("MODULE_ADD_ITEM");
-		m_icon = ICON_LC_PLUS;
-
-		m_layouts.push_back({"Table View", true, DrawTableView}); // TODO: Locale
+		m_layouts.push_back({Translate("TAB_ADDITEM"), true, DrawTableView}); // TODO: Locale
 		
 		constexpr auto table_flags =
 		UITable::ModexTableFlag_Base |

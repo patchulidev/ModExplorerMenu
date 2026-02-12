@@ -17,7 +17,7 @@ namespace Modex
 		const float table_height = ImGui::GetContentRegionAvail().y - (window_padding.y * 2.0f);
 
 		ImVec2 table_pos = ImGui::GetCursorPos();
-		UIContainers::DrawBasicTablePanel(table_pos, ImVec2(table_width, table_height), a_tables[0]);
+		UIContainers::DrawBasicTablePanel("TABLE_ACTOR", table_pos, ImVec2(table_width, table_height), a_tables[0]);
 
 		ImVec2 action_pos = table_pos;
 		action_pos.x += table_width + window_padding.x;
@@ -33,10 +33,7 @@ namespace Modex
 
 	ActorModule::ActorModule()
 	{
-		m_name = Translate("MODULE_ACTOR");
-		m_icon = ICON_LC_USER_PLUS;
-
-		m_layouts.push_back({"Table View", true, DrawTableLayout}); // TODO: Locale
+		m_layouts.push_back({Translate("TAB_ACTOR"), true, DrawTableLayout});
 
 		constexpr auto table_flags =
 		UITable::ModexTableFlag_EnableFilterTree |

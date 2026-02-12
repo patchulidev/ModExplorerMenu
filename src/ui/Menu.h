@@ -67,6 +67,7 @@ namespace Modex
 			Home = 0,
 			AddItem,
 			Equipment,
+			Inventory,
 			Actor,
 			Object,
 			Teleport,

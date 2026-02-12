@@ -33,34 +33,18 @@ namespace Modex
 		return 0;
 	}
 
-	void UIModule::LoadSharedReference()
-	{
-		RE::FormID targetReferenceID = UserData::Get<RE::FormID>("LastSharedTargetFormID", 0);
-		auto reference = UIModule::LookupReferenceByFormID(targetReferenceID);
-		UIModule::SetTargetReference(reference);
-	}
-
-	void UIModule::SaveSharedReference()
-	{
-		if (auto reference = UIModule::GetTargetReference(); reference) {
-			UserData::Set<RE::FormID>("LastSharedTargetFormID", reference->formID);
-		} else {
-			UserData::Set<RE::FormID>("LastSharedTargetFormID", 0);
-		}
-	}
-
 	void UIModule::DrawTabMenu()
 	{
 		ImVec2 window_padding = ImGui::GetStyle().WindowPadding;
 		const int layoutCount = std::ssize(m_layouts);
-		const float button_width = (ImGui::GetContentRegionAvail().x / layoutCount);
+		const float button_width = (ImGui::GetContentRegionAvail().x / layoutCount) + (window_padding.x / layoutCount);
 		const float button_height = ImGui::GetFrameHeightWithSpacing();
 
 		ImVec2 start_pos = ImGui::GetCursorPos();
 
         // Tab Button Area
 		if (UICustom::BeginTabBar("#Modex::Layout::TabBar", button_height, m_offset, start_pos)) {
-			ImGui::PushStyleColor(ImGuiCol_Header, ThemeConfig::GetColor("TAB_BUTTON"));
+			ImGui::PushStyleColor(ImGuiCol_Header, ThemeConfig::GetColor("PRIMARY"));
 			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(.0f, .0f));
 			for (const auto& layout : m_layouts) {
 				const auto selected = layout.selected;
@@ -94,7 +78,7 @@ namespace Modex
 		ImGui::SetCursorPos(start_pos);
 
 		// Tab Bar Separator
-		ImGui::PushStyleColor(ImGuiCol_Separator, ThemeConfig::GetColor("TAB_BUTTON"));
+		ImGui::PushStyleColor(ImGuiCol_Separator, ThemeConfig::GetColor("PRIMARY"));
 		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal, 2.0f);
 		ImGui::PopStyleColor();
 
@@ -111,6 +95,21 @@ namespace Modex
 	void UIModule::SetTargetReference(RE::TESObjectREFR* a_ref) {
 		s_targetReference = a_ref;
 	}
+
+	void UIModule::LoadSharedReference()
+	{
+		RE::FormID targetReferenceID = UserData::Get<RE::FormID>("LastSharedTargetFormID", 0);
+		auto reference = UIModule::LookupReferenceByFormID(targetReferenceID);
+		UIModule::SetTargetReference(reference);
+	}
+
+	void UIModule::SaveSharedReference()
+	{
+		if (auto reference = UIModule::GetTargetReference(); reference) {
+			UserData::Set<RE::FormID>("LastSharedTargetFormID", reference->formID);
+		}
+	}
+
 
 	RE::TESObjectREFR* UIModule::LookupReferenceByFormID(const RE::FormID& a_formID) {
 		if (a_formID == 0) {

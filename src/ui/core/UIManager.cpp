@@ -44,6 +44,7 @@ namespace Modex
 		m_windowStack.clear();
 
 		// OPTIMIZE: Is this a good location for this?
+		UIModule::SaveSharedReference();
 		UserData::Save();
 
 		ImGui::GetIO().ClearInputKeys();

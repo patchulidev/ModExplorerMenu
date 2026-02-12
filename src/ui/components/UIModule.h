@@ -21,9 +21,6 @@ namespace Modex
 		float               m_offset = 0.0f;
 		float               m_sidebar = 0;
 
-		std::string         m_name;
-		std::string         m_icon;
-
 	public:
 		static inline RE::TESObjectREFR* s_targetReference = nullptr;
 
@@ -32,8 +29,6 @@ namespace Modex
 		virtual void DrawTabMenu();
 
 		float& GetSidebarWidth() { return m_sidebar; };
-		const std::string& GetName() const { return m_name; };
-		const std::string& GetIcon() const { return m_icon; };
 
 		void SetOffset(float a_offset) { m_offset = a_offset; };
 		void SetActiveLayout(uint8_t a_layoutIndex);

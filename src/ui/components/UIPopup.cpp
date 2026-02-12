@@ -37,11 +37,14 @@ namespace Modex
 			ImGui::NewLine();
 
 			ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-			ImGui::PushStyleColor(ImGuiCol_Button, ThemeConfig::GetColor("BUTTON_DECLINE"));
+
+			ImGui::PushStyleColor(ImGuiCol_Button, ThemeConfig::GetColor("DECLINE"));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ThemeConfig::GetHover("DECLINE"));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ThemeConfig::GetActive("DECLINE"));
 			if (ImGui::Button(Translate("CLOSE"), ImVec2(ImGui::GetContentRegionAvail().x, 0.f))) {
 				DeclineHotkey();
 			}
-			ImGui::PopStyleColor();
+			ImGui::PopStyleColor(3);
 
 			height = ImGui::GetWindowSize().y;
 		}
@@ -314,11 +317,13 @@ namespace Modex
 			ImGui::NewLine();
 			ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 
-		ImGui::PushStyleColor(ImGuiCol_Button, ThemeConfig::GetColor("BUTTON_CONFIRM"));
+		ImGui::PushStyleColor(ImGuiCol_Button, ThemeConfig::GetColor("CONFIRM"));
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ThemeConfig::GetHover("CONFIRM"));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ThemeConfig::GetActive("CONFIRM"));
 		if (ImGui::Button(Translate("CONFIRM"), ImVec2(ImGui::GetContentRegionAvail().x, 0.f))) {
 			CloseInfo();
 		}
-		ImGui::PopStyleColor();
+		ImGui::PopStyleColor(3);
 
 			if (ImGui::IsKeyPressed(ImGuiKey_Enter) && ImGui::GetIO().WantTextInput == false) {
 		CloseInfo();

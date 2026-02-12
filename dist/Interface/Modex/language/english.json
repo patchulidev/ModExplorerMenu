@@ -19,9 +19,11 @@
     "KEYWORDS": "Keywords",
     "FACTION": "Faction",
 	"VALUE": "Value",
+	"INVALID": "Invalid",
     "OTHER": "Other",
     "SLOTS": "Slots",
     "ORDER": "Load Order",
+	"DELETE": "Throw Away",
     "BROWSE": "Browse",
     "CONFIRM": "Confirm",
     "CANCEL": "Cancel",
@@ -31,17 +33,29 @@
     "ON": "ON",
     "OFF": "OFF",
 
+    "SHOWALL": "All",
+    "SHOWRECENT": "Recent",
+	"SHOWFAVORITE": "Favorites",
+
 	"ORDER_TOOLTIP": "Load Order\n\nDisplays a sorted list of plugins modifying this form, based on load order. This can help identify the origin of a form.\n\nThis list does not utilize any of the Modex Plugin user settings such as sorting direction.",
 	"DESCRIPTION_TOOLTIP": "Description\n\nAttempts to dynamically display the description for a Form. Values are calculated from Base MGEF values, and won't reflect real-time modifiers such as perks, player level, etc.",
 
 	"MODULE_HOME": "Home",
 	"MODULE_ADDITEM": "Add Item",
 	"MODULE_EQUIPMENT": "Equipment",
+	"MODULE_INVENTORY": "Inventory",
 	"MODULE_ACTOR": "Actor",
 	"MODULE_OBJECT": "Objects",
 	"MODULE_TELEPORT": "Teleport",
 	"MODULE_SETTINGS": "Settings",
 	"MODULE_EXIT": "Exit",
+
+	"TABLE_ITEM": "Item Table",
+	"TABLE_INVENTORY": "Targeted Inventory",
+	"TABLE_KIT": "Selected Kit Table",
+	"TABLE_OBJECT": "Object Table",
+	"TABLE_ACTOR": "Actor Table",
+	"TABLE_CELL": "Cell Table",
 
     "KIT": "Kit",
 	"KIT_ADD": "Add Selection to Kit",
@@ -68,19 +82,21 @@
 	"TAB_ADDITEM": "AddItem Table Layout",
 	"TAB_SETTINGS": "User Settings Layout",
 	"TAB_BLACKLIST": "Blacklist Settings Layout",
-	"TAB_INVENTORY": "Inventory Layout",
-	"TAB_EQUIPMENT": "Equipment Layout",
+	"TAB_INVENTORY": "Single Layout",
+	"TAB_MULTI_INVENTORY": "Multi Layout",
+	"TAB_EQUIPMENT": "Equipment Setup Layout",
+	"TAB_ACTOR": "Actor Table Layout",
+	"TAB_OBJECT": "Object Table Layout",
+	"TAB_TELEPORT": "Teleport Table Layout",
 
     "HEADER_HOTKEY": "Set Hotkey",
     "HEADER_TAGS": "Tags",
     "HEADER_SEARCH": "Search",
     "HEADER_BROWSER": "File Browser",
     "HEADER_ACTIONS": "Actions",
-    "HEADER_PREVIEW": "Preview",
-    "HEADER_ITEM_TABLE": "Item Table",
-    "HEADER_INVENTORY_TABLE": "Inventory Table",
-    "HEADER_KIT_TABLE": "Kit Table",
-    "HEADER_KIT_ACTIONS": "Kit Actions",
+    "HEADER_PREVIEW": "Form Preview",
+    "HEADER_KIT_TABLE": "Select and Manage Kits",
+    "HEADER_KIT_ACTIONS": "Selected Kit Actions",
     "HEADER_KIT_SELECTION": "Kit Selection",
 
     "POPUP_KIT_RENAME_TITLE": "Rename Kit",
@@ -98,47 +114,29 @@
     "PLUGIN_DEPENDENCIES": "Show Plugin Dependencies",
     "PLUGIN_DEPENDENCIES_TOOLTIP": "Plugin Dependencies\n\nShow a list of all plugins that the selected item or kit depends on.",
     
-    "SHOW_ALL": "Showing All",
-    "SHOW_ALL_TOOLTIP": "Show All\n\nDisplay all items in the table, ignoring recent items.\nClick To Toggle.",
-
-    "SHOW_RECENT": "Showing Recent",
-    "SHOW_RECENT_TOOLTIP": "Show Recent\n\nDisplay recently used items in the table.\nClick To Toggle.",
-
     "CONTAINER_VIEW": "To Container",
-    "CONTAINER_VIEW_TOOLTIP": "Container View\n\nView the contents of the table results inside a chest.",
+    "CONTAINER_VIEW_TOOLTIP": "Container View\n\nView the contents of your Selection within a virtual in-game chest.",
     "CONTAINER_VIEW_KIT": "To Container",
     "CONTAINER_VIEW_KIT_TOOLTIP": "Container View\n\nView the contents of the selected kit inside a chest.",
 
     "ADD_KIT": "To Inventory",
-    "ADD_KIT_TOOLTIP": "Add Kit\n\nAdd all items from the selected kit to an inventory.",
     "ADD_KIT_NPC": "To Target",
-    "ADD_KIT_NPC_TOOLTIP": "Add Kit To NPC\n\nAdd all items from the selected kit to the targeted NPC's inventory.",
 
-	"REMOVE_SELECTION": "Remove Selection from Inventory",
+    "CLEAR_INVENTORY": "Clear Target Inventory",
+	"CLEAR_INVENTORY_DESC": "Clear Inventory:\n\nThis action will remove *every* item from the targeted inventory. This cannot be undone.\n\nAre you sure you want to proceed?",
+	"RESET_INVENTORY": "Reset Target Inventory",
+	"RESET_INVENTORY_DESC": "Reset Inventory:\n\nResetting an Inventory will restore it to its original contents when initially spawned.\n\nAre you sure you want to proceed?",
+
     "ADD_SELECTION": "Add Selection To Inventory",
-    "ADD_SELECTION_TOOLTIP": "Add Selection\n\nAdd the selected item(s) from the table to an inventory.",
-    "ADD_SELECTION_NPC": "Add Selection To Targeted NPC",
-    "ADD_SELECTION_NPC_TOOLTIP": "Add Selection To NPC\n\nAdd the selected item(s) from the table to the targeted NPC.",
-
-    "CLEAR_INVENTORY": "Clear Player Inventory",
-    "CLEAR_INVENTORY_TOOLTIP": "Clear Inventory\n\nRemoves all items from an inventory.",
-    "CLEAR_INVENTORY_NPC": "Clear NPC Inventory",
-    "CLEAR_INVENTORY_NPC_TOOLTIP": "Clear NPC Inventory\n\nRemoves all items from the targeted NPC's inventory.",
-    "RESET_INVENTORY_NPC": "Reset NPC Inventory",
-    "RESET_INVENTORY_NPC_TOOLTIP": "Reset NPC Inventory\n\nResets the targeted NPC's inventory to its default state.",
-
+	"REMOVE_SELECTION": "Remove Selection from Inventory",
     "PLACE_SELECTION": "Place Selection On Ground",
-    "PLACE_SELECTION_TOOLTIP": "Place Selection\n\nPlace the selected item(s) from the table on the ground.",
-
     "EQUIP_SELECTION": "Equip Selection To Player",
-    "EQUIP_SELECTION_TOOLTIP": "Add & Equip\n\nAdd & Equip the selected item(s) from the table to the player directly.",
-    "EQUIP_SELECTION_NPC": "Equip Selection To Targeted NPC",
-    "EQUIP_SELECTION_NPC_TOOLTIP": "Add & Equip\n\nAdd & Equip the selected item(s) from the table to the targeted NPC directly.",
+    "EQUIP_SELECTION_TOOLTIP": "Add & Equip\n\nAdd & Equip the selected item(s) from the Table to your Target directly.",
 
-    "GOTO_NPC_REFERENCE": "Teleport To NPC",
-    "GOTO_NPC_REFERENCE_TOOLTIP": "Goto NPC Reference\n\nTeleports the player to the targeted NPC's current location in the world.",
-    "BRING_NPC_REFERENCE": "Bring NPC To Player",
-    "BRING_NPC_REFERENCE_TOOLTIP": "Bring NPC Reference\n\nTeleports the targeted NPC to the player's current location in the world.",
+    "GOTO_NPC_REFERENCE": "Teleport To Actor",
+    "GOTO_NPC_REFERENCE_TOOLTIP": "Goto Actor Reference\n\nTeleports the player to the targeted Actor's current location in the world.",
+    "BRING_NPC_REFERENCE": "Bring Actor To Player",
+    "BRING_NPC_REFERENCE_TOOLTIP": "Bring Actor Reference\n\nTeleports the targeted Actor to the player's current location in the world.",
 
     "ENABLE_NPC_REFERENCE": "Enable NPC",
     "ENABLE_NPC_REFERENCE_TOOLTIP": "Enable NPC Reference\n\nEnables the targeted NPC if they are disabled.",
@@ -146,9 +144,9 @@
     "DISABLE_NPC_REFERENCE_TOOLTIP": "Disable NPC Reference\n\nDisables the targeted NPC, making them invisible and non-interactive.",
     
     "ADD_ALL": "Add All",
-    "ADD_ALL_TOOLTIP": "Add All\n\nAdd all items from the table to an inventory.",
+    "ADD_ALL_TOOLTIP": "Add All\n\nAdd ALL items from the Table to your selected Target.",
     "PLACE_ALL": "Place All",
-    "PLACE_ALL_TOOLTIP": "Place All\n\nPlace all items from the table on the ground.",
+    "PLACE_ALL_TOOLTIP": "Place All\n\nPlace ALL items from the table on the ground at your feet.",
 
 	"SETTINGS_HEADER_INPUT": "Input Settings",
 	"SETTINGS_HEADER_FONT": "Font & Language Settings",
@@ -207,7 +205,8 @@
 	"STATUS_BAR_TOOLTIP": "Target Reference\n\nThis represents the targeted Actor or Container to operate upon. Click to manually enter.\n\n<T> Set to Player\n<C> Set to Console Reference\n<Shift> + <LMB> Copy FormID\n<Ctrl> + <LMB> Set to shared target.",
 	"STATUS_BAR_DESC": "Manually set the Target Reference by FormID.\n\n- Must be a 'Reference' FormID.\n\n- Hexidecimal (e.g. FF001234).\n\n- Can be Shortened (e.g. 14).\n\n- Must be 'loaded'.\n\nIf Modex is unable to locate the Target based on your input, a warning will appear with more details.",
 
-    "ADD_AMOUNT_TOOLTIP": "Amount To Add\n\nThe number of items to be added upon activation of action.",
+    "ADD_AMOUNT_DESC": "Please enter the desired quantity you would like.",
+	"INVALID_AMOUNT_DESC": "Must be a valid positive integer. (e.g. 10)",
 
 	"kNone": "None",
 	"kArmor": "Armor",
@@ -334,6 +333,9 @@
 
     "ERROR_NO_KIT_SELECTED": "No Kit Selected: Select a kit to proceed.",
 	"ERROR_MISSING_REFERENCE": "No Target Reference: Hover for details.",
+	"ERROR_LAST_REFERENCE": "Unloaded Reference: Last Reference not found or not loaded yet.",
+	"ERROR_UNLOADED_REFERENCE": "Unloaded Reference: Reference is not Loaded in-game. (Ignore if in Main Menu)",
 	"ERROR_MISSING_PLUGIN": "Missing Plugin: ",
-	"ERROR_INVALID_REFERENCE": "Invalid Target: Must be an Actor or Container reference."
+	"ERROR_INVALID_REFERENCE": "Invalid Target: Must be an Actor or Container reference.",
+	"ERROR_SAME_REF": "Duplicate Origin & Destination Targets"
 }

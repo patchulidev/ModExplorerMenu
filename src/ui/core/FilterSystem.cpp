@@ -59,7 +59,6 @@ namespace Modex
 			const auto& j = m_data;
 			m_rootNode = FilterNode::FromJson(j);
 
-			SetupShowAllNode();
 			AssignColorIndices();
 
 			m_nodeRegistry.clear();
@@ -113,24 +112,10 @@ namespace Modex
 	void FilterSystem::ActivateNodeByID(const std::string& a_id, bool a_select) {
 		FilterNode* node = FindNode(a_id);
 
-		bool force_recent = false;
-		if (a_id == "show_recent") {
-			node = FindNode("show_all");
-			force_recent = true;
-		}
-
 		if (node) {
 			node->isSelected = a_select;
 
-			if (force_recent) {
-				ClearActiveNodes();
-				node->id = "show_recent";
-				node->displayName = Translate("SHOW_RECENT");
-				node->isSelected = true;
-			}
-
-			if (node->parent) {
-				// Ensure parent nodes are selected to make this node visible
+			if (node->parent) { // Ensure parent nodes are selected to make this node visible
 				FilterNode* current = node->parent;
 				while (current) {
 					current->isSelected = true;
@@ -152,61 +137,12 @@ namespace Modex
 		return nullptr;
 	}
 
-	// FIX: Can we remove m_showRecentList and just check selected node id?
-	bool FilterSystem::ShowRecent()
-	{
-		auto selected = GetSelectedRootNode();
-		return selected && selected->id == "show_recent";
-	}
-
 	void FilterSystem::HandleNodeClick(FilterNode* a_parent, FilterNode* a_clicked) {
 		bool _change = false;
 		bool isModifierDown = ImGui::GetIO().KeyCtrl || ImGui::GetIO().KeyShift;
 
 		if (!a_parent || !a_clicked) return;
 
-		// Handle toggling of show_all and show_recent state.
-		if (auto from = GetSelectedRootNode(); from) {
-			if (from->id == "show_all" and a_clicked->id == "show_all") 
-			{
-				ClearActiveNodes();
-				a_clicked->id = "show_recent";
-				a_clicked->displayName = Translate("SHOW_RECENT");
-				a_clicked->isSelected = true;
-
-				if (m_filterChangeCallback) {
-					m_filterChangeCallback();
-				}
-
-				return;
-			} 
-			else if (from->id == "show_recent" and a_clicked->id == "show_recent") 
-			{
-				ClearActiveNodes();
-				a_clicked->id = "show_all";
-				a_clicked->displayName = Translate("SHOW_ALL");
-				a_clicked->isSelected = true;
-
-				if (m_filterChangeCallback) {
-					m_filterChangeCallback();
-				}
-
-				return;
-			} else if (from->id == "show_recent") {
-				ClearActiveNodes();
-				from->id = "show_all";
-				from->displayName = Translate("SHOW_ALL");
-				from->isSelected = false;
-
-				a_clicked->isSelected = !a_clicked->isSelected;
-				if (m_filterChangeCallback) {
-					m_filterChangeCallback();
-				}
-
-				return;
-			}
-		}
-		
 		switch (a_parent->behavior) {
 			case FilterBehavior::SINGLE_SELECT:
 				for (auto& sibling : a_parent->children) {
@@ -248,34 +184,9 @@ namespace Modex
 				break;
 		}
 
-		// If we deselect a root node, go back to show_all.
-		if (GetSelectedRootNode() == nullptr) {
-			ActivateNodeByID("show_all", true);
-			_change = true;
-		}
-
 		if (_change && m_filterChangeCallback) {
 			m_filterChangeCallback();
 		}
-	}
-
-	void FilterSystem::SetupShowAllNode() {
-		if (!m_rootNode) return;
-
-		// Create a "Show All" node
-		auto showAllNode = std::make_shared<FilterNode>();
-		showAllNode->id = "show_all";
-		showAllNode->displayName = Translate("SHOW_ALL");
-		showAllNode->behavior = FilterBehavior::SINGLE_SELECT;
-		showAllNode->isSelected = true;  // Default to selected
-		showAllNode->colorIndex = -1;    // Default color
-
-		// Add to root's children
-		m_rootNode->children.insert(m_rootNode->children.begin(), showAllNode);
-		showAllNode->parent = m_rootNode.get();
-
-		// Register the new node
-		m_nodeRegistry[showAllNode->id] = showAllNode.get();
 	}
 
 	void FilterSystem::RegisterNodeRecursive(FilterNode* a_node) {
@@ -296,9 +207,7 @@ namespace Modex
 			const float total_spacing = item_spacing * (total_nodes - 1.0f);
 			const float button_width = (a_width - total_spacing) / total_nodes;
 			
-			ImGui::PushStyleColor(ImGuiCol_Separator, ThemeConfig::GetColor("HEADER_SEPARATOR"));
 			ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal, 1.0f);
-			ImGui::PopStyleColor();
 
 			int _count = 0;
 			for (auto& child : a_node->children) {
@@ -313,27 +222,13 @@ namespace Modex
 				ImVec4 button_color;
 
 				if (child->colorIndex >= 0) {
-					button_color = COLOR_PALETTE[child->colorIndex];
+					button_color = ThemeConfig::GetColor(std::format("FILTER_{}", child->colorIndex));
 				} else {
-					if (child->id == "show_all") {
-						button_color = ImVec4(0.18f, 0.35f, 0.39f, 1.0f); // container color
-					} else {
-						button_color = DEFAULT_COLOR;
-					}
+					button_color = ThemeConfig::GetColor("PRIMARY");
 				}
 
 				if (UIContainers::TabButton(child->displayName.c_str(), ImVec2(button_width, 0.0f), child->isSelected, button_color)) {
 					HandleNodeClick(a_node, child.get());
-				}
-				
-				if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal)) {
-					if (child->id == "show_all") {
-						UICustom::FancyTooltip(Translate("SHOW_ALL_TOOLTIP"));
-					}
-					
-					if (child->id == "show_recent") {
-						UICustom::FancyTooltip(Translate("SHOW_RECENT_TOOLTIP"));
-					}
 				}
 				
 				_count++;

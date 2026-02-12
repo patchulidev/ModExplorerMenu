@@ -118,6 +118,11 @@ namespace Modex
 				UserConfig::GetSingleton()->SaveSettings();
 			}
 
+			if (ImGui::Button(Translate("SETTINGS_RELOAD_THEME"))) {
+				ThemeConfig::GetSingleton()->Load(false);
+				Locale::GetSingleton()->Load(false);
+			}
+
 			if (UICustom::Settings_ToggleButton("SETTINGS_PAUSE_GAME", config.pauseGame))
 			{
 				UserConfig::GetSingleton()->SaveSettings();
@@ -135,6 +140,7 @@ namespace Modex
 			{
 				UserConfig::GetSingleton()->SaveSettings();
 			}
+
 		}
 
 		ImGui::EndChild();
@@ -163,19 +169,15 @@ namespace Modex
 		, m_sort(0)
 		, m_type(0)
 	{
-		// overrides
-		m_name = Translate("MODULE_SETTINGS");
-		m_icon = ICON_LC_SETTINGS;
-
 		// static
 		s_uiScaleVertical 	= UserConfig::Get().uiScaleVertical;
 		s_uiScaleHorizontal = UserConfig::Get().uiScaleHorizontal;
 		s_fontSize 			= (int)UserConfig::Get().globalFontSize;
 
 		// layouts
-		m_layouts.push_back({"General Settings", true, DrawSettingsLayout});
+		m_layouts.push_back({ Translate("TAB_SETTINGS"), true, DrawSettingsLayout});
 
-		m_layouts.push_back({"Blacklist Settings", false, 
+		m_layouts.push_back({ Translate("TAB_BLACKLIST"), false, 
 			[this](std::vector<std::unique_ptr<UITable>>& a_tables) {
 				DrawBlacklistLayout(a_tables);
 		}});

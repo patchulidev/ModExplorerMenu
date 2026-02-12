@@ -7,6 +7,9 @@ namespace Modex
 	class EquipmentModule : public UIModule
 	{
 	private:
+		Kit                             m_selectedKit;
+		char                            m_searchBuffer[256];
+		std::unique_ptr<SearchSystem>   m_searchSystem;
 
 	public:
 		EquipmentModule();
@@ -17,24 +20,7 @@ namespace Modex
 		EquipmentModule& operator=(EquipmentModule&&) = delete;
 
 		void Draw() override;
-
-		// These don't need to be static members...
-		static inline std::unique_ptr<SearchSystem>   m_searchSystem;
-		static void DrawKitSelectionPanel(const ImVec2 &a_pos, const ImVec2 &a_size, std::unique_ptr<UITable> &a_kitTable);
-
-		static inline Kit      m_selectedKit;
-		static inline char     m_searchBuffer[256];
-
-		static std::unique_ptr<SearchSystem>& GetSearchSystem() {
-			return m_searchSystem;
-		}
-
-		static Kit& GetSelectedKit() {
-			return m_selectedKit;
-		}
-
-		static void SelectKit(const Kit& a_kit) {
-			m_selectedKit = a_kit;
-		}
+		void DrawEquipmentLayout(std::vector<std::unique_ptr<UITable>>& a_tables);
+		void DrawKitActionsPanel(const ImVec2 &a_pos, const ImVec2 &a_size);
 	};
 }

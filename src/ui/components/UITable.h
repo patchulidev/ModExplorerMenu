@@ -57,7 +57,6 @@ namespace Modex
 		char                    pluginSearchBuffer[256];
 		std::string             selectedPlugin;
 		Kit*                    selectedKitPtr;
-		int                     clickAmount;
 		
 		//                      lazy event callbacks
 		bool                    updateKeyboardNav;
@@ -97,6 +96,12 @@ namespace Modex
 			ModexTableFlag_EnableHeader = 1 << 5,
 			ModexTableFlag_EnableDebugToolkit = 1 << 6,
 			ModexTableFlag_EnableItemPreviewOnHover = 1 << 7
+		};
+
+		enum TableMode : uint32_t {
+			SHOWALL = 0,
+			SHOWRECENT,
+			SHOWFAVORITE,
 		};
 
 		UITable(const std::string& a_dataID, bool a_shared, uint8_t a_type, uint32_t a_flags);
@@ -141,7 +146,8 @@ namespace Modex
 		//                      target reference accessors
 		RE::TESObjectREFR*      GetTableTargetRef() const { return tableTargetRef; }
 		void                    SetTargetByReference(RE::TESObjectREFR* a_reference);
-
+		bool                    IsActionAllowed();
+		bool                    IsValidTargetReference(RE::TESObjectREFR* a_reference = nullptr);
 		
 		//                      drag n drop behaviors
 		DragDropHandle          GetDragDropHandle() const { return dragDropHandle; }
@@ -153,17 +159,16 @@ namespace Modex
 		void                    RemovePayloadItemFromKit(const std::unique_ptr<BaseObject>& a_item);
 		void                    RemovePayloadFromInventory(const std::unique_ptr<BaseObject>& a_item);
 		const char*             GetDragDropHandleText(DragDropHandle a_handle) const { return magic_enum::enum_name(a_handle).data(); }
+		void                    ResolvePayloadDrop(UITable* origin, UITable* destination, std::vector<std::unique_ptr<BaseObject>>& payload_items);
 		
 		//                      table action methods
 		uint32_t                GetSelectionCount() const;
-		void                    SetClickAmount(int a_amount) { clickAmount = a_amount; }
-		int                     GetClickAmount() { return clickAmount; }
 		void                    AddSelectionToActiveKit();
-		void                    AddSelectionToTargetInventory(int a_count);
+		void                    AddSelectionToTargetInventory(uint32_t a_count);
 		void                    AddKitToTargetInventory(const Kit& a_kit);
 		void                    RemoveSelectionFromKit();
 		void                    RemoveSelectionFromTargetInventory();  
-		void                    PlaceSelectionOnGround(int a_count);
+		void                    PlaceSelectionOnGround(uint32_t a_count);
 		void                    EquipSelectionToTarget();
 		void                    PlaceAll();
 		void                    AddAll();
@@ -181,6 +186,7 @@ namespace Modex
 		//                      search and filter impl
 		void                    Filter(const std::vector<BaseObject>& a_data);
 		void                    FilterRecentImpl();
+		void                    FilterFavoriteImpl();
 		void                    FilterKitImpl();
 		void                    FilterInventoryImpl();
 		void                    UpdateActiveInventoryTables();
@@ -208,11 +214,12 @@ namespace Modex
 		
 		//                      layout and drawing
 		void                    DrawDragDropPayload(const std::string& a_icon);
-		void                    DrawItem(const std::unique_ptr<BaseObject>& a_item, const ImVec2& a_pos);
-		void                    DrawKitItem(const std::unique_ptr<BaseObject>& a_item, const ImVec2& a_pos);
+		void                    DrawItem(const std::unique_ptr<BaseObject>& a_item, const ImVec2& a_pos, bool a_selected);
+		void                    DrawKitItem(const std::unique_ptr<BaseObject>& a_item, const ImVec2& a_pos, bool a_selected);
 		void                    DrawKit(const Kit& a_kit, const ImVec2& a_pos);
 		void                    DrawPluginSearchBar(const ImVec2& a_size);
 		void                    DrawFormSearchBar(const ImVec2& a_size);
+		void                    DrawModeDropdown(const ImVec2& a_size);
 		void                    CustomSortColumn(std::string a_header, float a_valueWidth, bool a_sorted);
 
 		//                      widget groups
