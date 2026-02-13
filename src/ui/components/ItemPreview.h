@@ -362,10 +362,12 @@ namespace
 	}
 }
 
+
 	// @arg a_tooltip: the item preview is shown in a tooltip instead of a widget.
 	inline void ShowItemPreview(const std::unique_ptr<BaseObject>& a_item, bool a_tooltip = false)
 	{
 		if (a_item == nullptr) return;
+		if (a_item->IsDummy()) return;
 
 		const auto cursor = ImGui::GetCursorScreenPos();
 		const float font_size = ImGui::GetFontSize();
@@ -444,14 +446,4 @@ namespace
 		);
 	}
 
-	inline void ShowMissingPlugin(const std::unique_ptr<BaseObject>& a_object)
-	{
-		const std::string warning = Translate("ERROR_MISSING_PLUGIN") + a_object->GetPluginName(); 
-
-		ImGui::NewLine();
-		ImGui::SetCursorPosX(UICustom::GetCenterTextPosX(warning.data()));
-		ImGui::SetCursorPosY(ImGui::GetCursorPosY() - ImGui::GetFontSize() / 2);
-		ImGui::Text("%s", warning.data());
-		ImGui::NewLine();
-	}
 }

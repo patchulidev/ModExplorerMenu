@@ -39,6 +39,12 @@ namespace Modex
 		// Must have a valid selection.
 		if (GetSelectionCount() <= 0) {
 			return false;
+		} else {
+			for (const auto& item : GetSelection()) {
+				if (item == nullptr || item->IsDummy()) {
+					return false;
+				}
+			}
 		}
 
 		// Selection must be valid.
@@ -112,7 +118,6 @@ namespace Modex
 		tableMode = UserData::Get<uint32_t>(data_id + "::TableMode", SHOWALL);
 
 		BuildPluginList();
-		LoadRecentList();
 		Refresh();
 	}
 
@@ -219,28 +224,6 @@ namespace Modex
 		}
 	}
 
-	void UITable::LoadRecentList()
-	{
-		const auto recent = UserData::GetRecentAsVector();
-		if (recent.empty()) return;
-
-		// TEST: Should we keep dummy objects in recent list?
-		// BUG: This is still broken. CTD if a dummy object is read due to icon.
-		for (const auto& edid : recent) {
-			if (RE::TESForm* form = RE::TESForm::LookupByEditorID(edid)) {
-				this->recentList.emplace_back(std::make_unique<BaseObject>(form, 0, 0));
-			} else {
-				this->recentList.emplace_back(std::make_unique<BaseObject>(edid, edid, "Unknown", 0));
-			}
-		}
-
-		for (int i = 0; i < std::ssize(this->recentList); i++) {
-			this->recentList[i]->m_tableID = i;
-		}
-
-		updateRecentList = false;
-	}
-
 	void UITable::UpdateActiveInventoryTables()
 	{
 		if (this->HasFlag(ModexTableFlag_Inventory) || this->GetDragDropHandle() == DragDropHandle::Inventory) {
@@ -291,7 +274,7 @@ namespace Modex
 
 		if (GetSelectionCount() == 0)
 		{
-			if (itemPreview && itemPreview->GetTESForm()->IsInventoryObject()) {
+			if (itemPreview && !itemPreview->IsDummy() && itemPreview->GetTESForm()->IsInventoryObject()) {
 				Commands::RemoveItemFromInventory(tableTargetRef, itemPreview->GetEditorID(), 1);
 				UserData::AddRecent(itemPreview);
 			}
@@ -303,8 +286,10 @@ namespace Modex
 			while (selectionStorage.GetNextSelectedItem(&it, &id)) {
 				if (id < std::ssize(tableList) && id >= 0) {
 					const auto& item = tableList[id];
-					Commands::RemoveItemFromInventory(tableTargetRef, item->GetEditorID(), 1);
-					UserData::AddRecent(item);
+					if (!item->IsDummy()) {
+						Commands::RemoveItemFromInventory(tableTargetRef, item->GetEditorID(), 1);
+						UserData::AddRecent(item);
+					}
 				}
 			}
 		}
@@ -322,7 +307,7 @@ namespace Modex
 			return;
 
 		if (GetSelectionCount() == 0) {
-			if (itemPreview && itemPreview->GetTESForm()->IsInventoryObject()) {
+			if (itemPreview && !itemPreview->IsDummy() && itemPreview->GetTESForm()->IsInventoryObject()) {
 				Commands::AddItemToRefInventory(tableTargetRef, itemPreview->GetEditorID(), a_count);
 				UserData::AddRecent(itemPreview);
 			}
@@ -334,7 +319,7 @@ namespace Modex
 			while (selectionStorage.GetNextSelectedItem(&it, &id)) {
 				if (id < std::ssize(tableList) && id >= 0) {
 					const auto& item = tableList[id];
-					if (item && item->GetTESForm()->IsInventoryObject()) {
+					if (item && !item->IsDummy() && item->GetTESForm()->IsInventoryObject()) {
 						Commands::AddItemToRefInventory(tableTargetRef, item->GetEditorID(), a_count);
 						UserData::AddRecent(item);
 					}
@@ -354,7 +339,7 @@ namespace Modex
 			return;
 
 		if (GetSelectionCount() == 0) {
-			if (itemPreview && (itemPreview->IsArmor() || itemPreview->IsWeapon())) {
+			if (itemPreview && !itemPreview->IsDummy() && (itemPreview->IsArmor() || itemPreview->IsWeapon())) {
 				Commands::AddAndEquipItemToInventory(tableTargetRef, itemPreview->GetEditorID());
 				UserData::AddRecent(itemPreview);
 			}
@@ -366,7 +351,7 @@ namespace Modex
 			while (selectionStorage.GetNextSelectedItem(&it, &id)) {
 				if (id < std::ssize(tableList) && id >= 0) {
 					const auto& item = tableList[id];
-					if (item && (item->IsArmor() || item->IsWeapon())) {
+					if (item && !itemPreview->IsDummy() && (item->IsArmor() || item->IsWeapon())) {
 						Commands::AddAndEquipItemToInventory(tableTargetRef, item->GetEditorID());
 						UserData::AddRecent(item);
 					}
@@ -388,7 +373,7 @@ namespace Modex
 			return;
 
 		if (GetSelectionCount() == 0) {
-			if (itemPreview) {
+			if (itemPreview && !itemPreview->IsDummy()) {
 				Commands::PlaceAtMe(itemPreview->GetEditorID(), a_count);
 				UserData::AddRecent(itemPreview);
 			}
@@ -400,7 +385,7 @@ namespace Modex
 			while (selectionStorage.GetNextSelectedItem(&it, &id)) {
 				if (id < std::ssize(tableList) && id >= 0) {
 					const auto& item = tableList[id];
-					if (item) {
+					if (item && !item->IsDummy()) {
 						Commands::PlaceAtMe(item->GetEditorID(), a_count);
 						UserData::AddRecent(item);
 					}
@@ -418,7 +403,7 @@ namespace Modex
 			return;
 		
 		for (auto& item : tableList) {
-			if (item && item->GetTESForm()->IsInventoryObject()) {
+			if (item && !item->IsDummy() && item->GetTESForm()->IsInventoryObject()) {
 				Commands::AddItemToRefInventory(tableTargetRef, item->GetEditorID(), 1);
 				UserData::AddRecent(item);
 			}
@@ -437,7 +422,7 @@ namespace Modex
 			return;
 
 		for (auto& item : tableList) {
-			if (item && item->GetTESForm()->HasWorldModel()) {
+			if (item && !item->IsDummy() && item->GetTESForm()->HasWorldModel()) {
 				Commands::PlaceAtMe(item->GetEditorID(), 1);
 				UserData::AddRecent(item);
 			}
@@ -496,7 +481,7 @@ namespace Modex
 		if (!tableTargetRef)
 			return;
 
-		if (a_item && a_item->GetTESForm()->IsInventoryObject()) {
+		if (a_item && !a_item->IsDummy() && a_item->GetTESForm()->IsInventoryObject()) {
 			Commands::AddItemToRefInventory(this->tableTargetRef, a_item->GetEditorID(), a_item->GetQuantity());
 			UserData::AddRecent(a_item);
 		}
@@ -509,7 +494,7 @@ namespace Modex
 		if (!tableTargetRef)
 			return;
 
-		if (a_item && a_item->GetTESForm()->IsInventoryObject()) {
+		if (a_item && !a_item->IsDummy() && a_item->GetTESForm()->IsInventoryObject()) {
 			Commands::RemoveItemFromInventory(this->tableTargetRef, a_item->GetEditorID(), a_item->GetQuantity());
 			UserData::AddRecent(a_item);
 		}
@@ -518,7 +503,7 @@ namespace Modex
 	}
 
 	// NOTE: Kit's are not inventories, they're virtual containers in memory. So we handle them
-	// outside the use of Add/RemovePayloadFromTable. Although, maybe they should be containers?
+	// explcitly. We also can handle dummy forms here without worry.
 
 	void UITable::AddPayloadToKit(const std::unique_ptr<BaseObject>& a_item)
 	{
@@ -546,7 +531,13 @@ namespace Modex
 
 			if (GetSelectionCount() == 0)
 			{
-				if (itemPreview && itemPreview->GetTESForm()->IsInventoryObject()) {
+				// TODO: This was a valid check, but should be used when iterating over a kit for
+				// actions. Not when we're adding/removing. That way we support dummy objects. The
+				// context of this was to prevent npc's from being added to kits lol.
+				//
+				// if (itemPreview && itemPreview->GetTESForm()->IsInventoryObject()) {
+
+				if (itemPreview) {
 					destination->AddPayloadToKit(itemPreview);
 				}
 			}
@@ -558,7 +549,9 @@ namespace Modex
 					if (id < tableList.size() && id >= 0) {
 						const auto& item = this->tableList[id];
 
-						destination->AddPayloadToKit(item);
+						if (item) {
+							destination->AddPayloadToKit(item);
+						}
 					}
 				}
 			}
@@ -734,7 +727,13 @@ namespace Modex
 
 		for (const auto& edid : recent) {
 			RE::TESForm* form = RE::TESForm::LookupByEditorID(edid);
-			temp.emplace_back(BaseObject(form, 0, 0));
+			if (form) {
+				temp.emplace_back(BaseObject(form, 0, 0));
+			} else {
+				if (UserConfig::Get().showMissing) {
+					temp.emplace_back(BaseObject(edid, edid, Translate("ERROR_MISSING_PLUGIN")));
+				}
+			}
 		}
 
 		for (const auto& item : temp) {
@@ -767,7 +766,7 @@ namespace Modex
 			if (form) {
 				tableList.emplace_back(std::make_unique<BaseObject>(form, 0, 0, item->m_amount, item->m_equipped));
 			} else {
-				tableList.emplace_back(std::make_unique<BaseObject>(item->m_name, item->m_editorid, item->m_plugin));
+				tableList.emplace_back(std::make_unique<BaseObject>(item->m_name, item->m_editorid, item->m_plugin, 0, item->m_amount, item->m_equipped));
 			}
 		}
 
@@ -938,8 +937,7 @@ namespace Modex
 		colors.hover = ThemeConfig::GetColorU32("TABLE_HOVER", colors.alpha);
 		colors.text = ThemeConfig::GetColorU32("TEXT", colors.alpha);
 		colors.textEnchanted = ThemeConfig::GetColorU32("TEXT_ENCHANTED", colors.alpha);
-		colors.error = ThemeConfig::GetColorU32("ERROR", colors.alpha);
-
+		colors.error = ThemeConfig::GetColorU32("ERROR", colors.alpha * 0.1f);
 
 		if (styleFontSize == 0.0f) {
 			styleFontSize = config.globalFontSize;
@@ -1289,17 +1287,11 @@ namespace Modex
 	void UITable::HandleItemHoverPreview(const std::unique_ptr<BaseObject>& a_item)
 	{
 		itemPreview = std::make_unique<BaseObject>(*a_item);
-		if (HasFlag(ModexTableFlag_EnableItemPreviewOnHover)) {
+		if (HasFlag(ModexTableFlag_EnableItemPreviewOnHover) && !a_item->IsDummy()) {
 			if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort | ImGuiHoveredFlags_NoSharedDelay)) {
 				const auto size = ImVec2(ImGui::GetWindowSize().x / 3.0f, 0.f);
-				// ImGui::SetNextWindowPos(ImVec2(ImGui::GetMousePos().x - size.x, ImGui::GetMousePos().y));
 				if (ImGui::BeginTooltip()) {
-					if (a_item->IsDummy()) {
-						ShowMissingPlugin(a_item);
-					} else {
-						ShowItemPreview(a_item, true);
-					}
-
+					ShowItemPreview(a_item, true);
 					ImGui::EndTooltip();
 				}
 			}
@@ -1333,7 +1325,10 @@ namespace Modex
 			if (!selectionStorage.Contains(a_item->m_tableID)) {
 				selectionStorage.Clear();
 			}
-			ImGui::OpenPopup("TableViewContextMenu");
+
+			if (!a_item->IsDummy()) {
+				ImGui::OpenPopup("TableViewContextMenu");
+			}
 		}
 
 		if (ImGui::BeginPopup("TableViewContextMenu")) {

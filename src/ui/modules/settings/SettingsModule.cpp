@@ -86,26 +86,6 @@ namespace Modex
 			}
 
 			ImGui::NewLine();
-			UICustom::Settings_Header(Translate("SETTINGS_HEADER_FONT"));
-
-			if (UICustom::Settings_FontDropdown("SETTINGS_FONT", &config.globalFont))
-			{
-				UserConfig::GetSingleton()->SaveSettings();
-			}
-
-			UICustom::Settings_SliderInt("SETTINGS_FONT_SIZE", s_fontSize, 8, 48);
-
-			if (ImGui::IsItemDeactivatedAfterEdit())
-			{
-				config.globalFontSize = s_fontSize;
-				UserConfig::GetSingleton()->SaveSettings();
-			}
-
-			if (UICustom::Settings_LanguageDropdown("SETTINGS_LANGUAGE", &config.language)) {
-				UserConfig::GetSingleton()->SaveSettings();
-			}
-
-			ImGui::NewLine();
 			UICustom::Settings_Header(Translate("SETTINGS_HEADER_GENERAL"));
 
 			std::vector<std::string> sorts = Data::GetSortStrings();
@@ -118,9 +98,9 @@ namespace Modex
 				UserConfig::GetSingleton()->SaveSettings();
 			}
 
-			if (ImGui::Button(Translate("SETTINGS_RELOAD_THEME"))) {
-				ThemeConfig::GetSingleton()->Load(false);
-				Locale::GetSingleton()->Load(false);
+			if (UICustom::Settings_ToggleButton("SETTINGS_MISSING_PLUGIN", config.showMissing))
+			{
+				UserConfig::GetSingleton()->SaveSettings();
 			}
 
 			if (UICustom::Settings_ToggleButton("SETTINGS_PAUSE_GAME", config.pauseGame))
@@ -141,6 +121,25 @@ namespace Modex
 				UserConfig::GetSingleton()->SaveSettings();
 			}
 
+			ImGui::NewLine();
+			UICustom::Settings_Header(Translate("SETTINGS_HEADER_FONT"));
+
+			if (UICustom::Settings_FontDropdown("SETTINGS_FONT", &config.globalFont))
+			{
+				UserConfig::GetSingleton()->SaveSettings();
+			}
+
+			UICustom::Settings_SliderInt("SETTINGS_FONT_SIZE", s_fontSize, 8, 48);
+
+			if (ImGui::IsItemDeactivatedAfterEdit())
+			{
+				config.globalFontSize = s_fontSize;
+				UserConfig::GetSingleton()->SaveSettings();
+			}
+
+			if (UICustom::Settings_LanguageDropdown("SETTINGS_LANGUAGE", &config.language)) {
+				UserConfig::GetSingleton()->SaveSettings();
+			}
 		}
 
 		ImGui::EndChild();

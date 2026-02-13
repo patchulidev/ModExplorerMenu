@@ -33,8 +33,8 @@ namespace Modex
 		static std::optional<Kit> RenameKit(Kit& a_kit, std::string a_new_name);
 		static std::optional<Kit> CreateKit(const std::filesystem::path& a_relativePath);
 		
-		static std::vector<BaseObject> 	GetItems(const Kit& a_kit);
-		static std::vector<BaseObject> 	GetItems(const KitData& a_metadata);
+		static std::vector<BaseObject> 	GetItems(const Kit& a_kit); // deprecated?
+		static std::vector<BaseObject> 	GetItems(const KitData& a_metadata); // deprecated?
 		static std::optional<Kit> 		KitLookup(const std::string& a_name);
 		static std::shared_ptr<KitItem> CreateKitItem(const BaseObject& a_object);
 

@@ -177,7 +177,6 @@ namespace Modex
 	private:
 		//                      core
 		void                    Setup();
-		void                    LoadRecentList();
 		void                    InitializeSystems();
 		void                    LoadSystemState();
 		void                    SaveSystemState();
