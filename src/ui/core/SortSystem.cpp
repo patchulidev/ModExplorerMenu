@@ -32,23 +32,35 @@ namespace Modex
 	{
 		nlohmann::json j;
 
-		j["CurrentSortProperty"] = m_currentSortFilter.ToString();
+		j["PrimarySortProperty"] = m_primarySortFilter.ToString();
+		j["SecondarySortProperty"] = m_secondarySortFilter.ToString();
 		j["Ascending"] = m_ascending;
-		j["Reset"] = m_reset;
+		j["UsePrimary"] = m_usePrimary;
 
 		return j;
 	}
 
 	void SortSystem::DeserializeState(const nlohmann::json& a_state)
 	{
-		if (a_state.contains("CurrentSortProperty") && a_state["CurrentSortProperty"].is_string()) {
-			std::string prop_str = a_state["CurrentSortProperty"].get<std::string>();
+		if (a_state.contains("PrimarySortProperty") && a_state["PrimarySortProperty"].is_string()) {
+			std::string prop_str = a_state["PrimarySortProperty"].get<std::string>();
 			auto filter = FilterProperty::FromString(prop_str);
 
 			if (filter.has_value()) {
-				m_currentSortFilter = filter.value();
+				m_primarySortFilter = filter.value();
 			} else {
-				m_currentSortFilter = FilterProperty(PropertyType::kNone);
+				m_primarySortFilter = FilterProperty(PropertyType::kNone);
+			}
+		}
+
+		if (a_state.contains("SecondarySortProperty") && a_state["SecondarySortProperty"].is_string()) {
+			std::string prop_str = a_state["SecondarySortProperty"].get<std::string>();
+			auto filter = FilterProperty::FromString(prop_str);
+
+			if (filter.has_value()) {
+				m_secondarySortFilter = filter.value();
+			} else {
+				m_secondarySortFilter = FilterProperty(PropertyType::kNone);
 			}
 		}
 
@@ -56,15 +68,15 @@ namespace Modex
 			m_ascending = a_state["Ascending"].get<bool>();
 		}
 
-		if (a_state.contains("Reset") && a_state["Reset"].is_number_integer()) {
-			// m_reset = a_state["Reset"].get<int>();
+		if (a_state.contains("UsePrimary") && a_state["UsePrimary"].is_boolean()) {
+			m_usePrimary = a_state["UsePrimary"].get<bool>();
 		}
 	}
 
 	// Need special definitions for properties of int, float, or none string types.
 	bool SortSystem::SortFn(const std::unique_ptr<BaseObject>& a_lhs, const std::unique_ptr<BaseObject>& a_rhs) const
     {
-		const auto property = m_currentSortFilter.GetPropertyType();
+		const auto property = m_usePrimary ? m_primarySortFilter.GetPropertyType() : m_secondarySortFilter.GetPropertyType();
 		const auto lhs_value = a_lhs->GetPropertyByValue(property);
 		const auto rhs_value = a_rhs->GetPropertyByValue(property);
 

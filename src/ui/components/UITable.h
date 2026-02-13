@@ -70,6 +70,7 @@ namespace Modex
 		bool                    showAltRowBG;
 		bool                    showItemIcon;
 		bool                    showEditorID;
+		bool                    showFormID;
 		bool                    useQuickSearch;
 		bool                    useSharedTarget;
 
@@ -220,7 +221,7 @@ namespace Modex
 		void                    DrawPluginSearchBar(const ImVec2& a_size);
 		void                    DrawFormSearchBar(const ImVec2& a_size);
 		void                    DrawModeDropdown(const ImVec2& a_size);
-		void                    CustomSortColumn(std::string a_header, float a_valueWidth, bool a_sorted);
+		void                    CustomSortColumn();
 
 		//                      widget groups
 		void                    DrawTableSettingsPopup();

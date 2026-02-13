@@ -72,6 +72,7 @@ namespace Modex
 		, selectedKitPtr(nullptr)
 		, updateKeyboardNav(false)
 		, showEditorID(false)
+		, showFormID(false)
 		, useSharedTarget(a_shared)
 		, navPositionID(0)
 	{
@@ -79,8 +80,8 @@ namespace Modex
 
 		auto timestamp = std::chrono::steady_clock::now();
 		tableID = std::hash<uint64_t>{}(timestamp.time_since_epoch().count());
+		Trace("Unique TableID {}", tableID);
 
-		Info("Unique TableID {}", tableID);
 		InitializeSystems();
 		LoadSystemState();
 		Setup();
@@ -105,6 +106,8 @@ namespace Modex
 			SetTargetByReference(target);
 		}
 
+		showEditorID = UserData::Get<bool>(data_id + "::ShowEditorID", false);
+		showFormID = UserData::Get<bool>(data_id + "::ShowFormID", false);
 		selectedPlugin = UserData::Get<std::string>(data_id + "::LastSelectedPlugin", Translate("SHOW_ALL"));
 		tableMode = UserData::Get<uint32_t>(data_id + "::TableMode", SHOWALL);
 
@@ -134,6 +137,8 @@ namespace Modex
 		sortSystem->SaveState(data_id + "::SortState");
 		searchSystem->SaveState(data_id + "::SearchState");
 
+		UserData::Set<bool>(data_id + "::ShowEditorID", showEditorID);
+		UserData::Set<bool>(data_id + "::ShowFormID", showFormID);
 		UserData::Set<std::string>(data_id + "::LastSelectedPlugin", selectedPlugin);
 		UserData::Set<uint32_t>(data_id + "::TableMode", tableMode);
 	}
@@ -1832,7 +1837,7 @@ namespace Modex
 			}
 		}
 
-		const PropertyType& sort_property = this->sortSystem->GetCurrentSortFilter().GetPropertyType();
+		const PropertyType& sort_property = this->sortSystem->GetSecondarySortFilter().GetPropertyType();
 		const ImVec2 sort_pos = ImVec2(bb.Min.x + spacing * 2.5f, center_align);
 		const float sort_text_cutoff = spacing * 1.5f;
 
@@ -2229,39 +2234,26 @@ namespace Modex
 	}
 
 	// a_valueWidth is to determine avaiable column space before EOL.
-	void UITable::CustomSortColumn(std::string a_header, float a_valueWidth, bool a_sorted)
+	void UITable::CustomSortColumn()
 	{
 		const static ImVec4 text_col = ThemeConfig::GetColor("TEXT_HEADER");
-		
-		if (!a_header.empty()) {
-			ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 4.0f);
-			ImGui::AlignTextToFramePadding();
-			ImGui::TextColored(text_col, "%s", a_header.c_str());
-			if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
-				if (a_sorted) {
-					this->sortSystem->ToggleAscending();
-					this->SortListBySpecs();
-					this->UpdateImGuiTableIDs();
-				}
-			}
-			ImGui::SameLine();
-			ImGui::SetCursorPosX(ImGui::GetCursorPosX() - ImGui::GetFontSize() / 1.5f); // Adjust for icon size
-		}
 
-		constexpr auto combo_flags = ImGuiComboFlags_NoArrowButton | ImGuiComboFlags_HeightLarge;
+		constexpr auto combo_flags = ImGuiComboFlags_HeightLarge;
 		ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0, 0, 0, 0));
 		ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0, 0, 0, 0));
 		ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(0, 0, 0, 0));
 		ImGui::PushStyleColor(ImGuiCol_Text, text_col);
 		
-		const float sortby_size = ImGui::GetContentRegionAvail().x - a_valueWidth - ImGui::GetStyle().ItemSpacing.x;				
-		const FilterProperty current_key = sortSystem->GetCurrentSortFilter();
+		const float sortby_size = ImGui::GetContentRegionAvail().x;
+		const FilterProperty current_key = sortSystem->GetSecondarySortFilter();
+		const auto preview_text = current_key == PropertyType::kNone ? Translate("SORT_BY") : current_key.ToString();
 		
 		ImGui::SetNextItemWidth(sortby_size);
-		if (ImGui::BeginCombo("##UITable::Sort::Combo", current_key.ToString().c_str(), combo_flags)) {
+		if (ImGui::BeginCombo("##UITable::Sort::Combo", preview_text.c_str(), combo_flags)) {
 			const FilterPropertyList available_keys = sortSystem->GetAvailableFilters();
 
 			ImGui::PushStyleColor(ImGuiCol_Text, colors.text);
+			ImGui::PushFontRegular();
 			for (auto& key : available_keys) {
 				const bool is_selected = (key == current_key);
 				const std::string key_text = key.ToString();
@@ -2272,7 +2264,7 @@ namespace Modex
 				}
 
 				if (ImGui::Selectable(key_text.c_str(), is_selected)) {
-					sortSystem->SetCurrentSortFilter(key);
+					sortSystem->SetSecondarySortFilter(key);
 
 					this->SortListBySpecs();
 					this->UpdateImGuiTableIDs();
@@ -2284,6 +2276,7 @@ namespace Modex
 					ImGui::SetItemDefaultFocus();
 				}
 			}
+			ImGui::PopFont();
 			ImGui::PopStyleColor();
 			ImGui::EndCombo();
 		}
@@ -2298,113 +2291,168 @@ namespace Modex
 		ImGui::PushID("##Modex::Table::Header");
 
 		ImGui::PushStyleColor(ImGuiCol_Separator, ThemeConfig::GetColor("PRIMARY"));
-		// ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal, 1.0f);
 
-		std::string header_plugin = Translate("PLUGIN");
+		std::string header_plugin = this->showFormID ? Translate("FORMID") : Translate("PLUGIN");
 		std::string header_name = this->showEditorID ? Translate("EDITORID") : Translate("NAME");
-		std::string header_custom = this->sortSystem->GetCurrentSortFilter().ToString();
-		std::string header_value = Translate("VALUE");
+		std::string header_custom = this->sortSystem->GetSecondarySortFilter().ToString();
 		std::string sort_icon = sortSystem->GetSortAscending()  == true ? ICON_LC_ARROW_DOWN_A_Z : ICON_LC_ARROW_UP_A_Z;
-		PropertyType current_sort = sortSystem->GetCurrentSortFilter().GetPropertyType();
-
-		const bool is_plugin_sorted = current_sort == PropertyType::kPlugin;
-		const bool is_name_sorted = current_sort == PropertyType::kName || current_sort == PropertyType::kEditorID;
-		const bool is_value_sorted = current_sort == PropertyType::kGoldValue;
-		const bool is_custom_sorted = !is_plugin_sorted && !is_name_sorted && !is_value_sorted && current_sort != PropertyType::kNone;
-
-		header_plugin = is_plugin_sorted ? sort_icon + " " + header_plugin : header_plugin;
-		header_name = is_name_sorted ? sort_icon + " " + header_name : header_name;
-		header_value = is_value_sorted ? sort_icon + " " + header_value : header_value;
-		header_custom = is_custom_sorted ? sort_icon + " " : "";
+		
+		// primary = name, plugin, editorid, formid.
+		// secondary = any custom property type.
+		PropertyType primary_sort = sortSystem->GetUsePrimary() ? sortSystem->GetPrimarySortFilter().GetPropertyType() : PropertyType::kNone;
+		PropertyType secondary_sort = sortSystem->GetUsePrimary() ? PropertyType::kNone : sortSystem->GetSecondarySortFilter().GetPropertyType();
 
 		constexpr float name_offset = 4.0f; // pillar offset.
 		const float spacing = name_offset + (LayoutColumnWidth / 4.0f);
 		const float sort_spacing = spacing * 2.50f;
-		const float value_width = ImGui::CalcTextSize(header_value.c_str()).x + ImGui::GetFontSize();
 
 		if (HasFlag(ModexTableFlag_Kit)) {
-			const std::string header_equip = Translate("EQUIP");
-
-			std::string header_amount = Translate("AMOUNT");
-			const bool is_amount_sorted = current_sort == PropertyType::kKitItemCount;
-			header_amount = is_amount_sorted ? sort_icon + " " + header_amount : header_amount;
-
+			bool is_first_sorted = showEditorID ? primary_sort == PropertyType::kEditorID : primary_sort == PropertyType::kName;
+			auto first_icon = is_first_sorted ? sort_icon : ICON_LC_ARROW_UP_DOWN;
 			ImGui::AlignTextToFramePadding();
-			ImGui::TextColored(text_col, "%s", header_name.c_str());
+			ImGui::TextColored(text_col, "%s", first_icon.c_str());
+
 			if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
+				this->sortSystem->SetPrimarySortFilter(this->showEditorID ? PropertyType::kEditorID : PropertyType::kName);
 				this->sortSystem->ToggleAscending();
-
-				if (this->sortSystem->GetClicks() == 2) {
-					this->showEditorID = !this->showEditorID;
-					this->sortSystem->ResetSort();
-				} else {
-					this->sortSystem->SetCurrentSortFilter(this->showEditorID ? PropertyType::kEditorID : PropertyType::kName);
-				}
-
-				this->sortSystem->SetCurrentSortFilter(this->showEditorID ? PropertyType::kEditorID : PropertyType::kName);
 				this->SortListBySpecs();
 				this->UpdateImGuiTableIDs();
 			}
+
+			ImGui::SameLine();
+			ImGui::AlignTextToFramePadding();
+			if (is_first_sorted) ImGui::PushFontBold();
+			ImGui::TextColored(text_col, "%s", header_name.c_str());
+			if (is_first_sorted) ImGui::PopFont();
+
+			if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
+				this->showEditorID = !this->showEditorID;
+
+				if (primary_sort == PropertyType::kEditorID || primary_sort == PropertyType::kName) {
+					this->sortSystem->SetPrimarySortFilter(this->showEditorID ? PropertyType::kEditorID : PropertyType::kName);
+					this->SortListBySpecs();
+					this->UpdateImGuiTableIDs();
+				}
+			}
+
+			bool is_second_sorted = primary_sort == PropertyType::kArmorType;
+			auto second_icon = is_second_sorted ? sort_icon : ICON_LC_ARROW_UP_DOWN;
 
 			ImGui::SameLine(LayoutItemSize.x / 2.0f);
 			ImGui::AlignTextToFramePadding();
-			ImGui::TextColored(text_col, "%s", header_equip.c_str());
-			{
+			ImGui::TextColored(text_col, "%s", second_icon.c_str());
 
+			if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
+				this->sortSystem->SetPrimarySortFilter(PropertyType::kArmorType);
+				this->sortSystem->ToggleAscending();
+				this->SortListBySpecs();
+				this->UpdateImGuiTableIDs();
 			}
+
+			ImGui::SameLine();
+			ImGui::AlignTextToFramePadding();
+			if (is_second_sorted) ImGui::PushFontBold();
+			ImGui::TextColored(text_col, "%s", Translate("EQUIPPED"));
+			if (is_second_sorted) ImGui::PopFont();
+
+			bool is_third_sorted = primary_sort == PropertyType::kKitItemCount;
+			auto third_icon = is_third_sorted ? sort_icon : ICON_LC_ARROW_UP_DOWN;
 
 			ImGui::SameLine(LayoutItemSize.x / 1.25f);
 			ImGui::AlignTextToFramePadding();
-			ImGui::TextColored(text_col, "%s", header_amount.c_str());
+			ImGui::TextColored(text_col, "%s", third_icon.c_str());
+
 			if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
-				this->sortSystem->SetCurrentSortFilter(PropertyType::kKitItemCount);
+				this->sortSystem->SetPrimarySortFilter(PropertyType::kKitItemCount);
 				this->sortSystem->ToggleAscending();
 				this->SortListBySpecs();
 				this->UpdateImGuiTableIDs();
 			}
+
+			ImGui::SameLine();
+			ImGui::AlignTextToFramePadding();
+			if (is_third_sorted) ImGui::PushFontBold();
+			ImGui::TextColored(text_col, "%s", Translate("AMOUNT"));
+			if (is_third_sorted) ImGui::PopFont();
 		}
 		
 		if (!HasFlag(ModexTableFlag_Kit)) {
-			ImGui::AlignTextToFramePadding();
-			ImGui::TextColored(text_col, "%s", header_plugin.c_str());
-			if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
-				this->sortSystem->SetCurrentSortFilter(PropertyType::kPlugin);
-				this->sortSystem->ToggleAscending();
-				this->SortListBySpecs();
-				this->UpdateImGuiTableIDs();
-			}
+				bool is_first_sorted = showFormID ? primary_sort == PropertyType::kFormID : primary_sort == PropertyType::kPlugin;
+				auto first_icon = is_first_sorted ? sort_icon : ICON_LC_ARROW_UP_DOWN;
 
-			ImGui::SameLine(spacing);
-			ImGui::AlignTextToFramePadding();
-			ImGui::TextColored(text_col, "%s", header_name.c_str());
-			if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
-				this->sortSystem->ToggleAscending();
+				ImGui::AlignTextToFramePadding();
+				ImGui::TextColored(text_col, "%s", first_icon.c_str());
 
-				if (this->sortSystem->GetClicks() == 2) {
-					this->showEditorID = !this->showEditorID;
-					this->sortSystem->ResetSort();
-				} else {
-					this->sortSystem->SetCurrentSortFilter(this->showEditorID ? PropertyType::kEditorID : PropertyType::kName);
+				if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
+					this->sortSystem->SetPrimarySortFilter(this->showFormID ? PropertyType::kFormID : PropertyType::kPlugin);
+					this->sortSystem->ToggleAscending();
+					this->SortListBySpecs();
+					this->UpdateImGuiTableIDs();
 				}
 
-				this->SortListBySpecs();
-				this->UpdateImGuiTableIDs();
-			}
+				ImGui::SameLine();
+				ImGui::AlignTextToFramePadding();
+				if (is_first_sorted) ImGui::PushFontBold();
+				ImGui::TextColored(text_col, "%s", header_plugin.c_str());
+				if (is_first_sorted) ImGui::PopFont();
 
-			ImGui::SameLine(sort_spacing - name_offset);
+				if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
+					this->showFormID = !this->showFormID;
 
-			CustomSortColumn(header_custom, value_width, is_custom_sorted);
+					if (primary_sort == PropertyType::kFormID || primary_sort == PropertyType::kPlugin) {
+						this->sortSystem->SetPrimarySortFilter(this->showFormID ? PropertyType::kFormID : PropertyType::kPlugin);
+						this->SortListBySpecs();
+						this->UpdateImGuiTableIDs();
+					}
+				}
 
-			ImGui::SameLine();
-			ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x - value_width - (ImGui::GetFrameHeight() / 2.0f));
-			ImGui::AlignTextToFramePadding();
-			ImGui::TextColored(text_col, "%s", header_value.c_str());
-			if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
-				this->sortSystem->SetCurrentSortFilter(PropertyType::kGoldValue);
-				this->sortSystem->ToggleAscending();
-				this->SortListBySpecs();
-				this->UpdateImGuiTableIDs();
-			}
+				bool is_second_sorted = showEditorID ? primary_sort == PropertyType::kEditorID : primary_sort == PropertyType::kName;
+				auto second_icon = is_second_sorted ? sort_icon : ICON_LC_ARROW_UP_DOWN;
+
+				ImGui::SameLine(spacing);
+				ImGui::AlignTextToFramePadding();
+				ImGui::TextColored(text_col, "%s", second_icon.c_str());
+
+				if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
+					this->sortSystem->SetPrimarySortFilter(this->showEditorID ? PropertyType::kEditorID : PropertyType::kName);
+					this->sortSystem->ToggleAscending();
+					this->SortListBySpecs();
+					this->UpdateImGuiTableIDs();
+				}
+
+				ImGui::SameLine();
+				ImGui::AlignTextToFramePadding();
+				if (is_second_sorted) ImGui::PushFontBold();
+				ImGui::TextColored(text_col, "%s", header_name.c_str());
+				if (is_second_sorted) ImGui::PopFont();
+
+				if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
+					this->showEditorID = !this->showEditorID;
+					if (primary_sort == PropertyType::kEditorID || primary_sort == PropertyType::kName) {
+						this->sortSystem->SetPrimarySortFilter(this->showEditorID ? PropertyType::kEditorID : PropertyType::kName);
+						this->SortListBySpecs();
+						this->UpdateImGuiTableIDs();
+					}
+				}
+
+				bool is_custom_sorted = (!this->sortSystem->GetUsePrimary());
+				auto custom_icon = secondary_sort == PropertyType::kNone ? ICON_LC_ARROW_UP_DOWN : is_custom_sorted ? sort_icon : ICON_LC_ARROW_UP_DOWN;
+
+				ImGui::SameLine(sort_spacing - name_offset);
+				ImGui::AlignTextToFramePadding();
+				ImGui::TextColored(text_col, "%s", custom_icon.c_str());
+
+				if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
+					this->sortSystem->UsePrimary(false);
+					this->sortSystem->ToggleAscending();
+					this->SortListBySpecs();
+					this->UpdateImGuiTableIDs();
+				}
+
+				ImGui::SameLine();
+				if (is_custom_sorted) ImGui::PushFontBold();
+				CustomSortColumn();
+				if (is_custom_sorted) ImGui::PopFont();
 		}
 		
 		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);

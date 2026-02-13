@@ -11,17 +11,19 @@ namespace Modex
 	{
 	private:
 		bool                        m_ascending;
-		int                         m_reset;
+		bool                        m_usePrimary;
 		std::function<void()>       m_sortSystemCallback;
 
-		FilterProperty              m_currentSortFilter;
+		FilterProperty              m_primarySortFilter;
+		FilterProperty              m_secondarySortFilter;
 		FilterPropertyList          m_availableSortFilters;
 
 	public:
-		SortSystem(const std::filesystem::path& a_path) :
-			m_ascending(true),
-			m_reset(0),
-			m_currentSortFilter(PropertyType::kNone)
+		SortSystem(const std::filesystem::path& a_path)
+			: m_ascending(true)
+			, m_usePrimary(true)
+			, m_primarySortFilter(PropertyType::kNone)
+			, m_secondarySortFilter(PropertyType::kNone)
 		{
 			ConfigManager::m_file_path = a_path;
 		}
@@ -40,38 +42,48 @@ namespace Modex
 
 		void ResetSort() {
 			m_ascending = true;
-			m_currentSortFilter = PropertyType::kNone;
-		}
-
-		int GetClicks() {
-			return m_reset;
+			m_secondarySortFilter = PropertyType::kNone;
 		}
 
 		void ToggleAscending() {
 			m_ascending = !m_ascending;
-			m_reset++;
-
-			if (m_reset > 2) {
-				m_reset = 0;
-				m_ascending = true;
-				m_currentSortFilter = PropertyType::kNone;
-			}
 		}
 
-		const FilterProperty& GetCurrentSortFilter() const {
-			return m_currentSortFilter;
+		const FilterProperty& GetPrimarySortFilter() const {
+			return m_primarySortFilter;
+		}
+
+		const FilterProperty& GetSecondarySortFilter() const {
+			return m_secondarySortFilter;
 		}
 
 		bool& GetSortAscending() {
 			return m_ascending;
 		}
 
-		void SetCurrentSortFilter(FilterProperty a_filter) {
-			if (m_currentSortFilter != a_filter) {
-				m_reset = 0;
-				m_ascending = true;
-				m_currentSortFilter = std::move(a_filter);
+		bool& GetUsePrimary() {
+			return m_usePrimary;
+		}
+
+		void UsePrimary(bool a_use = true) {
+			m_usePrimary = a_use;
+		}
+
+		void SetPrimarySortFilter(FilterProperty a_filter) {
+			if (m_primarySortFilter != a_filter) {
+				m_primarySortFilter = std::move(a_filter);
 			}
+
+			m_usePrimary = true;
+		}
+
+		void SetSecondarySortFilter(FilterProperty a_filter) {
+			if (m_secondarySortFilter != a_filter) {
+				m_ascending = true;
+				m_secondarySortFilter = std::move(a_filter);
+			}
+
+			m_usePrimary = false;
 		}
 
 		void AddAvailableFilter(FilterProperty a_filter) {
