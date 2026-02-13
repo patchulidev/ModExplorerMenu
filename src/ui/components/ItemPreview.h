@@ -370,6 +370,7 @@ namespace
 		if (a_item->IsDummy()) return;
 
 		const auto cursor = ImGui::GetCursorScreenPos();
+		const float alpha = ImGui::GetStyle().Alpha;
 		const float font_size = ImGui::GetFontSize();
 		const float tooltip_width = getDesiredWidth(a_item, 200.0f);
 		const float max_width = a_tooltip ? tooltip_width : ImGui::GetContentRegionAvail().x;
@@ -380,8 +381,8 @@ namespace
 			const auto color = ImGui::GetStyleColorVec4(ImGuiCol_Border);
 			const auto text_color = a_item->IsEnchanted() ? ThemeConfig::GetColor("TEXT_ENCHANTED") : ThemeConfig::GetColor("TEXT");
 
-			draw_list->AddRectFilled(cursor, ImVec2(cursor.x + max_width, cursor.y + font_size * 2.5f), ImGui::ColorConvertFloat4ToU32(ImVec4(0.15f, 0.15f, 0.15f, 0.25f)));
-			draw_list->AddRect(cursor, ImVec2(cursor.x + max_width, cursor.y + ImGui::GetFontSize() * 2.5f), ImGui::ColorConvertFloat4ToU32(color));
+			draw_list->AddRectFilled(cursor, ImVec2(cursor.x + max_width, cursor.y + font_size * 2.5f), ThemeConfig::GetColorU32("BG", alpha));
+			draw_list->AddRect(cursor, ImVec2(cursor.x + max_width, cursor.y + font_size * 2.5f), ThemeConfig::GetColorU32("BORDER", alpha));
 
 			ImGui::NewLine();
 			ImGui::SetCursorPosX(UICustom::GetCenterTextPosX(name.data()));
@@ -431,7 +432,7 @@ namespace
 			ImVec2(start.x + ImGui::GetWindowWidth(), start.y + height) :
 			ImVec2(cursor.x + max_width, cursor.y + height);
 
-		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.2f);
+		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, alpha * 0.2f);
 		const ImU32 color = UICustom::GetFormTypeColor(a_item->GetFormType());
 		const ImU32 empty = ImGui::GetColorU32(ImVec4(0, 0, 0, 0));
 		ImGui::PopStyleVar();

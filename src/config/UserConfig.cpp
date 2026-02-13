@@ -58,6 +58,7 @@ namespace Modex
 		user.theme 		= ConfigManager::Get<std::string>("Modex Theme", _default.theme);
 		user.globalFont 	= ConfigManager::Get<std::string>("Global Font", _default.globalFont);
 
+		user.developerMode  = ConfigManager::Get<bool>("Developer Mode", _default.developerMode);
 		user.screenScaleRatio 	= ConfigManager::Get<ImVec2>("Screen Scale Ratio", _default.screenScaleRatio);
 
 		Locale::GetSingleton()->SetFilePath(LOCALE_JSON_DIR / (user.language + ".json"));
@@ -90,6 +91,7 @@ namespace Modex
 		ConfigManager::Set<std::string>("Modex Theme", user.theme);
 		ConfigManager::Set<std::string>("Global Font", user.globalFont);
 
+		ConfigManager::Set<bool>("Developer Mode", user.developerMode);
 		ConfigManager::Set<ImVec2>("Screen Scale Ratio", user.screenScaleRatio);
 	
 		this->Save();

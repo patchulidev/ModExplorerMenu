@@ -160,7 +160,7 @@ namespace Modex::UICustom
 		pos.x += a_width - ImGui::GetFrameHeightWithSpacing() + ImGui::GetStyle().FramePadding.x;
 		pos.y += (ImGui::GetItemRectSize().y / 2.0f) - (ImGui::GetFontSize() / 2.0f);
 
-		DrawList->AddText(pos, ThemeConfig::GetColorU32("TEXT"), ICON_LC_SEARCH);
+		DrawList->AddText(pos, ThemeConfig::GetColorU32("TEXT", ImGui::GetStyle().Alpha), ICON_LC_SEARCH);
 		ImGui::PopFont();
 		
 		ImGui::PopStyleVar(2);
@@ -228,7 +228,7 @@ namespace Modex::UICustom
 		pos.x += a_width - ImGui::GetFrameHeightWithSpacing() + ImGui::GetStyle().FramePadding.x;
 		pos.y += (ImGui::GetItemRectSize().y / 2.0f) - (ImGui::GetFontSize() / 2.0f);
 
-		DrawList->AddText(pos, ThemeConfig::GetColorU32("TEXT"), ICON_LC_SQUARE_CHEVRON_DOWN);
+		DrawList->AddText(pos, ThemeConfig::GetColorU32("TEXT", ImGui::GetStyle().Alpha), ICON_LC_SQUARE_CHEVRON_DOWN);
 		ImGui::PopFont();
 
 		ImGui::PopStyleVar(2);

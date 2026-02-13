@@ -114,7 +114,7 @@
 
     "PLUGIN_DEPENDENCIES": "Show Plugin Dependencies",
     "PLUGIN_DEPENDENCIES_TOOLTIP": "Plugin Dependencies\n\nShow a list of all plugins that the selected item or kit depends on.",
-    
+
     "CONTAINER_VIEW": "To Container",
     "CONTAINER_VIEW_TOOLTIP": "Container View\n\nView the contents of your Selection within a virtual in-game chest.",
     "CONTAINER_VIEW_KIT": "To Container",
@@ -131,7 +131,7 @@
     "ADD_SELECTION": "Add Selection To Inventory",
 	"REMOVE_SELECTION": "Remove Selection from Inventory",
     "PLACE_SELECTION": "Place Selection On Ground",
-    "EQUIP_SELECTION": "Equip Selection To Player",
+    "EQUIP_SELECTION": "Equip Selection To Target",
     "EQUIP_SELECTION_TOOLTIP": "Add & Equip\n\nAdd & Equip the selected item(s) from the Table to your Target directly.",
 
     "GOTO_NPC_REFERENCE": "Teleport To Actor",

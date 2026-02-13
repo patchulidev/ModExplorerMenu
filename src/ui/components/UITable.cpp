@@ -117,6 +117,10 @@ namespace Modex
 		selectedPlugin = UserData::Get<std::string>(data_id + "::LastSelectedPlugin", Translate("SHOW_ALL"));
 		tableMode = UserData::Get<uint32_t>(data_id + "::TableMode", SHOWALL);
 
+		if (UserConfig::Get().developerMode) {
+			this->flags |= ModexTableFlag_EnableDebugToolkit;
+		}
+
 		BuildPluginList();
 		Refresh();
 	}
@@ -1134,6 +1138,7 @@ namespace Modex
 	{
 		static std::string tooltip_icon = "";
 		static std::string tooltip_string = "";
+		static std::string tooltip_target = "";
 
 		if (ImGui::GetDragDropPayload()) { // Handle Tooltips outside of widget targets!
 			DrawDragDropPayload(tooltip_icon);
@@ -1158,22 +1163,26 @@ namespace Modex
 					if (destination->GetDragDropHandle() == DragDropHandle::Kit) {
 						tooltip_icon = ICON_LC_PLUS;
 						tooltip_string = Translate("KIT_ADD");
+						tooltip_target = destination->selectedKitPtr ? destination->selectedKitPtr->m_key : "";
 					}
 
 					if (destination->GetDragDropHandle() == DragDropHandle::Inventory) {
 						tooltip_icon = ICON_LC_PLUS;
 						tooltip_string = Translate("ADD_SELECTION");
+						tooltip_target = tableTargetRef ? tableTargetRef->GetName() : "";
 					}
 
 					if (destination->GetDragDropHandle() == DragDropHandle::Table) {
 						if (origin->GetDragDropHandle() == DragDropHandle::Kit) {
 							tooltip_icon = ICON_LC_X;
 							tooltip_string = Translate("KIT_REMOVE");
+							tooltip_target = origin->selectedKitPtr ? origin->selectedKitPtr->m_key : "";
 						}
 
 						if (origin->GetDragDropHandle() == DragDropHandle::Inventory) {
 							tooltip_icon = ICON_LC_TRASH;
 							tooltip_string = Translate("REMOVE_SELECTION");
+							tooltip_target = tableTargetRef ? tableTargetRef->GetName() : "";
 						}
 					}
 
@@ -1182,6 +1191,7 @@ namespace Modex
 						if (origin->tableTargetRef->GetFormID() == destination->tableTargetRef->GetFormID()) {
 							tooltip_icon = ICON_LC_X;
 							tooltip_string = Translate("ERROR_SAME_REF");
+							tooltip_target = destination->tableTargetRef ? destination->tableTargetRef->GetName() : "";
 						}
 					}
 
@@ -1189,6 +1199,7 @@ namespace Modex
 					if (origin->tableTargetRef && !destination->tableTargetRef) {
 						tooltip_icon = ICON_LC_TRASH;
 						tooltip_string = Translate("REMOVE_SELECTION");
+						tooltip_target = tableTargetRef ? tableTargetRef->GetName() : "";
 					}
 
 					if (!tooltip_string.empty()) {
@@ -1208,7 +1219,7 @@ namespace Modex
 						DrawList->AddRectFilled(min, max, ThemeConfig::GetColorU32("BG"));
 
 						DrawList->AddText(ImGui::GetFont(), font_size,
-							min + (table_size / 2.0f) - (icon_size / 2.0f) - ImVec2(0, center_offset),
+							min + (table_size / 2.0f) - (icon_size / 1.5f) - ImVec2(0, center_offset),
 							ThemeConfig::GetColorU32("TEXT"),
 							tooltip_icon.c_str()
 						);
@@ -1222,6 +1233,19 @@ namespace Modex
 							ThemeConfig::GetColorU32("TEXT", 0.75f),
 							tooltip_string.c_str()
 						);
+
+						if (!tooltip_target.empty()) {
+							ImGui::PushFont(NULL, font_size / 2.0f);
+							const ImVec2 target_size = ImGui::CalcTextSize(tooltip_target.c_str());
+							ImGui::PopFont();
+
+							DrawList->AddText(ImGui::GetFont(), font_size / 2.5f,
+								min + (table_size / 2.0f) - (target_size / 2.0f) + ImVec2(0, icon_size.y * 1.25f) - ImVec2(0, center_offset),
+								ThemeConfig::GetColorU32("TEXT", 0.5f),
+								tooltip_target.c_str()
+							);
+						}
+
 					}
 				}
 
@@ -1333,6 +1357,16 @@ namespace Modex
 
 		if (ImGui::BeginPopup("TableViewContextMenu")) {
 			const bool shift_down = ImGui::GetIO().KeyShift;
+			
+			if (!tableTargetRef || !IsValidTargetReference()) {
+				ImGui::TextColored(ThemeConfig::GetColor("ERROR"), "%s", Translate("ERROR_INVALID_REFERENCE"));
+				ImGui::EndPopup();
+				return;
+			}
+
+			const auto color = tableTargetRef->IsPlayerRef() ? ThemeConfig::GetColor("SUCCESS") : ThemeConfig::GetColor("WARN");
+			ImGui::TextColored(color, "%s %s", ICON_LC_ASTERISK " ", tableTargetRef->GetName());
+			ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 
 			if (a_item->IsItem()) {
 				if (HasFlag(ModexTableFlag_Inventory)) {
@@ -2456,8 +2490,8 @@ namespace Modex
 	}
 	
 	// TODO: move this
-	static inline bool test_table_selection = false;
-	static inline bool test_table_filters = false;
+	static inline bool test_selection = false;
+	static inline bool test_filters = false;
 
 	void UITable::Draw(const TableList& _tableList)
 	{
@@ -2481,19 +2515,16 @@ namespace Modex
 		}
 
 		if (ImGui::BeginChild("##UITable::Draw", ImVec2(0.0f, 0.0f), 0, ImGuiWindowFlags_NoMove)) {
-			// FIX: PluginList isn't deterministic of a module failing to load anymore due to
-			// polymorphic use of UITable's. Need to redefine what a failure to load looks like.
-
-			if (test_table_selection) {
+			if (test_selection) {
 				Test_TableSelection();
-				const float target_scroll = this->itemPreview->m_tableID * LayoutItemStep.y;
+				const float target_scroll = itemPreview ? this->itemPreview->m_tableID * LayoutItemStep.y : 0;
 				const float current_scroll = ImGui::GetScrollY();
 				const float lerp_factor = 0.15f; // Adjust for faster/slower scroll (0.0-1.0)
 				const float smooth_scroll = current_scroll + (target_scroll - current_scroll) * lerp_factor;
 				ImGui::SetScrollY(smooth_scroll);
 			}
 
-			if (test_table_filters) {
+			if (test_filters) {
 				Test_TableFilters();
 			}
 
@@ -2664,15 +2695,13 @@ namespace Modex
 	void UITable::DrawDebugToolkit()
 	{
 		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		// if (UICustom::AddToggleButton("Autotest Table Selection", test_table_selection)) {
-			// test_table_selection = !test_table_selection;
-		// }
+		if (UICustom::Settings_ToggleButton("Autotest Table Selection", test_selection)) {
+			// test_selection = !test_selection;
+		}
 
-		ImGui::SameLine();
-
-		// if (UICustom::AddToggleButton("Autotest Table Filters", test_table_filters)) {
-			// test_table_filters = !test_table_filters;
-		// }
+		if (UICustom::Settings_ToggleButton("Autotest Table Filters", test_filters)) {
+			// test_filters = !test_filters;
+		}
 	}
 
 	// Use ImGuiIO delta to incrementally select table filter nodes one by one until completion
@@ -2709,7 +2738,7 @@ namespace Modex
 
 			// stop when we finish
 			if (current_index == nodesSize) {
-				test_table_filters = false;
+				test_filters = false;
 			}
 		}
 	}
@@ -2725,6 +2754,10 @@ namespace Modex
 
 		const TableList* selectionList = (TableList*)selectionStorage.UserData;
 		const size_t tableSize = selectionList->size();
+
+		if (tableSize == 0) {
+			return;
+		}
 
 		if (accumulator >= 0.015f) {
 			accumulator = 0.0f;
@@ -2746,7 +2779,7 @@ namespace Modex
 
 			// stop when we finish
 			if (current_index == tableSize) {
-				test_table_selection = false;
+				test_selection = false;
 			}
 		}
 	}

@@ -86,6 +86,8 @@ namespace Modex
 
 		ImGuiID                 navPositionID = 0;
 
+		inline static bool test_selection = false;
+		inline static bool test_filters = false;
 
 	public:
 		enum TableFlag : uint32_t {

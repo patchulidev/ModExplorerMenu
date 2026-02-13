@@ -339,7 +339,7 @@ namespace Modex
 		icon_pos.x += a_width - ImGui::GetFrameHeightWithSpacing() + ImGui::GetStyle().FramePadding.x;
 		icon_pos.y += (ImGui::GetItemRectSize().y / 2.0f) - (ImGui::GetFontSize() / 2.0f);
 
-		DrawList->AddText(icon_pos, ThemeConfig::GetColorU32("TEXT"), ICON_LC_SEARCH);
+		DrawList->AddText(icon_pos, ThemeConfig::GetColorU32("TEXT", ImGui::GetStyle().Alpha), ICON_LC_SEARCH);
 		ImGui::PopFont();
 		ImGui::PopStyleVar(2);
 

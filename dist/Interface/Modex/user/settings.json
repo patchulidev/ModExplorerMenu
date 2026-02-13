@@ -12,6 +12,7 @@
     "Disable Opening In Menu": false,
     "Pause Game While Open": false,
 	"Use Base Plugin": false,
+	"Missing Plugin": true,
     "Modex Theme": "default",
     "Global Font": "Ubuntu-Regular",
     "Language": "English",

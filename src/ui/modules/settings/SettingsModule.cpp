@@ -140,6 +140,16 @@ namespace Modex
 			if (UICustom::Settings_LanguageDropdown("SETTINGS_LANGUAGE", &config.language)) {
 				UserConfig::GetSingleton()->SaveSettings();
 			}
+
+			ImGui::NewLine(); 
+			UICustom::Settings_Header(Translate("OTHER"));
+
+			if (UICustom::Settings_ToggleButton("Developer Mode", config.developerMode)) {
+				UserConfig::GetSingleton()->SaveSettings();
+			}
+
+			ImGui::NewLine();
+			ImGui::NewLine();
 		}
 
 		ImGui::EndChild();

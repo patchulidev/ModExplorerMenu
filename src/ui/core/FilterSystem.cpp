@@ -184,6 +184,10 @@ namespace Modex
 				break;
 		}
 
+		if (GetSelectedRootNode() == nullptr) {
+			ClearActiveNodes();
+		}
+
 		if (_change && m_filterChangeCallback) {
 			m_filterChangeCallback();
 		}
@@ -348,6 +352,10 @@ namespace Modex
 		
 		// No filters active = show everything
 		if (nodesByParent.empty()) {
+			return true;
+		}
+
+		if (GetSelectedRootNode() == nullptr) {
 			return true;
 		}
 		

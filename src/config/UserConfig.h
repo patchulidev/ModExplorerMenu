@@ -46,6 +46,7 @@ namespace Modex
 			bool smoothScroll 		= true;
 			bool basePlugin			= false;
 			bool showMissing		= true;
+			bool developerMode		= false;
 
 			std::string language 		= "English";
 			std::string theme 			= "default";
