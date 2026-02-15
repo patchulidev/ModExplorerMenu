@@ -1,11 +1,80 @@
 #pragma once
 
+#include "RE/T/TrainingMenu.h"
 #include "data/BaseObject.h"
 #include "localization/Locale.h"
+#include "ui/core/UIManager.h"
 
 
 namespace Modex::Commands
 {
+	// Source: Qudix in xSE RE discord <3
+	// https://discord.com/channels/535508975626747927/535530099475480596/1213998301314031686
+	//
+	// Only serves as a shortcut for users to remotely open containers. Doesn't resolve issues with
+	// items flagged as stolen, crime, etc. Will require a lot more implementation for such actions.
+	static inline void TESObjectREFR_OpenContainer(RE::TESObjectREFR* a_this, RE::ContainerMenu::ContainerMode a_openType = RE::ContainerMenu::ContainerMode::kLoot)
+	{
+		using func_t = decltype(&TESObjectREFR_OpenContainer);
+		REL::Relocation<func_t> func{ RELOCATION_ID(50211, 51140) };
+		func(a_this, a_openType);
+	}
+
+    // Source: Meridiano on Skyrim REx Discord! :)
+    // https://discord.com/channels/535508975626747927/535530099475480596/1434769252094705725
+	//
+	// Check for explosion and initially disabled flag to safely pass NULL into first two arguments
+	// which are suspected for logging. Added the *a_count* argument for my implementation.
+	static inline RE::TESObjectREFR* Papyrus_PlaceAtMe(RE::TESObjectREFR* a_target, RE::TESForm* a_form, uint32_t a_count, bool a_persistent, bool a_initiallyDisabled) {
+		if (a_form->GetFormType() != RE::FormType::Explosion || !a_initiallyDisabled) {
+			using func_t = RE::TESObjectREFR*(*)(std::int64_t, std::int32_t, RE::TESObjectREFR*, RE::TESForm*, std::int32_t, bool, bool);
+			static REL::Relocation<func_t> func{ REL::RelocationID(55672, 56203, 55672) };
+			return func(NULL, NULL, a_target, a_form, a_count, a_persistent, a_initiallyDisabled);
+		}
+
+		return nullptr;
+	}
+
+	static inline bool CloseAllGameMenus()
+	{
+		if (const auto messagingQueue = RE::UIMessageQueue::GetSingleton(); messagingQueue) {
+			messagingQueue->AddMessage(ModexGUIMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
+			messagingQueue->AddMessage(RE::Console::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
+			messagingQueue->AddMessage(RE::ContainerMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
+			messagingQueue->AddMessage(RE::TrainingMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
+			messagingQueue->AddMessage(RE::CraftingMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
+			messagingQueue->AddMessage(RE::DialogueMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
+			messagingQueue->AddMessage(RE::StatsMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
+			messagingQueue->AddMessage(RE::TweenMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
+			messagingQueue->AddMessage(RE::BarterMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
+			messagingQueue->AddMessage(RE::SleepWaitMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
+			return true;
+		}
+
+		Error("Failed to get UIMessageQueue to close all menus. Discarding last Request!");
+		return false;
+	}
+
+	static inline void OpenActorInventory(RE::TESObjectREFR* a_actorRef)
+	{
+		if (a_actorRef && CloseAllGameMenus()) {
+			TESObjectREFR_OpenContainer(a_actorRef, RE::ContainerMenu::ContainerMode::kLoot);
+			UIManager::GetSingleton()->SetMenuListener(true);
+		}
+	}
+
+	static inline bool IsGameMenuOpen()
+	{
+		if (const auto GameUI = RE::UI::GetSingleton(); GameUI) {
+			return  GameUI->IsMenuOpen(RE::MainMenu::MENU_NAME)    ||
+					GameUI->IsMenuOpen(RE::StatsMenu::MENU_NAME)   ||
+					GameUI->IsMenuOpen(RE::JournalMenu::MENU_NAME) ||
+					GameUI->IsMenuOpen(RE::MapMenu::MENU_NAME);
+		}
+
+		return false;
+	}
+
 	static inline RE::TESObjectREFR* GetConsoleReference()
 	{
 		if (auto consoleRefr = RE::Console::GetSelectedRef().get(); consoleRefr != nullptr) {
@@ -291,7 +360,32 @@ namespace Modex::Commands
 				if (auto playerRefr = player->AsReference()) {
 					if (auto ref = RE::TESForm::LookupByID<RE::TESObjectREFR>(a_refID)) {
 						ref->MoveTo(playerRefr);
+						CloseAllGameMenus();
 					}
+				}
+			}
+		}
+	}
+
+	static inline void TeleportREFRToPlayer(RE::TESObjectREFR* a_ref)
+	{
+		if (a_ref) {
+			if (auto player = RE::PlayerCharacter::GetSingleton(); player) {
+				if (auto playerRefr = player->AsReference()) {
+					a_ref->MoveTo(playerRefr);
+					CloseAllGameMenus();
+				}
+			}
+		}
+	}
+
+	static inline void TeleportPlayerToREFR(RE::TESObjectREFR* a_ref)
+	{
+		if (a_ref) {
+			if (auto player = RE::PlayerCharacter::GetSingleton(); player) {
+				if (auto playerRefr = player->AsReference()) {
+					playerRefr->MoveTo(a_ref);
+					CloseAllGameMenus();
 				}
 			}
 		}
@@ -304,37 +398,29 @@ namespace Modex::Commands
 				if (auto playerRefr = player->AsReference()) {
 					if (auto ref = RE::TESForm::LookupByID<RE::TESObjectREFR>(a_refID)) {
 						playerRefr->MoveTo(ref);
+						CloseAllGameMenus();
 					}
 				}
 			}
 		}
 	}
 
-    // Source: Meridiano on Skyrim REx Discord! :)
-    // https://discord.com/channels/535508975626747927/535530099475480596/1434769252094705725
-	static inline RE::TESObjectREFR* PlaceAtMe(const std::string& a_editorID, uint32_t a_count = 1, bool persistent = true, bool disabled = false) 
+	static inline void PlaceAtMe(const std::string& a_editorID, uint32_t a_count = 1, bool persistent = true, bool disabled = false) 
 	{
 		auto player = RE::PlayerCharacter::GetSingleton();
-
-		if (!player)
-			return nullptr;
+		if (!player) 
+			return;
 
 		auto target = player->AsReference();
-		
-		if (target && !a_editorID.empty()) {
-			RE::TESForm* object = RE::TESForm::LookupByEditorID(a_editorID);
-			if (object) {
-				if (object->GetFormType() == RE::FormType::Explosion && disabled) {
-					// disabled explosions not allowed
-				} else {
-					using func_t = RE::TESObjectREFR*(*)(std::int64_t, std::int32_t, RE::TESObjectREFR*, RE::TESForm*, std::int32_t, bool, bool);
-					static REL::Relocation<func_t> func{ REL::RelocationID(55672, 56203, 55672) };
-					return func(NULL, NULL, target, object, a_count, persistent, disabled);
-				}
-			}
-		}
+		if (!target) 
+			return;
 
-		return nullptr;
+		if (a_editorID.empty())
+			return;
+		
+		if (RE::TESForm* object = RE::TESForm::LookupByEditorID(a_editorID); object) {
+			Papyrus_PlaceAtMe(target, object, a_count, persistent, disabled);
+		}
 	}
 
 	static inline void KillRefr(RE::TESObjectREFR* a_targetRef)
@@ -347,9 +433,7 @@ namespace Modex::Commands
 		if (!actor)
 			return;
 
-		// TEST: Verify working
-		// Do we even need this?
-		actor->KillDying();
+		actor->KillImpl(nullptr, actor->GetActorValueMax(RE::ActorValue::kHealth), true, true);
 	}
 
 	static inline void ResurrectRefr(RE::TESObjectREFR* a_targetRef)

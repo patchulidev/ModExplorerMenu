@@ -8,6 +8,8 @@
 
 #include "imgui.h"
 
+// BUG: Fadiing out does not work on menu close!!:
+//
 namespace Modex 
 {
 	void UINotification::ShowTooltip(const std::string& a_text, const std::string& a_icon)
@@ -254,13 +256,13 @@ namespace Modex
 	{
 		switch (a_type) {
 		case UIMessageType::Info:
-			return ThemeConfig::GetColorU32("MSG_INFO");
+			return ThemeConfig::GetColorU32("PRIMARY", 0.5f);
 		case UIMessageType::Warning:
-			return ThemeConfig::GetColorU32("MSG_WARN");
+			return ThemeConfig::GetColorU32("WARN", 0.5f);
 		case UIMessageType::Error:
-			return ThemeConfig::GetColorU32("MSG_ERROR");
+			return ThemeConfig::GetColorU32("ERROR", 0.5f);
 		case UIMessageType::Tooltip:
-			return ThemeConfig::GetColorU32("TOOLTIP");
+			return ThemeConfig::GetColorU32("FRAME");
 		default:
 			return ImGui::GetColorU32(ImGuiCol_Text);
 		}

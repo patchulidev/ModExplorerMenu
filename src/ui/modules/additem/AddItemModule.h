@@ -15,6 +15,5 @@ namespace Modex
 		AddItemModule& operator=(AddItemModule&&) = delete;
 
 		void Draw() override;
-		void DrawAddItemActionPanel(const ImVec2 &a_pos, const ImVec2 &a_size, std::unique_ptr<UITable> &a_view);
 	};
 }

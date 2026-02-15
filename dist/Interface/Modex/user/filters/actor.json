@@ -1,5 +1,52 @@
 {
-    "SearchProperty": [],
-    "SortProperty": [],
-    "FilterProperty": []
+    "SearchProperty": [
+		"kName",
+		"kEditorID",
+		"kFormID",
+		"kReferenceID",
+		"kKeywordList",
+		"kFactionList"
+	],
+
+    "SortProperty": [
+		"kNone",
+		"kFormID",
+		"kReferenceID",
+		"kCarryWeight",
+		"<separator>",
+		"kFactionList"
+	],
+
+    "FilterProperty": [
+		{
+			"id": "unique",
+			"displayName": "Unique",
+			"behavior": "multi_select",
+			"rule": {
+				"property": "kUnique",
+				"operator": "equals",
+				"value": "true"
+			}
+		},
+		{
+			"id": "essential",
+			"displayName": "Essential",
+			"behavior": "multi_select",
+			"rule": {
+				"property": "kEssential",
+				"operator": "equals",
+				"value": "true"
+			}
+		},
+		{
+			"id": "reference",
+			"displayName": "Has Reference",
+			"behavior": "multi_select",
+			"rule": {
+				"property": "kReferenceID",
+				"operator": "greater_than",
+				"value": "0"
+			}
+		}
+	]
 }

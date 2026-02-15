@@ -44,6 +44,7 @@ namespace Modex
 		user.uiScaleVertical 	= ConfigManager::Get<int>("UI Scale Vertical", _default.uiScaleVertical);
 		user.uiScaleHorizontal 	= ConfigManager::Get<int>("UI Scale Horizontal", _default.uiScaleHorizontal);
 		user.globalFontSize 	= ConfigManager::Get<int>("Global Font Size", _default.globalFontSize);
+		user.maxQuery			= ConfigManager::Get<int>("Max Action Query", _default.maxQuery);
 
 		user.fullscreen 	= ConfigManager::Get<bool>("Fullscreen", _default.fullscreen);
 		user.pauseGame 		= ConfigManager::Get<bool>("Pause Game While Open", _default.pauseGame);
@@ -53,12 +54,12 @@ namespace Modex
 		user.disableAlt		= ConfigManager::Get<bool>("Disable Alt Key Shortcut", _default.disableAlt);
 		user.basePlugin 	= ConfigManager::Get<bool>("Use Base Plugin", _default.basePlugin);
 		user.showMissing	= ConfigManager::Get<bool>("Show Missing Plugins", _default.showMissing);
+		user.developerMode  = ConfigManager::Get<bool>("Developer Mode", _default.developerMode);
 
 		user.language 		= ConfigManager::Get<std::string>("Language", _default.language);
 		user.theme 		= ConfigManager::Get<std::string>("Modex Theme", _default.theme);
 		user.globalFont 	= ConfigManager::Get<std::string>("Global Font", _default.globalFont);
 
-		user.developerMode  = ConfigManager::Get<bool>("Developer Mode", _default.developerMode);
 		user.screenScaleRatio 	= ConfigManager::Get<ImVec2>("Screen Scale Ratio", _default.screenScaleRatio);
 
 		Locale::GetSingleton()->SetFilePath(LOCALE_JSON_DIR / (user.language + ".json"));
@@ -77,6 +78,7 @@ namespace Modex
 		ConfigManager::Set<int>("UI Scale Vertical", user.uiScaleVertical);
 		ConfigManager::Set<int>("UI Scale Horizontal", user.uiScaleHorizontal);
 		ConfigManager::Set<int>("Global Font Size", user.globalFontSize);
+		ConfigManager::Set<int>("Max Action Query", user.maxQuery);
 
 		ConfigManager::Set<bool>("Fullscreen", user.fullscreen);
 		ConfigManager::Set<bool>("Pause Game While Open", user.pauseGame);
@@ -86,12 +88,12 @@ namespace Modex
 		ConfigManager::Set<bool>("Disable Alt Key Shortcut", user.disableAlt);
 		ConfigManager::Set<bool>("Use Base Plugin", user.basePlugin);
 		ConfigManager::Set<bool>("Show Missing Plugins", user.showMissing);
+		ConfigManager::Set<bool>("Developer Mode", user.developerMode);
 
 		ConfigManager::Set<std::string>("Language", user.language);
 		ConfigManager::Set<std::string>("Modex Theme", user.theme);
 		ConfigManager::Set<std::string>("Global Font", user.globalFont);
 
-		ConfigManager::Set<bool>("Developer Mode", user.developerMode);
 		ConfigManager::Set<ImVec2>("Screen Scale Ratio", user.screenScaleRatio);
 	
 		this->Save();

@@ -36,6 +36,7 @@ namespace Modex
 			int uiScaleVertical 	= 100;
 			int uiScaleHorizontal 	= 100;
 			int globalFontSize 		= 16;
+			int maxQuery			= 3000;
 
 			bool fullscreen 		= false;
 			bool pauseGame 			= false;

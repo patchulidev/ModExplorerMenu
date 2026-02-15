@@ -106,7 +106,8 @@ namespace Modex
 				if (valueLower.length() > itemValue.length()) return false;
 				return itemValue. compare(itemValue.length() - valueLower.length(), valueLower.length(), valueLower) == 0;
 			}
-			
+
+			Error("Unknown operator in filter rule: " + op);
 			return true;
 		}
 	};

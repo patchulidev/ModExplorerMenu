@@ -308,12 +308,18 @@ namespace Modex
 		banner->Display();
 	}
 
-	void UIManager::ShowWarning(const std::string& a_title, const std::string& a_message, std::function<void()> onConfirmCallback)
+	void UIManager::ShowWarning(const std::string& a_title, const std::string& a_message, bool a_showCondition, std::function<void()> onConfirmCallback)
 	{
-		m_windowStack.push_back(std::make_unique<UIPopupWarning>());
-		UIPopupWarning* popup = static_cast<UIPopupWarning*>(m_windowStack.back().get());
-		popup->PopupWarning(a_title, a_message, onConfirmCallback);
-		popup->OpenWindow(this);
+		if (a_showCondition) {
+			m_windowStack.push_back(std::make_unique<UIPopupWarning>());
+			UIPopupWarning* popup = static_cast<UIPopupWarning*>(m_windowStack.back().get());
+			popup->PopupWarning(a_title, a_message, onConfirmCallback);
+			popup->OpenWindow(this);
+		} else {
+			if (onConfirmCallback) {
+				onConfirmCallback();
+			}
+		}
 	}
 
 	void UIManager::ShowHotkey(const char* a_title, const char* a_desc, uint32_t* a_hotkey, uint32_t& a_default, bool a_modifierOnly, std::function<void()> onConfirmHotkeyCallback)

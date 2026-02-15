@@ -40,6 +40,7 @@
 
 	"ORDER_TOOLTIP": "Load Order\n\nDisplays a sorted list of plugins modifying this form, based on load order. This can help identify the origin of a form.\n\nThis list does not utilize any of the Modex Plugin user settings such as sorting direction.",
 	"DESCRIPTION_TOOLTIP": "Description\n\nAttempts to dynamically display the description for a Form. Values are calculated from Base MGEF values, and won't reflect real-time modifiers such as perks, player level, etc.",
+	"ACTOR_SKILLS": "Actor Skills: Represents the base actor values of this form. Does not reflect changes made to copies or in-game references of this form.",
 
 	"MODULE_HOME": "Home",
 	"MODULE_ADDITEM": "Add Item",
@@ -115,13 +116,16 @@
     "PLUGIN_DEPENDENCIES": "Show Plugin Dependencies",
     "PLUGIN_DEPENDENCIES_TOOLTIP": "Plugin Dependencies\n\nShow a list of all plugins that the selected item or kit depends on.",
 
-    "CONTAINER_VIEW": "To Container",
-    "CONTAINER_VIEW_TOOLTIP": "Container View\n\nView the contents of your Selection within a virtual in-game chest.",
-    "CONTAINER_VIEW_KIT": "To Container",
-    "CONTAINER_VIEW_KIT_TOOLTIP": "Container View\n\nView the contents of the selected kit inside a chest.",
+    "CONTAINER_VIEW": "Show Results In-game",
+    "CONTAINER_VIEW_TOOLTIP": "Show Results\n\nView the contents of your search in an in-game container. There you can preview, or loot items directly in-game",
+    "CONTAINER_VIEW_KIT": "Show Kit In-game",
+    "CONTAINER_VIEW_KIT_TOOLTIP": "Show Results\n\nView the contents of this Kit in an in-game container. Allowing you to preview, or loot items directly in-game.",
+	"CONTAINER_VIEW_TARGET": "Open Target Inventory",
+	"CONTAINER_VIEW_TARGET_TOOLTIP": "Target Container\n\nRemotely open and access the Inventory of the currently targeted Actor or Container in-game.",
+	"CONTAINER_VIEW_SELECTION": "Open Selected Inventory",
+	"CONTAINER_VIEW_SELECTION_TOOLTIP": "Selected Inventory\n\nRemotely open and access the Inventory of the currently selected Actor from the visible table.\n\nMay provide inconsistent results for Non-unique actors that may have multiple references such as Bandits. (WIP)",
 
-    "ADD_KIT": "To Inventory",
-    "ADD_KIT_NPC": "To Target",
+    "ADD_KIT": "Add To Target",
 
     "CLEAR_INVENTORY": "Clear Target Inventory",
 	"CLEAR_INVENTORY_DESC": "Clear Inventory:\n\nThis action will remove *every* item from the targeted inventory. This cannot be undone.\n\nAre you sure you want to proceed?",
@@ -133,6 +137,12 @@
     "PLACE_SELECTION": "Place Selection On Ground",
     "EQUIP_SELECTION": "Equip Selection To Target",
     "EQUIP_SELECTION_TOOLTIP": "Add & Equip\n\nAdd & Equip the selected item(s) from the Table to your Target directly.",
+	"BRING_SELECTION": "Bring Selection To Player",
+	"GOTO_SELECTION": "Teleport To Selection",
+	"RESSURECT_ACTOR": "Ressurect Actor",
+	"KILL_ACTOR": "Kill Actor",
+	"ENABLE_REFERENCE": "Enable Reference",
+	"DISABLE_REFERENCE": "Disable Reference",
 
     "GOTO_NPC_REFERENCE": "Teleport To Actor",
     "GOTO_NPC_REFERENCE_TOOLTIP": "Goto Actor Reference\n\nTeleports the player to the targeted Actor's current location in the world.",
@@ -182,6 +192,8 @@
 	"SETTINGS_LANGUAGE": "Language / Translation File",
 	"SETTINGS_MISSING_PLUGIN": "Missing Plugins",
 	"SETTINGS_MISSING_PLUGIN_TOOLTIP": "Missing Plugins\n\nToggle whether to Show or Hide forms which no longer exist in your Load Order within some lists such as Recent, Favorites, etc. \n\nDefault (ON).",
+	"SETTINGS_MAX_QUERY": "Max Action Query",
+	"SETTINGS_MAX_QUERY_TOOLTIP": "Max Query Check\n\nDetermines the threshold, on bulk actions, when a warning prompt should appear and ask for confirmation.\n\nDefault (1500)",
 
 	"BLACKLIST": "Plugin Blacklist",
 	"WHITELIST": "Plugin Whitelist",
@@ -197,6 +209,8 @@
 	"TABLE_SETTINGS_SHOW_BG": "Alt Row Background",
 	"TABLE_SETTINGS_SHOW_EDITORID": "Name <-> EditorID",
     "TABLE_SETTINGS_SHOW_ICON": "Item Icon",
+	"TABLE_SET_TARGET": "Set As Modex Target",
+	"TABLE_SET_TARGET_TOOLTIP": "Set As Modex Target\n\nSet the currently selected reference as the active Target Reference for Modex. Most tables in other modules will share this target!\n\nThis is a quick alternative to manually entering a FormID in the status bar, or using the console selection method.",
 
     "TABLE_SEARCH_HINT": "Click or press 'Space' to search...",
 	"TABLE_SEARCH_TOOLTIP": "Search Field\n\nType to search within the currently shown Plugin, based on the Property specified to the left.\n\nPress 'Enter' to submit your search query. You can optionally enable 'QuickSearch' to automatically filter results as you type.\n\nFor advanced features, read the Wiki.",
@@ -282,6 +296,7 @@
 	"kKitItemCount": "Item Count",
 
     "kNone_TOOLTIP": "None",
+	"kSpell_TOOLTIP": "Spell: Known to this actor and can be used based on their AI package.",
     "kPlugin_TOOLTIP": "Plugin: The source plugin file where the Form is defined. (e.g. ESM, ESP, ESL).",
     "kFormID_TOOLTIP": "Form ID: The unique hexadecimal identifier for the Form within the game.",
     "kName_TOOLTIP": "Name: The (FULL) Fullname record of a Form. Modex will default to (EDID) Editor ID if empty.",
@@ -327,6 +342,8 @@
 	"kSpellList_TOOLTIP": "Spell List: The list of spells known to this Form. Does not represent real-time data from in-game references.",
 	"kKeywordList_TOOLTIP": "Keywords: The list of keywords associated with this Form, used by many frameworks and game scripts to resolve logic.",
 	"kFactionList_TOOLTIP": "Factions: A list of factions which an Actor is a member of. (Ranks Unsupported)",
+	"kDefaultOutfit_TOOLTIP": "Default Outfit: The default outfit assigned to this actor. Used by some scripts in the game to manage Actor clothing.",
+	"kSleepOutfit_TOOLTIP": "Sleep Outfit: The assigned outfit to use when an Actor sleeps. May not always be reflected correctly in-game.",
 
 	"INVALID_REFERENCE_POPUP_TITLE": "Could not locate FormID: ",
 	"INVALID_REFERENCE_POPUP_DESC": "Modex could not resolve a valid Target Reference from your input. Try again, and ensure proper formatting is used.\n\nIf this is unexpected, you can use the in-game Console to select your target. Then press <C> while hovering the status bar to assign a Target Reference from your Console selection.\n\nIf all else fails, you can press <T> while hovering the status bar to quickly assign the Player reference.",
@@ -340,5 +357,6 @@
 	"ERROR_UNLOADED_REFERENCE": "Unloaded Reference: Reference is not Loaded in-game. (Ignore if in Main Menu)",
 	"ERROR_MISSING_PLUGIN": "Missing Plugin",
 	"ERROR_INVALID_REFERENCE": "Invalid Target: Must be an Actor or Container reference.",
-	"ERROR_SAME_REF": "Duplicate Origin & Destination Targets"
+	"ERROR_SAME_REF": "Duplicate Origin & Destination Targets",
+	"ERROR_MAX_QUERY": "The task you're performing exceeds your specified limit in Modex settings. This may result in undesirable behavior such as high performance impacts and stability concerns\n\nThis warning is to prevent accidentally servicing large tasks due to your selection or current search results."
 }

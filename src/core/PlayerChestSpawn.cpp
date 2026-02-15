@@ -1,5 +1,6 @@
 #include "PlayerChestSpawn.h"
 #include "ui/core/UIManager.h"
+#include "core/Commands.h"
 
 namespace Modex
 {
@@ -15,7 +16,7 @@ namespace Modex
 		auto player = RE::PlayerCharacter::GetSingleton();
 		auto playerRef = player->AsReference();
 
-		UIManager::GetSingleton()->Close();
+		Commands::CloseAllGameMenus();
 		container->ActivateRef(playerRef, 0, nullptr, 0, false);
 		UIManager::GetSingleton()->SetMenuListener(true);
 		Debug("Opened PlayerChest container");
@@ -118,10 +119,12 @@ namespace Modex
 
 	void PlayerChestSpawn::PopulateChestWithItems(const std::vector<std::unique_ptr<BaseObject>>& a_items)
 	{
+		if (a_items.empty()) { return; }
+
 		Reset();
 
 		auto container = m_chestHandle.get();
-		container->SetDisplayName("Modex Search Results", true);
+		container->SetDisplayName("Modex Search Results", true); // TODO: Localize
 
 		int _count = 0;
 		for (auto& item : a_items) {

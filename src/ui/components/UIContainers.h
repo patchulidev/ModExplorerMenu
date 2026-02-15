@@ -8,10 +8,9 @@ namespace Modex
 {
     namespace UIContainers
     {
-        static inline char s_sharedInputSearchBuffer[256] = ""; // FIX: Go back to module ownership.
-
 		void DrawKitSelectionPanel(const ImVec2 &a_pos, const ImVec2 &a_size);
 		void DrawAddItemActionPanel(const ImVec2 &a_pos, const ImVec2 &a_size, std::unique_ptr<UITable> &a_view);
+		void DrawActorActionPanel(const ImVec2 &a_pos, const ImVec2 &a_size, std::unique_ptr<UITable> &a_view);
         void DrawItemSearchPanel(const ImVec2 &a_pos, const ImVec2 &a_size, std::unique_ptr<UITable> &a_view);
         void DrawBasicTablePanel(const char* a_localeText, const ImVec2 &a_pos, const ImVec2 &a_size, std::unique_ptr<UITable> &a_view);
         void DrawTableStatusPanel(const ImVec2 &a_pos, const ImVec2 &a_size, std::unique_ptr<UITable> &a_view);

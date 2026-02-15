@@ -161,6 +161,7 @@ namespace Modex
 
 	// Called Internally from Data::CacheNPCRefIds.
 	// Merges newfound NPC references with the master list.
+	// New in 2.0: Removes old references.
 	void Data::MergeNPCRefIds(std::shared_ptr<std::unordered_map<RE::FormID, RE::FormID>> npc_ref_map)
 	{
 		if (npc_ref_map->empty()) {
@@ -170,20 +171,20 @@ namespace Modex
 				auto it = npc_ref_map->find(npc.GetBaseFormID());
 				if (it != npc_ref_map->end()) {
 					npc.m_refID = it->second;
+				} else {
+					if (npc.m_refID != 0) {
+						Trace("Old Reference ID: {:08X} -> No reference found, resetting to 0.", npc.m_refID);
+					}
 				}
 			}
 		}
 	}
 
-	// Best I can currently do to cache NPC references for the time being.
-	// Some unique NPCs are not captured until their cell (or world) is loaded.
-	// Hroki in Markarth Silverblood-inn is an example of this.
 	void Data::CacheNPCRefIds()
 	{
-		// This is shared so that it's lifetime persists until the SKSE task is complete.
-		// Passing solely by reference does not seem to work, causes a CTD.
 		auto npc_ref_map = std::make_shared<std::unordered_map<RE::FormID, RE::FormID>>();
 
+		Trace("Caching NPC Reference IDs for Actor Module...");
 		SKSE::GetTaskInterface()->AddTask([npc_ref_map]() {
 			auto process = RE::ProcessLists::GetSingleton();
 
@@ -230,7 +231,7 @@ namespace Modex
 				}
 			}
 
-			// Callback to Data to merge with master list.
+			Trace(" Caching {} loaded Actor references.", npc_ref_map->size());
 			Data::GetSingleton()->MergeNPCRefIds(npc_ref_map);
 		});
 	}

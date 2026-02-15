@@ -1,5 +1,6 @@
 #include "UITable.h" 
 
+#include "SKSE/API.h"
 #include "core/Commands.h"
 #include "data/BaseObject.h"
 #include "imgui.h"
@@ -30,7 +31,7 @@ namespace Modex
 			return false;
 		}
 
-		const auto baseObject = a_reference != nullptr ? a_reference : nullptr;
+		const auto baseObject = a_reference != nullptr ? a_reference : nullptr; // huh
 		return baseObject && (baseObject->IsActor() || baseObject->GetFormType() == RE::FormType::Container);
 	}
 
@@ -52,7 +53,38 @@ namespace Modex
 			return false;
 		}
 
+		// Best guess at being in-game and not in main-menu
+		if (const auto ui = RE::UI::GetSingleton(); ui == nullptr || ui->IsMenuOpen(RE::MainMenu::MENU_NAME)) {
+			return false;
+		}
+
 		return true;
+	}
+	
+	bool UITable::IsValidSelectionReference() const
+	{
+		if (GetSelectionCount() == 1) {
+			return GetSelection().front() && !GetSelection().front()->IsDummy() && GetSelection().front()->GetRefID() != 0;
+		} else {
+			return itemPreview != nullptr && !itemPreview->IsDummy() && itemPreview->GetRefID() != 0;
+		}
+	}
+
+	RE::TESObjectREFR* UITable::GetSelectedReference() const
+	{
+		if (GetSelectionCount() == 1) {
+			if (GetSelection().front() && !GetSelection().front()->IsDummy()) {
+				auto id = GetSelection().front()->GetRefID();
+				return RE::TESForm::LookupByID<RE::TESObjectREFR>(id);
+			}
+		} else {
+			if (itemPreview && !itemPreview->IsDummy()) {
+				auto id = itemPreview->GetRefID();
+				return RE::TESForm::LookupByID<RE::TESObjectREFR>(id);
+			}
+		}
+
+		return nullptr;
 	}
 
 	bool UITable::IsMouseHoveringRect(const ImVec2& a_min, const ImVec2& a_max)
@@ -85,7 +117,8 @@ namespace Modex
 		memset(pluginSearchBuffer, 0, sizeof(pluginSearchBuffer));
 
 		auto timestamp = std::chrono::steady_clock::now();
-		tableID = std::hash<uint64_t>{}(timestamp.time_since_epoch().count());
+		auto count = timestamp.time_since_epoch().count();
+		tableID = static_cast<uint32_t>(std::hash<decltype(count)>{}(count));
 		Trace("Unique TableID {}", tableID);
 
 		InitializeSystems();
@@ -373,9 +406,6 @@ namespace Modex
 		if (tableList.empty()) 
 			return;
 
-		if (!tableTargetRef)
-			return;
-
 		if (GetSelectionCount() == 0) {
 			if (itemPreview && !itemPreview->IsDummy()) {
 				Commands::PlaceAtMe(itemPreview->GetEditorID(), a_count);
@@ -396,6 +426,85 @@ namespace Modex
 				}
 			}
 		}
+	}
+
+	bool UITable::SelectionContainsOnlyReferences()
+	{
+		if (GetSelectionCount() == 0) {
+			if (itemPreview && !itemPreview->IsDummy()) {
+				return itemPreview->GetRefID() != 0;
+			}
+		}
+		else {
+			void* it = NULL;
+			ImGuiID id = 0;
+
+			while (selectionStorage.GetNextSelectedItem(&it, &id)) {
+				if (id < std::ssize(tableList) && id >= 0) {
+					const auto& item = tableList[id];
+					if (item->IsDummy()) return false;
+					if (item->GetRefID() == 0) return false;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	void UITable::ExecuteCommandOnSelection(const std::function<void(const std::unique_ptr<BaseObject>&)>& a_command)
+	{
+		if (tableList.empty())
+			return;
+
+		if (GetSelectionCount() == 0) {
+			if (itemPreview && !itemPreview->IsDummy()) {
+				a_command(itemPreview);
+				UserData::AddRecent(itemPreview);
+			}
+		}
+		else {
+			void* it = NULL;
+			ImGuiID id = 0;
+			while (selectionStorage.GetNextSelectedItem(&it, &id)) {
+				if (id < std::ssize(tableList) && id >= 0) {
+					const auto& item = tableList[id];
+					if (item && !item->IsDummy()) {
+						a_command(item);
+						UserData::AddRecent(item);
+					}
+				}
+			}
+		}
+
+		selectionStorage.Clear();
+	}
+
+	void UITable::BringSelectionToPlayer()
+	{
+		if (GetSelectionCount() == 0) {
+			if (itemPreview && !itemPreview->IsDummy()) {
+				Commands::TeleportREFRToPlayer(GetSelectedReference());
+				UserData::AddRecent(itemPreview);
+			}
+		}
+		else {
+			void* it = NULL;
+			ImGuiID id = 0;
+			while (selectionStorage.GetNextSelectedItem(&it, &id)) {
+				if (id < std::ssize(tableList) && id >= 0) {
+					const auto& item = tableList[id];
+					if (item && !item->IsDummy()) {
+						if (auto refr = RE::TESForm::LookupByID<RE::TESObjectREFR>(item->GetRefID())) {
+							Commands::TeleportREFRToPlayer(refr);
+						}
+
+						UserData::AddRecent(item);
+					}
+				}
+			}
+		}
+
+		selectionStorage.Clear();
 	}
 
 	void UITable::AddAll()
@@ -870,12 +979,12 @@ namespace Modex
 		ImGui::Text(" " ICON_LC_ARROW_LEFT_RIGHT " ");
 		ImGui::SameLine();
 		
-		const auto flags = useQuickSearch ? ImGuiInputTextFlags_AutoSelectAll :
+		const auto input_flags = useQuickSearch ? ImGuiInputTextFlags_AutoSelectAll :
 		ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue;
 
 		static bool key_hovered;
 		ImGui::PushStyleColor(ImGuiCol_FrameBg, key_hovered ? ThemeConfig::GetHover("BG_LIGHT") : ThemeConfig::GetColor("BG_LIGHT"));
-		if (UICustom::FancyInputText("##Search::Input::Compare", "TABLE_SEARCH_HINT", "TABLE_SEARCH_TOOLTIP", searchSystem->GetSearchBuffer(), input_width, flags)) {
+		if (UICustom::FancyInputText("##Search::Input::Compare", "TABLE_SEARCH_HINT", "TABLE_SEARCH_TOOLTIP", searchSystem->GetSearchBuffer(), input_width, input_flags)) {
 			this->Refresh();
 		}
 		ImGui::PopStyleColor();
@@ -944,7 +1053,7 @@ namespace Modex
 		colors.error = ThemeConfig::GetColorU32("ERROR", colors.alpha * 0.1f);
 
 		if (styleFontSize == 0.0f) {
-			styleFontSize = config.globalFontSize;
+			styleFontSize = static_cast<decltype(styleFontSize)>(config.globalFontSize);
 		}
 
 		// Constrained to the child window which we draw within.
@@ -959,7 +1068,7 @@ namespace Modex
 		LayoutHitSpacing = 0.0f;
 
 		// Calculate whether a scrollbar is present based on which list we're viewing.
-		const int table_size = tableMode == SHOWRECENT ? recentList.size() : tableList.size();
+		const int table_size = tableMode == SHOWRECENT ? static_cast<int>(std::ssize(recentList)) : static_cast<int>(std::ssize(tableList));
 		const float total_height = table_size * (height) + ((table_size + 2) * LayoutRowSpacing);
 
 		// Offset Layout width if scrollbar is present
@@ -1644,7 +1753,6 @@ namespace Modex
 		// Pad bounding box pre-alignment.
 		bb.Min.x += type_pillar_width * 2.0f;
 		float spacing = LayoutItemSize.x / 4.0f;
-		float padding = ImGui::GetFrameHeight();
 
 		// Text alignment calculations
 		const float center_align = bb.Min.y + ((LayoutOuterPadding + LayoutItemSize.y) / 2) - (font_size / 2.0f);
@@ -2155,6 +2263,11 @@ namespace Modex
 		ImGui::PopStyleVar(3);
 		ImGui::PopStyleColor(3);
 
+		if (ImGui::IsItemClicked(ImGuiMouseButton_Right)) {
+			ImGui::OpenPopup("STATUS_BAR_CONTEXT_MENU");
+		}
+
+
 		if (valid_target && valid_type && !warning) {
 			ImGui::PopFont();
 		}
@@ -2246,6 +2359,23 @@ namespace Modex
 		ImGui::PushStyleColor(ImGuiCol_Separator, ThemeConfig::GetColor(status_color));
 		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 		ImGui::PopStyleColor();
+
+		// Draw last to avoid unwanted styling
+		if (ImGui::BeginPopup("STATUS_BAR_CONTEXT_MENU")) {
+			if (ImGui::MenuItem(Translate("GOTO_NPC_REFERENCE"))) {
+				if (IsValidTargetReference()) {
+					Commands::TeleportPlayerToREFR(tableTargetRef);
+				}
+			}
+
+			if (ImGui::MenuItem(Translate("BRING_NPC_REFERENCE"))) {
+				if (IsValidTargetReference()) {
+					Commands::TeleportREFRToPlayer(tableTargetRef);
+				}
+			}
+
+			ImGui::EndPopup();
+		}
 	}
 
 	void UITable::DrawFormFilterTree()

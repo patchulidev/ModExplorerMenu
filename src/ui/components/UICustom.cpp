@@ -78,7 +78,14 @@ namespace Modex::UICustom
 					uint32_t amount = 0;
 					auto [ptr, ec] = std::from_chars(a_input.data(), a_input.data() + a_input.size(), amount);
 					if (ec == std::errc() && amount > 0) {
-						a_onAmountEntered(amount);
+						UIManager::GetSingleton()->ShowWarning(
+							Translate("WARNING"),
+							Translate("ERROR_MAX_QUERY"),
+							(int)amount >= UserConfig::Get().maxQuery,
+							[a_onAmountEntered, amount]() {
+								a_onAmountEntered(amount);
+							}
+						); return;
 					} else {
 						UIManager::GetSingleton()->ShowWarning(
 							Translate("INVALID"),
@@ -711,17 +718,13 @@ namespace Modex::UICustom
 	{
 		const float button_width = (ImGui::GetContentRegionAvail().x - ImGui::GetStyle().ItemSpacing.x) * 0.5f;
 
-		ImGui::PushStyleColor(ImGuiCol_Button, 
-			m_navAccept ? ThemeConfig::GetHover("CONFIRM") : ThemeConfig::GetColor("CONFIRM")
-		);
+		ImGui::PushStyleColor(ImGuiCol_Button, m_navAccept ? ThemeConfig::GetHover("CONFIRM") : ThemeConfig::GetColor("CONFIRM"));
 		bool confirm = ImGui::Button(Translate("CONFIRM"), ImVec2(button_width, ImGui::GetFrameHeightWithSpacing()));
 		ImGui::PopStyleColor();
 		
 		ImGui::SameLine();
 
-		ImGui::PushStyleColor(ImGuiCol_Button, 
-			m_navAccept ? ThemeConfig::GetColor("CONFIRM") : ThemeConfig::GetHover("CONFIRM")
-		);
+		ImGui::PushStyleColor(ImGuiCol_Button, m_navAccept ? ThemeConfig::GetColor("DECLINE") : ThemeConfig::GetHover("DECLINE"));
 		bool decline = ImGui::Button(Translate("CANCEL"), ImVec2(button_width, ImGui::GetFrameHeightWithSpacing()));
 		ImGui::PopStyleColor();
 

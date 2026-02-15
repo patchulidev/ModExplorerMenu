@@ -103,6 +103,11 @@ namespace Modex
 				UserConfig::GetSingleton()->SaveSettings();
 			}
 
+			if (UICustom::Settings_SliderInt("SETTINGS_MAX_QUERY", config.maxQuery, 10, 2500))
+			{
+				UserConfig::GetSingleton()->SaveSettings();
+			}
+
 			if (UICustom::Settings_ToggleButton("SETTINGS_PAUSE_GAME", config.pauseGame))
 			{
 				UserConfig::GetSingleton()->SaveSettings();

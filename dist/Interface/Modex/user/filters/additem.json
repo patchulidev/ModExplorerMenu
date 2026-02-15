@@ -4,15 +4,12 @@
         "kEditorID",
         "kFormID",
         "kReferenceID",
-		"kKeywordList",
-		"kFactionList"
+		"kKeywordList"
     ],
 
     "SortProperty": [
         "kNone",
         "kFormType",
-        "kFormID",
-        "kEditorID",
         "kCarryWeight",
         "<separator>",
         "kWeaponDamage",

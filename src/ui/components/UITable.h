@@ -151,6 +151,9 @@ namespace Modex
 		void                    SetTargetByReference(RE::TESObjectREFR* a_reference);
 		bool                    IsActionAllowed();
 		bool                    IsValidTargetReference(RE::TESObjectREFR* a_reference = nullptr);
+		bool                    IsValidSelectionReference() const;
+		bool                    SelectionContainsOnlyReferences();
+		RE::TESObjectREFR*      GetSelectedReference() const;
 		
 		//                      drag n drop behaviors
 		DragDropHandle          GetDragDropHandle() const { return dragDropHandle; }
@@ -172,7 +175,9 @@ namespace Modex
 		void                    RemoveSelectionFromKit();
 		void                    RemoveSelectionFromTargetInventory();  
 		void                    PlaceSelectionOnGround(uint32_t a_count);
+		void                    BringSelectionToPlayer();
 		void                    EquipSelectionToTarget();
+		void                    ExecuteCommandOnSelection(const std::function<void(const std::unique_ptr<BaseObject>&)>& a_command);
 		void                    PlaceAll();
 		void                    AddAll();
 

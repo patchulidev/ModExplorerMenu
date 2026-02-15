@@ -1113,7 +1113,7 @@ namespace Modex
 				if (npc.value()->defaultOutfit == nullptr)
 					return "";
 
-				return npc.value()->defaultOutfit->GetName();
+				return po3_GetEditorID(npc.value()->defaultOutfit->GetFormID());
 			}
 
 			return "";
@@ -1125,7 +1125,7 @@ namespace Modex
 				if (npc.value()->sleepOutfit == nullptr)
 					return "";
 
-				return npc.value()->sleepOutfit->GetName();
+				return po3_GetEditorID(npc.value()->sleepOutfit->GetFormID());
 			}
 			
 			return "";
@@ -1206,13 +1206,13 @@ namespace Modex
 		}
 
 		// TODO: Check for current vs base?
-		inline float GetActorValue(const RE::ActorValue a_value) const
+		inline int GetActorValue(const RE::ActorValue a_value) const
 		{
 			if (auto npc = GetTESNPC(); npc.has_value()) {
-				return npc.value()->GetActorValue(a_value);
+				return static_cast<int>(npc.value()->GetActorValue(a_value));
 			}
 
-			return 0.0f;
+			return 0;
 		}
 
 		inline std::optional<RE::TESNPC::Skills> GetSkills() const

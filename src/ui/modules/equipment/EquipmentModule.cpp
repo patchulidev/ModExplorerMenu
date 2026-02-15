@@ -103,6 +103,7 @@ namespace Modex
 				UIManager::GetSingleton()->ShowWarning(
 					std::string(Translate("POPUP_KIT_DELETE_TITLE")) + " - " + m_selectedKit.GetNameTail(),
 					Translate("POPUP_KIT_DELETE_DESC"),
+					true,
 					[&]() {
 						ImFormatString(m_searchBuffer, 256, "");
 						EquipmentConfig::DeleteKit(m_selectedKit);
@@ -118,6 +119,7 @@ namespace Modex
 				static auto targetRefr = m_tables[1]->GetTableTargetRef();
 				static std::string target_name = targetRefr ? targetRefr->GetName() : Translate("NO_CONSOLE_SELECTION");
 				const bool action_allowed = !m_selectedKit.empty() && m_selectedKit.m_items.size() > 0;
+				const bool shift_down = ImGui::GetIO().KeyShift;
 
 				{ // Side-by-side buttons group.
 					ImGui::PushStyleColor(ImGuiCol_Button, ThemeConfig::GetColor("SECONDARY"));
@@ -160,10 +162,17 @@ namespace Modex
 					UIManager::GetSingleton()->ShowInfoBox(Translate("Plugin Dependencies"), message);
 				}
 
-				if (UICustom::ActionButton("CLEAR_INVENTORY", ImVec2(max_width, button_height), m_tables[1]->IsValidTargetReference())) {
-					UIManager::GetSingleton()->ShowWarning("Clear Inventory", Translate("GENERAL_CLEAR_INVENTORY_INSTRUCTION"), []() {
-						if (auto player = RE::PlayerCharacter::GetSingleton()->AsReference(); player) {
-							Commands::RemoveAllItemsFromInventory(player);
+				const auto title = shift_down ? Translate("RESET_INVENTORY") : Translate("CLEAR_INVENTORY");
+				const auto description = shift_down ? Translate("RESET_INVENTORY_DESC") : Translate("CLEAR_INVENTORY_DESC");
+
+				if (UICustom::ActionButton(title, ImVec2(max_width, button_height), m_tables[1]->IsValidTargetReference())) {
+					UIManager::GetSingleton()->ShowWarning(Translate("CLEAR_INVENTORY"), description, true, [this]() {
+						if (auto target = this->m_tables[1]->GetTableTargetRef(); target) {
+							if (ImGui::GetIO().KeyShift) {
+								Commands::ResetTargetInventory(target);
+							} else {
+								Commands::RemoveAllItemsFromInventory(target);
+							}
 						}
 					});
 				}

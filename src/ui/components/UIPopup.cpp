@@ -312,21 +312,21 @@ namespace Modex
 				CloseInfo();
 			}
 			
-		ImGui::NewLine();
+			ImGui::NewLine();
 			ImGui::TextWrapped("%s", m_pendingInfoMessage.c_str());
 			ImGui::NewLine();
 			ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 
-		ImGui::PushStyleColor(ImGuiCol_Button, ThemeConfig::GetColor("CONFIRM"));
-		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ThemeConfig::GetHover("CONFIRM"));
-		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ThemeConfig::GetActive("CONFIRM"));
-		if (ImGui::Button(Translate("CONFIRM"), ImVec2(ImGui::GetContentRegionAvail().x, 0.f))) {
-			CloseInfo();
-		}
-		ImGui::PopStyleColor(3);
+			ImGui::PushStyleColor(ImGuiCol_Button, ThemeConfig::GetColor("CONFIRM"));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ThemeConfig::GetHover("CONFIRM"));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ThemeConfig::GetActive("CONFIRM"));
+			if (ImGui::Button(Translate("CONFIRM"), ImVec2(ImGui::GetContentRegionAvail().x, 0.f))) {
+				CloseInfo();
+			}
+			ImGui::PopStyleColor(3);
 
 			if (ImGui::IsKeyPressed(ImGuiKey_Enter) && ImGui::GetIO().WantTextInput == false) {
-		CloseInfo();
+				CloseInfo();
 			}
 
 			height = ImGui::GetWindowSize().y;

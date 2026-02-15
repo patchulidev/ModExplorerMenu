@@ -2,6 +2,7 @@
 #include "core/InputManager.h"
 #include "ui/core/UIManager.h"
 #include "ui/core/UIMenuImpl.h"
+#include <memory>
 
 // Addresses for hooks, in large part, derived from Open Animation Replacer by Ersh
 // https://github.com/ersh1/OpenAnimationReplacer/blob/786b286ffc0f680d9cbe3e70f59c5cf2387d3017/src/Hooks.h
@@ -15,6 +16,29 @@ namespace Hooks
 				if (event->menuName == RE::ContainerMenu::MENU_NAME) {
 					if (manager->GetMenuListener()) {
 						manager->QueueOpen();
+					}
+				}
+			}
+		}
+
+		if (event->opening) {
+			if (const auto& manager = Modex::UIManager::GetSingleton(); manager != nullptr) {
+				if (event->menuName == RE::ContainerMenu::MENU_NAME) {
+					if (manager->GetMenuListener()) {
+						auto ref = RE::UI::GetSingleton()->GetMenu<RE::ContainerMenu>();
+
+						auto items = ref->GetRuntimeData().itemList;
+
+						for (auto& item : items->items) {
+							if (item) {
+								auto player = RE::PlayerCharacter::GetSingleton();
+								auto playerRef = player->AsReference();
+								uint32_t handle = playerRef->GetHandle().native_handle();
+								item->data.owner = handle;
+								Info("Updated ContainerMenu item owner handle to {:#x}", handle);
+							}
+						}
+
 					}
 				}
 			}

@@ -2,6 +2,7 @@
 
 #include "UICustom.h"
 #include "data/Data.h"
+#include "imgui.h"
 #include "localization/Locale.h"
 #include "config/ThemeConfig.h"
 #include "ui/components/UINotification.h"
@@ -12,13 +13,54 @@ namespace Modex
 
 namespace 
 {
-	inline ImVec4 progressColor(const double value, const float max_value)
+	inline ImU32 progressColor(const double value, const float max_value)
 	{
-		static const float dampen = 0.7f;
-		const float ratio = (float)value / max_value;
-		const float r = 1.0f - ratio * dampen;
-		const float g = ratio * dampen;
-		return ImVec4(r, g, 0.0f, 0.67f);
+		const float ratio = std::clamp((float)value / max_value, 0.0f, 1.0f);
+		
+		float r, g;
+		if (ratio < 0.5f) {
+			r = 1.0f;
+			g = ratio * 2.0f;
+		} else {
+			r = 1.0f - (ratio - 0.5f) * 2.0f;
+			g = 1.0f;
+		}
+
+		return ImGui::ColorConvertFloat4ToU32(ImVec4(r, g, 0.0f, 0.25f));
+	}
+
+	inline void inlineBarEx(const char* a_label, float value, float max_value)
+	{
+		const auto& draw_list = ImGui::GetWindowDrawList();
+		const float max_width = ImGui::GetContentRegionAvail().x;
+		const ImVec2 bar_size = ImVec2(max_width / 3.0f, ImGui::GetFrameHeight());
+		const ImVec2 start = ImGui::GetCursorScreenPos();
+
+		char buffer[256];
+		ImFormatString(buffer, IM_ARRAYSIZE(buffer), "%d", static_cast<int>(value));
+
+		// bar
+		draw_list->AddRectFilled(
+			ImVec2(start.x, start.y),
+			ImVec2(start.x + (max_width * (value / max_value)), start.y + bar_size.y),
+			progressColor(value, max_value)
+		);
+
+		// label
+		draw_list->AddText(
+			ImVec2(start.x + 4.0f, start.y + (ImGui::GetFrameHeight() - ImGui::GetFontSize())/2.0f),
+			ImGui::GetColorU32(ImGuiCol_Text),
+			a_label
+		);
+
+		// value right-hand side
+		draw_list->AddText(
+			ImVec2(start.x + max_width - ImGui::CalcTextSize(buffer).x - 4.0f, start.y + (ImGui::GetFrameHeight() - ImGui::GetFontSize())/2.0f),
+			ImGui::GetColorU32(ImGuiCol_Text),
+			buffer
+		);
+
+		ImGui::Dummy(ImVec2(max_width, bar_size.y)); // reserve space for the custom bar
 	}
 
 	inline void inlineBar(const std::unique_ptr<BaseObject>& a_item, PropertyType a_property, float max_value)
@@ -163,6 +205,17 @@ namespace
 		}
 	}
 
+	inline void drawDebugInfo(const std::unique_ptr<BaseObject>& a_object)
+	{
+		if (!UserConfig::Get().developerMode) return;
+
+		ImGui::Spacing();
+		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
+		ImGui::Spacing();
+
+		inlineTextEx("TableID", std::to_string(a_object->m_tableID).c_str(), "");
+	}
+
 	inline void drawFooter(const std::unique_ptr<BaseObject>& a_object, bool a_tooltip)
 	{
 		if (a_tooltip) return;
@@ -184,12 +237,17 @@ namespace
 					inlineTextEx(icon.c_str(), keyword.c_str(), tooltip.c_str());
 				}
 				ImGui::PopID();
+			} else {
+				if (ImGui::IsItemHovered()) {
+					UINotification::ShowTooltip(Translate(FilterProperty::GetPropertyTooltipKey(PropertyType::kKeywordList).c_str()));
+				}
 			}
 		}
 
 		// Dummy Object's don't contain valid form pointers, stop here.
 		if (a_object->IsDummy()) return;
 
+		drawDebugInfo(a_object);
 		drawLoadOrder(a_object);
 		drawDescription(a_object);
 	}
@@ -221,9 +279,29 @@ namespace
 		ImGui::Spacing();
 
 		if (!a_tooltip) {
-			constexpr auto header_flags = ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_DefaultOpen;
+			constexpr auto header_flags = ImGuiTreeNodeFlags_SpanAvailWidth;
 
-			// TODO: Draw Skill Tree here.
+			if (const auto skills = a_npc->GetSkills(); skills.has_value()) {
+				ImGui::Spacing();
+				if (ImGui::CollapsingHeader(Translate("SKILLS"), header_flags)) {
+					ImGui::PushID("ItemPreview::Skills");
+					for (size_t i = 0; i < RE::TESNPC::Skills::Skills::kTotal; i++) {
+						uint32_t offset = static_cast<uint8_t>(RE::ActorValue::kOneHanded);
+
+						uint8_t skillValue = skills.value().values[i];
+						const std::string_view skillName = magic_enum::enum_name(static_cast<RE::ActorValue>(offset + i));
+
+						inlineBarEx(skillName.data(), skillValue, 100.0f);
+
+					}
+					ImGui::PopID();
+				} else {
+					if (ImGui::IsItemHovered()) {
+						UINotification::ShowTooltip(Translate("ACTOR_SKILLS"));
+					}
+				}
+			}
+
 
 			if (const auto spells = a_npc->GetSpellList(); !spells.empty()) {
 				ImGui::Spacing();
@@ -239,12 +317,13 @@ namespace
 						inlineTextEx(icon.c_str(), spell.c_str(), tooltip.c_str());
 					}
 					ImGui::PopID();
+				} else {
+					if (ImGui::IsItemHovered()) {
+						UINotification::ShowTooltip(Translate(FilterProperty::GetPropertyTooltipKey(PropertyType::kSpellList).c_str()));
+					}
 				}
 			}
 
-			if (ImGui::IsItemHovered()) {
-				UINotification::ShowTooltip(Translate(FilterProperty::GetPropertyTooltipKey(PropertyType::kSpellList).c_str()));
-			}
 
 			if (const auto factions = a_npc->GetFactions(); factions.has_value()) {
 				ImGui::Spacing();
@@ -261,17 +340,17 @@ namespace
 						}
 
 						if (factionName.empty()) {
-							factionName = "Modex Error";
+							factionName = "";
 						}
 
 						inlineTextEx(icon.c_str(), factionName.c_str(), tooltip.c_str());
 					}
 					ImGui::PopID();
+				} else {
+					if (ImGui::IsItemHovered()) {
+						UINotification::ShowTooltip(Translate(FilterProperty::GetPropertyTooltipKey(PropertyType::kFactionList).c_str()));
+					}
 				}
-			}
-
-			if (ImGui::IsItemHovered()) {
-				UINotification::ShowTooltip(Translate(FilterProperty::GetPropertyTooltipKey(PropertyType::kFactionList).c_str()));
 			}
 		}
 	}
