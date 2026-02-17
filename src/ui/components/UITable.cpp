@@ -147,7 +147,7 @@ namespace Modex
 
 		showEditorID = UserData::Get<bool>(data_id + "::ShowEditorID", false);
 		showFormID = UserData::Get<bool>(data_id + "::ShowFormID", false);
-		selectedPlugin = UserData::Get<std::string>(data_id + "::LastSelectedPlugin", Translate("SHOW_ALL"));
+		selectedPlugin = UserData::Get<std::string>(data_id + "::LastSelectedPlugin", Translate("SHOWALL"));
 		tableMode = UserData::Get<uint32_t>(data_id + "::TableMode", SHOWALL);
 
 		if (UserConfig::Get().developerMode) {
@@ -911,12 +911,12 @@ namespace Modex
 			}
 
 			// All Mods vs Selected Mod
-			if (this->selectedPlugin != Translate("SHOW_ALL") && item.GetPluginName() != this->selectedPlugin) {
+			if (this->selectedPlugin != Translate("SHOWALL") && item.GetPluginName() != this->selectedPlugin) {
 				continue;
 			}
 
 			// Blacklist
-			if (this->selectedPlugin == Translate("SHOW_ALL")) {
+			if (this->selectedPlugin == Translate("SHOWALL")) {
 				if (const auto& fileOpt = item.GetFile(); fileOpt.has_value()) {
 					const auto& file = fileOpt.value();
 					if (BlacklistConfig::GetSingleton()->Has(file)) {
@@ -948,7 +948,7 @@ namespace Modex
 		this->pluginList = Data::GetSingleton()->GetFilteredListOfPluginNames(type, sort); 
 		this->pluginSet = Data::GetSingleton()->GetModulePluginList(type);
 
-		pluginList.insert(pluginList.begin(), Translate("SHOW_ALL"));
+		pluginList.insert(pluginList.begin(), Translate("SHOWALL"));
 	}
 
 	void UITable::DrawFormSearchBar(const ImVec2& a_size)

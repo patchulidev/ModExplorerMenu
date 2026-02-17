@@ -18,6 +18,12 @@ namespace Modex
 			kTotal,
 		};
 
+		struct ActorRefData 
+		{
+			std::vector<RE::FormID> refs;
+			uint32_t count;
+		};
+
 		enum class PluginSort : uint8_t 
 		{
 			Alphabetical = 0,

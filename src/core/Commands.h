@@ -38,7 +38,10 @@ namespace Modex::Commands
 	static inline bool CloseAllGameMenus()
 	{
 		if (const auto messagingQueue = RE::UIMessageQueue::GetSingleton(); messagingQueue) {
-			messagingQueue->AddMessage(ModexGUIMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
+			if (UIManager::GetSingleton()->IsMenuOpen()) {
+				UIManager::GetSingleton()->Close();
+			}
+
 			messagingQueue->AddMessage(RE::Console::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
 			messagingQueue->AddMessage(RE::ContainerMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
 			messagingQueue->AddMessage(RE::TrainingMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);

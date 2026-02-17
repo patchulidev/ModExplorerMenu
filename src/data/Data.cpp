@@ -1,4 +1,5 @@
 #include "Data.h"
+#include "SKSE/API.h"
 #include "external/framework/DescriptionFrameworkImpl.h"
 
 namespace Modex
@@ -180,60 +181,76 @@ namespace Modex
 		}
 	}
 
+	void StoreActorReference(const RE::BSPointerHandle<RE::Actor>& a_handle, std::unordered_map<RE::FormID, Data::ActorRefData>& a_out)
+	{
+		if (auto actor = a_handle.get().get(); actor) {
+			RE::FormID base_id = actor->GetActorBase()->GetFormID();
+			RE::FormID refr_id = actor->GetFormID();
+
+			auto& data = a_out[base_id];
+			data.refs.push_back(refr_id);
+			data.count++;
+		}
+	}
+
 	void Data::CacheNPCRefIds()
 	{
-		auto npc_ref_map = std::make_shared<std::unordered_map<RE::FormID, RE::FormID>>();
+		auto references = std::unordered_map<RE::FormID, ActorRefData>();
+		const auto* process = RE::ProcessLists::GetSingleton();
 
-		Trace("Caching NPC Reference IDs for Actor Module...");
-		SKSE::GetTaskInterface()->AddTask([npc_ref_map]() {
-			auto process = RE::ProcessLists::GetSingleton();
-
-			// Captures most NPCs in the game.
-			for (auto& handle : process->lowActorHandles) {
+		auto processHandler = [&](const auto& a_list) {
+			for (const auto& handle : a_list) {
 				if (!handle.get() || !handle.get().get()) {
 					continue;
 				}
 
-				auto actor = handle.get().get();
-				RE::FormID base = actor->GetBaseObject()->GetFormID();
-				RE::FormID ref = actor->GetFormID();
+				StoreActorReference(handle, references);
+			}
+		};
 
-				npc_ref_map->insert_or_assign(base, ref);
+		processHandler(process->lowActorHandles);
+		processHandler(process->middleLowActorHandles);
+		processHandler(process->highActorHandles);
+
+		std::vector<BaseObject> newCache;
+		newCache.reserve(m_npcCache.size());
+
+		std::unordered_set<RE::FormID> processed;
+		processed.reserve(m_npcCache.size());
+
+		// for (size_t i = 0; i < m_npcCache.size(); ++i) {
+		for (const auto& npc : m_npcCache) {
+			RE::FormID base_id = npc.GetBaseFormID();
+			
+			if (!processed.insert(base_id).second) {
+				continue;
 			}
 
-			// Captures some unloaded NPCs based on cell.
-			for (auto& handle : process->middleLowActorHandles) {
-				if (!handle.get() || !handle.get().get()) {
-					continue;
+			auto it = references.find(base_id);
+			
+			if (it != references.end()) {
+				const auto& refData = it->second;
+				
+				
+				if (refData.count == 1) {
+					BaseObject actor = npc;
+					actor.m_refID = refData.refs[0];
+					newCache.push_back(actor);
+				} else {
+					for (size_t i = 0; i < refData.refs.size(); i++) {
+						BaseObject actor = npc;
+						actor.m_refID = refData.refs[i];
+						newCache.push_back(actor);
+					}
 				}
-
-				auto actor = handle.get().get();
-				RE::FormID base = actor->GetBaseObject()->GetFormID();
-				RE::FormID ref = actor->GetFormID();
-
-				if (npc_ref_map->find(base) == npc_ref_map->end()) {
-					npc_ref_map->insert_or_assign(base, ref);
-				}
+			} else {
+				BaseObject actor = npc;
+				actor.m_refID = 0;
+				newCache.push_back(actor);
 			}
+		}
 
-			// Same as above.
-			for (auto& handle : process->highActorHandles) {
-				if (!handle.get() || !handle.get().get()) {
-					continue;
-				}
-
-				auto actor = handle.get().get();
-				RE::FormID base = actor->GetBaseObject()->GetFormID();
-				RE::FormID ref = actor->GetFormID();
-
-				if (npc_ref_map->find(base) == npc_ref_map->end()) {
-					npc_ref_map->insert_or_assign(base, ref);
-				}
-			}
-
-			Trace(" Caching {} loaded Actor references.", npc_ref_map->size());
-			Data::GetSingleton()->MergeNPCRefIds(npc_ref_map);
-		});
+		m_npcCache = std::move(newCache);
 	}
 
 	template <class T>

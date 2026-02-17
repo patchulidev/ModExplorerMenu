@@ -155,6 +155,12 @@ namespace Modex
 				});
 			}
 
+			// Allow from main menu.
+			if (UICustom::ActionButton("GOTO_SELECTION", ImVec2(max_width, button_height), a_view->IsValidSelectionReference())) {
+				Commands::TeleportPlayerToREFR(a_view->GetSelectedReference());
+			}
+
+			// These actions are pointless within main menu, steer players to use in-game.
 			if (!Commands::IsGameMenuOpen() && a_view->IsValidSelectionReference()) {
 				if (UICustom::ActionButton("BRING_SELECTION", ImVec2(max_width, button_height), valid_multi_target)) {
 					a_view->ExecuteCommandOnSelection([](const std::unique_ptr<BaseObject>& a_actor) {
@@ -162,10 +168,6 @@ namespace Modex
 							Commands::TeleportREFRToPlayer(reference);
 						}
 					});
-				}
-
-				if (UICustom::ActionButton("GOTO_SELECTION", ImVec2(max_width, button_height), valid_selection_target)) {
-					Commands::TeleportPlayerToREFR(a_view->GetSelectedReference());
 				}
 
 				if (a_view->GetSelectedReference()->IsDead()) {
