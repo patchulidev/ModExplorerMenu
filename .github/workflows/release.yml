@@ -1,4 +1,4 @@
-name: Release on PR merge
+name: "Release on PR merge"
 
 on:
   push:
