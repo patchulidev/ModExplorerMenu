@@ -108,11 +108,6 @@ namespace Modex
 			sidebar_initialized = true;
 		}
 		
-		
-		// TODO: Add a configurable option to draw tooltip below window instead?
-		UINotification::DrawMessageContainer(ImVec2(center_x, center_y), ImVec2(sidebar_w, sidebar_h), expand_sidebar); 
-		UINotification::DrawTooltipContainer(ImVec2(center_x + sidebar_w, center_y), ImVec2(window_w - sidebar_w, window_h));
-
 		// Push style for Modex Menu window
 		ImGui::PushStyleColor(ImGuiCol_WindowBg, ThemeConfig::GetColor("WINDOW_BACKGROUND", m_alpha));
 
@@ -126,6 +121,9 @@ namespace Modex
 
 		if (ImGui::Begin("##Modex::Menu", nullptr, WINDOW_FLAGS)) {
 			ImGui::SetCursorPos(ImVec2(0, 0));
+
+			UINotification::DrawMessageContainer(ImGui::GetWindowPos(), ImVec2(sidebar_w, sidebar_h), expand_sidebar);
+			UINotification::DrawTooltipContainer(ImVec2(ImGui::GetWindowPos().x + sidebar_w, ImGui::GetWindowPos().y), ImVec2(window_w - sidebar_w, window_h));
 
 			DrawSidebar();
 			DrawModule();
