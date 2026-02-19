@@ -178,6 +178,8 @@
 	"SETTINGS_UI_SCALE_VERTICAL": "Vertical Menu Scale (Up/Down)",
 	"SETTINGS_UI_SCALE_HORIZONTAL": "Horizontal Menu Scale (Left/Right)",
 	"SETTINGS_FULLSCREEN": "Fullscreen Mode",
+	"SETTINGS_LOCK_POSITION": "Lock Menu Position",
+	"SETTINGS_LOCK_POSITION_TOOLTIP": "Lock Menu Position\n\nWhen enabled, the Modex menu will always open in the center of the screen and cannot be moved by dragging.\n\nWhen disabled, you can freely move the menu around by dragging the title bar. The menu will remember its last position and open there next time.\n\nDefault (ON).",
 	"SETTINGS_BASE_PLUGIN": "Plugin List - Use Base Plugin",
 	"SETTINGS_BASE_PLUGIN_TOOLTIP": "Plugin List - Use Base Plugin\n\n(Requires Restart)\n\nWhen enabled, forms will be indexed by their BASE plugin instead of the LAST plugin to modify them.\n\nE.g. 'Banded Iron Armor' will always be located in 'Skyrim.esm' even if 'Update.esm' modifies it. If this option is disabled, then it will be categorized under the last plugin that modified the form.\n\nDefault (OFF).",
 	"SETTINGS_PAUSE_GAME": "Pause Game while Open",

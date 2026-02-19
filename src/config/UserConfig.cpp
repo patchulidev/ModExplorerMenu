@@ -47,6 +47,7 @@ namespace Modex
 		user.maxQuery			= ConfigManager::Get<int>("Max Action Query", _default.maxQuery);
 
 		user.fullscreen 	= ConfigManager::Get<bool>("Fullscreen", _default.fullscreen);
+		user.lockPosition 	= ConfigManager::Get<bool>("Lock Menu Position", _default.lockPosition);
 		user.pauseGame 		= ConfigManager::Get<bool>("Pause Game While Open", _default.pauseGame);
 		user.disableInMenu 	= ConfigManager::Get<bool>("Disable Opening In Menu", _default.disableInMenu);
 		user.welcomeBanner 	= ConfigManager::Get<bool>("Welcome Banner", _default.welcomeBanner);
@@ -81,6 +82,7 @@ namespace Modex
 		ConfigManager::Set<int>("Max Action Query", user.maxQuery);
 
 		ConfigManager::Set<bool>("Fullscreen", user.fullscreen);
+		ConfigManager::Set<bool>("Lock Menu Position", user.lockPosition);
 		ConfigManager::Set<bool>("Pause Game While Open", user.pauseGame);
 		ConfigManager::Set<bool>("Disable Opening In Menu", user.disableInMenu);
 		ConfigManager::Set<bool>("Welcome Banner", user.welcomeBanner);

@@ -75,6 +75,11 @@ namespace Modex
 				UserConfig::GetSingleton()->SaveSettings();
 			}
 
+			if (UICustom::Settings_ToggleButton("SETTINGS_LOCK_POSITION", config.lockPosition))
+			{
+				UserConfig::GetSingleton()->SaveSettings();
+			}
+
 			if (UICustom::Settings_ToggleButton("SETTINGS_SMOOTH_SCROLL", config.smoothScroll))
 			{
 				UserConfig::GetSingleton()->SaveSettings();

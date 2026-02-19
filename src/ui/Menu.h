@@ -34,8 +34,7 @@ namespace Modex
 			ImGuiWindowFlags_NoCollapse         |
 			ImGuiWindowFlags_NoTitleBar         |
 			ImGuiWindowFlags_NoResize           |
-			ImGuiWindowFlags_NoBringToFrontOnFocus | 
-			ImGuiWindowFlags_NoMove;
+			ImGuiWindowFlags_NoBringToFrontOnFocus;
 
 		static constexpr ImGuiWindowFlags BACKGROUND_FLAGS =
 			ImGuiWindowFlags_NoTitleBar         |

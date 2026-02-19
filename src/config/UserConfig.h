@@ -39,6 +39,7 @@ namespace Modex
 			int maxQuery			= 3000;
 
 			bool fullscreen 		= false;
+			bool lockPosition 		= true;
 			bool pauseGame 			= false;
 			bool disableSplash		= false;
 			bool disableInMenu 		= false;

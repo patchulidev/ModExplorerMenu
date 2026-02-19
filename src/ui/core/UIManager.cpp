@@ -230,12 +230,8 @@ namespace Modex
 		if (!ImGui_ImplDX11_Init(device, context))
 			return false;
 
-		RECT     rect = {0, 0, 0, 0};
-		::GetClientRect(hWnd, &rect);
-
 		ImGuiIO &io   = ImGui::GetIO();
 		io.ConfigNavMoveSetMousePos = false;
-		io.DisplaySize = ImVec2(static_cast<float>(rect.right - rect.left), static_cast<float>(rect.bottom - rect.top));
 		io.ConfigFlags &= ~ImGuiConfigFlags_NavEnableKeyboard;
 		io.ConfigFlags &= ~ImGuiConfigFlags_NavEnableGamepad;
 		io.IniFilename = NULL;
@@ -268,6 +264,9 @@ namespace Modex
 			ASSERT_MSG(true, "Failed to get SwapChain description!");
 			return;
 		}
+
+		m_displayWidth = swapChainDesc.bufferDesc.width;
+		m_displayHeight = swapChainDesc.bufferDesc.height;
 
 		m_hWnd = reinterpret_cast<HWND>(swapChainDesc.outputWindow);
 		if (!this->DoInit(renderData, m_hWnd)) {
@@ -396,7 +395,8 @@ namespace Modex
 
 	UIManager::UIManager()
 	{
-
+		m_displayWidth = 1920.0f;
+		m_displayHeight = 1080.0f;
 	}
 
 	// UIManager::UIManager() try {
