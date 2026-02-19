@@ -230,7 +230,6 @@ namespace Modex
 				}
 			}
 
-			// TODO: Turn this into a module which closes menu on RAII
 			static constexpr std::string exit_icon = ICON_LC_LOG_OUT;
 			if (UICustom::SidebarImageButton(Translate("MODULE_EXIT"), exit_icon, false, ImVec2(button_width, button_height), exit_w, expand_sidebar)) {
 				UIManager::GetSingleton()->Close();

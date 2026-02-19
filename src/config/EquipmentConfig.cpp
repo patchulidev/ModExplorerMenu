@@ -1,6 +1,6 @@
 #include "EquipmentConfig.h"
 
-// TODO: Cache all kits at startup.
+// TODO: Migrate to caching all kits on startup by default for quicker lookups.
 
 namespace Modex
 {

@@ -29,7 +29,8 @@ namespace Modex
 		std::filesystem::path GetFilepath(const std::string& a_stem);
 		const char* GetTranslation(const char* fallback_text) const;
 		const char* GetTooltip(const char* a_localeString) const;
-		bool HasTooltip(const char* a_localeString) const;
+		bool HasEntry(const char* a_localeString) const;
+		bool HasTranslation(const char* a_localeString) const;
 
 		std::string TruncateText(const std::string& a_text, float a_maxLength);
     };

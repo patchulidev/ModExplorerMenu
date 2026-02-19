@@ -1,5 +1,6 @@
 #pragma once
 
+#include "RE/T/TESAmmo.h"
 #include "localization/Locale.h"
 #include "pch.h"
 #include "external/magic_enum.hpp"
@@ -257,7 +258,7 @@ namespace Modex
 			case PropertyType::kSleepOutfit:
 				return ICON_LC_SHIRT;
 			case PropertyType::kSpell:
-				return ICON_LC_WAND; // TODO: Verify if this is a good fit?
+				return ICON_LC_WAND;
 			case PropertyType::kSpellCost:
 				return ICON_LC_ZAP;
 			case PropertyType::kSpellType:
@@ -394,11 +395,6 @@ namespace Modex
 		RE::FormID 			m_refID;
 		ImGuiID 			m_tableID = 0;
 		int					m_quantity = 1;
-
-		// TODO: Reference old comment as to why I should not move this to Kit class.
-		// bool				kitEquipped = false;
-		// int				kitAmount = 1;
-		//
 		bool                m_equipped = false;
 
 		// Constructor from TESForm pointer
@@ -502,7 +498,6 @@ namespace Modex
 
 		// inline const std::string GetEquipSlot() const
 		// {
-		// 	// TODO: This needs to be merged into JSON file.
 		// 	static const std::unordered_map<std::string_view, std::string_view> keyword_to_slot = {
 		// 		{"ArmorHelmet", "Helmet"},
 		// 		{"ArmorCuirass", "Cuirass"},
@@ -653,11 +648,31 @@ namespace Modex
 			return slots;
 		}
 
-		// TODO: Only works on Weapons ?
 		inline bool IsPlayable() const
 		{
 			switch (GetFormType()) 
 			{
+				case RE::FormType::Misc:
+					if (auto misc = m_formWrapper.As<RE::TESObjectMISC>(); misc.has_value()) {
+						if (misc.value() == nullptr) 
+							return true;
+
+						return !(misc.value()->GetFormFlags() & static_cast<uint32_t>(RE::TESObjectMISC::RecordFlags::kNonPlayable));
+					}
+				case RE::FormType::Ammo:
+					if (auto ammo = m_formWrapper.As<RE::TESAmmo>(); ammo.has_value()) {
+						if (ammo.value() == nullptr) 
+							return true;
+
+						return !(ammo.value()->GetFormFlags() & static_cast<uint32_t>(RE::TESAmmo::RecordFlags::kNonPlayable));
+					}
+				case RE::FormType::KeyMaster:
+					if (auto key = m_formWrapper.As<RE::TESKey>(); key.has_value()) {
+						if (key.value() == nullptr) 
+							return true;
+
+						return !(key.value()->GetFormFlags() & static_cast<uint32_t>(RE::TESKey::RecordFlags::kNonPlayable));
+					}
 				case RE::FormType::Weapon:
 					if (auto weapon = m_formWrapper.As<RE::TESObjectWEAP>(); weapon.has_value()) {
 						if (weapon.value() == nullptr) 
@@ -1448,7 +1463,7 @@ namespace Modex
 				case PropertyType::kIsArmor:
 					return IsArmor() ? "true" : "false";
 				case PropertyType::kArmorSlot:
-					return GetArmorSlots().front(); // TODO: handle multiples?
+					return GetArmorSlots().front(); // BUG: May produce unexpected results.
 				case PropertyType::kArmorType:
 					return GetArmorType();
 				case PropertyType::kArmorRating:
@@ -1508,7 +1523,7 @@ namespace Modex
 				case PropertyType::kSpell:
 					return HasSpell(a_arg) ? "true" : "false";
 				case PropertyType::kSpellCost:
-					return ""; // TODO: Needs actor context
+					return ""; // BUG: Not working, needs Actor context for cost.
 				case PropertyType::kSpellDelivery:
 					return GetDeliveryType();
 				case PropertyType::kSpellCastType:
@@ -1542,7 +1557,7 @@ namespace Modex
 		[[nodiscard]] inline std::string_view 		GetPluginNameView() const { return filename; }
 		[[nodiscard]] inline std::string_view 		GetCellName() const { return cellName; }
 		[[nodiscard]] inline std::string_view 		GetEditorIDView() const { return editorid; }
-		[[nodiscard]] inline std::string_view 		GetEditorID() const { return editorid; }  // TODO: separate these.
+		[[nodiscard]] inline std::string_view 		GetEditorID() const { return editorid; }
 
 		CellData(std::string filename, std::string cellName, std::string editorid, const RE::TESFile* mod = nullptr) :
 			filename(filename), 
@@ -1632,8 +1647,6 @@ namespace Modex
 			return !empty();
 		}
 	};
-
-	// TODO: Implement getters and accessors as needed.
 
 	class Kit : public KitData
 	{

@@ -8,8 +8,6 @@
 
 #include "imgui.h"
 
-// BUG: Fadiing out does not work on menu close!!:
-//
 namespace Modex 
 {
 	void UINotification::ShowTooltip(const std::string& a_text, const std::string& a_icon)
@@ -28,7 +26,7 @@ namespace Modex
 		const auto key = magic_enum::enum_name(a_item->GetItemPropertyType());
 		const auto icon = a_item->GetItemIcon();
 		const auto tooltip = Translate(key.data());
-		if (Locale::GetSingleton()->HasTooltip(key.data())) ShowTooltip(tooltip, icon);
+		if (Locale::GetSingleton()->HasEntry(key.data())) ShowTooltip(tooltip, icon);
 	}
 
 	// Conditionally shows "PROPERTY_TOOLTIP" tooltip with Icon appended.
@@ -37,7 +35,7 @@ namespace Modex
 		const auto key = FilterProperty::GetPropertyTooltipKey(a_property);
 		const auto icon = FilterProperty::GetIcon(a_property);
 		const auto tooltip = Translate(key.c_str());
-		if (Locale::GetSingleton()->HasTooltip(key.c_str())) ShowTooltip(tooltip, icon);
+		if (Locale::GetSingleton()->HasEntry(key.c_str())) ShowTooltip(tooltip, icon);
 	}
 
 	void UINotification::ShowInfo(const std::string& a_text, float a_duration)
@@ -210,9 +208,7 @@ namespace Modex
 			// Message
 			ImGui::Text("%s", TRUNCATE(a_msg.text.c_str(), a_width / 1.5f).c_str());
 
-			// TODO: Add an option to enable/disable this:
 			// DrawProgressBar(a_msg, a_width, a_height, alpha);
-
 		}
 
 		ImGui::EndChild();

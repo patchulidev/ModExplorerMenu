@@ -124,7 +124,7 @@ namespace Modex
 		Reset();
 
 		auto container = m_chestHandle.get();
-		container->SetDisplayName("Modex Search Results", true); // TODO: Localize
+		container->SetDisplayName("Modex", true);
 
 		int _count = 0;
 		for (auto& item : a_items) {

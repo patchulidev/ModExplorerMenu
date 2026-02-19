@@ -193,6 +193,9 @@ namespace Modex
 		}
 	}
 
+	// OPTIMIZE: CacheNPCRefIds is called everytime the NPC module is activated. Are we that
+	// rebuilding the entire list each time is the most efficient way to handle this?
+
 	void Data::CacheNPCRefIds()
 	{
 		auto references = std::unordered_map<RE::FormID, ActorRefData>();
@@ -332,7 +335,6 @@ namespace Modex
 			}
 		} while (a_file->SeekNextForm(true));
 
-		// TODO: Bug, survivalmode has a single cell that isn't being loaded for some reason.
 		Debug("Found {} cells in mod: {:s}", count, a_file->fileName);
 
 		if (!a_file->CloseTES(false)) {
@@ -434,7 +436,7 @@ namespace Modex
 		}
 	}
 
-	// TODO: Outfit List
+	// TODO: Outfit Module Implementation
 	// OTFT is the outfit form type / record header
 	// Outfits contain EDID and INAM records
 	// INAM is a leveled list of sorted forms of items

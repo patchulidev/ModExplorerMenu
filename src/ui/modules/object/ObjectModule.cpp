@@ -21,8 +21,6 @@ namespace Modex
 
 		ImVec2 action_pos = table_pos;
 		action_pos.x += table_width + window_padding.x;
-
-		// TODO: Re-implement object action panel
 	}
 
 	ObjectModule::~ObjectModule()

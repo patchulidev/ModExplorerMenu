@@ -119,7 +119,6 @@ namespace Modex
 			}
 
 			// NOTE: Unimplemented old feature, still needed?
-			// Disable Menu opening over Skyrim Menu's (deprecated)
 			if (UICustom::Settings_ToggleButton("SETTINGS_DISABLE_IN_MENU", config.disableInMenu))
 			{
 				UserConfig::GetSingleton()->SaveSettings();

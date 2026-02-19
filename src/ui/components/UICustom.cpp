@@ -99,14 +99,8 @@ namespace Modex::UICustom
 		}
 	}
 
-	void SubCategoryHeader(const char* a_label, ImVec4 a_color)
+	void SubCategoryHeader(const char* a_label)
 	{
-		// ImGui::PushStyleColor(ImGuiCol_Button, a_color);
-		// ImGui::PushStyleColor(ImGuiCol_ButtonHovered, a_color);
-		// ImGui::PushStyleColor(ImGuiCol_ButtonActive, a_color);
-		// ImGui::Button(a_label, ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetFrameHeightWithSpacing()));
-		// ImGui::PopStyleColor(3);
-		
 		ImGui::Spacing();
 		ImGui::PushFontBold(ImGui::GetFontSize());
 		const float center_x = UICustom::GetCenterTextPosX(a_label);
@@ -129,7 +123,7 @@ namespace Modex::UICustom
 
 		if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal | ImGuiHoveredFlags_NoSharedDelay | ImGuiHoveredFlags_AllowWhenDisabled)) {
 			const auto tooltip_key = std::string(a_translate) + "_TOOLTIP";
-			if (Locale::GetSingleton()->HasTooltip(tooltip_key.c_str())) {
+			if (Locale::GetSingleton()->HasEntry(tooltip_key.c_str())) {
 				UICustom::FancyTooltip(tooltip_key.c_str());
 			}
 		}
@@ -154,7 +148,7 @@ namespace Modex::UICustom
 			ModexGUIMenu::FlushInputState();
 		}
 
-		if (Locale::GetSingleton()->HasTooltip(a_tooltip)) {
+		if (Locale::GetSingleton()->HasEntry(a_tooltip)) {
 			if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal | ImGuiHoveredFlags_NoSharedDelay)) {
 				UICustom::FancyTooltip(a_tooltip);
 			}
@@ -180,7 +174,7 @@ namespace Modex::UICustom
 		return FancyDropdown(a_id, a_tooltip, tempIndex, a_items, a_width) && (a_currentItem = static_cast<uint8_t>(tempIndex), true);
 	}
 
-	// TODO: Go back and localize string vectors sent to this.
+	// TEST: Need to re-verify on a blank locale file to see how this behaves.
 	// OPTIMIZE: Go over this one more time for handling vector out-of-range exceptions.
 	bool FancyDropdown(const char* a_id, const char* a_tooltip, int& a_currentItem, const std::vector<std::string>& a_items, float a_width)
 	{
@@ -198,7 +192,13 @@ namespace Modex::UICustom
 			a_currentItem = 0;
 		}
 
-		std::string current_item = Translate(a_items.empty() ? "" : a_items[a_currentItem].c_str());
+		std::string current_item;
+		if (!a_items.empty() && Locale::GetSingleton()->HasEntry(a_items[a_currentItem].c_str())) {
+			current_item = Translate(a_items[a_currentItem].c_str());
+		} else {
+			current_item = a_items[a_currentItem];
+		}
+
 		current_item = TRUNCATE(current_item, a_width * 0.8f);
 
 		ImGui::SetNextItemWidth(a_width);
@@ -222,7 +222,7 @@ namespace Modex::UICustom
 		}
 		ImGui::PopStyleVar();
 
-		if (Locale::GetSingleton()->HasTooltip(a_tooltip)) {
+		if (Locale::GetSingleton()->HasEntry(a_tooltip)) {
 			if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal | ImGuiHoveredFlags_NoSharedDelay)) {
 				UICustom::FancyTooltip(a_tooltip);
 			}
@@ -479,7 +479,7 @@ namespace Modex::UICustom
 
 		if (GraphicManager::imgui_library.empty()) {
 			const float height = ImGui::GetFrameHeight() * 2.0f;
-			const std::string label = a_keybind == 0 ? Translate("NONE") : ImGui::SkyrimKeymap.at(a_keybind);
+			const std::string label = a_keybind == 0 ? Translate("NONE") : KeyCode::SkyrimKeymap.at(a_keybind);
 
 			ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth);  // Right Align
 			ImGui::SetCursorPosY(ImGui::GetCursorPosY() - (ImGui::GetFrameHeight() / 2.0f));
@@ -492,8 +492,8 @@ namespace Modex::UICustom
 		} else {
 			GraphicManager::Image img;
 
-			const auto keyIt = ImGui::SkyrimKeymap.find(a_keybind);
-			if (a_keybind == 0 || keyIt == ImGui::SkyrimKeymap.end()) {
+			const auto keyIt = KeyCode::SkyrimKeymap.find(a_keybind);
+			if (a_keybind == 0 || keyIt == KeyCode::SkyrimKeymap.end()) {
 				img = GraphicManager::imgui_library.at("UnknownKey");
 			} else {
 				const std::string& keyName = keyIt->second;

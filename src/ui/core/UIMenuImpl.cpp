@@ -272,7 +272,7 @@ namespace Modex
 		const auto keyEvent = reinterpret_cast<RE::GFxKeyEvent *>(event);
 		const auto imguiKey = GFxKeyToImGuiKey(keyEvent->keyCode);
 		const auto showMenu = UserConfig::GetShowMenuKeys();
-		const auto scanCode = ImGui::ImGuiKeyToScanCode(imguiKey);
+		const auto scanCode = KeyCode::ImGuiKeyToScanCode(imguiKey);
 		const auto modifier = InputManager::GetSingleton()->IsBoundModifierDown();
 
 		if (m_listeners.size() > 0) {
@@ -285,7 +285,7 @@ namespace Modex
 		}
 
 		// override behaviors for specific keys
-		if (imguiKey == ImGuiKey_PageUp && down) { // TODO: Pass KeyEvent, handle if key is bound
+		if (imguiKey == ImGuiKey_PageUp && down) {
 			UIManager::GetSingleton()->AddScrollEvent(0, 1.0f);
 			return;
 		}

@@ -133,7 +133,7 @@ namespace Modex
 			}
 
 			if (ImGui::BeginChild("Modex::Browser::Tags", ImVec2(ImGui::GetContentRegionAvail().x * 0.35f, 0), false)) {
-				UICustom::SubCategoryHeader(Translate("HEADER_BROWSER"), ImVec4(0.22f, 0.22f, 0.35f, 0.75f));
+				UICustom::SubCategoryHeader(Translate("HEADER_BROWSER"));
 				
 				// Recursive tree rendering
 				std::function<void(const std::string&)> DrawTreeNode = [&](const std::string& path) {

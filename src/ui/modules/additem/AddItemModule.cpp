@@ -32,7 +32,7 @@ namespace Modex
 
 	AddItemModule::AddItemModule()
 	{
-		m_layouts.push_back({Translate("TAB_ADDITEM"), true, DrawTableView}); // TODO: Locale
+		m_layouts.push_back({Translate("TAB_ADDITEM"), true, DrawTableView});
 		
 		constexpr auto table_flags =
 		UITable::ModexTableFlag_Base |

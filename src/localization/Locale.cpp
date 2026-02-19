@@ -56,7 +56,7 @@ namespace Modex
 		return fallback_text;
 	}
 
-	bool Locale::HasTooltip(const char* a_localeString) const
+	bool Locale::HasEntry(const char* a_localeString) const
 	{
 		size_t tooltip_hash = hash_string(a_localeString);
 

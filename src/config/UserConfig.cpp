@@ -19,8 +19,8 @@ namespace Modex
 		auto& config = UserConfig::Get();
 
 		// BUG: Can we gaurantee this lookup?
-		const std::string keyName = ImGui::SkyrimKeymap.at(config.showMenuKey);
-		const std::string modifierKeyName = ImGui::SkyrimKeymap.at(config.showMenuModifier);
+		const std::string keyName = KeyCode::SkyrimKeymap.at(config.showMenuKey);
+		const std::string modifierKeyName = KeyCode::SkyrimKeymap.at(config.showMenuModifier);
 
 		if (!modifierKeyName.empty()) {
 			return std::format("{} + {}", modifierKeyName, keyName);

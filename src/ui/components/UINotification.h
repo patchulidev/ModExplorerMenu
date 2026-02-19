@@ -2,6 +2,8 @@
 
 #include "data/BaseObject.h"
 
+// TODO: Expand notification display and configuration.
+
 namespace Modex
 {
 	enum class UIMessageType : uint8_t
@@ -111,7 +113,7 @@ namespace Modex
 
 		static inline std::deque<UIMessage> s_messages;
 		static inline UIMessage s_tooltip;
-		static inline constexpr size_t MAX_QUEUE = 10; // TODO: Add an option?
+		static inline constexpr size_t MAX_QUEUE = 10;
 		static inline constexpr size_t MAX_DISPLAY = 1;
 
 		UINotification() = delete;

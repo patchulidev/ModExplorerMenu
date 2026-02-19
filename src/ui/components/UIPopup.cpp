@@ -69,16 +69,16 @@ namespace Modex
 	void UIPopupHotkey::AcceptHotkey(uint32_t a_key)
 	{
 		bool success = false;
-		if (ImGui::IsValidHotkey(a_key)) {
+		if (KeyCode::IsValidHotkey(a_key)) {
 			if (m_hotkeyModifierOnly) {
-				if (ImGui::IsKeyModifier(a_key)) {
+				if (KeyCode::IsKeyModifier(a_key)) {
 					*m_hotkeyCurrent = a_key;
 					success = true;
 				}
 			}
 
 			if (!m_hotkeyModifierOnly) {
-				if (!ImGui::IsKeyModifier(a_key)) {
+				if (!KeyCode::IsKeyModifier(a_key)) {
 					*m_hotkeyCurrent = a_key;
 					success = true;
 				}

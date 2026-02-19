@@ -162,9 +162,14 @@ namespace Modex
 		return copy;
 	}
 
-	// TODO: Verify that we are properly populating m_itemListModFormTypeMap in Data.cpp 
+	// pre v2.0 feature not in use. keeping it for potential future use. This is used to track what
+	// form types are in what plugins, so we can filter plugins out of the plugin list if they don't
+	// contain the selected form type.
+
 	bool Data::IsFormTypeInPlugin(const RE::TESFile* a_plugin, RE::FormType a_formType)
 	{
+		ASSERT_MSG(true, "Deprecated");
+
 		if (a_plugin == nullptr) {
 			return false;
 		}
@@ -209,14 +214,9 @@ namespace Modex
 		case RE::FormType::Cell:
 			return m_itemListModFormTypeMap[a_plugin].cell;
 		default:
-			ASSERT_MSG(true, "Unhandled 'RE::FormType' passed to Data::IsFormTypeInPlugin: '{}'", static_cast<int>(a_formType));
 			return false;
 		}
 	}
-
-	// BUG: Previously crashing to desktop, called from BuildPluginList. Might have been a weird
-	// build artifact. Test a_type and a_sort parameters. Doesn't seem like a runtime issue.
-	// 1245198 error code?
 
 	// Returns a sorted vector of plugin names filtered out by global blacklist config.
 	std::vector<std::string> Data::GetFilteredListOfPluginNames(PluginType a_type, PluginSort a_sort)

@@ -137,7 +137,7 @@ namespace Modex
 	bool GraphicManager::ValidateImGuiIcons()
 	{
 		// Validate users local install of ImGuiIcon's matches our compiled map.
-		for (const auto& [key, name] : ImGui::SkyrimKeymap) {
+		for (const auto& [key, name] : KeyCode::SkyrimKeymap) {
 			if (imgui_library.find(name) == imgui_library.end()) {
 				return Error("ImGuiIcon for key '{}' not found in ImGui Icon Library!", name);
 			}

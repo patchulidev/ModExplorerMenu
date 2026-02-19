@@ -30,7 +30,7 @@ namespace Modex
 		m_menu = static_cast<Menu*>(m_windowStack.back().get());
 		m_menu->OpenWindow(this);
 
-		// TODO: Determine how to patch / create compatibility for SkyrimSouls with new IMenu impl. 
+		// TODO: Compatability for SkyrimSouls and other PauseGame plugins.
 		// if (LoadLibrary("Data/SKSE/Plugins/SkyrimSoulsRE.dll")) {
 		//     if (RE::Main* Game = RE::Main::GetSingleton()) {
 		// 		Game->freezeTime = true;

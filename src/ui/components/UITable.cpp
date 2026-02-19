@@ -644,7 +644,7 @@ namespace Modex
 
 			if (GetSelectionCount() == 0)
 			{
-				// TODO: This was a valid check, but should be used when iterating over a kit for
+				// NOTE: This was a valid check, but should be used when iterating over a kit for
 				// actions. Not when we're adding/removing. That way we support dummy objects. The
 				// context of this was to prevent npc's from being added to kits lol.
 				//
@@ -938,7 +938,6 @@ namespace Modex
 	}
 
 
-	// TODO: Currently set to 0 = ALL. Need to reconsider this implementation.
 	void UITable::BuildPluginList()
 	{
 		const auto& config = UserConfig::Get();
@@ -1431,21 +1430,22 @@ namespace Modex
 		}
 	}
 
+	// TODO: Migrate all additions to Recent list to Command methods.
+
 	void UITable::HandleLeftClickBehavior(const std::unique_ptr<BaseObject>& a_item)
 	{		
 		if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
 			if (a_item->IsItem()) {
-				Commands::AddItemToPlayerInventory(a_item->GetEditorID(), 1);
+				UICustom::InputAmountHandler(ImGui::GetIO().KeyShift, [&a_item](uint32_t amount = 1) {
+					Commands::AddItemToPlayerInventory(a_item->GetEditorID(), amount);
+				});
 			}
-
-			// TODO: Poll whether this is expected behavior or not. Should we always spawn on the
-			// player, or spawn on the targeted ref if available?
 
 			if (tableTargetRef && a_item->IsNPC()) {
-				Commands::PlaceAtMe(a_item->GetEditorID(), 1);
+				UICustom::InputAmountHandler(ImGui::GetIO().KeyShift, [&a_item](uint32_t amount = 1) {
+					Commands::PlaceAtMe(a_item->GetEditorID(), amount);
+				});
 			}
-
-			UserData::AddRecent(a_item);
 		}
 	}
 
@@ -1897,79 +1897,8 @@ namespace Modex
 		if (a_item->GetFormType() == RE::FormType::NPC) {
 			if (const auto& npc = a_item->GetTESNPC(); npc.has_value()) {
 				const auto& npcData = npc.value();
-
 				if (npcData != nullptr) {
-					// const ImU32 unique_color = IM_COL32(255, 179, 102, 20);
-					// const ImU32 essential_color = IM_COL32(204, 153, 255, 20);
-
-					const ImVec2 unique_pos = ImVec2(bb.Min.x + spacing + spacing, center_align);
-					const ImVec2 essential_pos = ImVec2(unique_pos.x + font_size + 2.0f, unique_pos.y);
-					// ImVec2 disabled_pos = unique_pos;
-
-					// TODO: Pending re-write
-					// const std::string unique_string = Utils::IconMap["UNIQUE"];
-					// const std::string essential_string = Utils::IconMap["ESSENTIAL"];
-					// const std::string disabled_string = Utils::IconMap["FAILURE"];
-
-					// if (npcData->IsUnique() && !npcData->IsEssential()) {
-					// 	disabled_pos = ImVec2(unique_pos.x + fontSize + 2.0f, unique_pos.y);
-					// 	DrawList->AddText(unique_pos, text_color, unique_string.c_str());
-					// 	DrawList->AddRectFilledMultiColor(
-					// 		ImVec2(bb.Min.x, bb.Min.y),
-					// 		ImVec2(bb.Max.x, bb.Max.y),
-					// 		unique_color,
-					// 		unique_color,
-					// 		IM_COL32(0, 0, 0, 0),
-					// 		IM_COL32(0, 0, 0, 0));
-					// } else if (npcData->IsEssential() && !npcData->IsUnique()) {
-					// 	disabled_pos = ImVec2(unique_pos.x + fontSize + 2.0f, unique_pos.y);
-					// 	DrawList->AddText(unique_pos, text_color, essential_string.c_str());
-					// 	DrawList->AddRectFilledMultiColor(
-					// 		ImVec2(bb.Min.x, bb.Min.y),
-					// 		ImVec2(bb.Max.x, bb.Max.y),
-					// 		essential_color,
-					// 		essential_color,
-					// 		IM_COL32(0, 0, 0, 0),
-					// 		IM_COL32(0, 0, 0, 0));
-					// } else if (npcData->IsEssential() && npcData->IsUnique()) {
-					// 	disabled_pos = ImVec2(essential_pos.x + fontSize + 2.0f, unique_pos.y);
-					// 	DrawList->AddText(unique_pos, text_color, unique_string.c_str());
-					// 	DrawList->AddText(essential_pos, text_color, essential_string.c_str());
-					// 	DrawList->AddRectFilledMultiColor(
-					// 		ImVec2(bb.Min.x, bb.Min.y),
-					// 		ImVec2(bb.Max.x, bb.Max.y),
-					// 		unique_color,
-					// 		unique_color,
-					// 		essential_color,
-					// 		essential_color);
-					// }
-
-					// if (a_item.IsDisabled()) {
-					// 	DrawList->AddText(disabled_pos, text_color, disabled_string.c_str());
-						
-					// 	if (ImGui::IsMouseHoveringRectDelayed(disabled_pos, ImVec2(disabled_pos.x + fontSize, disabled_pos.y + fontSize))) {
-					// 		// ImGui::SetTooltip(Translate("TOOLTIP_DISABLED"));
-					// 		UICustom::AddFancyTooltip(Translate("TOOLTIP_DISABLED"));
-					// 	}
-					// }
-
-					// if (IsMouseHoveringRectDelayed(unique_pos, ImVec2(unique_pos.x + fontSize, unique_pos.y + fontSize))) {
-					// 	if (npcData->IsUnique()) {
-					// 		UICustom::FancyTooltip("TOOLTIP_UNIQUE");
-					// 	} else if (npcData->IsEssential()) {
-					// 		UICustom::FancyTooltip("TOOLTIP_ESSENTIAL");
-					// 	}
-					// }
-					//
-					// if (IsMouseHoveringRectDelayed(essential_pos, ImVec2(essential_pos.x + fontSize, essential_pos.y + fontSize))) {
-					// 	if (npcData->IsEssential()) {
-					// 		UICustom::FancyTooltip("TOOLTIP_ESSENTIAL");
-					// 	}
-					// }
-
-					// if (a_item.m_refID != 0) {
-					// 	name_string = TRUNCATE(Utils::IconMap["REFID"] + name_string, spacing);
-					// }
+					// TODO: Actor Reference specifier and Unique/Essential indicators.
 				}
 			}
 		}
@@ -2706,10 +2635,6 @@ namespace Modex
 						auto& item_data = _tableList.at(item_idx);
 						ImGui::PushID((int)item_data->m_tableID);
 
-						// Double-click add amount behavior.
-						// TODO: Renable this
-						// const int click_amount = HasFlag(ModexTableFlag_Kit) ? item_data->kitAmount : clickAmount;
-
 						// position item at start
 						ImVec2 pos = ImVec2(start_pos.x, start_pos.y + line_idx * LayoutItemStep.y);
 						ImGui::SetCursorScreenPos(pos);
@@ -2717,7 +2642,6 @@ namespace Modex
 						// set next item selection user data
 						bool is_item_selected = selectionStorage.Contains(item_data->m_tableID);
 						bool is_item_visible = ImGui::IsRectVisible(LayoutItemSize);
-
 
 						ImGui::SetNextItemSelectionUserData(item_idx);
 						ImGui::PushItemFlag(ImGuiItemFlags_NoNav, true);
@@ -2761,16 +2685,6 @@ namespace Modex
 						}
 
 						HandleRightClickBehavior(item_data);
-
-						// TODO: Can we bypass default selection backend so that when we click on an item
-						// it will stay selected? Right now there is this intermediary state where there is an
-						// outline but the item is not selected.
-
-						// instantly toggle, bypassing multi selection backend
-						// if (ImGui::IsItemToggledSelection()) {
-						// 	is_item_selected = true;
-						// 	// is_item_selected = !is_item_selected;
-						// }
 
 						// Drag and drop
 						if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceNoPreviewTooltip)) {
