@@ -103,7 +103,7 @@ jobs:
           # Ensure clang-cl is on PATH
           clang-cl --version
 
-          xmake f -p windows -a x64 -m releasedbg --skyrim_vr=n --toolchain=clang-cl -y
+          xmake f -p windows -a x64 -m releasedbg --skyrim_vr=n --toolchain=cl -y
 
       - name: Build
         if: steps.bump.outputs.bump != 'skip'
