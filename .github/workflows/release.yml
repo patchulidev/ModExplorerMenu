@@ -17,6 +17,7 @@ jobs:
         with:
           fetch-depth: 0
           fetch-tags: true
+          submodules: recursive
 
       # ----- Determine PR + bump type (labels) -----
       - name: Determine PR number (best-effort)
