@@ -1,0 +1,161 @@
+name: Release on PR merge
+
+on:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      # ----- Determine PR + bump type (labels) -----
+      - name: Determine PR number (best-effort)
+        id: pr
+        shell: bash
+        run: |
+          set -euo pipefail
+          msg="$(git log -1 --pretty=%B)"
+          if [[ "$msg" =~ \#([0-9]+) ]]; then
+            echo "number=${BASH_REMATCH[1]}" >> "$GITHUB_OUTPUT"
+          else
+            echo "number=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Determine bump from PR labels (default: patch)
+        id: bump
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          bump="patch"
+
+          if [[ -n "${PR_NUMBER}" ]]; then
+            labels="$(gh api repos/$REPO/pulls/$PR_NUMBER --jq '.labels[].name' || true)"
+            echo "PR labels:"
+            echo "$labels" || true
+
+            if echo "$labels" | grep -q '^release:major$'; then bump="major"; fi
+            if echo "$labels" | grep -q '^release:minor$'; then bump="minor"; fi
+            if echo "$labels" | grep -q '^release:patch$'; then bump="patch"; fi
+            if echo "$labels" | grep -q '^release:skip$';  then bump="skip";  fi
+          fi
+
+          echo "bump=$bump" >> "$GITHUB_OUTPUT"
+
+      - name: Compute next semver tag
+        id: version
+        if: steps.bump.outputs.bump != 'skip'
+        shell: bash
+        run: |
+          set -euo pipefail
+          latest="$(git tag -l 'v*' | sort -V | tail -n 1 || true)"
+          if [[ -z "$latest" ]]; then latest="v0.0.0"; fi
+
+          ver="${latest#v}"
+          IFS='.' read -r major minor patch <<< "$ver"
+
+          bump="${{ steps.bump.outputs.bump }}"
+          case "$bump" in
+            major) major=$((major+1)); minor=0; patch=0 ;;
+            minor) minor=$((minor+1)); patch=0 ;;
+            patch) patch=$((patch+1)) ;;
+          esac
+
+          next="v${major}.${minor}.${patch}"
+          echo "next=$next" >> "$GITHUB_OUTPUT"
+
+      # ----- Build (xmake + clang-cl) -----
+      - name: Install xmake
+        if: steps.bump.outputs.bump != 'skip'
+        uses: xmake-io/github-action-setup-xmake@v1
+
+      - name: Install LLVM (clang-cl)
+        if: steps.bump.outputs.bump != 'skip'
+        uses: KyleMayes/install-llvm-action@v2
+        with:
+          version: "17.0"
+
+      - name: Configure (releasedbg, Skyrim VR = n)
+        if: steps.bump.outputs.bump != 'skip'
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Ensure clang-cl is on PATH
+          clang-cl --version
+
+          # If your xmake project auto-detects clang-cl, this is sufficient.
+          # If not, we can force it with `--toolchain=clang-cl` (see note below).
+          xmake f -m releasedbg --skyrim_vr=n -y
+
+      - name: Build
+        if: steps.bump.outputs.bump != 'skip'
+        shell: bash
+        run: |
+          set -euo pipefail
+          xmake -y -v
+
+      # ----- Package dist + binaries into SKSE/Plugins -----
+      - name: Prepare package folder (copy dist)
+        if: steps.bump.outputs.bump != 'skip'
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf package
+          mkdir -p package
+
+          test -d dist
+          cp -a dist/. package/
+
+          mkdir -p package/SKSE/Plugins
+
+      - name: Copy Modex.dll and Modex.pdb into SKSE/Plugins
+        if: steps.bump.outputs.bump != 'skip'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          outdir="build/windows/x64/releasedbg"
+          test -f "${outdir}/Modex.dll"
+          test -f "${outdir}/Modex.pdb"
+
+          cp -f "${outdir}/Modex.dll" package/SKSE/Plugins/Modex.dll
+          cp -f "${outdir}/Modex.pdb" package/SKSE/Plugins/Modex.pdb
+
+      - name: Create distribution zip
+        if: steps.bump.outputs.bump != 'skip'
+        id: distzip
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $version = "${{ steps.version.outputs.next }}"
+          $assetName = "Modex - A Mod Explorer Menu - $version.zip"
+          "asset_name=$assetName" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
+          Push-Location package
+          7z a -tzip "..\$assetName" .
+          Pop-Location
+
+      # ----- Release -----
+      - name: Create GitHub Release and upload asset
+        if: steps.bump.outputs.bump != 'skip'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.next }}
+          name: Modex - A Mod Explorer Menu - ${{ steps.version.outputs.next }}
+          generate_release_notes: true
+          files: |
+            ${{ steps.distzip.outputs.asset_name }}
