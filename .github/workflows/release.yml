@@ -3,6 +3,7 @@ name: Release on PR merge
 on:
   push:
     branches: [ master ]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -154,7 +155,7 @@ jobs:
 
       # ----- Release -----
       - name: Create GitHub Release and upload asset
-        if: steps.bump.outputs.bump != 'skip'
+        if: steps.bump.outputs.bump != 'skip' && github.event_name != 'workflow_dispatch'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.next }}
