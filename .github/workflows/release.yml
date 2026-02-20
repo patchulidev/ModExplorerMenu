@@ -146,7 +146,7 @@ jobs:
         run: |
           $ErrorActionPreference = "Stop"
           $version = "${{ steps.version.outputs.next }}"
-          $assetName = "Modex - A Mod Explorer Menu - $version.zip"
+          $assetName = "Modex.Release.$version.zip"
           "asset_name=$assetName" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
 
           Push-Location package
