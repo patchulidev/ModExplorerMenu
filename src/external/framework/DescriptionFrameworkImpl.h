@@ -61,7 +61,7 @@ namespace DescriptionFramework_Impl
 	// This entirely removes HTML tags in Descriptions from Description Framework
 	// I did not see an instance where a Tag was necessary, so if there is
 	// This will need modified to only remove unecessary HTML tags.
-	[[nodiscard]] static std::string GetItemDescription(RE::TESForm* form)
+	[[nodiscard]] static inline std::string GetItemDescription(RE::TESForm* form)
 	{
 		std::string desc;
 

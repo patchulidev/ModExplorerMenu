@@ -36,7 +36,7 @@ namespace Modex
 	void UIModule::DrawTabMenu()
 	{
 		ImVec2 window_padding = ImGui::GetStyle().WindowPadding;
-		const int layoutCount = std::ssize(m_layouts);
+		const int layoutCount = static_cast<int>(std::ssize(m_layouts));
 		const float button_width = (ImGui::GetContentRegionAvail().x / layoutCount) + (window_padding.x / layoutCount);
 		const float button_height = ImGui::GetFrameHeightWithSpacing();
 

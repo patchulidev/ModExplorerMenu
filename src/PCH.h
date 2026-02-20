@@ -9,7 +9,7 @@
 #include <RE/Skyrim.h>
 #include <SKSE/SKSE.h>
 
-#define MODEX_DEBUG
+// #define MODEX_DEBUG
 
 #define IMGUI_DISABLE_DEMO_WINDOWS
 #define IMGUI_DISABLE_DEBUG_TOOLS

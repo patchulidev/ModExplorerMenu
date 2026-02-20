@@ -41,6 +41,7 @@ namespace Modex::PrettyLog
 	inline int error_count = 0;
 	inline int warn_count = 0;
 
+#ifdef _NDEBUG
 	template <typename... Args>
 	std::string Assert(bool a_condition, std::string_view a_msg, const char* file, int line, const char* function, Args&&... a_args)
 	{
@@ -55,11 +56,7 @@ namespace Modex::PrettyLog
 			formatted_msg = std::string(a_msg);
 		}
 		
-#ifdef MODEX_DEBUG
 		std::string stack_info = "\n\nCall Stack:\n" + GetStackTrace(2);
-#else
-		std::string stack_info = "";
-#endif
 		
 		std::string full_error = std:: format(
 			"ASSERTION FAILED:\n\n{}\n\n File: {}\n Line: {}\n Function: {}{}",
@@ -70,6 +67,28 @@ namespace Modex::PrettyLog
 		error_count++;
 		return full_error;
 	}
+#else
+	template <typename... Args>
+	std::string Assert(bool a_condition, std::string_view a_msg, Args&&... a_args)
+	{
+		if (!a_condition) [[likely]] {
+			return std::string();
+		}
+		
+		std::string formatted_msg;
+		if constexpr (sizeof...(Args) > 0) {
+			formatted_msg = std::vformat(a_msg, std::make_format_args(a_args...));
+		} else {
+			formatted_msg = std::string(a_msg);
+		}
+		
+		std::string full_error = std:: format("ASSERTION FAILED: {}", formatted_msg);
+		SKSE::log::error("{}", full_error);
+		
+		error_count++;
+		return full_error;
+	}
+#endif
 
 	template <typename... Args>
 	bool Error(std::string_view a_msg, Args&&... a_args)
@@ -147,12 +166,10 @@ namespace Modex::PrettyLog
 	}
 }
 
-#ifdef MODEX_RELEASE
+#ifndef _NDEBUG 
 #	define ASSERT_MSG(condition, msg, ...)          \
     PrettyLog::Assert(condition, msg, __VA_ARGS__)
-#endif
-
-#ifdef MODEX_DEBUG
+#else
 #define ASSERT_MSG(condition, msg, ...) \
 	if (auto _assert_msg = PrettyLog::Assert((condition), (msg), __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__); !_assert_msg.empty()) { \
 		stl::report_and_fail(_assert_msg.c_str()); \

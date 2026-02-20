@@ -345,7 +345,6 @@ namespace Modex
 
 		ImGuiID inputTextID = ImGui::GetItemID();
 		const bool inputTextActive = ImGui::IsItemActive();
-		const bool inputTextDeactivated = ImGui::IsItemDeactivated();
 
 		// Global keyboard shortcut to focus search (Ctrl+Shift+F)
 		if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_F, ImGuiInputFlags_RouteAlways)) {

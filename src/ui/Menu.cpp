@@ -150,9 +150,11 @@ namespace Modex
 		// Render a splash logo if theme contains a valid path.
 		if (const auto splash_image = ThemeConfig::GetSplashLogo(); splash_image.has_value()) {
 			if (splash_image->texture != nullptr) {
+				const float image_width = static_cast<float>(splash_image->width);
+				const float image_height = static_cast<float>(splash_image->height);
 				ImGui::SetCursorPosX((a_displaySize.x / 2.0f) - (splash_image->width / 2.0f));
 				ImGui::SetCursorPosY((a_displaySize.y / 2.0f) - (splash_image->height / 2.0f));
-				ImGui::Image(reinterpret_cast<ImTextureID>(splash_image->texture), ImVec2(splash_image->width, splash_image->height));
+				ImGui::Image(reinterpret_cast<ImTextureID>(splash_image->texture), ImVec2(image_width, image_height));
 			}
 		}
 
@@ -230,7 +232,7 @@ namespace Modex
 				}
 			}
 
-			static constexpr std::string exit_icon = ICON_LC_LOG_OUT;
+			static const std::string exit_icon = ICON_LC_LOG_OUT;
 			if (UICustom::SidebarImageButton(Translate("MODULE_EXIT"), exit_icon, false, ImVec2(button_width, button_height), exit_w, expand_sidebar)) {
 				UIManager::GetSingleton()->Close();
 			}

@@ -170,31 +170,31 @@ namespace Modex
 			case PropertyType::kWeaponSpeed: {
 				const auto lhs_speed = std::stof(lhs_value);
 				const auto rhs_speed = std::stof(rhs_value);
-				delta = lhs_speed - rhs_speed;
+				delta = (lhs_speed > rhs_speed) ? 1 : (lhs_speed < rhs_speed) ? -1 : 0;
 				break;
 			}
 			case PropertyType::kWeaponCriticalDamage: {
 				const auto lhs_crit = std::stof(lhs_value);
 				const auto rhs_crit = std::stof(rhs_value);
-				delta = lhs_crit - rhs_crit;
+				delta = (lhs_crit > rhs_crit) ? 1 : (lhs_crit < rhs_crit) ? -1 : 0;
 				break;
 			}
 			case PropertyType::kWeaponDamagePerSecond: {
 				const auto lhs_dps = std::stof(lhs_value);
 				const auto rhs_dps = std::stof(rhs_value);
-				delta = lhs_dps - rhs_dps;
+				delta = (lhs_dps > rhs_dps) ? 1 : (lhs_dps < rhs_dps) ? -1 : 0;
 				break;
 			}
 			case PropertyType::kWeaponRange: {
 				const auto lhs_range = std::stof(lhs_value);
 				const auto rhs_range = std::stof(rhs_value);
-				delta = lhs_range - rhs_range;
+				delta = (lhs_range > rhs_range) ? 1 : (lhs_range < rhs_range) ? -1 : 0;
 				break;
 			}
 			case PropertyType::kWeaponStagger: {
 				const auto lhs_stagger = std::stof(lhs_value);
 				const auto rhs_stagger = std::stof(rhs_value);
-				delta = lhs_stagger - rhs_stagger;
+				delta = (lhs_stagger > rhs_stagger) ? 1 : (lhs_stagger < rhs_stagger) ? -1 : 0;
 				break;
 			}
 			case PropertyType::kArmorRating: {

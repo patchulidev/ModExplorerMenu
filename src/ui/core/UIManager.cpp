@@ -189,7 +189,7 @@ namespace Modex
 		// ImGui::ShowDemoWindow();
 
 		TrySetAllowTextInput();
-		ImGui::PushFont(NULL, UserConfig::Get().globalFontSize);
+		ImGui::PushFont(NULL, static_cast<float>(UserConfig::Get().globalFontSize));
 		for (const auto& window : m_windowStack) {
 			if (window) {
 				window->Update(ImGui::GetIO().DeltaTime);
@@ -265,8 +265,8 @@ namespace Modex
 			return;
 		}
 
-		m_displayWidth = swapChainDesc.bufferDesc.width;
-		m_displayHeight = swapChainDesc.bufferDesc.height;
+		m_displayWidth = static_cast<float>(swapChainDesc.bufferDesc.width); // uin32_t
+		m_displayHeight = static_cast<float>(swapChainDesc.bufferDesc.height); // uin32_t
 
 		m_hWnd = reinterpret_cast<HWND>(swapChainDesc.outputWindow);
 		if (!this->DoInit(renderData, m_hWnd)) {

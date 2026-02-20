@@ -144,6 +144,7 @@ namespace Modex
 		}
 
 		Trace("Validated ImGui Icon Library with {} icons.", imgui_library.size());
+		return true;
 	}
 
 	void GraphicManager::Init()

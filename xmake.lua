@@ -32,7 +32,8 @@ add_requires("imgui 21d3299e588b5c702dcca0f448b4f937af369b4a", {configs = {freet
 -- explicitly define macros
 add_defines("ENABLE_SKYRIM_SE=1")
 add_defines("ENABLE_SKYRIM_AE=1")
-add_undefines("ENABLE_SKYRIM_VR=1")
+-- add_defines("ENABLE_SKYRIM_VR=0")
+-- add_undefines("ENABLE_SKYRIM_VR=1")
 
 -- targets
 target("Modex")
