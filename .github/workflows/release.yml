@@ -2,7 +2,7 @@ name: Release on PR merge
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
 
 permissions:
   contents: write
@@ -31,7 +31,7 @@ jobs:
             echo "number=" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Determine bump from PR labels (default: patch)
+      - name: "Determine bump from PR labels (default: patch)"
         id: bump
         shell: bash
         env:
