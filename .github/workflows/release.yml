@@ -90,6 +90,10 @@ jobs:
         with:
           version: "17.0"
 
+      - name: Set up MSVC developer environment
+        if: steps.bump.outputs.bump != 'skip'
+        uses: ilammy/msvc-dev-cmd@v1
+
       - name: Configure (releasedbg, Skyrim VR = n)
         if: steps.bump.outputs.bump != 'skip'
         shell: bash
@@ -98,9 +102,7 @@ jobs:
           # Ensure clang-cl is on PATH
           clang-cl --version
 
-          # If your xmake project auto-detects clang-cl, this is sufficient.
-          # If not, we can force it with `--toolchain=clang-cl` (see note below).
-          xmake f -m releasedbg --skyrim_vr=n -y
+          xmake f -p windows -a x64 -m releasedbg --skyrim_vr=n --toolchain=clang-cl -y
 
       - name: Build
         if: steps.bump.outputs.bump != 'skip'
