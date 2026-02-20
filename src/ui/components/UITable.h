@@ -26,6 +26,9 @@ namespace Modex
 			ImU32 outline;
 			ImU32 text;
 			ImU32 textEnchanted;
+			ImU32 textUnique;
+			ImU32 textEssential;
+			ImU32 textUniqueEssential;
 			ImU32 error;
 		};
 

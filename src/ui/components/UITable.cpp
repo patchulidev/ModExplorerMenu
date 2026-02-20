@@ -1049,6 +1049,9 @@ namespace Modex
 		colors.hover = ThemeConfig::GetColorU32("TABLE_HOVER", colors.alpha);
 		colors.text = ThemeConfig::GetColorU32("TEXT", colors.alpha);
 		colors.textEnchanted = ThemeConfig::GetColorU32("TEXT_ENCHANTED", colors.alpha);
+		colors.textUnique = ThemeConfig::GetColorU32("TEXT_UNIQUE", colors.alpha);
+		colors.textEssential = ThemeConfig::GetColorU32("TEXT_ESSENTIAL", colors.alpha);
+		colors.textUniqueEssential = ThemeConfig::GetColorU32("TEXT_UNIQUE_ESSENTIAL", colors.alpha);
 		colors.error = ThemeConfig::GetColorU32("ERROR", colors.alpha * 0.1f);
 
 		if (styleFontSize == 0.0f) {
@@ -1835,7 +1838,7 @@ namespace Modex
 		ImRect bb(box_min, box_max);
 
 		// Outline & Background colors
-		bool is_enchanted = false;
+		ImU32 text_color = colors.text;
 
 		// Background
 		if (!a_selected) {
@@ -1898,7 +1901,26 @@ namespace Modex
 			if (const auto& npc = a_item->GetTESNPC(); npc.has_value()) {
 				const auto& npcData = npc.value();
 				if (npcData != nullptr) {
-					// TODO: Actor Reference specifier and Unique/Essential indicators.
+					if (a_item->GetRefID() != 0) {
+						constexpr std::string icon = ICON_LC_ASTERISK;
+						const ImVec2 icon_pos = ImVec2(center_right_align.x - ImGui::GetFontSize(), center_right_align.y);
+						draw_list->AddText(icon_pos, colors.text, icon.c_str());
+
+						if (IsMouseHoveringRect(icon_pos, ImVec2(icon_pos.x + font_size, icon_pos.y + font_size))) {
+							UINotification::ShowPropertyTooltip(PropertyType::kReferenceID);
+						}
+					}
+
+					const bool is_essential = a_item->IsEssential();
+					const bool is_unique = a_item->IsUnique();
+
+					if (is_essential && !is_unique) {
+						text_color = colors.textEssential;
+					} else if (is_unique && !is_essential) {
+						text_color = colors.textUnique;
+					} else if (is_essential && is_unique) {
+						text_color = colors.textUniqueEssential;
+					}
 				}
 			}
 		}
@@ -1908,15 +1930,6 @@ namespace Modex
 		const float sort_text_cutoff = spacing * 1.5f;
 
 		if (const auto& item = a_item; item->IsItem()) {
-			const std::string value_string = std::to_string(item->GetGoldValue()) + " " + ICON_LC_COINS;
-			const float value_width = ImGui::CalcTextSize(value_string.c_str()).x;
-			const ImVec2 value_pos = ImVec2(center_right_align.x - value_width, center_right_align.y);
-			draw_list->AddText(value_pos, colors.text, value_string.c_str());
-
-			if (IsMouseHoveringRect(value_pos, ImVec2(value_pos.x + value_width, value_pos.y + font_size))) {
-				UINotification::ShowPropertyTooltip(PropertyType::kGoldValue);
-			}
-
 			if (const auto& armor = item->GetTESArmor(); armor.has_value()) {
 				const auto& armorData = armor.value();
 
@@ -1925,7 +1938,7 @@ namespace Modex
 					const std::string type_string = TRUNCATE(item->GetPropertyValueWithIcon(PropertyType::kArmorType), sort_text_cutoff);
 
 					if (armorData->formEnchanting != nullptr) {
-						is_enchanted = true;
+						text_color = colors.textEnchanted;
 					}
 
 					if (sort_property == PropertyType::kNone) {
@@ -1974,7 +1987,7 @@ namespace Modex
 					// const std::string type_string = item.GetPropertyValueWithIcon(PropertyType::kWeaponType);
 
 					if (weaponData->formEnchanting != nullptr) {
-						is_enchanted = true;
+						text_color = colors.textEnchanted;
 					}
 					
 					if (sort_property == PropertyType::kNone) {
@@ -1991,10 +2004,23 @@ namespace Modex
 		draw_list->AddText(center_left_align, colors.text, plugin_name.c_str());
 
 		const ImVec2 name_pos = ImVec2(bb.Min.x + spacing - 5.0f, center_align);
-		draw_list->AddText(name_pos, is_enchanted ? colors.textEnchanted : colors.text, name_string.c_str());
+		draw_list->AddText(name_pos, text_color, name_string.c_str());
 
 		if (IsMouseHoveringRect(name_pos, ImVec2(name_pos.x + font_size, name_pos.y + font_size))) {
 			UINotification::ShowObjectTooltip(a_item);
+		}
+
+		// Display tooltips relevant to name colors (essential, unique, enchanted)
+		if (IsMouseHoveringRect(name_pos + ImVec2(font_size, 0.0f), ImVec2(name_pos.x + ImGui::CalcTextSize(name_string.c_str()).x, name_pos.y + font_size))) {
+			if (a_item->IsEssential() && !a_item->IsUnique()) {
+				UINotification::ShowPropertyTooltip(PropertyType::kEssential);
+			} else if (a_item->IsUnique() && !a_item->IsEssential()) {
+				UINotification::ShowPropertyTooltip(PropertyType::kUnique);
+			} else if (a_item->IsUnique() && a_item->IsEssential()) {
+				UINotification::ShowPropertyTooltip(PropertyType::kUniqueEssential);
+			} else if (a_item->IsEnchanted()) {
+				UINotification::ShowPropertyTooltip(PropertyType::kEnchanted);
+			}
 		}
 
 		if (sort_property != PropertyType::kPlugin and sort_property != PropertyType::kName and sort_property != PropertyType::kGoldValue) {

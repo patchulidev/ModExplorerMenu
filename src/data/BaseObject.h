@@ -64,6 +64,7 @@ namespace Modex
 		kReferenceID,			// NPC Properties
 		kUnique,
 		kEssential,
+		kUniqueEssential,
 		kDisabled,
 		kHealth,
 		kMagicka,
@@ -228,6 +229,8 @@ namespace Modex
 			case PropertyType::kUnique:
 				return ICON_LC_STAR;
 			case PropertyType::kEssential:
+				return ICON_LC_SHIELD_ALERT;
+			case PropertyType::kUniqueEssential:
 				return ICON_LC_SHIELD_ALERT;
 			case PropertyType::kDisabled:
 				return ICON_LC_CIRCLE_X;
@@ -1390,6 +1393,7 @@ namespace Modex
 		
 		std::string GetItemIcon() const
 		{
+			if (m_refID != 0 && IsNPC()) return ICON_LC_USER_SEARCH;
 			return FilterProperty::GetIcon(GetItemPropertyType());
 		}
 
@@ -1504,6 +1508,8 @@ namespace Modex
 					return IsUnique() ? "true" : "false";
 				case PropertyType::kEssential:
 					return IsEssential() ? "true" : "false";
+				case PropertyType::kUniqueEssential:
+					return (IsUnique() && IsEssential()) ? "true" : "false";
 				case PropertyType::kDisabled:
 					return IsDisabled() ? "true" : "false";
 				case PropertyType::kFaction:
