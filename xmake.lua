@@ -5,7 +5,7 @@ set_xmakever("2.8.2")
 includes("lib/commonlibsse-ng")
 
 -- set project
-set_project("Modex - A Mod Explorer Menu")
+set_project("Modex")
 set_version("2.0.0")
 set_license("GPL-3.0")
 
@@ -35,7 +35,7 @@ add_defines("ENABLE_SKYRIM_AE=1")
 add_undefines("ENABLE_SKYRIM_VR=1")
 
 -- targets
-target("Modex - A Mod Explorer Menu")
+target("Modex")
     add_deps("commonlibsse-ng")
 
     -- additional packages
@@ -47,7 +47,7 @@ target("Modex - A Mod Explorer Menu")
     
     -- add commonlibsse-ng plugin
     add_rules("commonlibsse-ng.plugin", {
-        name = "Modex - A Mod Explorer Menu",
+        name = "Modex",
         author = "Patchuli",
         description = "SKSE64 plugin template using CommonLibSSE-NG"
     })

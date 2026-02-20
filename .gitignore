@@ -12,5 +12,5 @@ vs*/
 # files
 *.zip
 compile_commands.json
-dist/SKSE/Plugins/Modex - A Mod Explorer Menu.pdb
-dist/SKSE/Plugins/Modex - A Mod Explorer Menu.dll
+dist/SKSE/
+dist/SKSE/*
