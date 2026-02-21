@@ -11,6 +11,16 @@ namespace Modex
 		AUTOMATIC         // All children always show (no selection needed) (unused)
 	};
 
+	enum class FilterLogic : uint32_t {
+		OR = 0,
+		AND
+	};
+
+	static inline std::vector<std::string> GetFilterLogicStrings() {
+		std::vector<std::string> out = { "OR", "AND" };
+		return out;
+	}
+
 	struct FilterRule {
 		std::string property;
 		std::string op;
@@ -268,7 +278,6 @@ namespace Modex
 		void RegisterNodeRecursive(FilterNode* a_node);
 		void ClearChildren(FilterNode* a_node);
 		void BuildVisibleCategories(const std::string &a_id, std::vector<std::string> &a_out);
-		void SetupShowAllNode();
 		ImVec4 GetParentColor(FilterNode* a_node);
 		FilterNode* GetSelectedRootNode() const;
 		

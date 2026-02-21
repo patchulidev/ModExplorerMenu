@@ -346,7 +346,6 @@ namespace Modex
 	bool FilterSystem::ShouldShowItem(const BaseObject* a_item) const {
 		if (!m_rootNode || !a_item) { return true; }
 		
-		// Collect all selected nodes grouped by their parent
 		std::map<FilterNode*, std::vector<FilterNode*>> nodesByParent;
 		CollectSelectedNodesByParent(m_rootNode.get(), nodesByParent);
 		
@@ -359,25 +358,36 @@ namespace Modex
 			return true;
 		}
 		
-		// Item must match at least ONE node from EACH parent group
-		// (AND between groups, OR within group)
-		for (const auto& [parent, nodes] : nodesByParent) {            
+		for (const auto& [parent, nodes] : nodesByParent) {
 			bool matchedAnyInGroup = false;
+			bool matchedAllInGroup = true;
 			
-			for (const auto* node :  nodes) {
-				if (!node->rule.IsEmpty()) {                    
+			for (const auto* node : nodes) {
+				if (!node->rule.IsEmpty()) {
 					if (node->rule.Evaluate(a_item)) {
 						matchedAnyInGroup = true;
-						break;  // OR within group - matched one, that's enough
+					} else {
+						matchedAllInGroup = false;
 					}
 				} else {
 					matchedAnyInGroup = true;
-					break;
 				}
 			}
 			
-			if (!matchedAnyInGroup) {
-				return false;  // AND between groups - must match all groups
+			const FilterLogic logic = magic_enum::enum_cast<FilterLogic>(UserConfig::Get().filterLogic).value_or(FilterLogic::OR);
+
+			switch (logic) {
+				case FilterLogic::AND: // ALL must match.
+					if (!matchedAllInGroup) {
+						return false;
+					}
+					break;
+					
+				case FilterLogic::OR: // At least ONE match.
+					if (!matchedAnyInGroup) {
+						return false;
+					}
+					break;
 			}
 		}
 		

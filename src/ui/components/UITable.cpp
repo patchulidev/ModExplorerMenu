@@ -2140,6 +2140,8 @@ namespace Modex
 		ImGui::PopStyleVar();
 	}
 
+	// TODO: Add context menu on Status Bar for Quick reference selection.
+
 	void UITable::DrawStatusBar()
 	{
 		static constexpr const char* valid_icon = ICON_LC_ASTERISK;

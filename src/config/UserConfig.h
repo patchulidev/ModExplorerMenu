@@ -31,6 +31,7 @@ namespace Modex
 			uint32_t showMenuKey 		= 211;
 			uint32_t showMenuModifier 	= 0;
 			uint32_t modListSort 		= 0;
+			uint32_t filterLogic		= 0;
 			uint32_t logLevel 			= 1;
 
 			int uiScaleVertical 	= 100;

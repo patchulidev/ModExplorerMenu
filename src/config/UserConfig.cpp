@@ -39,6 +39,7 @@ namespace Modex
 		user.showMenuKey 	= ConfigManager::Get<uint32_t>("Open Menu Keybind", _default.showMenuKey);
 		user.showMenuModifier 	= ConfigManager::Get<uint32_t>("Open Menu Modifier", _default.showMenuModifier);
 		user.modListSort 	= ConfigManager::Get<uint32_t>("Plugin List Sorting", _default.modListSort);
+		user.filterLogic = ConfigManager::Get<uint32_t>("Filter Logic", _default.filterLogic);
 		user.logLevel 		= ConfigManager::Get<uint32_t>("Log Level", _default.logLevel);
 
 		user.uiScaleVertical 	= ConfigManager::Get<int>("UI Scale Vertical", _default.uiScaleVertical);
@@ -74,6 +75,7 @@ namespace Modex
 		ConfigManager::Set<uint32_t>("Open Menu Keybind", user.showMenuKey);
 		ConfigManager::Set<uint32_t>("Open Menu Modifier", user.showMenuModifier);
 		ConfigManager::Set<uint32_t>("Plugin List Sorting", user.modListSort);
+		ConfigManager::Set<uint32_t>("Filter Logic", user.filterLogic);
 		ConfigManager::Set<uint32_t>("Log Level", user.logLevel);
 
 		ConfigManager::Set<int>("UI Scale Vertical", user.uiScaleVertical);
