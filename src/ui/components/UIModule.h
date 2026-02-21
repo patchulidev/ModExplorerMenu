@@ -39,7 +39,6 @@ namespace Modex
 
 		static RE::TESObjectREFR* GetTargetReference() { return s_targetReference; }
 		static void SetTargetReference(RE::TESObjectREFR* a_ref);
-		static RE::TESObjectREFR* LookupReferenceBySearch(const std::string& a_search);
 		static RE::TESObjectREFR* LookupReferenceByFormID(const RE::FormID& a_id);
 	};
 }
