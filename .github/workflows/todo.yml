@@ -2,7 +2,10 @@
 # Sourced from https://github.com/doodlum/skyrim-community-shaders/blob/dev/.github/workflows/todo.yaml
 name: "Run TODO to Issue"
 on:
-    push:
+    pull_request:
+        types: [closed]
+        branches:
+            - master
     workflow_dispatch:
         inputs:
             MANUAL_COMMIT_REF:
