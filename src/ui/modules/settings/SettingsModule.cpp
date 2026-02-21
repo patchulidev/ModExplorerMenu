@@ -6,6 +6,7 @@
 #include "localization/FontManager.h"
 #include "localization/Locale.h"
 #include "ui/core/UIManager.h"
+#include "ui/core/FilterSystem.h"
 
 namespace Modex
 {
@@ -95,6 +96,11 @@ namespace Modex
 
 			std::vector<std::string> sorts = Data::GetSortStrings();
 			if (UICustom::Settings_Dropdown("SETTINGS_SORT", config.modListSort, sorts)) {
+				UserConfig::GetSingleton()->SaveSettings();
+			}
+
+			std::vector<std::string> behavior = GetFilterLogicStrings();
+			if (UICustom::Settings_Dropdown("SETTINGS_FILTER_LOGIC", config.filterLogic, behavior)) {
 				UserConfig::GetSingleton()->SaveSettings();
 			}
 
