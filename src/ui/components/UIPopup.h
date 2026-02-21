@@ -1,6 +1,7 @@
 #pragma once
 
 #include "UIWindow.h"
+#include "data/Data.h"
 
 namespace Modex
 { 
@@ -23,6 +24,35 @@ namespace Modex
 		ImGui::PopStyleColor(2);
 	}
 
+	struct ReferenceLookupCache
+	{
+		std::vector<const BaseObject*> objects;
+		ImGuiID sortColumn = 0;
+		ImGuiSortDirection sortDirection = ImGuiSortDirection_None;
+	};
+
+	class UIPopupReferenceLookup : public UIWindow
+	{
+	public:
+		void Draw();
+		void PopupReferenceLookup(const std::string& a_title, const std::string& a_message, std::function<void(RE::FormID)> a_onSelectCallback = nullptr);
+	
+	private:
+		void AcceptEntry();
+		void DeclineEntry();
+
+		void FilterList(const std::string& a_filter);
+		void SortTable();
+		void DrawTable();
+
+		static inline ReferenceLookupCache s_cache;
+
+		bool									m_navAccept = true;
+		std::string								m_pendingFuzzyListTitle;
+		std::string								m_pendingFuzzyDesc;
+		RE::FormID								m_currentSelection;
+		std::function<void(RE::FormID)>  		m_onSelectCallback;
+	};
 
 	// BUG: PgUp and PgDn don't wory for hotkeys. Need to explicitly warn about this, or fix it.
 

@@ -130,4 +130,34 @@ namespace Modex
 		void CacheCells(RE::TESFile* a_file, std::map<std::tuple<std::uint32_t, const std::string, const std::string>, std::string_view>& out_map);
 		void MergeNPCRefIds(std::shared_ptr<std::unordered_map<RE::FormID, RE::FormID>> npc_ref_map);
 	};
+
+	inline static bool TryParseFormID(const std::string& input, RE::FormID& outFormID) 
+	{
+		if (input.empty()) return false;
+		if (input.length() > 8) return false;
+		
+		for (char c : input) {
+			if (!std::isxdigit(static_cast<unsigned char>(c))) {
+				return false;
+			}
+		}
+		
+		try {
+			size_t pos = 0;
+			unsigned long value = std::stoul(input, &pos, 16);
+			
+			if (pos != input.length()) {
+				return false;
+			}
+			
+			if (value > 0xFFFFFFFF) {
+				return false;
+			}
+			
+			outFormID = static_cast<RE::FormID>(value);
+			return true;
+		} catch (...) {
+			return false;
+		}
+	}
 }

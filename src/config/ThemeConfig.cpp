@@ -139,8 +139,8 @@ namespace Modex
 		style.Colors[ImGuiCol_Text] = ThemeConfig::GetColor("TEXT");
 		style.Colors[ImGuiCol_TextDisabled] = ThemeConfig::GetColor("TEXT_DISABLED");
 
-		style.Colors[ImGuiCol_TableRowBg] = ThemeConfig::GetColor("BG");
-		style.Colors[ImGuiCol_TableRowBgAlt] = ThemeConfig::GetHover("BG_LIGHT");
+		style.Colors[ImGuiCol_TableRowBg] = ThemeConfig::GetColor("TABLE_BG");
+		style.Colors[ImGuiCol_TableRowBgAlt] = ThemeConfig::GetHover("TABLE_BG_ALT");
 
 		style.Colors[ImGuiCol_Border] = ThemeConfig::GetColor("BORDER");
 	}

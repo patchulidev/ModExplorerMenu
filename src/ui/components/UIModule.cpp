@@ -110,7 +110,6 @@ namespace Modex
 		}
 	}
 
-
 	RE::TESObjectREFR* UIModule::LookupReferenceByFormID(const RE::FormID& a_formID) {
 		if (a_formID == 0) {
 			return nullptr;
@@ -123,30 +122,5 @@ namespace Modex
 		}
 
 		return nullptr; 
-	}
-
-	RE::TESObjectREFR* UIModule::LookupReferenceBySearch(const std::string& a_search) {
-		if (a_search.length() > 8) {
-			return nullptr;
-		}
-
-		for (const char& c : a_search) {
-			if (std::isspace(c)) {
-				return nullptr;
-			}
-
-			if (!std::isxdigit(c)) {
-				return nullptr;
-			}
-		}
-
-		RE::FormID formID = 0;
-		auto [ptr, ec] = std::from_chars(a_search.c_str(), a_search.c_str() + a_search.size(), formID, 16);
-
-		if (ec == std::errc()) {
-			return LookupReferenceByFormID(formID);
-		} else {
-			return nullptr;
-		}
 	}
 }

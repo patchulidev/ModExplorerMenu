@@ -224,7 +224,7 @@
 	"STATUS_BAR_LINK": "Target Reference Shared\n\nIndicates whether this table shares a Target Reference or not.\n\nTables that don't share references need to be assigned separately",
     "STATUS_BAR_TITLE": "Table Status Bar - Targeted Reference",
 	"STATUS_BAR_TOOLTIP": "Target Reference\n\nThis represents the targeted Actor or Container to operate upon. Click to manually enter.\n\n<T> Set to Player\n<C> Set to Console Reference\n<Shift> + <LMB> Copy FormID\n<Ctrl> + <LMB> Set to shared target.",
-	"STATUS_BAR_DESC": "Manually set the Target Reference by FormID.\n\n- Must be a 'Reference' FormID.\n\n- Hexidecimal (e.g. FF001234).\n\n- Can be Shortened (e.g. 14).\n\n- Must be 'loaded'.\n\nIf Modex is unable to locate the Target based on your input, a warning will appear with more details.",
+	"STATUS_BAR_DESC": "Assign a Target for Modex by selecting an Actor reference below. Use the input box to search over names or reference form ids.\n\nYou can manually enter a hexadecimal reference formid and press enter.",
 
     "ADD_AMOUNT_DESC": "Please enter the desired quantity you would like.",
 	"INVALID_AMOUNT_DESC": "Must be a valid positive integer. (e.g. 10)",
