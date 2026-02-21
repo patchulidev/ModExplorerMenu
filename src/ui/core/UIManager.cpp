@@ -321,6 +321,14 @@ namespace Modex
 		}
 	}
 
+	void UIManager::ShowReferenceLookup(const std::string& a_title, const std::string& a_message, std::function<void(RE::FormID)> onSelectCallback)
+	{
+		m_windowStack.push_back(std::make_unique<UIPopupReferenceLookup>());
+		UIPopupReferenceLookup* popup = static_cast<UIPopupReferenceLookup*>(m_windowStack.back().get());
+		popup->PopupReferenceLookup(a_title, a_message, onSelectCallback);
+		popup->OpenWindow(this);
+	}
+
 	void UIManager::ShowHotkey(const char* a_title, const char* a_desc, uint32_t* a_hotkey, uint32_t& a_default, bool a_modifierOnly, std::function<void()> onConfirmHotkeyCallback)
 	{
 		m_windowStack.push_back(std::make_unique<UIPopupHotkey>());

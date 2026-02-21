@@ -2140,8 +2140,6 @@ namespace Modex
 		ImGui::PopStyleVar();
 	}
 
-	// TODO: Add context menu on Status Bar for Quick reference selection.
-
 	void UITable::DrawStatusBar()
 	{
 		static constexpr const char* valid_icon = ICON_LC_ASTERISK;
@@ -2269,23 +2267,37 @@ namespace Modex
 		}
 
 		if (clicked && !user_shift_clicked && !user_ctrl_clicked) {
-			UIManager::GetSingleton()->ShowInputBox(
+			UIManager::GetSingleton()->ShowReferenceLookup(
 				Translate("STATUS_BAR_TITLE"),
 				Translate("STATUS_BAR_DESC"),
-				"",
-				[this](const std::string& a_input) {
-					auto reference = UIModule::LookupReferenceBySearch(a_input);
-
-					if (reference != nullptr) {
+				[this](RE::FormID formID) {
+					if (const auto reference = RE::TESForm::LookupByID(formID)->As<RE::TESObjectREFR>(); reference != nullptr) {
 						this->SetTargetByReference(reference);
 					} else {
 						UIManager::GetSingleton()->ShowWarning(
-							Translate("INVALID_REFERENCE_POPUP_TITLE") + a_input,
+							Translate("INVALID_REFERENCE_POPUP_TITLE") + std::format("{:08X}", formID),
 							Translate("INVALID_REFERENCE_POPUP_DESC")
 						);
 					}
 				}
 			);
+			// UIManager::GetSingleton()->ShowInputBox(
+			// 	Translate("STATUS_BAR_TITLE"),
+			// 	Translate("STATUS_BAR_DESC"),
+			// 	"",
+			// 	[this](const std::string& a_input) {
+			// 		auto reference = UIModule::LookupReferenceBySearch(a_input);
+			//
+			// 		if (reference != nullptr) {
+			// 			this->SetTargetByReference(reference);
+			// 		} else {
+			// 			UIManager::GetSingleton()->ShowWarning(
+			// 				Translate("INVALID_REFERENCE_POPUP_TITLE") + a_input,
+			// 				Translate("INVALID_REFERENCE_POPUP_DESC")
+			// 			);
+			// 		}
+			// 	}
+			// );
 		}
 
 		// Settings Button
