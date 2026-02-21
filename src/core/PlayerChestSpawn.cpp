@@ -16,7 +16,7 @@ namespace Modex
 		auto player = RE::PlayerCharacter::GetSingleton();
 		auto playerRef = player->AsReference();
 
-		Commands::CloseAllGameMenus();
+		UIManager::CloseAllGameMenus();
 		container->ActivateRef(playerRef, 0, nullptr, 0, false);
 		UIManager::GetSingleton()->SetMenuListener(true);
 		Debug("Opened PlayerChest container");

@@ -26,19 +26,22 @@ namespace Hooks
 				if (event->menuName == RE::ContainerMenu::MENU_NAME) {
 					if (manager->GetMenuListener()) {
 						auto ref = RE::UI::GetSingleton()->GetMenu<RE::ContainerMenu>();
-
 						auto items = ref->GetRuntimeData().itemList;
+
+						auto player = RE::PlayerCharacter::GetSingleton();
+						if (!player) { return RE::BSEventNotifyControl::kContinue; }
+
+						auto playerRef = player->AsReference();
+						if (!playerRef) { return RE::BSEventNotifyControl::kContinue; }
+
+						uint32_t handle = playerRef->GetHandle().native_handle();
+						if (handle == 0) { return RE::BSEventNotifyControl::kContinue; }
 
 						for (auto& item : items->items) {
 							if (item) {
-								auto player = RE::PlayerCharacter::GetSingleton();
-								auto playerRef = player->AsReference();
-								uint32_t handle = playerRef->GetHandle().native_handle();
 								item->data.owner = handle;
-								Info("Updated ContainerMenu item owner handle to {:#x}", handle);
 							}
 						}
-
 					}
 				}
 			}

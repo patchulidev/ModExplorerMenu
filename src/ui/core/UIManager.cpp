@@ -29,21 +29,16 @@ namespace Modex
 
 		m_menu = static_cast<Menu*>(m_windowStack.back().get());
 		m_menu->OpenWindow(this);
-
-		// TODO: Compatability for SkyrimSouls and other PauseGame plugins.
-		// if (LoadLibrary("Data/SKSE/Plugins/SkyrimSoulsRE.dll")) {
-		//     if (RE::Main* Game = RE::Main::GetSingleton()) {
-		// 		Game->freezeTime = true;
-		// 	}
-		// }
 	}
 
 	void UIManager::OnClose()
 	{
 		m_gui = nullptr;
-		m_windowStack.clear();
 
-		// OPTIMIZE: Is this a good location for this?
+		for (auto& window : m_windowStack) {
+			window->CloseWindow();
+		}
+
 		UIModule::SaveSharedReference();
 		UserData::Save();
 
@@ -52,16 +47,17 @@ namespace Modex
 
 	void UIManager::Open()
 	{
-		PrettyLog::Debug("UIManager::Open() called");
+		PrettyLog::Trace("UIMananger Open() Sent");
 		if (auto *messageQueue = RE::UIMessageQueue::GetSingleton(); messageQueue != nullptr)
 		{
+			CloseAllGameMenus();
 			messageQueue->AddMessage(ModexGUIMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kShow, nullptr);
 		}
 	}
 
 	void UIManager::Close()
 	{
-		PrettyLog::Debug("UIManager::Close() called");
+		PrettyLog::Trace("UIManager Close() Sent");
 		if (auto *messageQueue = RE::UIMessageQueue::GetSingleton(); messageQueue != nullptr)
 		{
 			messageQueue->AddMessage(ModexGUIMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
@@ -401,22 +397,28 @@ namespace Modex
 		func(controlMap, allow);
 	}
 
+	bool UIManager::CloseAllGameMenus()
+	{
+		if (UIManager::GetSingleton()->IsMenuOpen()) {
+			UIManager::GetSingleton()->Close();
+		}
+
+		if (const auto messagingQueue = RE::UIMessageQueue::GetSingleton(); messagingQueue) {
+			for (size_t i = 0; i < GameMenus.size(); i++) {
+				messagingQueue->AddMessage(GameMenus[i], RE::UI_MESSAGE_TYPE::kHide, nullptr);
+			}
+			return true;
+		}
+
+		Error("Failed to get UIMessageQueue to close all menus. Discarding last Request!");
+		return false;
+	}
+
 	UIManager::UIManager()
 	{
 		m_displayWidth = 1920.0f;
 		m_displayHeight = 1080.0f;
 	}
-
-	// UIManager::UIManager() try {
-	// 	m_homeWindow = std::make_unique<HomeModule>();
-	// 	m_addItemWindow = std::make_unique<AddItemModule>();
-	// 	m_equipmentWindow = std::make_unique<EquipmentModule>();
-	// 	m_npcWindow = std::make_unique<ActorModule>();
-	// 	m_objectWindow = std::make_unique<ObjectModule>();
-	// 	// m_teleportWindow = std::make_unique<TeleportModule>();
-	// } catch (const std::exception& e) {
-	// 	ASSERT_MSG(true, "UIManager constructor failed!\n\n" + std::string(e.what()));
-	// }
 
 	UIManager::~UIManager() noexcept = default;
 }

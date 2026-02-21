@@ -121,9 +121,19 @@ namespace Modex
 		m_listeners.push_back(a_func);
 	}
 
+	void ModexGUIMenu::ForceCursor()
+	{
+		if (auto* ui = RE::UI::GetSingleton(); ui && ui->IsMenuOpen(RE::CursorMenu::MENU_NAME)) {
+			if (const auto messagingQueue = RE::UIMessageQueue::GetSingleton(); messagingQueue) {
+				messagingQueue->AddMessage(RE::CursorMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kShow, nullptr);
+			}
+		}
+	}
+
 	void ModexGUIMenu::PostDisplay()
 	{
 		UIManager::GetSingleton()->Render();
+		ForceCursor();
 	}
 
 	// FIX: This isn't very reliable. If menu state is edited outside of our input mapping
@@ -209,11 +219,14 @@ namespace Modex
 	{
 		using Flags = RE::UI_MENU_FLAGS;
 		auto *menu  = new ModexGUIMenu();
-		menu->menuFlags.set(Flags::kPausesGame);
 		menu->menuFlags.set(Flags::kUpdateUsesCursor, Flags::kUsesCursor);
 		menu->menuFlags.set(Flags::kCustomRendering);
 		menu->menuFlags.set(Flags::kUsesMenuContext);
 		menu->depthPriority = 11;
+
+		if (UserConfig::Get().pauseGame) {
+			menu->menuFlags.set(Flags::kPausesGame);
+		}
 
 		menu->inputContext.set(Context::kConsole);
 		return menu;
