@@ -2271,33 +2271,19 @@ namespace Modex
 				Translate("STATUS_BAR_TITLE"),
 				Translate("STATUS_BAR_DESC"),
 				[this](RE::FormID formID) {
-					if (const auto reference = RE::TESForm::LookupByID(formID)->As<RE::TESObjectREFR>(); reference != nullptr) {
-						this->SetTargetByReference(reference);
-					} else {
-						UIManager::GetSingleton()->ShowWarning(
-							Translate("INVALID_REFERENCE_POPUP_TITLE") + std::format("{:08X}", formID),
-							Translate("INVALID_REFERENCE_POPUP_DESC")
-						);
+					if (const auto form = RE::TESForm::LookupByID(formID); form != nullptr) {
+						if (const auto reference = form->As<RE::TESObjectREFR>(); reference != nullptr) {
+							this->SetTargetByReference(reference);
+							return;
+						}
 					}
+
+					UIManager::GetSingleton()->ShowWarning(
+						Translate("INVALID_REFERENCE_POPUP_TITLE") + std::format("{:08X}", formID),
+						Translate("INVALID_REFERENCE_POPUP_DESC")
+					);
 				}
 			);
-			// UIManager::GetSingleton()->ShowInputBox(
-			// 	Translate("STATUS_BAR_TITLE"),
-			// 	Translate("STATUS_BAR_DESC"),
-			// 	"",
-			// 	[this](const std::string& a_input) {
-			// 		auto reference = UIModule::LookupReferenceBySearch(a_input);
-			//
-			// 		if (reference != nullptr) {
-			// 			this->SetTargetByReference(reference);
-			// 		} else {
-			// 			UIManager::GetSingleton()->ShowWarning(
-			// 				Translate("INVALID_REFERENCE_POPUP_TITLE") + a_input,
-			// 				Translate("INVALID_REFERENCE_POPUP_DESC")
-			// 			);
-			// 		}
-			// 	}
-			// );
 		}
 
 		// Settings Button

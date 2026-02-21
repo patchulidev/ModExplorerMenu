@@ -27,7 +27,6 @@ namespace Modex
 	struct ReferenceLookupCache
 	{
 		std::vector<const BaseObject*> objects;
-		bool dirty = true;
 		ImGuiID sortColumn = 0;
 		ImGuiSortDirection sortDirection = ImGuiSortDirection_None;
 	};

@@ -17,6 +17,7 @@ namespace Modex
 			}
 
 			if (!a_filter.empty()) {
+				bool matches = false;
 				std::string name = obj.GetName();
 
 				if (name.empty()) {
@@ -24,17 +25,16 @@ namespace Modex
 				}
 
 				std::string compare = a_filter;
-				std::transform(name.begin(), name.end(), name.begin(), ::tolower);
 				std::transform(compare.begin(), compare.end(), compare.begin(), ::tolower);
-				
-				bool matches = false;
 
-				if (name.find(a_filter) != std::string::npos) {
+				std::transform(name.begin(), name.end(), name.begin(), ::tolower);
+				if (name.find(compare) != std::string::npos) {
 					matches = true;
 				}
 
 				std::string formIDStr = std::format("{:08X}", obj.GetRefID());
-				if (formIDStr.find(a_filter) != std::string::npos) {
+				std::transform(formIDStr.begin(), formIDStr.end(), formIDStr.begin(), ::tolower);
+				if (formIDStr.find(compare) != std::string::npos) {
 					matches = true;
 				}
 
@@ -194,10 +194,12 @@ namespace Modex
 			bool _confirm, _cancel;
 			if (UICustom::Popup_ConfirmDeclineButtons(_confirm, _cancel, m_navAccept)) {
 				if (_confirm) {
-					RE::FormID refID = 0;
+					if (currentSearch[0] != '\0') {
+						RE::FormID refID = 0;
 
-					if (TryParseFormID(currentSearch, refID)) {
-						m_currentSelection = refID;
+						if (TryParseFormID(currentSearch, refID) && refID != 0) {
+							m_currentSelection = refID;
+						}
 					}
 
 					AcceptEntry();
