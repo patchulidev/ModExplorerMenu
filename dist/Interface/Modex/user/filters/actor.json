@@ -5,7 +5,8 @@
 		"kFormID",
 		"kReferenceID",
 		"kKeywordList",
-		"kFactionList"
+		"kFactionList",
+		"kSpellList"
 	],
 
     "SortProperty": [
@@ -14,39 +15,100 @@
 		"kReferenceID",
 		"kCarryWeight",
 		"<separator>",
-		"kFactionList"
+		"kClass",
+		"kRace",
+		"kGender",
+		"kLevel",
+		"<separator>",
+		"kHealth",
+		"kMagicka",
+		"kStamina",
+		"<separator>",
+		"kSleepOutfit",
+		"kDefaultOutfit"
 	],
 
     "FilterProperty": [
-		{
-			"id": "unique",
-			"displayName": "Unique",
-			"behavior": "multi_select",
-			"rule": {
-				"property": "kUnique",
-				"operator": "equals",
-				"value": "true"
+	{
+		"id": "filters",
+		"displayName": "Show Actor Filters",
+		"behavior": "multi_select",
+		"children": [
+			{
+				"id": "unique",
+				"displayName": "Unique",
+				"behavior": "multi_select",
+				"rule": {
+					"property": "kUnique",
+					"operator": "equals",
+					"value": "true"
+				}
+			},
+			{
+				"id": "essential",
+				"displayName": "Essential",
+				"behavior": "multi_select",
+				"rule": {
+					"property": "kEssential",
+					"operator": "equals",
+					"value": "true"
+				}
+			},
+			{
+				"id": "disabled",
+				"displayName": "Disabled",
+				"behavior": "multi_select",
+				"rule": {
+					"property": "kDisabled",
+					"operator": "equals",
+					"value": "true"
+				}
+			},
+			{
+				"id": "reference",
+				"displayName": "Has Reference",
+				"behavior": "multi_select",
+				"rule": {
+					"property": "kReferenceID",
+					"operator": "greater_than",
+					"value": 0,
+					"required": true
+				}
+			},
+			{
+				"id": "keywords",
+				"displayName": "Contains Keyword",
+				"behavior": "multi_select",
+				"children": [
+					{
+						"id": "undead",
+						"displayName": "Undead",
+						"rule": {
+							"property": "kKeywordList",
+							"operator": "contains",
+							"value": "Undead"
+						}
+					},
+					{
+						"id": "ghost",
+						"displayName": "Ghost",
+						"rule": {
+							"property": "kKeywordList",
+							"operator": "contains",
+							"value": "Ghost"
+						}
+					},
+					{
+						"id": "creature",
+						"displayName": "Creature",
+						"rule": {
+							"property": "kKeywordList",
+							"operator": "contains",
+							"value": "Creature"
+						}
+					}
+				]
 			}
-		},
-		{
-			"id": "essential",
-			"displayName": "Essential",
-			"behavior": "multi_select",
-			"rule": {
-				"property": "kEssential",
-				"operator": "equals",
-				"value": "true"
-			}
-		},
-		{
-			"id": "reference",
-			"displayName": "Has Reference",
-			"behavior": "multi_select",
-			"rule": {
-				"property": "kReferenceID",
-				"operator": "greater_than",
-				"value": "0"
-			}
-		}
-	]
+		]
+	}]
 }
