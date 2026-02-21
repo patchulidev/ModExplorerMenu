@@ -85,6 +85,8 @@ namespace Modex
 		int GetWindowCount() const { return static_cast<int>(m_windowStack.size()); }
 		ImVec2 GetDisplaySize() const { return ImVec2(m_displayWidth, m_displayHeight); }
 
+		static bool CloseAllGameMenus();
+
 	private:
 		UIManager();
 		~UIManager() noexcept;

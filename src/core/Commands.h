@@ -1,6 +1,5 @@
 #pragma once
 
-#include "RE/T/TrainingMenu.h"
 #include "data/BaseObject.h"
 #include "localization/Locale.h"
 #include "ui/core/UIManager.h"
@@ -35,32 +34,9 @@ namespace Modex::Commands
 		return nullptr;
 	}
 
-	static inline bool CloseAllGameMenus()
-	{
-		if (const auto messagingQueue = RE::UIMessageQueue::GetSingleton(); messagingQueue) {
-			if (UIManager::GetSingleton()->IsMenuOpen()) {
-				UIManager::GetSingleton()->Close();
-			}
-
-			messagingQueue->AddMessage(RE::Console::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
-			messagingQueue->AddMessage(RE::ContainerMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
-			messagingQueue->AddMessage(RE::TrainingMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
-			messagingQueue->AddMessage(RE::CraftingMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
-			messagingQueue->AddMessage(RE::DialogueMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
-			messagingQueue->AddMessage(RE::StatsMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
-			messagingQueue->AddMessage(RE::TweenMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
-			messagingQueue->AddMessage(RE::BarterMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
-			messagingQueue->AddMessage(RE::SleepWaitMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
-			return true;
-		}
-
-		Error("Failed to get UIMessageQueue to close all menus. Discarding last Request!");
-		return false;
-	}
-
 	static inline void OpenActorInventory(RE::TESObjectREFR* a_actorRef)
 	{
-		if (a_actorRef && CloseAllGameMenus()) {
+		if (a_actorRef && UIManager::CloseAllGameMenus()) {
 			TESObjectREFR_OpenContainer(a_actorRef, RE::ContainerMenu::ContainerMode::kLoot);
 			UIManager::GetSingleton()->SetMenuListener(true);
 		}
@@ -363,7 +339,7 @@ namespace Modex::Commands
 				if (auto playerRefr = player->AsReference()) {
 					if (auto ref = RE::TESForm::LookupByID<RE::TESObjectREFR>(a_refID)) {
 						ref->MoveTo(playerRefr);
-						CloseAllGameMenus();
+						UIManager::CloseAllGameMenus();
 					}
 				}
 			}
@@ -376,7 +352,7 @@ namespace Modex::Commands
 			if (auto player = RE::PlayerCharacter::GetSingleton(); player) {
 				if (auto playerRefr = player->AsReference()) {
 					a_ref->MoveTo(playerRefr);
-					CloseAllGameMenus();
+					UIManager::CloseAllGameMenus();
 				}
 			}
 		}
@@ -388,7 +364,7 @@ namespace Modex::Commands
 			if (auto player = RE::PlayerCharacter::GetSingleton(); player) {
 				if (auto playerRefr = player->AsReference()) {
 					playerRefr->MoveTo(a_ref);
-					CloseAllGameMenus();
+					UIManager::CloseAllGameMenus();
 				}
 			}
 		}
@@ -401,7 +377,7 @@ namespace Modex::Commands
 				if (auto playerRefr = player->AsReference()) {
 					if (auto ref = RE::TESForm::LookupByID<RE::TESObjectREFR>(a_refID)) {
 						playerRefr->MoveTo(ref);
-						CloseAllGameMenus();
+						UIManager::CloseAllGameMenus();
 					}
 				}
 			}

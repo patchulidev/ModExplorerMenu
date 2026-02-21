@@ -52,16 +52,17 @@ namespace Modex
 
 	void UIManager::Open()
 	{
-		PrettyLog::Debug("UIManager::Open() called");
+		PrettyLog::Trace("UIMananger Open() Sent");
 		if (auto *messageQueue = RE::UIMessageQueue::GetSingleton(); messageQueue != nullptr)
 		{
+			CloseAllGameMenus();
 			messageQueue->AddMessage(ModexGUIMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kShow, nullptr);
 		}
 	}
 
 	void UIManager::Close()
 	{
-		PrettyLog::Debug("UIManager::Close() called");
+		PrettyLog::Trace("UIManager Close() Sent");
 		if (auto *messageQueue = RE::UIMessageQueue::GetSingleton(); messageQueue != nullptr)
 		{
 			messageQueue->AddMessage(ModexGUIMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
@@ -401,22 +402,47 @@ namespace Modex
 		func(controlMap, allow);
 	}
 
+	bool UIManager::CloseAllGameMenus()
+	{
+		if (const auto messagingQueue = RE::UIMessageQueue::GetSingleton(); messagingQueue) {
+			if (UIManager::GetSingleton()->IsMenuOpen()) {
+				UIManager::GetSingleton()->Close();
+			}
+
+			messagingQueue->AddMessage(RE::ContainerMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
+			messagingQueue->AddMessage(RE::InventoryMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
+			messagingQueue->AddMessage(RE::MagicMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
+			messagingQueue->AddMessage(RE::TweenMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
+			messagingQueue->AddMessage(RE::SleepWaitMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
+			messagingQueue->AddMessage(RE::BarterMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
+			messagingQueue->AddMessage(RE::CraftingMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
+			messagingQueue->AddMessage(RE::GiftMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
+			messagingQueue->AddMessage(RE::FavoritesMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
+			messagingQueue->AddMessage(RE::TrainingMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
+			messagingQueue->AddMessage(RE::TutorialMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
+			messagingQueue->AddMessage(RE::LockpickingMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
+			messagingQueue->AddMessage(RE::BookMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
+			messagingQueue->AddMessage(RE::Console::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
+			messagingQueue->AddMessage(RE::JournalMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
+			messagingQueue->AddMessage(RE::MessageBoxMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
+			messagingQueue->AddMessage(RE::ModManagerMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
+			messagingQueue->AddMessage(RE::HUDMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
+			messagingQueue->AddMessage(RE::MapMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
+			messagingQueue->AddMessage(RE::StatsMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
+			messagingQueue->AddMessage(RE::StatsMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
+			messagingQueue->AddMessage(RE::LevelUpMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
+			return true;
+		}
+
+		Error("Failed to get UIMessageQueue to close all menus. Discarding last Request!");
+		return false;
+	}
+
 	UIManager::UIManager()
 	{
 		m_displayWidth = 1920.0f;
 		m_displayHeight = 1080.0f;
 	}
-
-	// UIManager::UIManager() try {
-	// 	m_homeWindow = std::make_unique<HomeModule>();
-	// 	m_addItemWindow = std::make_unique<AddItemModule>();
-	// 	m_equipmentWindow = std::make_unique<EquipmentModule>();
-	// 	m_npcWindow = std::make_unique<ActorModule>();
-	// 	m_objectWindow = std::make_unique<ObjectModule>();
-	// 	// m_teleportWindow = std::make_unique<TeleportModule>();
-	// } catch (const std::exception& e) {
-	// 	ASSERT_MSG(true, "UIManager constructor failed!\n\n" + std::string(e.what()));
-	// }
 
 	UIManager::~UIManager() noexcept = default;
 }
