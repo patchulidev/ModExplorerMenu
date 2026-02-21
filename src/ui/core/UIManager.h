@@ -113,6 +113,33 @@ namespace Modex
 
 		float                                   m_displayWidth;
 		float                                   m_displayHeight;
+
+		// Source: po3 @ https://github.com/powerof3/PhotoMode
+		static inline constexpr std::array GameMenus = {
+			RE::ContainerMenu::MENU_NAME,
+			RE::InventoryMenu::MENU_NAME,
+			RE::MagicMenu::MENU_NAME,
+			RE::TweenMenu::MENU_NAME,
+			RE::SleepWaitMenu::MENU_NAME,
+			RE::BarterMenu::MENU_NAME,
+			RE::CraftingMenu::MENU_NAME,
+			RE::GiftMenu::MENU_NAME,
+			RE::FavoritesMenu::MENU_NAME,
+			RE::TrainingMenu::MENU_NAME,
+			RE::TutorialMenu::MENU_NAME,
+			RE::LockpickingMenu::MENU_NAME,
+			RE::BookMenu::MENU_NAME,
+			RE::Console::MENU_NAME,
+			RE::JournalMenu::MENU_NAME,
+			RE::MessageBoxMenu::MENU_NAME,
+			RE::ModManagerMenu::MENU_NAME,
+			// RE::HUDMenu::MENU_NAME,
+			RE::MapMenu::MENU_NAME,
+			RE::StatsMenu::MENU_NAME,
+			RE::LevelUpMenu::MENU_NAME,
+			"LootMenu"sv, // Quickloot
+			"CustomMenu"sv, // ?
+		};
 		
 	};
 }

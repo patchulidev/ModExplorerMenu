@@ -35,6 +35,7 @@ namespace Modex
 		static void OnMouseWheelEvent(RE::GFxEvent *event);
 		static void OnKeyEvent(RE::GFxEvent *event, bool down);
 		static void OnCharEvent(RE::GFxEvent *event);
+		static void ForceCursor();
 
 		void DisablePlayerControls();
 		void EnablePlayerControls();

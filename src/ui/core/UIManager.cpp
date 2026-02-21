@@ -29,21 +29,16 @@ namespace Modex
 
 		m_menu = static_cast<Menu*>(m_windowStack.back().get());
 		m_menu->OpenWindow(this);
-
-		// TODO: Compatability for SkyrimSouls and other PauseGame plugins.
-		// if (LoadLibrary("Data/SKSE/Plugins/SkyrimSoulsRE.dll")) {
-		//     if (RE::Main* Game = RE::Main::GetSingleton()) {
-		// 		Game->freezeTime = true;
-		// 	}
-		// }
 	}
 
 	void UIManager::OnClose()
 	{
 		m_gui = nullptr;
-		m_windowStack.clear();
 
-		// OPTIMIZE: Is this a good location for this?
+		for (auto& window : m_windowStack) {
+			window->CloseWindow();
+		}
+
 		UIModule::SaveSharedReference();
 		UserData::Save();
 
@@ -404,33 +399,14 @@ namespace Modex
 
 	bool UIManager::CloseAllGameMenus()
 	{
-		if (const auto messagingQueue = RE::UIMessageQueue::GetSingleton(); messagingQueue) {
-			if (UIManager::GetSingleton()->IsMenuOpen()) {
-				UIManager::GetSingleton()->Close();
-			}
+		if (UIManager::GetSingleton()->IsMenuOpen()) {
+			UIManager::GetSingleton()->Close();
+		}
 
-			messagingQueue->AddMessage(RE::ContainerMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
-			messagingQueue->AddMessage(RE::InventoryMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
-			messagingQueue->AddMessage(RE::MagicMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
-			messagingQueue->AddMessage(RE::TweenMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
-			messagingQueue->AddMessage(RE::SleepWaitMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
-			messagingQueue->AddMessage(RE::BarterMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
-			messagingQueue->AddMessage(RE::CraftingMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
-			messagingQueue->AddMessage(RE::GiftMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
-			messagingQueue->AddMessage(RE::FavoritesMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
-			messagingQueue->AddMessage(RE::TrainingMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
-			messagingQueue->AddMessage(RE::TutorialMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
-			messagingQueue->AddMessage(RE::LockpickingMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
-			messagingQueue->AddMessage(RE::BookMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
-			messagingQueue->AddMessage(RE::Console::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
-			messagingQueue->AddMessage(RE::JournalMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
-			messagingQueue->AddMessage(RE::MessageBoxMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
-			messagingQueue->AddMessage(RE::ModManagerMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
-			messagingQueue->AddMessage(RE::HUDMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
-			messagingQueue->AddMessage(RE::MapMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
-			messagingQueue->AddMessage(RE::StatsMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
-			messagingQueue->AddMessage(RE::StatsMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
-			messagingQueue->AddMessage(RE::LevelUpMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
+		if (const auto messagingQueue = RE::UIMessageQueue::GetSingleton(); messagingQueue) {
+			for (size_t i = 0; i < GameMenus.size(); i++) {
+				messagingQueue->AddMessage(GameMenus[i], RE::UI_MESSAGE_TYPE::kHide, nullptr);
+			}
 			return true;
 		}
 
