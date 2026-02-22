@@ -313,7 +313,6 @@ namespace Modex
 		{
 			if (itemPreview && !itemPreview->IsDummy() && itemPreview->GetTESForm()->IsInventoryObject()) {
 				Commands::RemoveItemFromInventory(tableTargetRef, itemPreview->GetEditorID(), 1);
-				UserData::AddRecent(itemPreview);
 			}
 		} 
 		else {
@@ -325,7 +324,6 @@ namespace Modex
 					const auto& item = tableList[id];
 					if (!item->IsDummy()) {
 						Commands::RemoveItemFromInventory(tableTargetRef, item->GetEditorID(), 1);
-						UserData::AddRecent(item);
 					}
 				}
 			}
@@ -346,7 +344,6 @@ namespace Modex
 		if (GetSelectionCount() == 0) {
 			if (itemPreview && !itemPreview->IsDummy() && itemPreview->GetTESForm()->IsInventoryObject()) {
 				Commands::AddItemToRefInventory(tableTargetRef, itemPreview->GetEditorID(), a_count);
-				UserData::AddRecent(itemPreview);
 			}
 		} 
 		else {
@@ -358,7 +355,6 @@ namespace Modex
 					const auto& item = tableList[id];
 					if (item && !item->IsDummy() && item->GetTESForm()->IsInventoryObject()) {
 						Commands::AddItemToRefInventory(tableTargetRef, item->GetEditorID(), a_count);
-						UserData::AddRecent(item);
 					}
 				}
 			}
@@ -378,7 +374,6 @@ namespace Modex
 		if (GetSelectionCount() == 0) {
 			if (itemPreview && !itemPreview->IsDummy() && (itemPreview->IsArmor() || itemPreview->IsWeapon())) {
 				Commands::AddAndEquipItemToInventory(tableTargetRef, itemPreview->GetEditorID());
-				UserData::AddRecent(itemPreview);
 			}
 		}
 		else {
@@ -390,7 +385,6 @@ namespace Modex
 					const auto& item = tableList[id];
 					if (item && !itemPreview->IsDummy() && (item->IsArmor() || item->IsWeapon())) {
 						Commands::AddAndEquipItemToInventory(tableTargetRef, item->GetEditorID());
-						UserData::AddRecent(item);
 					}
 				}
 			}
@@ -409,7 +403,6 @@ namespace Modex
 		if (GetSelectionCount() == 0) {
 			if (itemPreview && !itemPreview->IsDummy()) {
 				Commands::PlaceAtMe(itemPreview->GetEditorID(), a_count);
-				UserData::AddRecent(itemPreview);
 			}
 		}
 		else {
@@ -421,7 +414,6 @@ namespace Modex
 					const auto& item = tableList[id];
 					if (item && !item->IsDummy()) {
 						Commands::PlaceAtMe(item->GetEditorID(), a_count);
-						UserData::AddRecent(item);
 					}
 				}
 			}
@@ -459,7 +451,6 @@ namespace Modex
 		if (GetSelectionCount() == 0) {
 			if (itemPreview && !itemPreview->IsDummy()) {
 				a_command(itemPreview);
-				UserData::AddRecent(itemPreview);
 			}
 		}
 		else {
@@ -470,7 +461,6 @@ namespace Modex
 					const auto& item = tableList[id];
 					if (item && !item->IsDummy()) {
 						a_command(item);
-						UserData::AddRecent(item);
 					}
 				}
 			}
@@ -484,7 +474,6 @@ namespace Modex
 		if (GetSelectionCount() == 0) {
 			if (itemPreview && !itemPreview->IsDummy()) {
 				Commands::TeleportREFRToPlayer(GetSelectedReference());
-				UserData::AddRecent(itemPreview);
 			}
 		}
 		else {
@@ -497,8 +486,6 @@ namespace Modex
 						if (auto refr = RE::TESForm::LookupByID<RE::TESObjectREFR>(item->GetRefID())) {
 							Commands::TeleportREFRToPlayer(refr);
 						}
-
-						UserData::AddRecent(item);
 					}
 				}
 			}
@@ -518,7 +505,6 @@ namespace Modex
 		for (auto& item : tableList) {
 			if (item && !item->IsDummy() && item->GetTESForm()->IsInventoryObject()) {
 				Commands::AddItemToRefInventory(tableTargetRef, item->GetEditorID(), 1);
-				UserData::AddRecent(item);
 			}
 		}
 
@@ -537,7 +523,6 @@ namespace Modex
 		for (auto& item : tableList) {
 			if (item && !item->IsDummy() && item->GetTESForm()->HasWorldModel()) {
 				Commands::PlaceAtMe(item->GetEditorID(), 1);
-				UserData::AddRecent(item);
 			}
 		}
 
@@ -596,7 +581,6 @@ namespace Modex
 
 		if (a_item && !a_item->IsDummy() && a_item->GetTESForm()->IsInventoryObject()) {
 			Commands::AddItemToRefInventory(this->tableTargetRef, a_item->GetEditorID(), a_item->GetQuantity());
-			UserData::AddRecent(a_item);
 		}
 
 		UpdateActiveInventoryTables();
@@ -609,7 +593,6 @@ namespace Modex
 
 		if (a_item && !a_item->IsDummy() && a_item->GetTESForm()->IsInventoryObject()) {
 			Commands::RemoveItemFromInventory(this->tableTargetRef, a_item->GetEditorID(), a_item->GetQuantity());
-			UserData::AddRecent(a_item);
 		}
 
 		UpdateActiveInventoryTables();
@@ -633,8 +616,6 @@ namespace Modex
 		if (!has_item) {
 			tableList.emplace_back(std::make_unique<BaseObject>(*a_item));
 		}
-
-		UserData::AddRecent(a_item);
 	}
 
 	void UITable::AddSelectionToActiveKit()
@@ -1521,7 +1502,6 @@ namespace Modex
 							if (ImGui::MenuItem(Translate("GENERAL_READ_ME"))) {
 								Commands::ReadBook(a_item->GetEditorID());
 								UIManager::GetSingleton()->Close();
-								UserData::AddRecent(a_item);
 							}
 						}
 
@@ -1562,13 +1542,11 @@ namespace Modex
 				if (a_item->m_refID != 0) {
 					if (ImGui::MenuItem(Translate("GOTO_NPC_REFERENCE"))) {
 						Commands::TeleportPlayerToNPC(a_item->m_refID);
-						UserData::AddRecent(a_item);
 						UIManager::GetSingleton()->Close();
 					}
 
 					if (ImGui::MenuItem(Translate("BRING_NPC_REFERENCE"))) {
 						Commands::TeleportNPCToPlayer(a_item->m_refID);
-						UserData::AddRecent(a_item);
 						UIManager::GetSingleton()->Close();
 					}
 
@@ -1576,14 +1554,12 @@ namespace Modex
 						if (ImGui::MenuItem(Translate("ENABLE_NPC_REFERENCE"))) {
 							if (auto* target = RE::TESForm::LookupByID<RE::Actor>(a_item->m_refID); target != nullptr) {
 								Commands::EnableRefr(target, false);
-								UserData::AddRecent(a_item);
 							}
 						}
 					} else {
 						if (ImGui::MenuItem(Translate("DISABLE_NPC_REFERENCE"))) {
 							if (auto* target = RE::TESForm::LookupByID<RE::Actor>(a_item->m_refID); target != nullptr) {
 								Commands::DisableRefr(target);
-								UserData::AddRecent(a_item);
 							}
 						}
 					}

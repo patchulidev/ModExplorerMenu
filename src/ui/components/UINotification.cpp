@@ -12,7 +12,7 @@ namespace Modex
 {
 	void UINotification::ShowTooltip(const std::string& a_text, const std::string& a_icon)
 	{
-		s_tooltip.text = Translate(a_text.c_str());
+		s_tooltip.text = a_text.empty() ? "" : Translate(a_text.c_str());
 		s_tooltip.icon = a_icon.empty() ? ICON_LC_INFO : a_icon;
 		s_tooltip.type = UIMessageType::Tooltip;
 		s_tooltip.active = true;
@@ -23,6 +23,7 @@ namespace Modex
 	// Conditionally shows an Object's Primary PROPERTY_TOOLTIP.
 	void UINotification::ShowObjectTooltip(const std::unique_ptr<BaseObject>& a_item)
 	{
+		if (!a_item) return;
 		const auto key = magic_enum::enum_name(a_item->GetItemPropertyType());
 		const auto icon = a_item->GetItemIcon();
 		const auto tooltip = Translate(key.data());
@@ -38,36 +39,14 @@ namespace Modex
 		if (Locale::GetSingleton()->HasEntry(key.c_str())) ShowTooltip(tooltip, icon);
 	}
 
-	void UINotification::ShowInfo(const std::string& a_text, float a_duration)
+	void UINotification::ShowAction(const std::string& a_action, const std::string& a_target, const char* a_icon, UIMessageType a_type, float a_duration)
 	{
-		PushMessage(a_text, ICON_LC_MESSAGES_SQUARE, UIMessageType::Info, a_duration);
-	}
-
-	void UINotification::ShowAction(const std::string& a_text, float a_duration)
-	{
-		PushMessage(a_text, ICON_LC_ITERATION_CCW, UIMessageType::Info, a_duration);
-	}
-
-	void UINotification::ShowWarning(const std::string& a_text, float a_duration)
-	{
-		PushMessage(a_text, ICON_LC_OCTAGON_ALERT, UIMessageType::Warning, a_duration);
+		PushMessage(std::format("{} {} {}", a_action, ICON_LC_ARROW_RIGHT, a_target), a_icon, a_type, a_duration);
 	}
 
 	void UINotification::ShowError(const std::string& a_text, float a_duration)
 	{
 		PushMessage(a_text, ICON_LC_TRIANGLE_ALERT, UIMessageType::Error, a_duration);
-	}
-
-	void UINotification::ShowAdd(const std::unique_ptr<BaseObject>& a_object, float a_duration)
-	{
-		const std::string text = a_object->GetName();
-		PushMessage(text, ICON_LC_PLUS, UIMessageType::Info, a_duration);
-	}
-
-	void UINotification::ShowRemove(const std::unique_ptr<BaseObject>& a_object, float a_duration)
-	{
-		const std::string text = a_object->GetName();
-		PushMessage(text, ICON_LC_MINUS, UIMessageType::Warning, a_duration);
 	}
 
 	void UINotification::PushMessage(const std::string& a_text, const std::string& a_icon, UIMessageType a_type, float a_duration)
@@ -90,7 +69,7 @@ namespace Modex
 	{
 		s_messages.erase(
 				std::remove_if(s_messages.begin(), s_messages.end(),
-					[](const UIMessage a_msg) {
+					[](const UIMessage& a_msg) {
 					return a_msg.IsExpired();
 				}),
 		s_messages.end());
@@ -128,20 +107,20 @@ namespace Modex
 		return {a_pos, a_size, WINDOW_FLAGS, a_padding};
 	}
 
-	void UINotification::DrawMessageContainer(const ImVec2& a_sidebarPos, const ImVec2& a_sidebarSize, bool a_sidebarExtended)
+	void UINotification::DrawMessageContainer(const ImVec2& a_windowPos, const ImVec2& a_windowSize)
 	{
 		Update();
 
 		const size_t MAX_COUNT = 10;
 		auto messagesToShow = min(s_messages.size(), MAX_COUNT);
 
-		if (messagesToShow == 0 || !a_sidebarExtended) return;
+		if (messagesToShow == 0) return;
 
-		const float msg_height = ImGui::GetFontSize();
-		const float window_width = a_sidebarSize.x;
+		const float msg_height = ImGui::GetTextLineHeightWithSpacing();
+		const float window_width = a_windowSize.x;
 		const float window_height = (msg_height * MAX_COUNT);
 
-		const ImVec2 pos(a_sidebarPos.x, a_sidebarPos.y + a_sidebarSize.y - window_height - 2.0f);
+		const ImVec2 pos(a_windowPos.x, a_windowPos.y + a_windowSize.y - window_height - 2.0f);
 		auto config = SetupContainer(pos, ImVec2(window_width, window_height), 1);
 
 		if (ImGui::Begin("##Modex::UIMessageBox", nullptr, config.flags)) {
@@ -155,7 +134,7 @@ namespace Modex
 		}
 
 		ImGui::End();
-		ImGui::PopStyleVar();
+		ImGui::PopStyleVar(); // Pop from SetupContainer;
 	}
 
 	void UINotification::DrawTooltipContainer(const ImVec2 &a_parentPos, const ImVec2 &a_parentSize)
@@ -166,6 +145,8 @@ namespace Modex
 			ClearTooltip();
 			return;
 		}
+
+		if (!s_messages.empty()) return;
 
 		const float msg_height = ImGui::GetFrameHeight() * 1.5f;
 		const float window_width = a_parentSize.x;
@@ -179,7 +160,7 @@ namespace Modex
 		}
 		
 		ImGui::End();
-		ImGui::PopStyleVar(2);
+		ImGui::PopStyleVar(2); // Pop from SetupContainer + 1;
 	}
 
 	void UINotification::DrawMessageRow(const UIMessage &a_msg, size_t a_index, float a_height, float a_width)
@@ -187,16 +168,16 @@ namespace Modex
 		if (!a_msg.active) return;
 
 		float alpha = a_msg.GetAlpha();
-		ImU32 bgColor = GetMessageColor(a_msg.type);
+		ImU32 bgColor = GetMessageColor(a_msg.type, alpha);
 		
 		ImGui::PushID(static_cast<int>(a_index));
-		ImGui::PushStyleColor(ImGuiCol_ChildBg, bgColor);
+		ImGui::PushStyleColor(ImGuiCol_ChildBg, ThemeConfig::GetColor("NONE"));
 		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, alpha);
 
 		if (ImGui::BeginChild("##UIMessage::Message", ImVec2(a_width, a_height), 0, ImGuiWindowFlags_NoScrollbar)) {
+			const auto draw_list = ImGui::GetWindowDrawList();
+			draw_list->AddRectFilledMultiColor(ImGui::GetWindowPos(), ImGui::GetWindowPos() + ImVec2(a_width, a_height), bgColor, 0, 0, bgColor);
 
-			// Center Text Vertically
-			ImGui::SetCursorPosY((a_height / 2.0f) - (a_height / 2.0f));
 			ImGui::SetCursorPosX(ImGui::GetStyle().WindowPadding.x + 2.0f);
 
 			// Icon
@@ -208,8 +189,10 @@ namespace Modex
 			// Message
 			ImGui::Text("%s", TRUNCATE(a_msg.text.c_str(), a_width / 1.5f).c_str());
 
+			// Previous style implementation: unused for now.
 			// DrawProgressBar(a_msg, a_width, a_height, alpha);
 		}
+
 
 		ImGui::EndChild();
 		ImGui::PopStyleVar();
@@ -221,12 +204,10 @@ namespace Modex
 	{
 		if (!a_msg.active) return;
 
-		ImU32 bgColor = GetMessageColor(a_msg.type);
+		ImU32 bgColor = GetMessageColor(a_msg.type, a_msg.GetAlpha());
 		ImGui::PushStyleColor(ImGuiCol_ChildBg, bgColor);
 
 		if (ImGui::BeginChild("##UIMessage::Tooltip", ImVec2(a_width, a_height), 0, ImGuiWindowFlags_NoScrollbar)) {
-			// ImGui::SetCursorPosY((a_height - ImGui::GetFontSize()) / 2.0f);
-
 			// Enlarge Tooltip Icon
 			if (!a_msg.icon.empty()) {
 				ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetFrameHeight() / 2.0f);
@@ -248,17 +229,17 @@ namespace Modex
 		ImGui::PopStyleColor();
 	}
 
-	ImU32 UINotification::GetMessageColor(UIMessageType a_type)
+	ImU32 UINotification::GetMessageColor(UIMessageType a_type, float a_alpha)
 	{
 		switch (a_type) {
 		case UIMessageType::Info:
-			return ThemeConfig::GetColorU32("PRIMARY", 0.5f);
+			return ThemeConfig::GetColorU32("PRIMARY", a_alpha);
 		case UIMessageType::Warning:
-			return ThemeConfig::GetColorU32("WARN", 0.5f);
+			return ThemeConfig::GetColorU32("WARN", a_alpha);
 		case UIMessageType::Error:
-			return ThemeConfig::GetColorU32("ERROR", 0.5f);
+			return ThemeConfig::GetColorU32("ERROR", a_alpha);
 		case UIMessageType::Tooltip:
-			return ThemeConfig::GetColorU32("FRAME");
+			return ThemeConfig::GetColorU32("FRAME", a_alpha);
 		default:
 			return ImGui::GetColorU32(ImGuiCol_Text);
 		}

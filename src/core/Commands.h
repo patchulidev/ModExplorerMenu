@@ -3,6 +3,7 @@
 #include "data/BaseObject.h"
 #include "localization/Locale.h"
 #include "ui/core/UIManager.h"
+#include "config/UserData.h"
 
 
 namespace Modex::Commands
@@ -98,6 +99,7 @@ namespace Modex::Commands
 		return m_inventory;
 	}
 
+	// Called repeatedly in a loop
 	static inline void AddItemToInventory(RE::TESObjectREFR* a_targetRef, const std::string& a_editorID, uint32_t a_amount = 1)
 	{
 		if (!a_targetRef)
@@ -114,6 +116,7 @@ namespace Modex::Commands
 			return;
 		
 		a_targetRef->AddObjectToContainer(boundObject, nullptr, a_amount, nullptr);
+		UserData::SendEvent(ModexActionType::AddItem, a_editorID);
 	}
 
 	static inline void AddItemToRefInventory(RE::TESObjectREFR* a_targetRef, const std::string& a_editorID, uint32_t a_amount = 1)
@@ -147,6 +150,7 @@ namespace Modex::Commands
 		    auto& [count, entry] = data;
 		    if (count > 0 && entry) {
 		        a_targetRef->RemoveItem(obj, count, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
+				UserData::SendEvent(ModexActionType::RemoveItem, po3_GetEditorID(obj->GetFormID()));
 		    }
 		}
 	}
@@ -167,6 +171,7 @@ namespace Modex::Commands
 			return;
 		
 		a_targetRef->RemoveItem(boundObject, a_amount, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
+		UserData::SendEvent(ModexActionType::RemoveItem, a_editorID);
 	}
 
 	static inline void RemoveItemFromPlayerInventory(const std::string& a_editorID, uint32_t a_amount = 1)
@@ -190,6 +195,7 @@ namespace Modex::Commands
 			return;
 
 		a_targetRef->ResetInventory(false);
+		UserData::SendEvent(ModexActionType::ResetInventory);
 	}
 
 	static inline void UnequipAllItemsFromInventory(RE::TESObjectREFR* a_targetRef)
@@ -339,6 +345,7 @@ namespace Modex::Commands
 				if (auto playerRefr = player->AsReference()) {
 					if (auto ref = RE::TESForm::LookupByID<RE::TESObjectREFR>(a_refID)) {
 						ref->MoveTo(playerRefr);
+						UserData::SendEvent(ModexActionType::BringReference, po3_GetEditorID(ref->GetFormID()));
 						UIManager::CloseAllGameMenus();
 					}
 				}
@@ -352,6 +359,7 @@ namespace Modex::Commands
 			if (auto player = RE::PlayerCharacter::GetSingleton(); player) {
 				if (auto playerRefr = player->AsReference()) {
 					a_ref->MoveTo(playerRefr);
+					UserData::SendEvent(ModexActionType::BringReference, po3_GetEditorID(a_ref->GetFormID()));
 					UIManager::CloseAllGameMenus();
 				}
 			}
@@ -364,6 +372,7 @@ namespace Modex::Commands
 			if (auto player = RE::PlayerCharacter::GetSingleton(); player) {
 				if (auto playerRefr = player->AsReference()) {
 					playerRefr->MoveTo(a_ref);
+					UserData::SendEvent(ModexActionType::GotoReference, po3_GetEditorID(a_ref->GetFormID()));
 					UIManager::CloseAllGameMenus();
 				}
 			}
@@ -377,6 +386,7 @@ namespace Modex::Commands
 				if (auto playerRefr = player->AsReference()) {
 					if (auto ref = RE::TESForm::LookupByID<RE::TESObjectREFR>(a_refID)) {
 						playerRefr->MoveTo(ref);
+						UserData::SendEvent(ModexActionType::GotoReference, po3_GetEditorID(ref->GetFormID()));
 						UIManager::CloseAllGameMenus();
 					}
 				}
@@ -399,6 +409,7 @@ namespace Modex::Commands
 		
 		if (RE::TESForm* object = RE::TESForm::LookupByEditorID(a_editorID); object) {
 			Papyrus_PlaceAtMe(target, object, a_count, persistent, disabled);
+			UserData::SendEvent(ModexActionType::PlaceAtMe, a_editorID);
 		}
 	}
 
@@ -413,6 +424,7 @@ namespace Modex::Commands
 			return;
 
 		actor->KillImpl(nullptr, actor->GetActorValueMax(RE::ActorValue::kHealth), true, true);
+		UserData::SendEvent(ModexActionType::KillActor, po3_GetEditorID(a_targetRef->GetFormID()));
 	}
 
 	static inline void ResurrectRefr(RE::TESObjectREFR* a_targetRef)
@@ -425,23 +437,8 @@ namespace Modex::Commands
 		if (!actor)
 			return;
 
-		// TEST: Verify works
-		// Do we event need this?
 		actor->Resurrect(false, true);
-	}
-
-	static inline void FreezeRefr(RE::TESObjectREFR* a_targetRef, bool a_freeze)
-	{
-		if (!a_targetRef)
-			return;
-
-		auto actor = a_targetRef->As<RE::Actor>();
-
-		if (!actor)
-			return;
-
-		// TEST: Verify this actually freezes an actor reliably.
-		actor->SetMotionType(a_freeze ? RE::hkpMotion::MotionType::kFixed : RE::hkpMotion::MotionType::kDynamic, true);
+		UserData::SendEvent(ModexActionType::ReviveActor, po3_GetEditorID(a_targetRef->GetFormID()));
 	}
 
 	static inline void DisableRefr(RE::TESObjectREFR* a_targetRef)
@@ -450,6 +447,7 @@ namespace Modex::Commands
 			return;
 
 		a_targetRef->Disable();
+		UserData::SendEvent(ModexActionType::DisableReference, po3_GetEditorID(a_targetRef->GetFormID()));
 	}
 
 	static inline void EnableRefr(RE::TESObjectREFR* a_targetRef, bool a_resetInventory = false)
@@ -458,6 +456,7 @@ namespace Modex::Commands
 			return;
 
 		a_targetRef->Enable(a_resetInventory);
+		UserData::SendEvent(ModexActionType::EnableReference, po3_GetEditorID(a_targetRef->GetFormID()));
 	}
 
 	static inline void CenterOnCell(const std::string& a_cellEditorID)
@@ -478,5 +477,7 @@ namespace Modex::Commands
 		SKSE::GetTaskInterface()->AddTask([player, cell]() {
 			player->CenterOnCell(cell);
 		});
+
+		UserData::SendEvent(ModexActionType::CenterOnCell, a_cellEditorID);
 	}
 }
