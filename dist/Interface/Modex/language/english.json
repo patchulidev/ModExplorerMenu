@@ -38,6 +38,8 @@
     "SHOWRECENT": "Recent",
 	"SHOWFAVORITE": "Favorites",
 
+	"ADD_TO_FAVORITES": "Add To Favorites",
+
 	"ORDER_TOOLTIP": "Load Order\n\nDisplays a sorted list of plugins modifying this form, based on load order. This can help identify the origin of a form.\n\nThis list does not utilize any of the Modex Plugin user settings such as sorting direction.",
 	"DESCRIPTION_TOOLTIP": "Description\n\nAttempts to dynamically display the description for a Form. Values are calculated from Base MGEF values, and won't reflect real-time modifiers such as perks, player level, etc.",
 	"ACTOR_SKILLS": "Actor Skills: Represents the base actor values of this form. Does not reflect changes made to copies or in-game references of this form.",

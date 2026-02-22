@@ -1415,8 +1415,6 @@ namespace Modex
 		}
 	}
 
-	// TODO: Migrate all additions to Recent list to Command methods.
-
 	void UITable::HandleLeftClickBehavior(const std::unique_ptr<BaseObject>& a_item)
 	{		
 		if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {

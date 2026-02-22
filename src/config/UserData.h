@@ -41,6 +41,8 @@ namespace Modex
 			size_t maxSize;
 		};
 
+		// TODO: Expand on Favorites implementation
+
 		struct FavoriteData {
 			std::vector<std::string> items;
 		};
@@ -61,7 +63,6 @@ namespace Modex
 		static void SendEvent(ModexActionType a_actionType, const std::unique_ptr<BaseObject>& a_item);
 		static void SendEvent(ModexActionType a_actionType, const std::string& a_editorid = "");
 
-		// static void AddRecent(const std::unique_ptr<BaseObject>& a_item);
 		static std::vector<std::string> GetRecentAsVector() { return m_recent.items; }
 		static RecentData& GetRecent() { return m_recent; }
 
