@@ -1367,8 +1367,9 @@ namespace Modex
 					std::vector<std::unique_ptr<BaseObject>> payload_items;
 					for (int payload_idx = 0; payload_idx < payloadCount; ++payload_idx) {
 						const ImGuiID payloadID = ((ImGuiID*)payload->Data)[payload_idx];
-						const auto& item = (*ptr->GetTableListPtr())[payloadID];
-						payload_items.emplace_back(std::make_unique<BaseObject>(*item));
+						if (const auto& item = (*ptr->GetTableListPtr())[payloadID]; item != nullptr) {
+							payload_items.emplace_back(std::make_unique<BaseObject>(*item));
+						}
 					}
 
 
@@ -1390,8 +1391,8 @@ namespace Modex
 										*pointer = std::move(new_kit.value());
 
 										for (const auto& item : *items) {
-											// pointer->m_items.emplace_back(EquipmentConfig::CreateKitItem(*item));
-											destination->AddPayloadToKit(item);
+											pointer->m_items.emplace_back(EquipmentConfig::CreateKitItem(*item));
+											destination->Refresh();
 										}
 									}
 								}
@@ -2574,9 +2575,10 @@ namespace Modex
 		ImGui::PopID();
 	}
 	
-	// TODO: move this
 	static inline bool test_selection = false;
 	static inline bool test_filters = false;
+
+	// TODO: Add instructions to empty table background panel
 
 	void UITable::Draw(const TableList& _tableList)
 	{
