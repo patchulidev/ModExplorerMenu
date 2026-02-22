@@ -122,7 +122,7 @@ namespace Modex
 		if (ImGui::Begin("##Modex::Menu", nullptr, WINDOW_FLAGS)) {
 			ImGui::SetCursorPos(ImVec2(0, 0));
 
-			UINotification::DrawMessageContainer(ImGui::GetWindowPos(), ImVec2(sidebar_w, sidebar_h), expand_sidebar);
+			UINotification::DrawMessageContainer(ImGui::GetWindowPos(), ImVec2(size_x / 2.0f, size_h));
 			UINotification::DrawTooltipContainer(ImVec2(ImGui::GetWindowPos().x + sidebar_w, ImGui::GetWindowPos().y), ImVec2(window_w - sidebar_w, window_h));
 
 			DrawSidebar();
