@@ -151,7 +151,7 @@ namespace Modex
 		const float msg_height = ImGui::GetFrameHeight() * 1.5f;
 		const float window_width = a_parentSize.x;
 
-		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, s_tooltip.GetAlpha());
+		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, s_tooltip.GetAlpha() * ImGui::GetStyle().Alpha);
 		const ImVec2 pos(a_parentPos.x, a_parentPos.y + a_parentSize.y - msg_height);
 		auto config = SetupContainer(pos, ImVec2(window_width, msg_height), 1);
 
