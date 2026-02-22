@@ -1,4 +1,5 @@
 #include "EquipmentConfig.h"
+#include "config/UserData.h"
 
 // TODO: Migrate to caching all kits on startup by default for quicker lookups.
 
@@ -135,6 +136,8 @@ namespace Modex
 		auto& cache = GetSingleton()->m_cache;
 		cache[data.m_key] = data;
 
+		UserData::SendEvent(ModexActionType::CreateKit, data.m_key);
+
 		Info("Created new kit: '{}'", data.m_key);
 		return data;
 	}
@@ -229,6 +232,7 @@ namespace Modex
 			}
 
 			file << data.dump(4);
+			UserData::SendEvent(ModexActionType::SaveKit, a_kit.m_key);
 			Info("Saved kit '{}' to file", a_kit.m_key);
 			return true;
 		} catch (const std::exception& e) {
@@ -267,6 +271,7 @@ namespace Modex
 		auto& cache = GetSingleton()->m_cache;
 		cache[new_kit.m_key] = new_kit;
 
+		UserData::SendEvent(ModexActionType::CopyKit, new_kit.m_key);
 		Info("Copied kit '{}' to new kit '{}'", a_kit.m_key, new_kit.m_key);
 		return new_kit;
 	}
@@ -318,6 +323,7 @@ namespace Modex
 			cache.erase(old_key);
 			cache[new_key] = new_kit;
 			
+			UserData::SendEvent(ModexActionType::RenameKit, new_key);
 			Info("Successfully renamed kit '{}' to '{}'", old_key, new_key);
 			return std::move(new_kit);
 			
@@ -349,6 +355,7 @@ namespace Modex
 		}
 		
 		cache.erase(a_kit.m_key);
+		UserData::SendEvent(ModexActionType::DeleteKit, a_kit.m_key);
 		Info("Deleted kit: {}", a_kit.m_key);
 	}
 

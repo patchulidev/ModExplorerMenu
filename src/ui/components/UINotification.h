@@ -127,19 +127,14 @@ namespace Modex
 		static void ClearTooltip() { s_tooltip.Clear(); }
 		
 		// Helpers to push/set messages based on context.
-		static void ShowInfo(const std::string& a_text, float a_duration = 3.0f);
-		static void ShowAction(const std::string& a_text, float a_duration = 3.0f);
-		static void ShowWarning(const std::string& a_text, float a_duration = 3.0f);
+		static void ShowAction(const std::string& a_action, const std::string& a_target, const char* a_icon = ICON_LC_ITERATION_CCW, UIMessageType a_type = UIMessageType::Info, float a_duration = 3.0f);
 		static void ShowError(const std::string& a_text, float a_duration = 3.0f);
-
-		static void ShowAdd(const std::unique_ptr<BaseObject>& a_object, float a_duration = 3.0f);
-		static void ShowRemove(const std::unique_ptr<BaseObject>& a_object, float a_duration = 3.0f);
 
 		// Container & Message Rendering
 		static void DrawTooltip(const UIMessage& a_msg, float a_height, float a_width);
 		static void DrawTooltipContainer(const ImVec2& a_parentPos, const ImVec2& a_parentSize);
-		static void DrawMessageContainer(const ImVec2& a_sidebarPos, const ImVec2& a_sidebarSize, bool a_sidebarExtended);
-		static ImU32 GetMessageColor(UIMessageType a_type);
+		static void DrawMessageContainer(const ImVec2& a_startPos, const ImVec2& a_windowSize);
+		static ImU32 GetMessageColor(UIMessageType a_type, float a_alpha = 1.0f);
 
 		// Core
 		static void Update();
