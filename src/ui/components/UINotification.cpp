@@ -6,7 +6,7 @@
 #include "imgui_internal.h"
 #include "ui/components/UICustom.h"
 
-#include "imgui.h"
+// TODO: Add a Modex Console / Log to display notification history
 
 namespace Modex 
 {

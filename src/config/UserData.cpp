@@ -44,8 +44,6 @@ namespace Modex
 
 	void UserData::SendEvent(ModexActionType a_actionType, const std::string& a_editorid)
 	{
-		if (a_editorid.empty()) return;
-
 		switch (a_actionType) {
 			case ModexActionType::AddItem:
 				AddToRecentList(a_editorid);
@@ -65,7 +63,7 @@ namespace Modex
 				break;
 			case ModexActionType::ReadBook:
 				AddToRecentList(a_editorid);
-				UINotification::ShowAction(Translate("READ_BOOK"), a_editorid, ICON_LC_BOOK);
+				UINotification::ShowAction(Translate("READ"), a_editorid, ICON_LC_BOOK);
 				break;
 			case ModexActionType::ResetInventory:
 				UINotification::ShowAction(Translate("RESET_INVENTORY"), a_editorid, ICON_LC_ROTATE_CCW, UIMessageType::Warning);
@@ -98,19 +96,19 @@ namespace Modex
 				UINotification::ShowAction(Translate("DISABLE_REFERENCE"), a_editorid, ICON_LC_CHECK);
 				break;
 			case ModexActionType::SaveKit:
-				UINotification::ShowAction(Translate("SAVE_KIT"), a_editorid, ICON_LC_SAVE);
+				UINotification::ShowAction(Translate("KIT_SAVE"), a_editorid, ICON_LC_SAVE);
 				break;
 			case ModexActionType::CreateKit:
-				UINotification::ShowAction(Translate("CREATE_KIT"), a_editorid, ICON_LC_SQUARE_PLUS);
+				UINotification::ShowAction(Translate("KIT_CREATE"), a_editorid, ICON_LC_SQUARE_PLUS);
 				break;
 			case ModexActionType::DeleteKit:
-				UINotification::ShowAction(Translate("DELETE_KIT"), a_editorid, ICON_LC_SQUARE_MINUS, UIMessageType::Warning);
+				UINotification::ShowAction(Translate("KIT_DELETE"), a_editorid, ICON_LC_SQUARE_MINUS, UIMessageType::Warning);
 				break;
 			case ModexActionType::RenameKit:
-				UINotification::ShowAction(Translate("RENAME_KIT"), a_editorid, ICON_LC_ROTATE_CW_SQUARE);
+				UINotification::ShowAction(Translate("KIT_RENAME"), a_editorid, ICON_LC_ROTATE_CW_SQUARE);
 				break;
 			case ModexActionType::CopyKit:
-				UINotification::ShowAction(Translate("COPY_KIT"), a_editorid, ICON_LC_SQUARE_PLUS);
+				UINotification::ShowAction(Translate("KIT_COPY"), a_editorid, ICON_LC_SQUARE_PLUS);
 				break;
 			case ModexActionType::CenterOnCell:
 				AddToRecentList(a_editorid);

@@ -284,8 +284,10 @@ namespace Modex::Commands
 			}
 
 			// TEST: Compare against commented out method.
-			actor->AddWornItem(equipObject, 1, false, 0, 0);
 			// RE::ActorEquipManager::GetSingleton()->EquipObject(actor, equipObject, extraData, 1, equipSlot);
+
+			actor->AddWornItem(equipObject, 1, false, 0, 0);
+			UserData::SendEvent(ModexActionType::EquipItem, a_editorID);
 		});
 		
 	}

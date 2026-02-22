@@ -1497,7 +1497,7 @@ namespace Modex
 
 					if (a_item->GetFormType() == RE::FormType::Book) {
 						if (GetSelectionCount() <= 1) {
-							if (ImGui::MenuItem(Translate("GENERAL_READ_ME"))) {
+							if (ImGui::MenuItem(Translate("READ"))) {
 								Commands::ReadBook(a_item->GetEditorID());
 								UIManager::GetSingleton()->Close();
 							}
