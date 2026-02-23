@@ -48,7 +48,7 @@ namespace Modex
 		std::unordered_set<const RE::TESFile*>  pluginSet;
 
 		std::string             data_id;
-		uint32_t                pluginType;
+		const Ownership         pluginType;
 		uint32_t                flags = 0;
 		uint32_t                tableID;
 		uint32_t                tableMode;
@@ -110,7 +110,7 @@ namespace Modex
 			SHOWFAVORITE,
 		};
 
-		UITable(const std::string& a_dataID, bool a_shared, uint8_t a_type, uint32_t a_flags);
+		UITable(const std::string& a_dataID, bool a_shared, Ownership a_type, uint32_t a_flags);
 		~UITable();
 		UITable(const UITable&) = delete;
 		UITable& operator=(const UITable&) = delete;
@@ -138,6 +138,7 @@ namespace Modex
 		void                    Draw(const TableList& a_tableList);
 		void                    Refresh();
 
+		Ownership               GetOwnership() { return pluginType; };
 		TableList*              GetTableListPtr() { return &tableList; }
 		TableList&              GetTableListRef() { return tableList; }
 		const PluginList&       GetPluginList() const { return pluginList; };

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "RE/T/TESAmmo.h"
 #include "localization/Locale.h"
 #include "pch.h"
 #include "external/magic_enum.hpp"
@@ -394,6 +393,7 @@ namespace Modex
 		const std::string 		m_plugin;
 		const std::string 		m_formid;
 		const RE::FormID 		m_baseid;
+		const Ownership			m_owner;
 	public:
 		RE::FormID 			m_refID;
 		ImGuiID 			m_tableID = 0;
@@ -401,28 +401,44 @@ namespace Modex
 		bool                m_equipped = false;
 
 		// Constructor from TESForm pointer
-		BaseObject(RE::TESForm* form, ImGuiID a_id = 0, RE:: FormID a_refID = 0, int a_quantity = 1, bool a_equipped = false)
+		BaseObject(RE::TESForm* form, Ownership a_owner, ImGuiID a_id = 0, RE::FormID a_refID = 0, int a_quantity = 1, bool a_equipped = false)
 			: m_formWrapper{ form }
 			, m_name{ m_formWrapper.WGetName() }
 			, m_editorid{ m_formWrapper.WGetEditorID() }
 			, m_plugin{ m_formWrapper.WGetPluginName() }
 			, m_formid{ m_formWrapper. WGetFormID() }
 			, m_baseid{ m_formWrapper.WGetBaseFormID() }
+			, m_owner(a_owner)
 			, m_refID{ a_refID }
 			, m_tableID{ a_id }
 			, m_quantity{ a_quantity }
 			, m_equipped{ a_equipped }
 		{}
 
+		// BaseObject(RE::TESForm* form, Ownership a_owner)
+		// 	: m_formWrapper{ form }
+		// 	, m_name{ m_formWrapper.WGetName() }
+		// 	, m_editorid{ m_formWrapper.WGetEditorID() }
+		// 	, m_plugin{ m_formWrapper.WGetPluginName() }
+		// 	, m_formid{ m_formWrapper. WGetFormID() }
+		// 	, m_baseid{ m_formWrapper.WGetBaseFormID() }
+		// 	, m_owner(a_owner)
+		// 	, m_refID{ 0 }
+		// 	, m_tableID{ 0 }
+		// 	, m_quantity{ 1 }
+		// 	, m_equipped{ false }
+		// {}
+
 		// Explicit dummy object constructor
-		BaseObject(std::string a_name, std::string a_editorid, std::string a_plugin, ImGuiID a_id = 0, int a_quantity = 1, bool a_equipped = false) 
+		BaseObject(std::string a_name, std::string a_editorid, std::string a_plugin, Ownership a_owner, uint32_t a_refid = 0, ImGuiID a_id = 0, int a_quantity = 1, bool a_equipped = false) 
 			: m_formWrapper{ nullptr }
 			, m_name{ a_name }
 			, m_editorid{ a_editorid }
 			, m_plugin{ a_plugin }
 			, m_formid{ "" }
 			, m_baseid{ 0 }
-			, m_refID{ 0 }
+			, m_owner(a_owner)
+			, m_refID{ a_refid }
 			, m_tableID{ a_id }
 			, m_quantity{ a_quantity }
 			, m_equipped{ a_equipped }
@@ -437,6 +453,7 @@ namespace Modex
 		inline RE::FormID 				GetBaseFormID() const { return m_baseid; }
 		inline RE::FormID 				GetRefID() const { return m_refID; }
 		inline ImGuiID 					GetTableID() const { return m_tableID; }
+		inline Ownership 				GetOwnership() const { return m_owner; }
 
 		inline const std::string& 		GetName() const { return m_name; }
 		inline const std::string& 		GetFormID() const { return m_formid; }
@@ -1599,9 +1616,9 @@ namespace Modex
 			const auto form = RE::TESForm::LookupByEditorID(m_editorid);
 
 			if (form == nullptr) {
-				return BaseObject(m_name, m_editorid, m_plugin);
+				return BaseObject(m_name, m_editorid, m_plugin, Ownership::None);
 			} else {
-				return BaseObject(form);
+				return BaseObject(form, Ownership::None);
 			}
 		}
 
@@ -1609,9 +1626,9 @@ namespace Modex
 			const auto form = RE::TESForm::LookupByEditorID(m_editorid);
 
 			if (form == nullptr) {
-				return std::make_unique<BaseObject>(m_name, m_editorid, m_plugin);
+				return std::make_unique<BaseObject>(m_name, m_editorid, m_plugin, Ownership::None);
 			} else {
-				return std::make_unique<BaseObject>(form);
+				return std::make_unique<BaseObject>(form, Ownership::None);
 			}
 		}
 

@@ -154,7 +154,7 @@ namespace Modex
 				}
 			}
 
-			m_npcCache.push_back(BaseObject{ form });
+			m_npcCache.push_back(BaseObject{ form, Ownership::Actor });
 			AddModToIndex(mod, m_npcModList);
 			ApplyModFileItemFlags(mod, form->GetFormType());
 		}
@@ -270,7 +270,7 @@ namespace Modex
 			if (!mod)
 				continue;
 
-			m_cache.push_back(BaseObject{ form });
+			m_cache.push_back(BaseObject{ form, Ownership::Item });
 			AddModToIndex(mod, m_itemModList);
 			ApplyModFileItemFlags(mod, form->GetFormType());
 
@@ -292,7 +292,7 @@ namespace Modex
 			if (!mod)
 				continue;
 
-			m_staticCache.push_back(BaseObject{ form });
+			m_staticCache.push_back(BaseObject(form, Ownership::Object));
 			AddModToIndex(mod, m_staticModList);
 			ApplyModFileItemFlags(mod, form->GetFormType());
 		}

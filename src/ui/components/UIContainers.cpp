@@ -93,9 +93,9 @@ namespace Modex
 				UIManager::GetSingleton()->ShowWarning(Translate("CLEAR_INVENTORY"), description, true, [&a_view, shift_down]() {
 					if (auto target = a_view->GetTableTargetRef(); target) {
 						if (shift_down) {
-							Commands::ResetTargetInventory(target);
+							Commands::ResetTargetInventory(a_view->GetOwnership(), target);
 						} else {
-							Commands::RemoveAllItemsFromInventory(target);
+							Commands::RemoveAllItemsFromInventory(a_view->GetOwnership(), target);
 						}
 					}
 				});
@@ -149,44 +149,44 @@ namespace Modex
 
 			if (UICustom::ActionButton("PLACE_SELECTION", ImVec2(max_width, button_height), !Commands::IsGameMenuOpen() && valid_multi_target)) {
 				UICustom::InputAmountHandler(shift_down, [&a_view](uint32_t amount) {
-					a_view->ExecuteCommandOnSelection([amount](const std::unique_ptr<BaseObject>& a_actor) {
-						Commands::PlaceAtMe(a_actor->GetEditorID(), amount);
+					a_view->ExecuteCommandOnSelection([&a_view, amount](const std::unique_ptr<BaseObject>& a_actor) {
+						Commands::PlaceAtMe(a_view->GetOwnership(), a_actor->GetEditorID(), amount);
 					});
 				});
 			}
 
 			// Allow from main menu.
 			if (UICustom::ActionButton("GOTO_SELECTION", ImVec2(max_width, button_height), a_view->IsValidSelectionReference())) {
-				Commands::TeleportPlayerToREFR(a_view->GetSelectedReference());
+				Commands::TeleportPlayerToREFR(a_view->GetOwnership(), a_view->GetSelectedReference());
 			}
 
 			// These actions are pointless within main menu, steer players to use in-game.
 			if (!Commands::IsGameMenuOpen() && a_view->IsValidSelectionReference()) {
 				if (UICustom::ActionButton("BRING_SELECTION", ImVec2(max_width, button_height), valid_multi_target)) {
-					a_view->ExecuteCommandOnSelection([](const std::unique_ptr<BaseObject>& a_actor) {
+					a_view->ExecuteCommandOnSelection([&a_view](const std::unique_ptr<BaseObject>& a_actor) {
 						if (auto reference = RE::TESForm::LookupByID<RE::TESObjectREFR>(a_actor->GetRefID()); reference) {
-							Commands::TeleportREFRToPlayer(reference);
+							Commands::TeleportREFRToPlayer(a_view->GetOwnership(), reference);
 						}
 					});
 				}
 
 				if (a_view->GetSelectedReference()->IsDead()) {
 					if (UICustom::ActionButton("RESURRECT_ACTOR", ImVec2(max_width, button_height), valid_selection_target)) {
-						Commands::ResurrectRefr(a_view->GetSelectedReference());
+						Commands::ResurrectRefr(a_view->GetOwnership(), a_view->GetSelectedReference());
 					}
 				} else {
 					if (UICustom::ActionButton("KILL_ACTOR", ImVec2(max_width, button_height), valid_selection_target)) {
-						Commands::KillRefr(a_view->GetSelectedReference());
+						Commands::KillRefr(a_view->GetOwnership(), a_view->GetSelectedReference());
 					}
 				}
 
 				if (a_view->GetSelectedReference()->IsDisabled()) {
 					if (UICustom::ActionButton("ENABLE_REFERENCE", ImVec2(max_width, button_height), valid_selection_target)) {
-						Commands::EnableRefr(a_view->GetSelectedReference(), false);
+						Commands::EnableRefr(a_view->GetOwnership(), a_view->GetSelectedReference(), false);
 					}
 				} else {
 					if (UICustom::ActionButton("DISABLE_REFERENCE", ImVec2(max_width, button_height), valid_selection_target)) {
-						Commands::DisableRefr(a_view->GetSelectedReference());
+						Commands::DisableRefr(a_view->GetOwnership(), a_view->GetSelectedReference());
 					}
 				}
 			}

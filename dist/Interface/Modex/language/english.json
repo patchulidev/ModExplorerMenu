@@ -360,6 +360,7 @@
 	"kDefaultOutfit_TOOLTIP": "Default Outfit: The default outfit assigned to this actor. Used by some scripts in the game to manage Actor clothing.",
 	"kSleepOutfit_TOOLTIP": "Sleep Outfit: The assigned outfit to use when an Actor sleeps. May not always be reflected correctly in-game.",
 
+	"DUMMY_OBJECT_INFO": "Dummy Object: This form was previously valid, but could not be resolved. This could be due to a missing plugin, update, or once valid reference being nonexistent.",
 	"INVALID_REFERENCE_POPUP_TITLE": "Could not locate FormID: ",
 	"INVALID_REFERENCE_POPUP_DESC": "Modex could not resolve a valid Target Reference from your input. Try again, and ensure proper formatting is used.\n\nIf this is unexpected, you can use the in-game Console to select your target. Then press <C> while hovering the status bar to assign a Target Reference from your Console selection.\n\nIf all else fails, you can press <T> while hovering the status bar to quickly assign the Player reference.",
 	"WARNING_NO_ITEMS": "No items found in the table matching the current criteria. If this is unexpected, check your search and plugin fields to confirm your query. It's likely you may be searching inside the wrong plugin, or searching by the wrong property (left-side drop-down box).",

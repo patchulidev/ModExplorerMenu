@@ -191,7 +191,7 @@ namespace Modex
 		, m_pluginList()
 		, m_pluginListVector()
 		, m_sort(0)
-		, m_type(0)
+		, m_type(Ownership::All)
 	{
 		// static
 		s_uiScaleVertical 	= UserConfig::Get().uiScaleVertical;

@@ -21,7 +21,6 @@
 #include <imgui_internal.h>
 #include <imgui_freetype.h>
 
-
 #include <SimpleIni.h>
 #include <nlohmann/json.hpp>
 #include <shared_mutex>
@@ -46,6 +45,17 @@ using namespace std::literals;
 
 namespace Modex
 {
+	enum class Ownership : uint32_t 
+	{
+		None = 0,
+		Item,
+		Actor,
+		Kit,
+		Object,
+		Cell,
+		All
+	};
+
 	// Helper functions for UTF-8/UTF-16 conversion
     inline std::string WideToUTF8(const std::wstring& wstr)
     {
