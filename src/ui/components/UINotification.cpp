@@ -122,6 +122,7 @@ namespace Modex
 
 		const ImVec2 pos(a_windowPos.x, a_windowPos.y + a_windowSize.y - window_height - 2.0f);
 		auto config = SetupContainer(pos, ImVec2(window_width, window_height), 1);
+		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha);
 
 		if (ImGui::Begin("##Modex::UIMessageBox", nullptr, config.flags)) {
 			for (size_t i = 0; i < messagesToShow; i++) {
@@ -134,7 +135,7 @@ namespace Modex
 		}
 
 		ImGui::End();
-		ImGui::PopStyleVar(); // Pop from SetupContainer;
+		ImGui::PopStyleVar(2); // Pop from SetupContainer;
 	}
 
 	void UINotification::DrawTooltipContainer(const ImVec2 &a_parentPos, const ImVec2 &a_parentSize)
@@ -167,14 +168,12 @@ namespace Modex
 	{
 		if (!a_msg.active) return;
 
-		float alpha = a_msg.GetAlpha();
+		float alpha = a_msg.GetAlpha() * ImGui::GetStyle().Alpha;
 		ImU32 bgColor = GetMessageColor(a_msg.type, alpha);
 		
 		ImGui::PushID(static_cast<int>(a_index));
-		ImGui::PushStyleColor(ImGuiCol_ChildBg, ThemeConfig::GetColor("NONE"));
-		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, alpha);
 
-		if (ImGui::BeginChild("##UIMessage::Message", ImVec2(a_width, a_height), 0, ImGuiWindowFlags_NoScrollbar)) {
+		if (ImGui::BeginChild("##UIMessage::Message", ImVec2(a_width, a_height), 0, WINDOW_FLAGS)) {
 			const auto draw_list = ImGui::GetWindowDrawList();
 			draw_list->AddRectFilledMultiColor(ImGui::GetWindowPos(), ImGui::GetWindowPos() + ImVec2(a_width, a_height), bgColor, 0, 0, bgColor);
 
@@ -195,8 +194,6 @@ namespace Modex
 
 
 		ImGui::EndChild();
-		ImGui::PopStyleVar();
-		ImGui::PopStyleColor();
 		ImGui::PopID();
 	}
 
@@ -204,10 +201,12 @@ namespace Modex
 	{
 		if (!a_msg.active) return;
 
-		ImU32 bgColor = GetMessageColor(a_msg.type, a_msg.GetAlpha());
-		ImGui::PushStyleColor(ImGuiCol_ChildBg, bgColor);
+		const float alpha = a_msg.GetAlpha() * ImGui::GetStyle().Alpha;
+		ImU32 bgColor = GetMessageColor(a_msg.type, alpha);
 
-		if (ImGui::BeginChild("##UIMessage::Tooltip", ImVec2(a_width, a_height), 0, ImGuiWindowFlags_NoScrollbar)) {
+		if (ImGui::BeginChild("##UIMessage::Tooltip", ImVec2(a_width, a_height), 0, WINDOW_FLAGS)) {
+			const auto draw_list = ImGui::GetWindowDrawList();
+			draw_list->AddRectFilled(ImGui::GetWindowPos(), ImGui::GetWindowPos() + ImVec2(a_width, a_height), bgColor, 0.0f);
 			// Enlarge Tooltip Icon
 			if (!a_msg.icon.empty()) {
 				ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetFrameHeight() / 2.0f);
@@ -226,7 +225,6 @@ namespace Modex
 		}
 
 		ImGui::EndChild();
-		ImGui::PopStyleColor();
 	}
 
 	ImU32 UINotification::GetMessageColor(UIMessageType a_type, float a_alpha)
