@@ -181,6 +181,9 @@ namespace Modex
 		void                    BringSelectionToPlayer();
 		void                    EquipSelectionToTarget();
 		void                    ExecuteCommandOnSelection(const std::function<void(const std::unique_ptr<BaseObject>&)>& a_command);
+		void                    AddSelectionToFavorites();
+		void                    RemoveSelectionFromFavorites();
+		void                    RemoveSelectionFromRecent();
 		void                    PlaceAll();
 		void                    AddAll();
 

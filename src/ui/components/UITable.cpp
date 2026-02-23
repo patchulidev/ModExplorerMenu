@@ -699,6 +699,56 @@ namespace Modex
 		this->tableList.erase(it, this->tableList.end());
 	}
 
+	void UITable::AddSelectionToFavorites()
+	{
+		if (GetSelectionCount() == 0) {
+			if (itemPreview && !itemPreview->IsDummy()) {
+				UserData::SendEvent(ModexActionType::Favorited, itemPreview);
+			}
+		}
+		else {
+			void* it = NULL;
+			ImGuiID id = 0;
+			while (selectionStorage.GetNextSelectedItem(&it, &id)) {
+				if (id < std::ssize(tableList) && id >= 0) {
+					const auto& item = tableList[id];
+					if (item) {
+						UserData::SendEvent(ModexActionType::Favorited, item);
+					}
+				}
+			}
+		}
+
+		if (tableMode == SHOWFAVORITE) {
+			Refresh();
+		}
+	}
+
+	void UITable::RemoveSelectionFromFavorites()
+	{
+		if (GetSelectionCount() == 0) {
+			if (itemPreview && !itemPreview->IsDummy()) {
+				UserData::SendEvent(ModexActionType::Unfavorited, itemPreview);
+			}
+		}
+		else {
+			void* it = NULL;
+			ImGuiID id = 0;
+			while (selectionStorage.GetNextSelectedItem(&it, &id)) {
+				if (id < std::ssize(tableList) && id >= 0) {
+					const auto& item = tableList[id];
+					if (item) {
+						UserData::SendEvent(ModexActionType::Unfavorited, item);
+					}
+				}
+			}
+		}
+
+		if (tableMode == SHOWFAVORITE) {
+			Refresh();
+		}
+	}
+
 	void UITable::SyncChangesToKit()
 	{
 		if (this->HasFlag(ModexTableFlag_Kit)) {
@@ -789,58 +839,75 @@ namespace Modex
 	void UITable::FilterFavoriteImpl()
 	{
 		const auto favorites = UserData::GetFavoritesAsVector();
-		auto temp = std::vector<BaseObject>{};
+		auto temp = TableList{};
 
-		for (const auto& edid : favorites) {
-			RE::TESForm* form = RE::TESForm::LookupByEditorID(edid);
-			temp.emplace_back(BaseObject(form, 0, 0));
+		for (const auto& favoriteItem : favorites) {
+			if (favoriteItem.refid != 0) {
+				if (RE::TESForm* form = RE::TESForm::LookupByID(favoriteItem.refid); form != nullptr) {
+					if (const auto reference = form->As<RE::TESObjectREFR>(); reference != nullptr) {
+						temp.emplace_back(std::make_unique<BaseObject>(reference->GetBaseObject()->As<RE::TESForm>(), favoriteItem.owner, 0, favoriteItem.refid));
+						continue;
+					}
+				}
+			} else {
+				if (RE::TESForm* form = RE::TESForm::LookupByEditorID(favoriteItem.editorid); form != nullptr) {
+					temp.emplace_back(std::make_unique<BaseObject>(form, favoriteItem.owner, 0, favoriteItem.refid));
+					continue;
+				}
+			}
+
+			temp.emplace_back(std::make_unique<BaseObject>(favoriteItem.editorid, favoriteItem.editorid, favoriteItem.plugin, favoriteItem.owner, favoriteItem.refid));
 		}
 
-		for (const auto& item : temp) {
-			// Disabled: Might be confusing to users if search parameter is carried over.
-			// if (searchSystem->CompareInputToObject(&item) == false) {
-				// continue;
-			// }
-
-			if (filterSystem && !filterSystem->ShouldShowItem(&item)) {
+		for (auto& item : temp) {
+			if (item->GetOwnership() != pluginType) {
 				continue;
 			}
 
-			this->tableList.emplace_back(std::make_unique<BaseObject>(item));
+			if (filterSystem && !filterSystem->ShouldShowItem(item.get())) {
+				continue;
+			}
+
+			this->tableList.emplace_back(std::move(item)); 
 		}
 
+		SortListBySpecs();
+		UpdateImGuiTableIDs();
 	}
 
 	void UITable::FilterRecentImpl()
 	{
 		const auto recent = UserData::GetRecentAsVector();
-		auto temp = std::vector<BaseObject>{};
+		auto temp = TableList{};
 
-		// NOTE: This looks stinky, but unless we cache recent items as BaseObjects to begin with,
-		// We have to rebuild them everytime we refresh. Something to think of down the line.
-
-		for (const auto& edid : recent) {
-			RE::TESForm* form = RE::TESForm::LookupByEditorID(edid);
-			if (form) {
-				temp.emplace_back(BaseObject(form, 0, 0));
+		for (const auto& recentItem : recent) {
+			if (recentItem.refid != 0) {
+				if (RE::TESForm* form = RE::TESForm::LookupByID(recentItem.refid); form != nullptr) {
+					if (const auto reference = form->As<RE::TESObjectREFR>(); reference != nullptr) {
+						temp.emplace_back(std::make_unique<BaseObject>(reference->GetBaseObject()->As<RE::TESForm>(), recentItem.owner, 0, recentItem.refid));
+						continue;
+					}
+				}
 			} else {
-				if (UserConfig::Get().showMissing) {
-					temp.emplace_back(BaseObject(edid, edid, Translate("ERROR_MISSING_PLUGIN")));
+				if (RE::TESForm* form = RE::TESForm::LookupByEditorID(recentItem.editorid); form != nullptr) {
+					temp.emplace_back(std::make_unique<BaseObject>(form, recentItem.owner, 0, recentItem.refid));
+					continue;
 				}
 			}
+
+			temp.emplace_back(std::make_unique<BaseObject>(recentItem.editorid, recentItem.editorid, recentItem.plugin, recentItem.owner, recentItem.refid));
 		}
 
-		for (const auto& item : temp) {
-			// Disabled: Might be confusing to users if search parameter is carried over.
-			// if (searchSystem->CompareInputToObject(&item) == false) {
-				// continue;
-			// }
-
-			if (filterSystem && !filterSystem->ShouldShowItem(&item)) {
+		for (auto& item : temp) {
+			if (item->GetOwnership() != pluginType) {
 				continue;
 			}
 
-			this->tableList.emplace_back(std::make_unique<BaseObject>(item));
+			if (filterSystem && !filterSystem->ShouldShowItem(item.get())) {
+				continue;
+			}
+
+			this->tableList.emplace_back(std::move(item)); 
 		}
 
 		SortListBySpecs();
@@ -1567,6 +1634,19 @@ namespace Modex
 				ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 			}
 
+
+			if (UserData::IsFavorited(a_item->GetEditorID())) {
+				if (ImGui::MenuItem(Translate("REMOVE_FROM_FAVORITES"))) {
+					RemoveSelectionFromFavorites();
+				}
+			} else {
+				if (ImGui::MenuItem(Translate("ADD_TO_FAVORITES"))) {
+					AddSelectionToFavorites();
+				}
+			}
+
+			ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
+
 			if (ImGui::BeginMenu(Translate("COPY"))) {
 				if (ImGui::MenuItem(Translate("COPY_FORMID"))) {
 					ImGui::SetClipboardText(a_item->GetFormID().c_str());
@@ -1617,6 +1697,32 @@ namespace Modex
 						selectionStorage.SetItemSelected(item->m_tableID, true);
 					}
 				}
+			}
+		}
+
+		if (ImGui::Shortcut(ImGuiKey_F, ImGuiInputFlags_RouteFromRootWindow)) {
+			if (selectionStorage.Size > 0) {
+				void* it = NULL;
+				ImGuiID id = 0;
+
+				while (selectionStorage.GetNextSelectedItem(&it, &id)) {
+					if (id < std::ssize(tableList) && id >= 0) {
+						const auto& item = tableList[id];
+						if (item) {
+							const bool is_favorited = item->GetRefID() == 0 ? UserData::IsFavorited(item->GetEditorID()) : UserData::IsFavorited(item->GetRefID());
+							UserData::SendEvent(is_favorited ? ModexActionType::Unfavorited : ModexActionType::Favorited, item);
+						}
+					}
+				}
+			} else {
+				if (itemPreview) {
+					const bool is_favorited = itemPreview->GetRefID() == 0 ? UserData::IsFavorited(itemPreview->GetEditorID()) : UserData::IsFavorited(itemPreview->GetRefID());
+					UserData::SendEvent(is_favorited ? ModexActionType::Unfavorited : ModexActionType::Favorited, itemPreview);
+				}
+			}
+
+			if (tableMode == SHOWFAVORITE) {
+				Refresh();
 			}
 		}
 
@@ -1872,14 +1978,24 @@ namespace Modex
 		const std::string raw_name = showEditorID ? a_item->GetEditorID() : a_item->GetName();
 		const std::string name_string = TRUNCATE(item_icon + raw_name, (spacing * 1.5f) - padding - quantity_offset) + quantity_string;
 
+		const bool is_favorited = a_item->m_refID == 0 ? UserData::IsFavorited(a_item->GetEditorID()) : UserData::IsFavorited(a_item->m_refID);
+		const ImVec2 favorite_pos = ImVec2(center_right_align.x - ImGui::GetFontSize(), center_right_align.y);
+
+		if (is_favorited) {
+			draw_list->AddText(favorite_pos, colors.text, ICON_LC_HEART);
+
+			if (IsMouseHoveringRect(favorite_pos, ImVec2(favorite_pos.x + font_size, favorite_pos.y + font_size))) {
+				UINotification::ShowTooltip(Translate("ADD_TO_FAVORITES_TOOLTIP"), ICON_LC_HEART);
+			}
+		}
+
 		if (a_item->GetFormType() == RE::FormType::NPC) {
 			if (const auto& npc = a_item->GetTESNPC(); npc.has_value()) {
 				const auto& npcData = npc.value();
 				if (npcData != nullptr) {
 					if (a_item->GetRefID() != 0) {
-						constexpr std::string icon = ICON_LC_ASTERISK;
-						const ImVec2 icon_pos = ImVec2(center_right_align.x - ImGui::GetFontSize(), center_right_align.y);
-						draw_list->AddText(icon_pos, colors.text, icon.c_str());
+						const ImVec2 icon_pos = is_favorited ? favorite_pos - ImVec2(ImGui::GetFontSize() * 2.0f, 0.0f) : favorite_pos;
+						draw_list->AddText(icon_pos, colors.text, ICON_LC_ASTERISK);
 
 						if (IsMouseHoveringRect(icon_pos, ImVec2(icon_pos.x + font_size, icon_pos.y + font_size))) {
 							UINotification::ShowPropertyTooltip(PropertyType::kReferenceID);

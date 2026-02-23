@@ -40,6 +40,8 @@
 	"SHOWFAVORITE": "Favorites",
 
 	"ADD_TO_FAVORITES": "Add To Favorites",
+	"ADD_TO_FAVORITES_TOOLTIP": "Add To Favorites: Adds the currently selected form to your favorites list, allowing you to quickly access it later.",
+	"REMOVE_FROM_FAVORITES": "Remove From Favorites",
 
 	"ORDER_TOOLTIP": "Load Order\n\nDisplays a sorted list of plugins modifying this form, based on load order. This can help identify the origin of a form.\n\nThis list does not utilize any of the Modex Plugin user settings such as sorting direction.",
 	"DESCRIPTION_TOOLTIP": "Description\n\nAttempts to dynamically display the description for a Form. Values are calculated from Base MGEF values, and won't reflect real-time modifiers such as perks, player level, etc.",

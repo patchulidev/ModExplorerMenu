@@ -28,8 +28,8 @@ namespace Modex
 		DeleteKit,
 		RenameKit,
 		CopyKit,
-		CenterOnCell,
 		Favorited,
+		Unfavorited,
 		Total,
 	};
 
@@ -37,14 +37,14 @@ namespace Modex
 	{
 	private:
 		struct RecentData {
-			std::vector<std::string> items;
+			std::vector<SerializedObject> items;
 			size_t maxSize;
 		};
 
 		// TODO: Expand on Favorites implementation
 
 		struct FavoriteData {
-			std::vector<std::string> items;
+			std::vector<SerializedObject> items;
 		};
 
 		static inline RecentData m_recent{ {}, 50 };
@@ -61,14 +61,21 @@ namespace Modex
 		static void Load();
 
 		static void SendEvent(ModexActionType a_actionType, const std::unique_ptr<BaseObject>& a_item);
-		static void SendEvent(ModexActionType a_actionType, const std::string& a_editorid = "");
+		static void SendEvent(ModexActionType a_actionType, const std::string& a_text, Ownership a_owner);
+		static void SendEvent(ModexActionType a_actionType, RE::FormID a_refid, Ownership a_owner);
 
-		static std::vector<std::string> GetRecentAsVector() { return m_recent.items; }
+		static std::vector<SerializedObject> GetRecentAsVector() { return m_recent.items; }
 		static RecentData& GetRecent() { return m_recent; }
+		// static void AddToRecentList(const std::unique_ptr<BaseObject>& a_item);
+		// static void RemoveFromRecentList(const std::unique_ptr<BaseObject>& a_item);
 
-		static void AddFavorite(const std::unique_ptr<BaseObject>& a_item);
-		static std::vector<std::string> GetFavoritesAsVector() { return m_favorites.items; }
+		static std::vector<SerializedObject> GetFavoritesAsVector() { return m_favorites.items; }
 		static FavoriteData& GetFavorites() { return m_favorites; }
+		// static void AddToFavorites(const std::unique_ptr<BaseObject>& a_item);
+		// static void RemoveFromFavorites(const std::unique_ptr<BaseObject>& a_item);
+
+		static bool IsFavorited(const std::string& a_editorid);
+		static bool IsFavorited(RE::FormID a_refid);
 
 		static nlohmann::json& GetData() { return m_userDataConfig.GetData(); }
 
@@ -85,3 +92,4 @@ namespace Modex
 		}
 	};
 }
+

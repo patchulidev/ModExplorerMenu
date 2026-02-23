@@ -7,6 +7,41 @@
 
 namespace Modex
 {
+	struct SerializedObject {
+		std::string plugin;
+		std::string editorid;
+		uint32_t refid = 0;
+		Ownership owner = Ownership::None;
+
+		bool operator==(const SerializedObject& other) const {
+			if (this->owner != other.owner) {
+				return false;
+			} else if (this->refid != 0 && other.refid != 0) {
+				return this->refid == other.refid;
+			} else if (this->refid == 0 && other.refid != 0) {
+				return false;
+			} else if (this->refid != 0 && other.refid == 0) {
+				return false;
+			} else {
+				return (this->plugin == other.plugin) && (this->editorid == other.editorid);
+			}
+		}
+	};
+
+	NLOHMANN_JSON_SERIALIZE_ENUM(Ownership, {
+		{Ownership::None, 0},
+		{Ownership::Item, 1},
+		{Ownership::Actor, 2},
+		{Ownership::Kit, 3},
+		{Ownership::Object, 4},
+		{Ownership::Cell, 5},
+		{Ownership::All, 6}
+	});
+
+	NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SerializedObject, plugin, editorid, refid, owner)
+
+	static_assert(static_cast<uint32_t>(Ownership::All) == 6, "Ownership enum changed! Update NLOHMANN_JSON_SERIALIZE_ENUM");
+
 	class ConfigManager
 	{
 	protected:
