@@ -1496,6 +1496,11 @@ namespace Modex
 					Commands::PlaceAtMe(pluginType, a_item->GetEditorID(), amount);
 				});
 			}
+
+			// Reset imgui click state to speeden up double click registers
+			ImGuiIO& io = ImGui::GetIO();
+			io.MouseClickedTime[ImGuiMouseButton_Left] = -FLT_MAX;
+			io.MouseClickedCount[ImGuiMouseButton_Left] = 0;
 		}
 	}
 
@@ -1600,6 +1605,12 @@ namespace Modex
 			}
 
 			if (a_item->IsNPC()) { // ModexTableFlag_Base (?)
+				if (a_item->m_refID != 0) {
+					if (ImGui::MenuItem(Translate("TABLE_SET_TARGET"))) {
+						SetTargetByReference(RE::TESForm::LookupByID<RE::TESObjectREFR>(itemPreview->GetRefID()));
+					}
+				}
+
 				if (!Commands::IsGameMenuOpen()) {
 					if (ImGui::MenuItem(Translate("PLACE_SELECTION"))) {
 						PlaceSelectionOnGround(click_amount);
