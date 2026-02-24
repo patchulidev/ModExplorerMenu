@@ -3,6 +3,8 @@
 #include "ConfigManager.h"
 #include "data/BaseObject.h"
 
+// TODO: chore: move elementary event system into it's own implementation.
+
 namespace Modex
 {
 	static const std::filesystem::path USERDATA_JSON_PATH =
@@ -41,8 +43,6 @@ namespace Modex
 			size_t maxSize;
 		};
 
-		// TODO: Expand on Favorites implementation
-
 		struct FavoriteData {
 			std::vector<SerializedObject> items;
 		};
@@ -57,23 +57,22 @@ namespace Modex
 		UserData(const UserData&) = delete;
 		UserData& operator=(const UserData&) = delete;
 
+		// baseclass
 		static void Save();
 		static void Load();
 
+		// event system
 		static void SendEvent(ModexActionType a_actionType, const std::unique_ptr<BaseObject>& a_item);
 		static void SendEvent(ModexActionType a_actionType, const std::string& a_text, Ownership a_owner);
 		static void SendEvent(ModexActionType a_actionType, RE::FormID a_refid, Ownership a_owner);
 
+		// recent
 		static std::vector<SerializedObject> GetRecentAsVector() { return m_recent.items; }
 		static RecentData& GetRecent() { return m_recent; }
-		// static void AddToRecentList(const std::unique_ptr<BaseObject>& a_item);
-		// static void RemoveFromRecentList(const std::unique_ptr<BaseObject>& a_item);
 
+		// favorites
 		static std::vector<SerializedObject> GetFavoritesAsVector() { return m_favorites.items; }
 		static FavoriteData& GetFavorites() { return m_favorites; }
-		// static void AddToFavorites(const std::unique_ptr<BaseObject>& a_item);
-		// static void RemoveFromFavorites(const std::unique_ptr<BaseObject>& a_item);
-
 		static bool IsFavorited(const std::string& a_editorid);
 		static bool IsFavorited(RE::FormID a_refid);
 

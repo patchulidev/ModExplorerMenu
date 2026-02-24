@@ -201,6 +201,8 @@ namespace Modex::Commands
 
 	static inline void UnequipAllItemsFromInventory(Ownership a_owner, RE::TESObjectREFR* a_targetRef)
 	{
+		(void)a_owner;
+
 		if (!a_targetRef)
 			return;
 

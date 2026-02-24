@@ -13,11 +13,8 @@ namespace Modex
 		m_pluginList.clear();
 		m_pluginListVector.clear();
 
-		const auto sortType = static_cast<Data::PluginSort>(m_sort);
-		// const auto pluginType = static_cast<Data::PluginType>(m_type);
-
-		m_pluginList = Data::GetSingleton()->GetModulePluginListSorted(m_type, sortType);
-		m_pluginListVector = Data::GetSingleton()->GetFilteredListOfPluginNames(m_type, sortType);
+		m_pluginList = Data::GetSingleton()->GetModulePluginListSorted(m_type, m_sort);
+		m_pluginListVector = Data::GetSingleton()->GetFilteredListOfPluginNames(m_type, m_sort);
 	}
 
 	void SettingsModule::DrawBlacklistSettings()
@@ -54,7 +51,7 @@ namespace Modex
 		ImGui::SameLine();
 
 		std::vector<std::string> sortOptions = Data::GetSortStrings();
-		if (UICustom::FancyDropdown("##Blacklist::SortDropdown", "BLACKLIST_SORT_TOOLTIP", m_sort, sortOptions, 0.0f)) { 
+		if (UICustom::FancyDropdown("##Blacklist::SortDropdown", "BLACKLIST_SORT_TOOLTIP", reinterpret_cast<uint32_t&>(m_sort), sortOptions, 0.0f)) { 
 			BuildBlacklistPlugins();
 		}
 

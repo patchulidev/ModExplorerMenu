@@ -141,8 +141,8 @@ namespace Modex
 			}
 			ImGui::PopStyleColor(3);
 
-			if (a_view->IsValidTargetReference()) {
-				if (UICustom::ActionButton("TABLE_SET_TARGET", ImVec2(max_width, button_height), valid_selection_target && !is_multiple_selected)) {
+			if (a_view->GetSelectedReference()) {
+				if (UICustom::ActionButton("TABLE_SET_TARGET", ImVec2(max_width, button_height), !is_multiple_selected)) {
 					a_view->SetTargetByReference(a_view->GetSelectedReference());
 				}
 			}

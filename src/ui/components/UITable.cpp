@@ -986,8 +986,7 @@ namespace Modex
 	void UITable::BuildPluginList()
 	{
 		const auto& config = UserConfig::Get();
-		// const auto type = static_cast<Data::PluginType>(this->pluginType);
-		const auto sort = static_cast<Data::PluginSort>(config.modListSort);
+		const auto& sort = static_cast<PluginSort>(config.modListSort);
 
 		this->pluginList = Data::GetSingleton()->GetFilteredListOfPluginNames(pluginType, sort); 
 		this->pluginSet = Data::GetSingleton()->GetModulePluginList(pluginType);

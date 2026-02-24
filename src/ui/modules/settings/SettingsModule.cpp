@@ -124,12 +124,6 @@ namespace Modex
 				UserConfig::GetSingleton()->SaveSettings();
 			}
 
-			// NOTE: Unimplemented old feature, still needed?
-			if (UICustom::Settings_ToggleButton("SETTINGS_DISABLE_IN_MENU", config.disableInMenu))
-			{
-				UserConfig::GetSingleton()->SaveSettings();
-			}
-
 			std::vector<std::string> levels = { "trace", "debug", "info", "warn", "error", "critical", "off" };
 			if (UICustom::Settings_Dropdown("SETTINGS_LOG_LEVEL", config.logLevel, levels, false))
 			{
@@ -190,7 +184,7 @@ namespace Modex
 		: m_modSearchBuffer{ 0 }
 		, m_pluginList()
 		, m_pluginListVector()
-		, m_sort(0)
+		, m_sort(PluginSort::Load_Order_Ascending)
 		, m_type(Ownership::All)
 	{
 		// static

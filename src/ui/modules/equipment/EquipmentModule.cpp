@@ -147,7 +147,7 @@ namespace Modex
 						}
 					}
 
-					auto pluginList = Data::GetSingleton()->GetModulePluginListSorted(Ownership::All, Data::PluginSort::Load_Order_Ascending);
+					auto pluginList = Data::GetSingleton()->GetModulePluginListSorted(Ownership::All, PluginSort::Load_Order_Ascending);
 					for (auto& plugin : pluginList) {
 						if (dependencies.contains(plugin->fileName)) {
 							message += std::format("[{}] - {}\n", Translate("Found"), plugin->fileName);

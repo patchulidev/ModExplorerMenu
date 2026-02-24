@@ -115,7 +115,7 @@ namespace Modex
 		UITable(const UITable&) = delete;
 		UITable& operator=(const UITable&) = delete;
 		UITable(UITable&&) noexcept = default;
-		UITable& operator=(UITable&&) noexcept = default;
+		UITable& operator=(UITable&&) noexcept = delete;
 
 		enum class DragBehavior {
 			None,

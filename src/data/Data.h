@@ -13,14 +13,6 @@ namespace Modex
 			uint32_t count;
 		};
 
-		enum class PluginSort : uint32_t 
-		{
-			Alphabetical = 0,
-			Load_Order_Ascending,
-			Load_Order_Descending,
-			kTotal,
-		};
-
 		struct ModFileItemFlags
 		{
 			bool 	alchemy 		= false;

@@ -10,7 +10,7 @@ namespace Modex
 		char                            m_modSearchBuffer[256];
 		std::vector<const RE::TESFile*> m_pluginList;
 		std::vector<std::string>        m_pluginListVector;
-		uint32_t                        m_sort;
+		PluginSort                      m_sort;
 		Ownership                       m_type;
 
 		SettingsModule();
