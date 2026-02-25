@@ -1497,7 +1497,7 @@ namespace Modex
 				});
 			}
 
-			// Reset imgui click state to speeden up double click registers
+			// Reset imgui click state to speed up double click registers
 			ImGuiIO& io = ImGui::GetIO();
 			io.MouseClickedTime[ImGuiMouseButton_Left] = -FLT_MAX;
 			io.MouseClickedCount[ImGuiMouseButton_Left] = 0;
@@ -1647,17 +1647,14 @@ namespace Modex
 					}
 				}
 
-				ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-			}
-
-
-			if (UserData::IsFavorited(a_item->GetEditorID())) {
-				if (ImGui::MenuItem(Translate("REMOVE_FROM_FAVORITES"))) {
-					RemoveSelectionFromFavorites();
-				}
-			} else {
-				if (ImGui::MenuItem(Translate("ADD_TO_FAVORITES"))) {
-					AddSelectionToFavorites();
+				if (a_item->m_refID == 0 ? UserData::IsFavorited(a_item->GetEditorID()) : UserData::IsFavorited(a_item->m_refID)) {
+					if (ImGui::MenuItem(Translate("REMOVE_FROM_FAVORITES"))) {
+						RemoveSelectionFromFavorites();
+					}
+				} else {
+					if (ImGui::MenuItem(Translate("ADD_TO_FAVORITES"))) {
+						AddSelectionToFavorites();
+					}
 				}
 			}
 

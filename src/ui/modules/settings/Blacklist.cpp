@@ -40,8 +40,9 @@ namespace Modex
 		ImGui::Text(ICON_LC_ARROW_RIGHT);
 		ImGui::SameLine();
 
+		uint32_t& pluginType = reinterpret_cast<uint32_t&>(m_type);
 		std::vector<std::string> pluginOptions = Data::GetTypeString();
-		if (UICustom::FancyDropdown("##Blacklist::TypeDropdown", "BLACKLIST_TYPE_TOOLTIP", reinterpret_cast<uint32_t&>(m_type), pluginOptions, widget_width)) {
+		if (UICustom::FancyDropdown("##Blacklist::TypeDropdown", "BLACKLIST_TYPE_TOOLTIP", pluginType, pluginOptions, widget_width)) {
 			BuildBlacklistPlugins();
 		}
 
@@ -50,8 +51,9 @@ namespace Modex
 		ImGui::Text(ICON_LC_ARROW_RIGHT);
 		ImGui::SameLine();
 
+		uint32_t& sortType = reinterpret_cast<uint32_t&>(m_sort);
 		std::vector<std::string> sortOptions = Data::GetSortStrings();
-		if (UICustom::FancyDropdown("##Blacklist::SortDropdown", "BLACKLIST_SORT_TOOLTIP", reinterpret_cast<uint32_t&>(m_sort), sortOptions, 0.0f)) { 
+		if (UICustom::FancyDropdown("##Blacklist::SortDropdown", "BLACKLIST_SORT_TOOLTIP", sortType, sortOptions, 0.0f)) { 
 			BuildBlacklistPlugins();
 		}
 

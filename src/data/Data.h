@@ -46,7 +46,6 @@ namespace Modex
 	
 		std::unordered_set<const RE::TESFile*>			GetModulePluginList(Ownership a_type);
 		std::vector<const RE::TESFile*> 				GetModulePluginListSorted(Ownership a_type, PluginSort a_sortType);
-		std::vector<std::string> 						GetSortedListOfPluginNames();
 		std::vector<std::string> 						GetFilteredListOfPluginNames(Ownership a_type, PluginSort a_sort);
 		bool											IsFormTypeInPlugin(const RE::TESFile* a_plugin, RE::FormType a_formType);
 		void 											CacheNPCRefIds();

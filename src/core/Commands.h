@@ -414,7 +414,11 @@ namespace Modex::Commands
 		
 		if (RE::TESForm* object = RE::TESForm::LookupByEditorID(a_editorID); object) {
 			auto newObject = Papyrus_PlaceAtMe(target, object, a_count, persistent, disabled);
-			UserData::SendEvent(ModexActionType::PlaceAtMe, newObject->GetFormID(), a_owner);
+			if (newObject) {
+				UserData::SendEvent(ModexActionType::PlaceAtMe, newObject->GetFormID(), a_owner);
+			} else {
+				Error("Failed to resolve new object from Papyrus_PlaceAtMe func: {}", a_editorID);
+			}
 		}
 	}
 

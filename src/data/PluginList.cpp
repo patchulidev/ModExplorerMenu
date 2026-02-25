@@ -101,18 +101,6 @@ namespace Modex
 		return m_modList;
 	}
 
-	// Returns an alphabetically sorted vector of plugin names cached at startup.
-	// std::vector<std::string> Data::GetSortedListOfPluginNames()
-	// {
-	// 	std::vector<std::string> modList;
-	//
-	// 	for (auto& mod : m_modListSorted) {
-	// 		modList.push_back(mod);
-	// 	}
-	//
-	// 	return modList;
-	// }
-
 	// Returns a sorted vector of TESFile pointers cached at startup based on PluginType.
 	std::vector<const RE::TESFile*> Data::GetModulePluginListSorted(Ownership a_owner, PluginSort a_sortType)
 	{

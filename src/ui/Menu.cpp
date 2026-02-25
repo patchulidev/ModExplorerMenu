@@ -153,8 +153,8 @@ namespace Modex
 				const auto& config = UserConfig::Get();
 				const float image_width = static_cast<float>(splash_image->width) * config.welcomeBannerScale.x;
 				const float image_height = static_cast<float>(splash_image->height) * config.welcomeBannerScale.y;
-				ImGui::SetCursorPosX((a_displaySize.x / 2.0f) - (splash_image->width / 2.0f));
-				ImGui::SetCursorPosY((a_displaySize.y / 2.0f) - (splash_image->height / 2.0f));
+				ImGui::SetCursorPosX((a_displaySize.x - image_width) * 0.5f);
+				ImGui::SetCursorPosY((a_displaySize.y - image_height) * 0.5f);
 				ImGui::Image(reinterpret_cast<ImTextureID>(splash_image->texture), ImVec2(image_width, image_height));
 			}
 		}

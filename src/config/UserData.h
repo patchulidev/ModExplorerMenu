@@ -3,7 +3,7 @@
 #include "ConfigManager.h"
 #include "data/BaseObject.h"
 
-// TODO: chore: move elementary event system into it's own implementation.
+// TODO: chore: move new juvenile event system into its own implementation.
 
 namespace Modex
 {
