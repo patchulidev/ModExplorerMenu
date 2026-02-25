@@ -1,5 +1,6 @@
 #include "EquipmentConfig.h"
 #include "config/UserData.h"
+#include "data/BaseObject.h"
 
 // TODO: Migrate to caching all kits on startup by default for quicker lookups.
 
@@ -232,7 +233,6 @@ namespace Modex
 			}
 
 			file << data.dump(4);
-			UserData::SendEvent(ModexActionType::SaveKit, a_kit.m_key, Ownership::Kit);
 			Info("Saved kit '{}' to file", a_kit.m_key);
 			return true;
 		} catch (const std::exception& e) {
@@ -434,6 +434,31 @@ namespace Modex
 		
 		std::sort(tails.begin(), tails.end());
 		return tails;
+	}
+
+	// Helper method to create a kit from a pre-existing outfit form.
+	bool EquipmentConfig::CreateKitFromOutfit(const std::string& a_name, RE::BGSOutfit* a_outfit)
+	{
+		if (!a_outfit) return false;
+		Debug("Creating Kit {} from outfit {}.", a_name, po3_GetEditorID(a_outfit->GetFormID()));
+
+		if (auto kit = CreateKit(a_name); kit.has_value()) {
+			a_outfit->ForEachItem([&kit](RE::TESForm* a_item) {
+				if (a_item) {
+					auto baseObject = BaseObject(a_item, Ownership::Outfit);
+					Trace(" - Adding {} from Outfit to Kit", baseObject.GetEditorID());
+					kit.value().m_items.emplace_back(CreateKitItem(std::move(baseObject)));
+				}
+
+				return RE::BSContainer::ForEachResult::kContinue;
+			});
+
+			SaveKit(kit.value());
+			Trace("Created {} with {} items", a_name, std::ssize(kit.value().m_items));
+			return true;
+		}
+
+		return false;
 	}
 
 	// This probably doesn't belong here.

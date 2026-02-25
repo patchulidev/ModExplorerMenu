@@ -1,4 +1,5 @@
 #include "UIContainers.h"
+#include "RE/B/BSContainer.h"
 #include "core/Commands.h"
 #include "config/UserData.h"
 #include "core/PlayerChestSpawn.h"
@@ -214,11 +215,32 @@ namespace Modex
 
 			UICustom::SubCategoryHeader(Translate("HEADER_ACTIONS"));
 
+			ImGui::PushStyleColor(ImGuiCol_Button, ThemeConfig::GetColor("SECONDARY"));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ThemeConfig::GetHover("SECONDARY"));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ThemeConfig::GetActive("SECONDARY"));
+			if (UICustom::ActionButton("CONTAINER_VIEW", ImVec2(max_width, button_height), action_allowed && a_view->GetSelectionCount() == 1)) {
+				if (auto form = a_view->GetSelection()[0]->GetTESForm(); form) {
+					if (auto outfit = form->As<RE::BGSOutfit>(); outfit) {
+						PlayerChestSpawn::GetSingleton()->PopulateChestWithOutfit(outfit);
+					}
+				}
+			}
+			ImGui::PopStyleColor(3);
+
 			if (UICustom::ActionButton("ADD_OUTFIT_ITEMS", ImVec2(max_width, button_height), action_allowed && a_view->IsValidTargetReference())) {
 				const auto& selection = a_view->GetSelection();
 				for (const auto& item : selection) {
 					if (auto outfit = item->GetTESForm()->As<RE::BGSOutfit>()) {
 						Commands::AddOutfitItemsToInventory(a_view->GetOwnership(), a_view->GetTableTargetRef(), outfit);
+					}
+				}
+			}
+
+			if (UICustom::ActionButton("EQUIP_OUTFIT_ITEMS", ImVec2(max_width, button_height), action_allowed && a_view->IsValidTargetReference() && a_view->GetSelectionCount() == 1)) {
+				const auto& selection = a_view->GetSelection();
+				if (!selection.empty()) {	
+					if (auto outfit = selection[0]->GetTESForm()->As<RE::BGSOutfit>()) {
+						Commands::EquipOutfit(a_view->GetOwnership(), a_view->GetTableTargetRef(), outfit);
 					}
 				}
 			}
@@ -230,6 +252,41 @@ namespace Modex
 						Commands::SetDefaultOutfitOnActor(a_view->GetOwnership(), a_view->GetTableTargetRef(), outfit);
 					}
 				}
+			}
+
+			if (UICustom::ActionButton("SET_SLEEP_OUTFIT", ImVec2(max_width, button_height), action_allowed && a_view->IsValidTargetReference() && a_view->GetSelectionCount() == 1)) {
+				const auto& selection = a_view->GetSelection();
+				if (!selection.empty()) {
+					if (auto outfit = selection[0]->GetTESForm()->As<RE::BGSOutfit>()) {
+						Commands::SetSleepOutfitOnActor(a_view->GetOwnership(), a_view->GetTableTargetRef(), outfit);
+					}
+				}
+			}
+
+			static std::string new_kit_name = "";
+			if (UICustom::ActionButton("KIT_FROM_OUTFIT", ImVec2(max_width, button_height), a_view->GetSelectionCount() == 1)) {
+				UIManager::GetSingleton()->ShowInputBox(
+					Translate("POPUP_KIT_CREATE_TITLE"),
+					Translate("POPUP_KIT_CREATE_DESC"),
+					"",
+					[](const std::string& a_output) {
+						new_kit_name = a_output;
+					}
+				);
+			}
+
+			// OPTIMIZE: Handled next frame for pointer lifetime. Can be put inside the previous
+			// ShowInputBox lambda if we copy the data we need instead of using references which may
+			// fall out of scope when we popup a window.
+
+			if (!new_kit_name.empty() && a_view->GetSelectionCount() == 1) {
+				if (auto form = a_view->GetSelection()[0]->GetTESForm(); form) {
+					if (auto outfit = form->As<RE::BGSOutfit>(); outfit) {
+						EquipmentConfig::CreateKitFromOutfit(new_kit_name, outfit);
+					}
+				}
+
+				new_kit_name.clear();
 			}
 
 			ImGui::Spacing();
@@ -253,6 +310,7 @@ namespace Modex
 							ImGui::SameLine();
 							ImGui::TextDisabled("[%s]", formid.c_str());
 						}
+
 						return RE::BSContainer::ForEachResult::kContinue;
 					});
 				}

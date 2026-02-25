@@ -1,5 +1,6 @@
 #pragma once
 
+#include "RE/B/BSContainer.h"
 #include "data/BaseObject.h"
 #include "localization/Locale.h"
 #include "ui/core/UIManager.h"
@@ -80,7 +81,24 @@ namespace Modex::Commands
 		return playerReference;
 	}
 
-	static inline const std::vector<BaseObject> GetInventoryList(RE::TESObjectREFR* reference = nullptr) 
+	static inline const std::vector<BaseObject> GetOutfitItems(const RE::BGSOutfit* a_outfit)
+	{
+		if (!a_outfit || a_outfit->outfitItems.size() == 0) return {};
+
+		std::vector<BaseObject> items;
+
+		a_outfit->ForEachItem([&items](RE::TESForm* a_form) {
+				if (a_form) {
+					items.emplace_back(a_form, Ownership::Outfit);
+				}
+
+				return RE::BSContainer::ForEachResult::kContinue;
+		});
+
+		return items;
+	}
+
+	static inline const std::vector<BaseObject> GetInventoryList(RE::TESObjectREFR* reference = nullptr) // deprecated
 	{
 		Trace("Generating Inventory List...");
 
@@ -413,6 +431,50 @@ namespace Modex::Commands
 		});
 	}
 
+	static inline void EquipOutfit(Ownership a_owner, RE::TESObjectREFR* a_targetRef, RE::BGSOutfit* a_outfit)
+	{
+		if (!a_targetRef || !a_outfit)
+			return;
+		
+		AddOutfitItemsToInventory(a_owner, a_targetRef, a_outfit);
+
+		// Queued task to allow game to catch up with inventory events (unsure).
+		SKSE::GetTaskInterface()->AddTask([a_owner, a_targetRef, a_outfit]() {
+			a_outfit->ForEachItem([a_owner, a_targetRef](RE::TESForm* a_item) {
+				if (a_item) {
+					RE::TESBoundObject* equipObject = nullptr;
+					RE::ExtraDataList* extraData = nullptr;
+
+					InventoryBoundObjects(a_targetRef, a_item, equipObject, extraData);
+
+					if (auto actor = a_targetRef->As<RE::Actor>()) {
+						actor->AddWornItem(equipObject, 1, false, 0, 0);
+						UserData::SendEvent(ModexActionType::EquipItem, po3_GetEditorID(a_item->GetFormID()), a_owner);
+					}
+				}
+
+				return RE::BSContainer::ForEachResult::kContinue;
+			});
+		});
+	}
+
+	// TEST: What happens when we call this on Player?
+	static inline void SetSleepOutfitOnActor(Ownership a_owner, RE::TESObjectREFR* a_targetRef, RE::BGSOutfit* a_outfit)
+	{
+		(void) a_owner;
+
+		if (!a_targetRef || !a_outfit)
+			return;
+
+		if (auto npc = a_targetRef->As<RE::Actor>()) {
+			if (auto base = npc->GetActorBase()) {
+				base->sleepOutfit = a_outfit;
+				UserData::SendEvent(ModexActionType::SetSleepOutfit, a_targetRef->GetFormID(), a_owner);
+			}
+		}
+	}
+
+	// TEST: Is this okay being applied to the actor base?
 	static inline void SetDefaultOutfitOnActor(Ownership a_owner, RE::TESObjectREFR* a_targetRef, RE::BGSOutfit* a_outfit)
 	{
 		(void)a_owner;
@@ -423,6 +485,7 @@ namespace Modex::Commands
 		if (auto npc = a_targetRef->As<RE::Actor>()) {
 			if (auto base = npc->GetActorBase()) {
 				base->defaultOutfit = a_outfit;
+				UserData::SendEvent(ModexActionType::SetDefaultOutfit, a_targetRef->GetFormID(), a_owner);
 			}
 		}
 	}

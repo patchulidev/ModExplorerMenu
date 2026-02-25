@@ -190,6 +190,14 @@ namespace Modex
 				AddToFavorites(a_item);
 				UINotification::ShowAction(Translate("ADD_TO_FAVORITES"), a_item->GetName(), ICON_LC_HEART);
 				break;
+			case Modex::ModexActionType::SetDefaultOutfit:
+				AddToRecentList(a_item);
+				UINotification::ShowAction(Translate("SET_DEFAULT_OUTFIT"), a_item->GetEditorID(), ICON_LC_SHIRT);
+				break;
+			case Modex::ModexActionType::SetSleepOutfit:
+				AddToRecentList(a_item);
+				UINotification::ShowAction(Translate("SET_SLEEP_OUTFIT"), a_item->GetEditorID(), ICON_LC_SHIRT);
+				break;
 			case ModexActionType::Unfavorited:
 				RemoveFromFavorites(a_item);
 				UINotification::ShowAction(Translate("REMOVE_FROM_FAVORITES"), a_item->GetName(), ICON_LC_HEART_OFF);

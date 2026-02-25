@@ -1,4 +1,6 @@
 #include "PlayerChestSpawn.h"
+#include "RE/B/BSContainer.h"
+#include "data/BaseObject.h"
 #include "ui/core/UIManager.h"
 #include "core/Commands.h"
 
@@ -89,11 +91,47 @@ namespace Modex
 		// }
 	}
 
+	void PlayerChestSpawn::PopulateChestWithOutfit(const RE::BGSOutfit* a_outfit)
+	{
+		if (!a_outfit) return;
+
+		Reset();
+
+		auto container = m_chestHandle.get();
+
+		if (!container)
+			return;
+
+		auto displayName = po3_GetEditorID(a_outfit->GetFormID());
+
+		container->SetDisplayName(displayName.c_str(), true);
+
+
+		a_outfit->ForEachItem([&container](RE::TESForm* a_item) {
+			if (auto boundObject = a_item->As<RE::TESBoundObject>(); boundObject) {
+				container->AddObjectToContainer(
+					boundObject, 
+					nullptr,
+					1,
+					nullptr
+				);
+			}
+
+			return RE::BSContainer::ForEachResult::kContinue;
+		});
+
+		OpenChest();
+	}
+
 	void PlayerChestSpawn::PopulateChestWithKit(const Modex::Kit& a_kit)
 	{
 		Reset();
 
 		auto container = m_chestHandle.get();
+
+		if (!container)
+			return;
+
 		container->SetDisplayName(a_kit.GetName().c_str(), true);
 
 		int _count = 0;

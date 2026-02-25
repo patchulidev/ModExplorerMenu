@@ -32,6 +32,8 @@ namespace Modex
 		CopyKit,
 		Favorited,
 		Unfavorited,
+		SetDefaultOutfit,
+		SetSleepOutfit,
 		Total,
 	};
 
