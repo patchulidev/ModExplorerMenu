@@ -147,7 +147,7 @@ namespace Modex
 						}
 					}
 
-					auto pluginList = Data::GetSingleton()->GetModulePluginListSorted(Data::PluginType::All, Data::PluginSort::Load_Order_Ascending);
+					auto pluginList = Data::GetSingleton()->GetModulePluginListSorted(Ownership::All, PluginSort::Load_Order_Ascending);
 					for (auto& plugin : pluginList) {
 						if (dependencies.contains(plugin->fileName)) {
 							message += std::format("[{}] - {}\n", Translate("Found"), plugin->fileName);
@@ -169,9 +169,9 @@ namespace Modex
 					UIManager::GetSingleton()->ShowWarning(Translate("CLEAR_INVENTORY"), description, true, [this]() {
 						if (auto target = this->m_tables[1]->GetTableTargetRef(); target) {
 							if (ImGui::GetIO().KeyShift) {
-								Commands::ResetTargetInventory(target);
+								Commands::ResetTargetInventory(this->m_tables[1]->GetOwnership(), target);
 							} else {
-								Commands::RemoveAllItemsFromInventory(target);
+								Commands::RemoveAllItemsFromInventory(this->m_tables[1]->GetOwnership(), target);
 							}
 						}
 					});
@@ -230,7 +230,7 @@ namespace Modex
 		UITable::ModexTableFlag_EnableSearch |
 		UITable::ModexTableFlag_EnableItemPreviewOnHover;
 
-		auto table = std::make_unique<UITable>("AddItem", true, 0, table_flags);
+		auto table = std::make_unique<UITable>("AddItem", true, Ownership::Item, table_flags);
 		table->SetDragDropHandle(UITable::DragDropHandle::Table);
 
 		constexpr auto kit_flags = 
@@ -238,7 +238,7 @@ namespace Modex
 		UITable::ModexTableFlag_EnableItemPreviewOnHover |
 		UITable::ModexTableFlag_EnableHeader;
 
-		auto kit = std::make_unique<UITable>("Equipment", true, 0, kit_flags);
+		auto kit = std::make_unique<UITable>("Equipment", true, Ownership::Item, kit_flags);
 		kit->SetKitPointer(&m_selectedKit);
 		kit->SetDragDropHandle(UITable::DragDropHandle::Kit);
 		kit->Refresh();

@@ -40,7 +40,7 @@ namespace Modex
 		UITable::ModexTableFlag_EnableSearch |
 		UITable::ModexTableFlag_EnableHeader;
 
-		auto table = std::make_unique<UITable>("AddItem", true, 0, table_flags);
+		auto table = std::make_unique<UITable>("AddItem", true, Ownership::Item, table_flags);
 		table->SetDragDropHandle(UITable::DragDropHandle::Table);
 
 		m_tables.push_back(std::move(table));

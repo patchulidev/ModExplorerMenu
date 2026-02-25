@@ -136,7 +136,7 @@ namespace Modex
 		auto& cache = GetSingleton()->m_cache;
 		cache[data.m_key] = data;
 
-		UserData::SendEvent(ModexActionType::CreateKit, data.m_key);
+		UserData::SendEvent(ModexActionType::CreateKit, data.m_key, Ownership::Kit);
 
 		Info("Created new kit: '{}'", data.m_key);
 		return data;
@@ -232,7 +232,7 @@ namespace Modex
 			}
 
 			file << data.dump(4);
-			UserData::SendEvent(ModexActionType::SaveKit, a_kit.m_key);
+			UserData::SendEvent(ModexActionType::SaveKit, a_kit.m_key, Ownership::Kit);
 			Info("Saved kit '{}' to file", a_kit.m_key);
 			return true;
 		} catch (const std::exception& e) {
@@ -271,7 +271,7 @@ namespace Modex
 		auto& cache = GetSingleton()->m_cache;
 		cache[new_kit.m_key] = new_kit;
 
-		UserData::SendEvent(ModexActionType::CopyKit, new_kit.m_key);
+		UserData::SendEvent(ModexActionType::CopyKit, new_kit.m_key, Ownership::Kit);
 		Info("Copied kit '{}' to new kit '{}'", a_kit.m_key, new_kit.m_key);
 		return new_kit;
 	}
@@ -323,7 +323,7 @@ namespace Modex
 			cache.erase(old_key);
 			cache[new_key] = new_kit;
 			
-			UserData::SendEvent(ModexActionType::RenameKit, new_key);
+			UserData::SendEvent(ModexActionType::RenameKit, new_key, Ownership::Kit);
 			Info("Successfully renamed kit '{}' to '{}'", old_key, new_key);
 			return std::move(new_kit);
 			
@@ -355,7 +355,7 @@ namespace Modex
 		}
 		
 		cache.erase(a_kit.m_key);
-		UserData::SendEvent(ModexActionType::DeleteKit, a_kit.m_key);
+		UserData::SendEvent(ModexActionType::DeleteKit, a_kit.m_key, Ownership::Kit);
 		Info("Deleted kit: {}", a_kit.m_key);
 	}
 
@@ -393,9 +393,9 @@ namespace Modex
 			RE::TESForm* form = RE::TESForm::LookupByEditorID(kitItem->m_editorid);
 
 			if (form) {
-				items.push_back(BaseObject(form, 0));
+				items.push_back(BaseObject(form, Ownership::Kit, 0));
 			} else {
-				items.push_back(BaseObject(kitItem->m_name, kitItem->m_editorid, kitItem->m_plugin, 0));
+				items.push_back(BaseObject(kitItem->m_name, kitItem->m_editorid, kitItem->m_plugin, Ownership::Kit, 0));
 			}
 		}
 		

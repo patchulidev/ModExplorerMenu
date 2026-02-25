@@ -41,7 +41,7 @@ namespace Modex
 		UITable::ModexTableFlag_EnableSearch |
 		UITable::ModexTableFlag_EnableHeader;
 
-		auto table = std::make_unique<UITable>("Actor", true, 1, table_flags);
+		auto table = std::make_unique<UITable>("Actor", true, Ownership::Actor, table_flags);
 
 		m_tables.push_back(std::move(table));
 	}

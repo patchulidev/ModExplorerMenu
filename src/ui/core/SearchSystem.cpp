@@ -43,10 +43,7 @@ namespace Modex
 
 		j["CurrentSearchProperty"] = m_searchKey.ToString();
 
-	    // Debug: Check what's actually in the buffer
 		std::string buffer_str(m_searchBuffer);
-		Info("SerializeState - Buffer contents: '{}' (length: {})", buffer_str, buffer_str.length());
-
 		j["CurrentSearchBuffer"] = buffer_str;
 
 		return j;
@@ -54,24 +51,19 @@ namespace Modex
 
 	void SearchSystem::DeserializeState(const nlohmann::json& a_state)
 	{
-		Info("Deserializing SearchSystem state...\n\n{}", a_state.dump());
 		if (a_state.contains("CurrentSearchProperty") && a_state["CurrentSearchProperty"].is_string()) {
-			Info("Trying to assign Search Key");
 			std::string prop_str = a_state["CurrentSearchProperty"].get<std::string>();
 			auto filter = FilterProperty::FromString(prop_str);
 
 			if (filter.has_value()) {
-				Info("Succeeded");
 				m_searchKey = filter.value();
 			} else {
-				Info("Failed");
 				m_searchKey = SearchItem(PropertyType::kNone);
 			}
 		}
 
 		if (a_state.contains("CurrentSearchBuffer") && a_state["CurrentSearchBuffer"].is_string()) {
 			std::string buffer_str = a_state["CurrentSearchBuffer"].get<std::string>();
-			Info("Restoring search buffer: {}", buffer_str);
 			ImFormatString(m_searchBuffer, sizeof(m_searchBuffer), "%s", buffer_str.c_str());
 		}
 	}

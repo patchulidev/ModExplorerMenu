@@ -8,9 +8,11 @@
 # folders
 build/
 vs*/
+dist/SKSE/
+dist/SKSE/*
+.claude
+.claude/*
 
 # files
 *.zip
 compile_commands.json
-dist/SKSE/
-dist/SKSE/*

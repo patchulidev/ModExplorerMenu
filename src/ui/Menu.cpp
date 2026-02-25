@@ -150,10 +150,11 @@ namespace Modex
 		// Render a splash logo if theme contains a valid path.
 		if (const auto splash_image = ThemeConfig::GetSplashLogo(); splash_image.has_value()) {
 			if (splash_image->texture != nullptr) {
-				const float image_width = static_cast<float>(splash_image->width);
-				const float image_height = static_cast<float>(splash_image->height);
-				ImGui::SetCursorPosX((a_displaySize.x / 2.0f) - (splash_image->width / 2.0f));
-				ImGui::SetCursorPosY((a_displaySize.y / 2.0f) - (splash_image->height / 2.0f));
+				const auto& config = UserConfig::Get();
+				const float image_width = static_cast<float>(splash_image->width) * config.welcomeBannerScale.x;
+				const float image_height = static_cast<float>(splash_image->height) * config.welcomeBannerScale.y;
+				ImGui::SetCursorPosX((a_displaySize.x - image_width) * 0.5f);
+				ImGui::SetCursorPosY((a_displaySize.y - image_height) * 0.5f);
 				ImGui::Image(reinterpret_cast<ImTextureID>(splash_image->texture), ImVec2(image_width, image_height));
 			}
 		}

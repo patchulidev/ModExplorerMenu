@@ -21,7 +21,6 @@
 #include <imgui_internal.h>
 #include <imgui_freetype.h>
 
-
 #include <SimpleIni.h>
 #include <nlohmann/json.hpp>
 #include <shared_mutex>
@@ -46,28 +45,24 @@ using namespace std::literals;
 
 namespace Modex
 {
-	// Helper functions for UTF-8/UTF-16 conversion
-    inline std::string WideToUTF8(const std::wstring& wstr)
-    {
-        if (wstr.empty()) return std::string();
-        
-        int size_needed = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), (int)wstr.size(), nullptr, 0, nullptr, nullptr);
-        std::string result(size_needed, 0);
-        WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), (int)wstr.size(), &result[0], size_needed, nullptr, nullptr);
-        
-        return result;
-    }
+	enum class Ownership : uint32_t 
+	{
+		None = 0,
+		Item,
+		Actor,
+		Kit,
+		Object,
+		Cell,
+		All
+	};
 
-    inline std::wstring UTF8ToWide(const std::string& str)
-    {
-        if (str.empty()) return std::wstring();
-        
-        int size_needed = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), (int)str.size(), nullptr, 0);
-        std::wstring result(size_needed, 0);
-        MultiByteToWideChar(CP_UTF8, 0, str.c_str(), (int)str.size(), &result[0], size_needed);
-        
-        return result;
-    }
+	enum class PluginSort : uint32_t 
+	{
+		Alphabetical = 0,
+		Load_Order_Ascending,
+		Load_Order_Descending,
+		kTotal,
+	};
 }
 
 namespace stl

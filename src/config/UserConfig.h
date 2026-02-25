@@ -43,19 +43,19 @@ namespace Modex
 			bool lockPosition 		= true;
 			bool pauseGame 			= false;
 			bool disableSplash		= false;
-			bool disableInMenu 		= false;
 			bool disableAlt			= false;
-			bool welcomeBanner 		= true;
 			bool smoothScroll 		= true;
 			bool basePlugin			= false;
 			bool showMissing		= true;
 			bool developerMode		= false;
+			bool welcomeBanner 		= true; // hidden
 
 			std::string language 		= "English";
 			std::string theme 			= "default";
 			std::string globalFont 		= "Ubuntu-Regular";
 
 			ImVec2 screenScaleRatio		= ImVec2(1.0f, 1.0f);
+			ImVec2 welcomeBannerScale   = ImVec2(1.0f, 1.0f); // hidden
 		};
 
 		UserSettings _default;

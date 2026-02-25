@@ -138,7 +138,7 @@ namespace Modex
 			RE::StatsMenu::MENU_NAME,
 			RE::LevelUpMenu::MENU_NAME,
 			"LootMenu"sv, // Quickloot
-			"CustomMenu"sv, // ?
+			// "CustomMenu"sv, // Unexpected Behavior ?
 		};
 		
 	};

@@ -3,6 +3,8 @@
 #include "ConfigManager.h"
 #include "data/BaseObject.h"
 
+// TODO: chore: move new juvenile event system into its own implementation.
+
 namespace Modex
 {
 	static const std::filesystem::path USERDATA_JSON_PATH =
@@ -28,8 +30,8 @@ namespace Modex
 		DeleteKit,
 		RenameKit,
 		CopyKit,
-		CenterOnCell,
 		Favorited,
+		Unfavorited,
 		Total,
 	};
 
@@ -37,14 +39,12 @@ namespace Modex
 	{
 	private:
 		struct RecentData {
-			std::vector<std::string> items;
+			std::vector<SerializedObject> items;
 			size_t maxSize;
 		};
 
-		// TODO: Expand on Favorites implementation
-
 		struct FavoriteData {
-			std::vector<std::string> items;
+			std::vector<SerializedObject> items;
 		};
 
 		static inline RecentData m_recent{ {}, 50 };
@@ -57,18 +57,24 @@ namespace Modex
 		UserData(const UserData&) = delete;
 		UserData& operator=(const UserData&) = delete;
 
+		// baseclass
 		static void Save();
 		static void Load();
 
+		// event system
 		static void SendEvent(ModexActionType a_actionType, const std::unique_ptr<BaseObject>& a_item);
-		static void SendEvent(ModexActionType a_actionType, const std::string& a_editorid = "");
+		static void SendEvent(ModexActionType a_actionType, const std::string& a_text, Ownership a_owner);
+		static void SendEvent(ModexActionType a_actionType, RE::FormID a_refid, Ownership a_owner);
 
-		static std::vector<std::string> GetRecentAsVector() { return m_recent.items; }
+		// recent
+		static std::vector<SerializedObject> GetRecentAsVector() { return m_recent.items; }
 		static RecentData& GetRecent() { return m_recent; }
 
-		static void AddFavorite(const std::unique_ptr<BaseObject>& a_item);
-		static std::vector<std::string> GetFavoritesAsVector() { return m_favorites.items; }
+		// favorites
+		static std::vector<SerializedObject> GetFavoritesAsVector() { return m_favorites.items; }
 		static FavoriteData& GetFavorites() { return m_favorites; }
+		static bool IsFavorited(const std::string& a_editorid);
+		static bool IsFavorited(RE::FormID a_refid);
 
 		static nlohmann::json& GetData() { return m_userDataConfig.GetData(); }
 
@@ -85,3 +91,4 @@ namespace Modex
 		}
 	};
 }
+

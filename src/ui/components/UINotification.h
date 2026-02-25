@@ -1,6 +1,7 @@
 #pragma once
 
 #include "data/BaseObject.h"
+#include "imgui.h"
 
 // TODO: Expand notification display and configuration.
 
@@ -109,6 +110,7 @@ namespace Modex
 			ImGuiWindowFlags_NoScrollbar |
 			ImGuiWindowFlags_NoBackground |
 			ImGuiWindowFlags_NoFocusOnAppearing |
+			ImGuiWindowFlags_NoMouseInputs |
 			ImGuiWindowFlags_NoNav;
 
 		static inline std::deque<UIMessage> s_messages;

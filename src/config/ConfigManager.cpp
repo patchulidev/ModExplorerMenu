@@ -44,8 +44,10 @@ namespace Modex
 	{
 		auto& userdata = UserData::GetData();
 		auto serialized = SerializeState();
-		Info("SaveState({}) - Saving: {}", a_key, serialized.dump());
 		userdata[a_key] = serialized;
+
+		Trace("Saving State {}", a_key);
+		Trace(" - {}", serialized.dump());
 	}
 
 	// a_create ensures json file is created to prevent CTD.

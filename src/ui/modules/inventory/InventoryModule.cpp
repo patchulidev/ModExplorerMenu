@@ -65,7 +65,7 @@ namespace Modex
 		UITable::ModexTableFlag_EnableSearch |
 		UITable::ModexTableFlag_EnableItemPreviewOnHover;
 
-		auto table = std::make_unique<UITable>("AddItem", true, 0, table_flags);
+		auto table = std::make_unique<UITable>("AddItem", true, Ownership::Item, table_flags);
 		table->SetDragDropHandle(UITable::DragDropHandle::Table);
 
 		constexpr auto inventory_flags = 
@@ -73,10 +73,10 @@ namespace Modex
 		UITable::ModexTableFlag_EnableItemPreviewOnHover |
 		UITable::ModexTableFlag_Inventory;
 
-		auto inventory_rhs = std::make_unique<UITable>("Inventory", true, 0, inventory_flags);
+		auto inventory_rhs = std::make_unique<UITable>("Inventory", true, Ownership::Item, inventory_flags);
 		inventory_rhs->SetDragDropHandle(UITable::DragDropHandle::Inventory);
 
-		auto inventory_lhs = std::make_unique<UITable>("Inventory", false, 0, inventory_flags);
+		auto inventory_lhs = std::make_unique<UITable>("Inventory", false, Ownership::Item, inventory_flags);
 		inventory_lhs->SetDragDropHandle(UITable::DragDropHandle::Inventory);
 
 		// Pair table + inventory table for inventory insertion / deletion.

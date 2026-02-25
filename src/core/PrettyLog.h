@@ -6,6 +6,9 @@
 #include <windows.h>
 #include <dbghelp.h>
 #pragma comment(lib, "dbghelp.lib")
+
+// TODO: chore: refactor logging and assertions for debug builds.
+
 namespace Modex::PrettyLog
 {
 	inline std::string GetStackTrace(int skip_frames = 0)

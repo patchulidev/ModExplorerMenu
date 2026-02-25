@@ -5,6 +5,7 @@
 #include "ui/core/UIManager.h"
 #include "config/UserData.h"
 
+// TODO: Implement requested Papyrus API for some handlers.
 
 namespace Modex::Commands
 {
@@ -91,7 +92,7 @@ namespace Modex::Commands
 			auto& [count, entry] = data;
 			if (count > 0 && entry) {
 				uint32_t quantity = static_cast<std::uint32_t>(count);
-				m_inventory.emplace_back(entry->object, 0, 0, quantity);
+				m_inventory.emplace_back(entry->object, Ownership::Item, 0, 0, quantity);
 			}
 		}
 
@@ -100,7 +101,7 @@ namespace Modex::Commands
 	}
 
 	// Called repeatedly in a loop
-	static inline void AddItemToInventory(RE::TESObjectREFR* a_targetRef, const std::string& a_editorID, uint32_t a_amount = 1)
+	static inline void AddItemToInventory(Ownership a_owner, RE::TESObjectREFR* a_targetRef, const std::string& a_editorID, uint32_t a_amount = 1)
 	{
 		if (!a_targetRef)
 			return;
@@ -116,28 +117,28 @@ namespace Modex::Commands
 			return;
 		
 		a_targetRef->AddObjectToContainer(boundObject, nullptr, a_amount, nullptr);
-		UserData::SendEvent(ModexActionType::AddItem, a_editorID);
+		UserData::SendEvent(ModexActionType::AddItem, a_editorID, a_owner);
 	}
 
-	static inline void AddItemToRefInventory(RE::TESObjectREFR* a_targetRef, const std::string& a_editorID, uint32_t a_amount = 1)
+	static inline void AddItemToRefInventory(Ownership a_owner, RE::TESObjectREFR* a_targetRef, const std::string& a_editorID, uint32_t a_amount = 1)
 	{
 		if (!a_targetRef)
 			return;
 
-		Commands::AddItemToInventory(a_targetRef, a_editorID, a_amount);
+		Commands::AddItemToInventory(a_owner, a_targetRef, a_editorID, a_amount);
 	}
 
-	static inline void AddItemToPlayerInventory(const std::string& a_editorID, uint32_t a_amount = 1)
+	static inline void AddItemToPlayerInventory(Ownership a_owner, const std::string& a_editorID, uint32_t a_amount = 1)
 	{
 		auto player = RE::PlayerCharacter::GetSingleton();
 
 		if (!player)
 			return;
 
-		AddItemToInventory(player->AsReference(), a_editorID, a_amount);
+		AddItemToInventory(a_owner, player->AsReference(), a_editorID, a_amount);
 	}
 
-	static inline void RemoveAllItemsFromInventory(RE::TESObjectREFR* a_targetRef)
+	static inline void RemoveAllItemsFromInventory(Ownership a_owner, RE::TESObjectREFR* a_targetRef)
 	{
 		if (!a_targetRef)
 			return;
@@ -150,12 +151,12 @@ namespace Modex::Commands
 		    auto& [count, entry] = data;
 		    if (count > 0 && entry) {
 		        a_targetRef->RemoveItem(obj, count, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
-				UserData::SendEvent(ModexActionType::RemoveItem, po3_GetEditorID(obj->GetFormID()));
+				UserData::SendEvent(ModexActionType::RemoveItem, po3_GetEditorID(obj->GetFormID()), a_owner);
 		    }
 		}
 	}
 
-	static inline void RemoveItemFromInventory(RE::TESObjectREFR* a_targetRef, const std::string& a_editorID, uint32_t a_amount = 1)
+	static inline void RemoveItemFromInventory(Ownership a_owner, RE::TESObjectREFR* a_targetRef, const std::string& a_editorID, uint32_t a_amount = 1)
 	{
 		if (!a_targetRef)
 			return;
@@ -171,10 +172,10 @@ namespace Modex::Commands
 			return;
 		
 		a_targetRef->RemoveItem(boundObject, a_amount, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
-		UserData::SendEvent(ModexActionType::RemoveItem, a_editorID);
+		UserData::SendEvent(ModexActionType::RemoveItem, a_editorID, a_owner);
 	}
 
-	static inline void RemoveItemFromPlayerInventory(const std::string& a_editorID, uint32_t a_amount = 1)
+	static inline void RemoveItemFromPlayerInventory(Ownership a_owner, const std::string& a_editorID, uint32_t a_amount = 1)
 	{
 		auto player = RE::PlayerCharacter::GetSingleton();
 
@@ -186,20 +187,22 @@ namespace Modex::Commands
 		if (!playerRef)
 			return;
 
-		RemoveItemFromInventory(playerRef, a_editorID, a_amount);
+		RemoveItemFromInventory(a_owner, playerRef, a_editorID, a_amount);
 	}
 
-	static inline void ResetTargetInventory(RE::TESObjectREFR* a_targetRef)
+	static inline void ResetTargetInventory(Ownership a_owner, RE::TESObjectREFR* a_targetRef)
 	{
 		if (!a_targetRef)
 			return;
 
 		a_targetRef->ResetInventory(false);
-		UserData::SendEvent(ModexActionType::ResetInventory);
+		UserData::SendEvent(ModexActionType::ResetInventory, po3_GetEditorID(a_targetRef->GetFormID()), a_owner);
 	}
 
-	static inline void UnequipAllItemsFromInventory(RE::TESObjectREFR* a_targetRef)
+	static inline void UnequipAllItemsFromInventory(Ownership a_owner, RE::TESObjectREFR* a_targetRef)
 	{
+		(void)a_owner;
+
 		if (!a_targetRef)
 			return;
 
@@ -257,14 +260,14 @@ namespace Modex::Commands
 		return count;
 	}
 
-	static inline void AddAndEquipItemToInventory(RE::TESObjectREFR* a_targetRef, const std::string& a_editorID, uint32_t a_amount = 1)
+	static inline void AddAndEquipItemToInventory(Ownership a_owner, RE::TESObjectREFR* a_targetRef, const std::string& a_editorID, uint32_t a_amount = 1)
 	{
 		if (!a_targetRef)
 			return;
 
-		AddItemToInventory(a_targetRef, a_editorID, a_amount);
+		AddItemToInventory(a_owner, a_targetRef, a_editorID, a_amount);
 		
-		SKSE::GetTaskInterface()->AddTask([a_targetRef, a_editorID]() {
+		SKSE::GetTaskInterface()->AddTask([a_owner, a_targetRef, a_editorID]() {
 			auto actor = a_targetRef->As<RE::Actor>();
 			RE::TESForm* form = RE::TESForm::LookupByEditorID(a_editorID);
 
@@ -287,26 +290,26 @@ namespace Modex::Commands
 			// RE::ActorEquipManager::GetSingleton()->EquipObject(actor, equipObject, extraData, 1, equipSlot);
 
 			actor->AddWornItem(equipObject, 1, false, 0, 0);
-			UserData::SendEvent(ModexActionType::EquipItem, a_editorID);
+			UserData::SendEvent(ModexActionType::EquipItem, a_editorID, a_owner);
 		});
 		
 	}
 
-	static inline void AddAndEquipItemToPlayerInventory(const std::string& a_editorID)
+	static inline void AddAndEquipItemToPlayerInventory(Ownership a_owner, const std::string& a_editorID)
 	{
 		auto player = RE::PlayerCharacter::GetSingleton();
 
 		if (!player)
 			return;
 
-		AddAndEquipItemToInventory(player->AsReference(), a_editorID, 1);
+		AddAndEquipItemToInventory(a_owner, player->AsReference(), a_editorID, 1);
 	}
 
-	static inline void ReadBook(const std::string& a_editorID)
+	static inline void ReadBook(Ownership a_owner, const std::string& a_editorID)
 	{
-		SKSE::GetTaskInterface()->AddTask([a_editorID]() {
+		SKSE::GetTaskInterface()->AddTask([a_owner, a_editorID]() {
 			RE::TESForm* form = RE::TESForm::LookupByEditorID(a_editorID);
-			Commands::AddItemToPlayerInventory(a_editorID, 1); // Ensure the book is in inventory
+			Commands::AddItemToPlayerInventory(a_owner, a_editorID, 1); // Ensure the book is in inventory
 
 			if (!form) 
 				return;
@@ -340,14 +343,14 @@ namespace Modex::Commands
 		});
 	}
 
-	static inline void TeleportNPCToPlayer(uint32_t a_refID)
+	static inline void TeleportNPCToPlayer(Ownership a_owner, uint32_t a_refID)
 	{
 		if (a_refID != 0) {
 			if (auto player = RE::PlayerCharacter::GetSingleton(); player) {
 				if (auto playerRefr = player->AsReference()) {
 					if (auto ref = RE::TESForm::LookupByID<RE::TESObjectREFR>(a_refID)) {
 						ref->MoveTo(playerRefr);
-						UserData::SendEvent(ModexActionType::BringReference, po3_GetEditorID(ref->GetFormID()));
+						UserData::SendEvent(ModexActionType::BringReference, ref->GetFormID(), a_owner); 
 						UIManager::CloseAllGameMenus();
 					}
 				}
@@ -355,40 +358,40 @@ namespace Modex::Commands
 		}
 	}
 
-	static inline void TeleportREFRToPlayer(RE::TESObjectREFR* a_ref)
+	static inline void TeleportREFRToPlayer(Ownership a_owner, RE::TESObjectREFR* a_ref)
 	{
 		if (a_ref) {
 			if (auto player = RE::PlayerCharacter::GetSingleton(); player) {
 				if (auto playerRefr = player->AsReference()) {
 					a_ref->MoveTo(playerRefr);
-					UserData::SendEvent(ModexActionType::BringReference, po3_GetEditorID(a_ref->GetFormID()));
+					UserData::SendEvent(ModexActionType::BringReference, a_ref->GetFormID(), a_owner); 
 					UIManager::CloseAllGameMenus();
 				}
 			}
 		}
 	}
 
-	static inline void TeleportPlayerToREFR(RE::TESObjectREFR* a_ref)
+	static inline void TeleportPlayerToREFR(Ownership a_owner, RE::TESObjectREFR* a_ref)
 	{
 		if (a_ref) {
 			if (auto player = RE::PlayerCharacter::GetSingleton(); player) {
 				if (auto playerRefr = player->AsReference()) {
 					playerRefr->MoveTo(a_ref);
-					UserData::SendEvent(ModexActionType::GotoReference, po3_GetEditorID(a_ref->GetFormID()));
+					UserData::SendEvent(ModexActionType::GotoReference, a_ref->GetFormID(), a_owner); 
 					UIManager::CloseAllGameMenus();
 				}
 			}
 		}
 	}
 
-	static inline void TeleportPlayerToNPC(uint32_t a_refID)
+	static inline void TeleportPlayerToNPC(Ownership a_owner, uint32_t a_refID)
 	{
 		if (a_refID != 0) {
 			if (auto player = RE::PlayerCharacter::GetSingleton(); player) {
 				if (auto playerRefr = player->AsReference()) {
 					if (auto ref = RE::TESForm::LookupByID<RE::TESObjectREFR>(a_refID)) {
 						playerRefr->MoveTo(ref);
-						UserData::SendEvent(ModexActionType::GotoReference, po3_GetEditorID(ref->GetFormID()));
+						UserData::SendEvent(ModexActionType::GotoReference, ref->GetFormID(), a_owner);
 						UIManager::CloseAllGameMenus();
 					}
 				}
@@ -396,7 +399,7 @@ namespace Modex::Commands
 		}
 	}
 
-	static inline void PlaceAtMe(const std::string& a_editorID, uint32_t a_count = 1, bool persistent = true, bool disabled = false) 
+	static inline void PlaceAtMe(Ownership a_owner, const std::string& a_editorID, uint32_t a_count = 1, bool persistent = true, bool disabled = false) 
 	{
 		auto player = RE::PlayerCharacter::GetSingleton();
 		if (!player) 
@@ -410,12 +413,16 @@ namespace Modex::Commands
 			return;
 		
 		if (RE::TESForm* object = RE::TESForm::LookupByEditorID(a_editorID); object) {
-			Papyrus_PlaceAtMe(target, object, a_count, persistent, disabled);
-			UserData::SendEvent(ModexActionType::PlaceAtMe, a_editorID);
+			auto newObject = Papyrus_PlaceAtMe(target, object, a_count, persistent, disabled);
+			if (newObject) {
+				UserData::SendEvent(ModexActionType::PlaceAtMe, newObject->GetFormID(), a_owner);
+			} else {
+				Error("Failed to resolve new object from Papyrus_PlaceAtMe func: {}", a_editorID);
+			}
 		}
 	}
 
-	static inline void KillRefr(RE::TESObjectREFR* a_targetRef)
+	static inline void KillRefr(Ownership a_owner, RE::TESObjectREFR* a_targetRef)
 	{
 		if (!a_targetRef)
 			return;
@@ -426,10 +433,10 @@ namespace Modex::Commands
 			return;
 
 		actor->KillImpl(nullptr, actor->GetActorValueMax(RE::ActorValue::kHealth), true, true);
-		UserData::SendEvent(ModexActionType::KillActor, po3_GetEditorID(a_targetRef->GetFormID()));
+		UserData::SendEvent(ModexActionType::KillActor, a_targetRef->GetFormID(), a_owner); 
 	}
 
-	static inline void ResurrectRefr(RE::TESObjectREFR* a_targetRef)
+	static inline void ResurrectRefr(Ownership a_owner, RE::TESObjectREFR* a_targetRef)
 	{
 		if (!a_targetRef)
 			return;
@@ -440,29 +447,30 @@ namespace Modex::Commands
 			return;
 
 		actor->Resurrect(false, true);
-		UserData::SendEvent(ModexActionType::ReviveActor, po3_GetEditorID(a_targetRef->GetFormID()));
+		UserData::SendEvent(ModexActionType::ReviveActor, a_targetRef->GetFormID(), a_owner); 
 	}
 
-	static inline void DisableRefr(RE::TESObjectREFR* a_targetRef)
+	static inline void DisableRefr(Ownership a_owner, RE::TESObjectREFR* a_targetRef)
 	{
 		if (!a_targetRef)
 			return;
 
 		a_targetRef->Disable();
-		UserData::SendEvent(ModexActionType::DisableReference, po3_GetEditorID(a_targetRef->GetFormID()));
+		UserData::SendEvent(ModexActionType::DisableReference, a_targetRef->GetFormID(), a_owner); 
 	}
 
-	static inline void EnableRefr(RE::TESObjectREFR* a_targetRef, bool a_resetInventory = false)
+	static inline void EnableRefr(Ownership a_owner, RE::TESObjectREFR* a_targetRef, bool a_resetInventory = false)
 	{
 		if (!a_targetRef)
 			return;
 
 		a_targetRef->Enable(a_resetInventory);
-		UserData::SendEvent(ModexActionType::EnableReference, po3_GetEditorID(a_targetRef->GetFormID()));
+		UserData::SendEvent(ModexActionType::EnableReference, a_targetRef->GetFormID(), a_owner);
 	}
 
-	static inline void CenterOnCell(const std::string& a_cellEditorID)
+	static inline void CenterOnCell(Ownership a_owner, const std::string& a_cellEditorID)
 	{
+		(void)a_owner;
 		if (a_cellEditorID.empty())
 			return;
 
@@ -480,6 +488,6 @@ namespace Modex::Commands
 			player->CenterOnCell(cell);
 		});
 
-		UserData::SendEvent(ModexActionType::CenterOnCell, a_cellEditorID);
+		// UserData::SendEvent(ModexActionType::CenterOnCell, a_cellEditorID);
 	}
 }

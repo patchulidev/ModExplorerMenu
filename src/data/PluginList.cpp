@@ -43,7 +43,7 @@ namespace Modex
 
 	std::vector<std::string> Data::GetTypeString()
 	{
-		auto enumNames = magic_enum::enum_names<PluginType>();
+		auto enumNames = magic_enum::enum_names<Ownership>();
 		std::vector<std::string> strings;
 
 		for (auto& name : enumNames) {
@@ -78,20 +78,22 @@ namespace Modex
 	}
 
 	// Returns an unordered set of TESFile pointers cached at startup based on PluginType.
-	std::unordered_set<const RE::TESFile*> Data::GetModulePluginList(PluginType a_type)
+	std::unordered_set<const RE::TESFile*> Data::GetModulePluginList(Ownership a_type)
 	{
 		switch (a_type) {
-		case PluginType::Item:
+		case Ownership::Item:
 			return m_itemModList;
-		case PluginType::Actor:
+		case Ownership::Actor:
 			return m_npcModList;
-		case PluginType::Object:
+		case Ownership::Object:
 			return m_staticModList;
-		case PluginType::Cell:
+		case Ownership::Cell:
 			return m_cellModList;
-		case PluginType::kTotal:
-		case PluginType::All:
+		case Ownership::All:
 			return m_modList;
+		case Ownership::None:
+		case Ownership::Kit:
+			return {};
 		}
 
 		ASSERT_MSG(true, "Invalid Data::PluginType arg passed to Data::GetModulePluginList: '{}'", static_cast<uint8_t>(a_type));
@@ -99,20 +101,8 @@ namespace Modex
 		return m_modList;
 	}
 
-	// Returns an alphabetically sorted vector of plugin names cached at startup.
-	std::vector<std::string> Data::GetSortedListOfPluginNames()
-	{
-		std::vector<std::string> modList;
-
-		for (auto& mod : m_modListSorted) {
-			modList.push_back(mod);
-		}
-
-		return modList;
-	}
-
 	// Returns a sorted vector of TESFile pointers cached at startup based on PluginType.
-	std::vector<const RE::TESFile*> Data::GetModulePluginListSorted(PluginType a_type, PluginSort a_sortType)
+	std::vector<const RE::TESFile*> Data::GetModulePluginListSorted(Ownership a_owner, PluginSort a_sortType)
 	{
 		std::vector<const RE::TESFile*> copy;
 
@@ -124,23 +114,25 @@ namespace Modex
 			}
 		};
 
-		switch (a_type) 
+		switch (a_owner) 
 		{
-		case PluginType::Item:
+		case Ownership::Item:
 			safeCopy(m_itemModList);
 			break;
-		case PluginType::Actor:
+		case Ownership::Actor:
 			safeCopy(m_npcModList);
 			break;
-		case PluginType::Object:
+		case Ownership::Object:
 			safeCopy(m_staticModList);
 			break;
-		case PluginType::Cell:
+		case Ownership::Cell:
 			safeCopy(m_cellModList);
 			break;
-		case PluginType::kTotal:
-		case PluginType::All:
+		case Ownership::All:
 			safeCopy(m_modList);
+			break;
+		case Ownership::Kit:
+		case Ownership::None:
 			break;
 		}
 
@@ -219,9 +211,9 @@ namespace Modex
 	}
 
 	// Returns a sorted vector of plugin names filtered out by global blacklist config.
-	std::vector<std::string> Data::GetFilteredListOfPluginNames(PluginType a_type, PluginSort a_sort)
+	std::vector<std::string> Data::GetFilteredListOfPluginNames(Ownership a_owner, PluginSort a_sort)
 	{
-		const auto& masterlist = GetModulePluginListSorted(a_type, a_sort);
+		const auto& masterlist = GetModulePluginListSorted(a_owner, a_sort);
 		const auto& blacklist = BlacklistConfig::Get();
 
 		std::vector<std::string> pluginList;

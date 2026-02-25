@@ -1,14 +1,11 @@
 #pragma once
 
-#include "RE/T/TESAmmo.h"
 #include "localization/Locale.h"
-#include "pch.h"
 #include "external/magic_enum.hpp"
 #include "external/icons/IconsLucide.h"
 #include "config/UserConfig.h"
 
-#include <format>
-#include <optional>
+// TODO: chore: move Property implementation outside of BaseObject header.
 
 namespace Modex
 {
@@ -94,11 +91,10 @@ namespace Modex
 		kTotal
 	};
 
-	// Used to represent a property that can be filtered or sorted on
 	struct FilterProperty
 	{
 	private:
-		PropertyType		m_type;
+		PropertyType m_type;
 
 	public:
 		FilterProperty(PropertyType a_type) :
@@ -279,7 +275,6 @@ namespace Modex
 			case PropertyType::kTomeSkill:
 				return ICON_LC_BOOK_USER;
 			default:
-				// ASSERT_MSG(true, "Unhandled PropertyType in GetIcon()");
 				return ICON_LC_MESSAGE_CIRCLE_QUESTION;
 			}
 		}
@@ -342,8 +337,6 @@ namespace Modex
 			return TESFile->fileName;
 		}
 
-		// TEST: Changed to EditorID fallback. Verify stability.
-
 		std::string ValidateName() const
 		{
 			if (!IsValid()) return "Error";
@@ -362,7 +355,7 @@ namespace Modex
 			return m_form ? po3_GetEditorID(m_form->GetFormID()) : "[NULL FORM]";
 		}
 		
-		// BUG: If users change this at runtime, we need to regenerate all objects!!
+		// TODO: Handle cache validation after compile index setting changes.
 		[[nodiscard]] const std::string WGetPluginName() const {
 			const int32_t idx = UserConfig::GetCompileIndex();
 			return m_form ? ValidateFilename(idx) : "[NULL FORM]";
@@ -394,20 +387,22 @@ namespace Modex
 		const std::string 		m_plugin;
 		const std::string 		m_formid;
 		const RE::FormID 		m_baseid;
+		const Ownership			m_owner;
 	public:
 		RE::FormID 			m_refID;
 		ImGuiID 			m_tableID = 0;
 		int					m_quantity = 1;
 		bool                m_equipped = false;
 
-		// Constructor from TESForm pointer
-		BaseObject(RE::TESForm* form, ImGuiID a_id = 0, RE:: FormID a_refID = 0, int a_quantity = 1, bool a_equipped = false)
+		// Constructor from TESForm pointer where Ownership represents the module its used.
+		BaseObject(RE::TESForm* form, Ownership a_owner, ImGuiID a_id = 0, RE::FormID a_refID = 0, int a_quantity = 1, bool a_equipped = false)
 			: m_formWrapper{ form }
 			, m_name{ m_formWrapper.WGetName() }
 			, m_editorid{ m_formWrapper.WGetEditorID() }
 			, m_plugin{ m_formWrapper.WGetPluginName() }
 			, m_formid{ m_formWrapper. WGetFormID() }
 			, m_baseid{ m_formWrapper.WGetBaseFormID() }
+			, m_owner(a_owner)
 			, m_refID{ a_refID }
 			, m_tableID{ a_id }
 			, m_quantity{ a_quantity }
@@ -415,14 +410,15 @@ namespace Modex
 		{}
 
 		// Explicit dummy object constructor
-		BaseObject(std::string a_name, std::string a_editorid, std::string a_plugin, ImGuiID a_id = 0, int a_quantity = 1, bool a_equipped = false) 
+		BaseObject(std::string a_name, std::string a_editorid, std::string a_plugin, Ownership a_owner, uint32_t a_refid = 0, ImGuiID a_id = 0, int a_quantity = 1, bool a_equipped = false) 
 			: m_formWrapper{ nullptr }
 			, m_name{ a_name }
 			, m_editorid{ a_editorid }
 			, m_plugin{ a_plugin }
 			, m_formid{ "" }
 			, m_baseid{ 0 }
-			, m_refID{ 0 }
+			, m_owner(a_owner)
+			, m_refID{ a_refid }
 			, m_tableID{ a_id }
 			, m_quantity{ a_quantity }
 			, m_equipped{ a_equipped }
@@ -431,12 +427,13 @@ namespace Modex
 		~BaseObject() = default;
 
 		inline bool 					IsDummy() const { return !m_formWrapper.IsValid(); }
-		inline int						GetQuantity() const { return m_quantity; }		
+		inline int						GetQuantity() const { return m_quantity; }
 		inline bool 					GetEquipped() const { return m_equipped; }
 		inline RE::TESForm* 			GetTESForm() const { return m_formWrapper.Get(); }
 		inline RE::FormID 				GetBaseFormID() const { return m_baseid; }
 		inline RE::FormID 				GetRefID() const { return m_refID; }
 		inline ImGuiID 					GetTableID() const { return m_tableID; }
+		inline Ownership 				GetOwnership() const { return m_owner; }
 
 		inline const std::string& 		GetName() const { return m_name; }
 		inline const std::string& 		GetFormID() const { return m_formid; }
@@ -1223,7 +1220,7 @@ namespace Modex
 			return out;
 		}
 
-		// TODO: Check for current vs base?
+		// TODO: Implement reference-aware actor value lookups for actor module.
 		inline int GetActorValue(const RE::ActorValue a_value) const
 		{
 			if (auto npc = GetTESNPC(); npc.has_value()) {
@@ -1385,7 +1382,6 @@ namespace Modex
 					return (PropertyType::kFurniture);
 				case RE::FormType::Flora:
 					return (PropertyType::kFlora);
-				// default: ASSERT_MSG(true, "Unhandled GetItemPropertyType() case in BaseObject. '{}' '{}'", magic_enum::enum_name(formType), GetEditorID());
 				default:
 					return PropertyType::kNone;
 			}
@@ -1599,9 +1595,9 @@ namespace Modex
 			const auto form = RE::TESForm::LookupByEditorID(m_editorid);
 
 			if (form == nullptr) {
-				return BaseObject(m_name, m_editorid, m_plugin);
+				return BaseObject(m_name, m_editorid, m_plugin, Ownership::None);
 			} else {
-				return BaseObject(form);
+				return BaseObject(form, Ownership::None);
 			}
 		}
 
@@ -1609,18 +1605,16 @@ namespace Modex
 			const auto form = RE::TESForm::LookupByEditorID(m_editorid);
 
 			if (form == nullptr) {
-				return std::make_unique<BaseObject>(m_name, m_editorid, m_plugin);
+				return std::make_unique<BaseObject>(m_name, m_editorid, m_plugin, Ownership::None);
 			} else {
-				return std::make_unique<BaseObject>(form);
+				return std::make_unique<BaseObject>(form, Ownership::None);
 			}
 		}
-
-
 	};
 
 	struct KitPerk : KitBase
 	{
-		int					rank;
+		int rank;
 	};
 
 	struct KitSpell : KitBase // unused
@@ -1657,14 +1651,14 @@ namespace Modex
 	class Kit : public KitData
 	{
 	public:
-		std::string					m_desc;
+		std::string m_desc;
 		std::vector<std::shared_ptr<KitItem>> m_items;
 
 		// runtime
-		ImGuiID 					m_tableID = 0;
-		int							m_weaponCount;
-		int							m_armorCount;
-		int							m_miscCount;
+		ImGuiID m_tableID = 0;
+		int     m_weaponCount;
+		int     m_armorCount;
+		int     m_miscCount;
 
 		Kit() : 
 			m_weaponCount(0),

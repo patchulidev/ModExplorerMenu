@@ -37,7 +37,7 @@ namespace Modex
 		UITable::ModexTableFlag_EnableSearch |
 		UITable::ModexTableFlag_EnableHeader;
 
-		auto table = std::make_unique<UITable>("Object", true, 0, table_flags);
+		auto table = std::make_unique<UITable>("Object", true, Ownership::Object, table_flags);
 		m_tables.push_back(std::move(table));
 	}
 }

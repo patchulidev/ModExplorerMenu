@@ -7,29 +7,10 @@ namespace Modex
 	class Data
 	{
 	public:
-
-		enum class PluginType : uint8_t 
-		{
-			All = 0,
-			Item,
-			Actor,
-			Object,
-			Cell,
-			kTotal,
-		};
-
 		struct ActorRefData 
 		{
 			std::vector<RE::FormID> refs;
 			uint32_t count;
-		};
-
-		enum class PluginSort : uint8_t 
-		{
-			Alphabetical = 0,
-			Load_Order_Ascending,
-			Load_Order_Descending,
-			kTotal,
 		};
 
 		struct ModFileItemFlags
@@ -63,10 +44,9 @@ namespace Modex
 
 		void Run();
 	
-		std::unordered_set<const RE::TESFile*>			GetModulePluginList(PluginType a_type);
-		std::vector<const RE::TESFile*> 				GetModulePluginListSorted(PluginType a_type, PluginSort a_sortType);
-		std::vector<std::string> 						GetSortedListOfPluginNames();
-		std::vector<std::string> 						GetFilteredListOfPluginNames(PluginType a_type, PluginSort a_sort);
+		std::unordered_set<const RE::TESFile*>			GetModulePluginList(Ownership a_type);
+		std::vector<const RE::TESFile*> 				GetModulePluginListSorted(Ownership a_type, PluginSort a_sortType);
+		std::vector<std::string> 						GetFilteredListOfPluginNames(Ownership a_type, PluginSort a_sort);
 		bool											IsFormTypeInPlugin(const RE::TESFile* a_plugin, RE::FormType a_formType);
 		void 											CacheNPCRefIds();
 		void 											GenerateNPCClassList();
