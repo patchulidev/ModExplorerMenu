@@ -54,6 +54,7 @@
 	"MODULE_ACTOR": "Actor",
 	"MODULE_OBJECT": "Objects",
 	"MODULE_TELEPORT": "Teleport",
+	"MODULE_OUTFIT": "Outfit",
 	"MODULE_SETTINGS": "Settings",
 	"MODULE_EXIT": "Exit",
 
@@ -63,6 +64,7 @@
 	"TABLE_OBJECT": "Object Table",
 	"TABLE_ACTOR": "Actor Table",
 	"TABLE_CELL": "Cell Table",
+	"TABLE_OUTFIT": "Outfit Table",
 
 	"KIT": "Kit",
 	"KIT_SAVE": "Saved Kit",
@@ -96,6 +98,7 @@
 	"TAB_ACTOR": "Actor Table Layout",
 	"TAB_OBJECT": "Object Table Layout",
 	"TAB_TELEPORT": "Teleport Table Layout",
+	"TAB_OUTFIT": "Outfit Table Layout",
 
 	"CENTER_ON_CELL": "Center On Cell",
 
@@ -105,6 +108,7 @@
 	"HEADER_BROWSER": "File Browser",
 	"HEADER_ACTIONS": "Actions",
 	"HEADER_PREVIEW": "Form Preview",
+	"HEADER_OUTFIT_ITEMS": "Outfit Items",
 	"HEADER_KIT_TABLE": "Select and Manage Kits",
 	"HEADER_KIT_ACTIONS": "Selected Kit Actions",
 	"HEADER_KIT_SELECTION": "Kit Selection",
@@ -145,6 +149,8 @@
 	"REMOVE_SELECTION": "Remove Selection from Inventory",
 	"PLACE_SELECTION": "Place Selection On Ground",
 	"EQUIP_SELECTION": "Equip Selection To Target",
+	"ADD_OUTFIT_ITEMS": "Add Outfit Items To Inventory",
+	"SET_DEFAULT_OUTFIT": "Set As Default Outfit",
 	"EQUIP_SELECTION_TOOLTIP": "Add & Equip\n\nAdd & Equip the selected item(s) from the Table to your Target directly.",
 	"BRING_SELECTION": "Bring Selection To Player",
 	"GOTO_SELECTION": "Teleport To Selection",

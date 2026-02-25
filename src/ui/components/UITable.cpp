@@ -829,7 +829,8 @@ namespace Modex
 				return Filter(Data::GetSingleton()->GetNPCList());
 			if (pluginType == Ownership::Object)
 				return Filter(Data::GetSingleton()->GetObjectList());
-			// if (pluginType == 3)
+			if (pluginType == Ownership::Outfit)
+				return Filter(Data::GetSingleton()->GetOutfitList());
 		}
 	}
 	

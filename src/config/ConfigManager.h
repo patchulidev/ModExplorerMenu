@@ -35,12 +35,13 @@ namespace Modex
 		{Ownership::Kit, 3},
 		{Ownership::Object, 4},
 		{Ownership::Cell, 5},
-		{Ownership::All, 6}
+		{Ownership::Outfit, 6},
+		{Ownership::All, 7}
 	});
 
 	NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SerializedObject, plugin, editorid, refid, owner)
 
-	static_assert(static_cast<uint32_t>(Ownership::All) == 6, "Ownership enum changed! Update NLOHMANN_JSON_SERIALIZE_ENUM");
+	static_assert(static_cast<uint32_t>(Ownership::All) == 7, "Ownership enum changed! Update NLOHMANN_JSON_SERIALIZE_ENUM");
 
 	class ConfigManager
 	{

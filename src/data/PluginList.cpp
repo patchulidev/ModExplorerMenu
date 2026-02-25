@@ -89,6 +89,8 @@ namespace Modex
 			return m_staticModList;
 		case Ownership::Cell:
 			return m_cellModList;
+		case Ownership::Outfit:
+			return m_outfitModList;
 		case Ownership::All:
 			return m_modList;
 		case Ownership::None:
@@ -127,6 +129,9 @@ namespace Modex
 			break;
 		case Ownership::Cell:
 			safeCopy(m_cellModList);
+			break;
+		case Ownership::Outfit:
+			safeCopy(m_outfitModList);
 			break;
 		case Ownership::All:
 			safeCopy(m_modList);

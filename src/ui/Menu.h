@@ -70,6 +70,7 @@ namespace Modex
 			Actor,
 			Object,
 			Teleport,
+			Outfit,
 			Settings,
 			Count
 		};

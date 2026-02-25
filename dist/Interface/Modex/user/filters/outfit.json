@@ -1,0 +1,11 @@
+{
+    "SearchProperty": [
+        "kName",
+        "kEditorID",
+        "kFormID"
+	],
+    "SortProperty": [
+		"kNone"
+	],
+    "FilterProperty": []
+}

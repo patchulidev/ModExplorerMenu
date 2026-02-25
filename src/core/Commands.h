@@ -399,6 +399,34 @@ namespace Modex::Commands
 		}
 	}
 
+	static inline void AddOutfitItemsToInventory(Ownership a_owner, RE::TESObjectREFR* a_targetRef, RE::BGSOutfit* a_outfit)
+	{
+		if (!a_targetRef || !a_outfit)
+			return;
+
+		a_outfit->ForEachItem([&](RE::TESForm* a_item) {
+			if (auto boundObject = a_item->As<RE::TESBoundObject>()) {
+				a_targetRef->AddObjectToContainer(boundObject, nullptr, 1, nullptr);
+				UserData::SendEvent(ModexActionType::AddItem, po3_GetEditorID(a_item->GetFormID()), a_owner);
+			}
+			return RE::BSContainer::ForEachResult::kContinue;
+		});
+	}
+
+	static inline void SetDefaultOutfitOnActor(Ownership a_owner, RE::TESObjectREFR* a_targetRef, RE::BGSOutfit* a_outfit)
+	{
+		(void)a_owner;
+
+		if (!a_targetRef || !a_outfit)
+			return;
+
+		if (auto npc = a_targetRef->As<RE::Actor>()) {
+			if (auto base = npc->GetActorBase()) {
+				base->defaultOutfit = a_outfit;
+			}
+		}
+	}
+
 	static inline void PlaceAtMe(Ownership a_owner, const std::string& a_editorID, uint32_t a_count = 1, bool persistent = true, bool disabled = false) 
 	{
 		auto player = RE::PlayerCharacter::GetSingleton();

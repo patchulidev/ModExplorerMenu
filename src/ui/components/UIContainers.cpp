@@ -202,6 +202,65 @@ namespace Modex
 
 	}
 
+	void UIContainers::DrawOutfitActionPanel(const ImVec2 &a_pos, const ImVec2 &a_size, std::unique_ptr<UITable> &a_view)
+	{
+		const float button_height = ImGui::GetFontSize() * 1.5f;
+
+		ImGui::SameLine();
+		ImGui::SetCursorPos(a_pos);
+		if (ImGui::BeginChild("Modex::OutfitWindow::Actions", a_size)) {
+			const float max_width = ImGui::GetContentRegionAvail().x;
+			const bool action_allowed = a_view->IsActionAllowed();
+
+			UICustom::SubCategoryHeader(Translate("HEADER_ACTIONS"));
+
+			if (UICustom::ActionButton("ADD_OUTFIT_ITEMS", ImVec2(max_width, button_height), action_allowed && a_view->IsValidTargetReference())) {
+				const auto& selection = a_view->GetSelection();
+				for (const auto& item : selection) {
+					if (auto outfit = item->GetTESForm()->As<RE::BGSOutfit>()) {
+						Commands::AddOutfitItemsToInventory(a_view->GetOwnership(), a_view->GetTableTargetRef(), outfit);
+					}
+				}
+			}
+
+			if (UICustom::ActionButton("SET_DEFAULT_OUTFIT", ImVec2(max_width, button_height), action_allowed && a_view->IsValidTargetReference() && a_view->GetSelectionCount() == 1)) {
+				const auto& selection = a_view->GetSelection();
+				if (!selection.empty()) {
+					if (auto outfit = selection[0]->GetTESForm()->As<RE::BGSOutfit>()) {
+						Commands::SetDefaultOutfitOnActor(a_view->GetOwnership(), a_view->GetTableTargetRef(), outfit);
+					}
+				}
+			}
+
+			ImGui::Spacing();
+			ImGui::Spacing();
+
+			UICustom::SubCategoryHeader(Translate("HEADER_OUTFIT_ITEMS"));
+
+			// Show the item list of the selected outfit
+			const auto& preview = a_view->GetItemPreview();
+			if (preview) {
+				if (auto outfit = preview->GetTESForm()->As<RE::BGSOutfit>()) {
+					outfit->ForEachItem([](RE::TESForm* a_item) {
+						if (a_item) {
+							std::string name = a_item->GetName();
+							if (name.empty()) {
+								name = po3_GetEditorID(a_item->GetFormID());
+							}
+
+							std::string formid = std::format("{:08X}", a_item->GetFormID());
+							ImGui::Text("%s", name.c_str());
+							ImGui::SameLine();
+							ImGui::TextDisabled("[%s]", formid.c_str());
+						}
+						return RE::BSContainer::ForEachResult::kContinue;
+					});
+				}
+			}
+		}
+		ImGui::EndChild();
+	}
+
 	// Can be used globally as a general purpose BaseObject table.
 	void UIContainers::DrawBasicTablePanel(const char* a_localeText, const ImVec2 &a_pos, const ImVec2 &a_size, std::unique_ptr<UITable> &a_view)
 	{
