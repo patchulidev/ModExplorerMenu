@@ -1,11 +1,11 @@
 {
     "SearchProperty": [
-        "kName",
         "kEditorID",
         "kFormID"
 	],
     "SortProperty": [
-		"kNone"
+		"kNone",
+		"kOutfitItems"
 	],
     "FilterProperty": []
 }

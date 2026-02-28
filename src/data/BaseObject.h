@@ -89,6 +89,7 @@ namespace Modex
 		kImGuiSeparator,        // Special ImGui Separator
 		kKitItemCount,          // Kit properties
 		kOutfit,
+		kOutfitItems,
 		kLeveledItem,
 		kLeveledNPC,
 		kLeveledSpell,
@@ -285,6 +286,8 @@ namespace Modex
 				return ICON_LC_BOOK_USER;
 			case PropertyType::kOutfit:
 				return ICON_LC_SHIRT;
+			case PropertyType::kOutfitItems:
+				return ICON_LC_LIST_ORDERED;
 			case PropertyType::kLeveledItem:
 				return ICON_LC_LIST_PLUS;
 			case PropertyType::kLeveledNPC:
@@ -1185,6 +1188,18 @@ namespace Modex
 			return "";
 		}
 
+		inline std::string GetOutfitItemCount() const
+		{
+			if (auto outfit = GetTESOutfit(); outfit.has_value()) {
+				if (outfit.value() == nullptr || outfit.value()->outfitItems.size() == 0)
+					return "0";
+
+				return std::to_string(outfit.value()->outfitItems.size());
+			}
+
+			return "0";
+		}
+
 		inline std::vector<std::string> GetKeywordList() const
 		{
 			std::vector<std::string> keywords;
@@ -1614,6 +1629,8 @@ namespace Modex
 					return GetBookSkill();
 				case PropertyType::kKitItemCount:
 					return std::to_string(m_quantity); 
+				case PropertyType::kOutfitItems:
+					return GetOutfitItemCount();
 				case PropertyType::kLeveledItem: // Chance, flagged, count?
 				case PropertyType::kLeveledNPC:
 				case PropertyType::kLeveledSpell:

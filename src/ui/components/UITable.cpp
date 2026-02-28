@@ -17,6 +17,8 @@
 
 #include "ui/components/UIModule.h"
 
+// TODO: Serialize table selection in state
+
 namespace Modex
 {
 	bool UITable::IsValidTargetReference(RE::TESObjectREFR* a_reference) {
