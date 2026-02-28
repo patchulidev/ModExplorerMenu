@@ -2,7 +2,9 @@
 
 #include "UICustom.h"
 #include "data/Data.h"
+#include "core/Commands.h"
 #include "imgui.h"
+#include "imgui_internal.h"
 #include "localization/Locale.h"
 #include "config/ThemeConfig.h"
 #include "ui/components/UINotification.h"
@@ -10,8 +12,10 @@
 
 namespace Modex
 {
+	// Forward declaration for use in drawOutfitItem.
+	inline void ShowItemPreview(const std::unique_ptr<BaseObject>& a_item, bool a_tooltip = false);
 
-namespace 
+namespace
 {
 	inline ImU32 progressColor(const double value, const float max_value)
 	{
@@ -97,6 +101,28 @@ namespace
 		ImGui::ProgressBar(value / max_value, bar_size, buffer);
 		ImGui::PopStyleColor(1);
 		ImGui::PopStyleVar(1);
+	}
+
+	inline void inlineCheckbox(const std::unique_ptr<BaseObject>& a_item, PropertyType a_property)
+	{
+		const float max_width = ImGui::GetContentRegionAvail().x;
+		const std::string& icon = a_item->GetPropertyTypeWithIcon(a_property);
+		const std::string& tooltip = FilterProperty::GetPropertyTooltipKey(a_property);
+		bool flag = a_item->GetPropertyByValue(a_property).find("true") == std::string::npos ? false : true;
+		const float box_width = ImGui::GetFontSize();
+		const float width = (std::max)(max_width - box_width, ImGui::GetContentRegionAvail().x - box_width);
+
+		ImGui::Text("%s", icon.c_str());
+
+		// Icon + Property Type
+		if (ImGui::IsItemHovered()) {
+			UINotification::ShowTooltip(tooltip.c_str());
+		}
+
+		// Right align flag checkbox
+		ImGui::SameLine(width - 1.0f);
+		ImGui::Checkbox("##NoLabel", &flag);
+
 	}
 
 	inline void inlineText(const std::unique_ptr<BaseObject>& a_item, PropertyType a_property)
@@ -427,6 +453,145 @@ namespace
 		}
 	}
 
+	// Render a single concrete item as a selectable row in the outfit preview.
+	inline void drawOutfitItem(int a_index, RE::TESForm* a_form, uint16_t a_level)
+	{
+		const auto displayObject = std::make_unique<BaseObject>(a_form, Ownership::Outfit);
+
+		std::string icon = displayObject->GetItemIcon();
+		std::string formid = std::format("{:08X}", a_form->GetFormID());
+		std::string level = std::format("[Lv{}]", a_level); 
+		std::string text = std::format("{} {}", icon.c_str(), displayObject->GetEditorID().c_str());
+
+		ImGui::PushID(a_index);
+		ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.0f, 0.5f));
+		if (ImGui::Selectable(text.c_str(), false, ImGuiSelectableFlags_SpanAvailWidth)) {
+			const auto player = RE::PlayerCharacter::GetSingleton();
+			if (player) {
+				if (auto playerRef = player->AsReference(); playerRef != nullptr) {
+					Commands::AddItemToRefInventory(Ownership::Item, playerRef, displayObject->GetEditorID(), 1);
+				}
+			}
+		}
+		ImGui::PopStyleVar();
+
+		if (ImGui::IsItemHovered(ImGuiHoveredFlags_NoSharedDelay | ImGuiHoveredFlags_DelayShort)) {
+			ImGui::BeginTooltip();
+			ShowItemPreview(displayObject, true);
+			ImGui::EndTooltip();
+		}
+
+		if (a_level != 0) {
+			ImGui::SameLine();
+			ImGui::SetNextItemAllowOverlap();
+			ImGui::TextDisabled("[Lv%d]", a_level);
+		}
+
+
+		ImGui::SameLine();
+		ImGui::SetNextItemAllowOverlap();
+		ImGui::TextDisabled("[%s]", formid.c_str());
+		ImGui::PopID();
+	}
+
+	// Recursively render a LeveledList as a collapsing tree in the outfit preview.
+	inline void drawLeveledListTree(int a_index, RE::TESForm* a_form, RE::TESLeveledList* a_list)
+	{
+		ImGui::PushID(a_index);
+		auto label = std::format("{} {} [{}]",
+			ICON_LC_LIST, po3_GetEditorID(a_form->GetFormID()), a_list->entries.size());
+
+		auto showTreeNodePreview = [&a_form]() {
+			if (ImGui::IsItemHovered(ImGuiHoveredFlags_NoSharedDelay | ImGuiHoveredFlags_DelayShort)) {
+				const auto displayObject = std::make_unique<BaseObject>(a_form, Ownership::Outfit);
+
+				ImGui::BeginTooltip();
+				ShowItemPreview(displayObject, true);
+				ImGui::EndTooltip();
+			}
+		};
+
+		// constexpr auto flags = ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Bullet;
+		if (ImGui::TreeNode(label.c_str())) {
+			showTreeNodePreview();
+			Commands::ForEachLeveledEntry(a_list,
+				[](int a_index, RE::TESForm* a_item, [[maybe_unused]] uint16_t a_level, [[maybe_unused]] std::int32_t a_count) {
+					drawOutfitItem(a_index, a_item, a_level);
+				},
+				[](int a_index, RE::TESForm* a_nestedForm, RE::TESLeveledList* a_nested) {
+					drawLeveledListTree(a_index, a_nestedForm, a_nested);
+				}
+			);
+			ImGui::TreePop();
+		} else {
+			showTreeNodePreview();
+		}
+
+
+		ImGui::PopID();
+	}
+
+	inline void drawLeveledListPreview(const std::unique_ptr<BaseObject>& a_list)
+	{
+		ImGui::Spacing();
+		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
+		ImGui::Spacing();
+
+		inlineCheckbox(a_list, PropertyType::kLeveledAllLevelsFlag);
+		inlineCheckbox(a_list, PropertyType::kLeveledEachFlag);
+		inlineCheckbox(a_list, PropertyType::kLeveledUseAllFlag);
+		inlineCheckbox(a_list, PropertyType::kLeveledSpecialFlag);
+
+		ImGui::Spacing();
+		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
+		ImGui::Spacing();
+
+		inlineText(a_list, PropertyType::kLeveledChance);
+	}
+
+	inline void drawOutfitPreview(const std::unique_ptr<BaseObject>& a_item)
+	{
+		ImGui::Spacing();
+		ImGui::Spacing();
+
+		// Load Order Header with Tooltip
+		ImGui::SetCursorPosX(UICustom::GetCenterTextPosX(Translate("HEADER_OUTFIT_ITEMS")));
+		ImGui::AlignTextToFramePadding();
+		ImGui::Text("%s", Translate("HEADER_OUTFIT_ITEMS"));
+		ImGui::SameLine();
+		ImGui::AlignTextToFramePadding();
+		ImGui::Text(ICON_LC_MESSAGE_CIRCLE_QUESTION);
+
+		if (ImGui::IsItemHovered(ImGuiHoveredFlags_NoSharedDelay | ImGuiHoveredFlags_DelayShort)) {
+			UICustom::FancyTooltip(Translate("HEADER_OUTFIT_TOOLTIP"));
+		}
+
+		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
+		ImGui::Spacing();
+
+		// Show the item list of the selected outfit
+		if (a_item) {
+			if (auto outfit = a_item->GetTESForm()->As<RE::BGSOutfit>()) {
+
+				int index = 0;
+				outfit->ForEachItem([&index](RE::TESForm* a_item) {
+					index++;
+					if (!a_item) return RE::BSContainer::ForEachResult::kContinue;
+
+					if (a_item->GetFormType() == RE::FormType::LeveledItem) {
+						if (auto leveledList = a_item->As<RE::TESLeveledList>()) {
+							drawLeveledListTree(index, a_item, leveledList);
+						}
+					} else {
+						drawOutfitItem(index, a_item, 0);
+					}
+
+					return RE::BSContainer::ForEachResult::kContinue;
+				});
+			}
+		}
+	}
+
 	inline float getDesiredWidth(const std::unique_ptr<BaseObject>& a_item, float a_min)
 	{
 		const auto& edid = a_item->GetEditorID();
@@ -443,7 +608,7 @@ namespace
 
 
 	// @arg a_tooltip: the item preview is shown in a tooltip instead of a widget.
-	inline void ShowItemPreview(const std::unique_ptr<BaseObject>& a_item, bool a_tooltip = false)
+	inline void ShowItemPreview(const std::unique_ptr<BaseObject>& a_item, bool a_tooltip)
 	{
 		if (a_item == nullptr) return;
 		if (a_item->IsDummy()) return;
@@ -491,6 +656,16 @@ namespace
 
 			if (auto weapon = a_item->GetTESWeapon(); weapon.has_value()) {
 				drawWeaponPreview(a_item);
+			}
+
+			if (auto outfit = a_item->GetTESOutfit(); outfit.has_value()) {
+				drawOutfitPreview(a_item);
+			}
+
+			if (auto form = a_item->GetTESForm(); form) {
+				if (auto leveled = form->As<RE::TESLeveledList>(); leveled) {
+					drawLeveledListPreview(a_item);
+				}
 			}
 
 			drawFooter(a_item, a_tooltip);

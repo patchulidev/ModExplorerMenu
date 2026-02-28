@@ -88,6 +88,15 @@ namespace Modex
 		kTomeSkill,
 		kImGuiSeparator,        // Special ImGui Separator
 		kKitItemCount,          // Kit properties
+		kOutfit,
+		kLeveledItem,
+		kLeveledNPC,
+		kLeveledSpell,
+		kLeveledAllLevelsFlag,
+		kLeveledEachFlag,
+		kLeveledUseAllFlag,
+		kLeveledSpecialFlag,
+		kLeveledChance,
 		kTotal
 	};
 
@@ -274,6 +283,24 @@ namespace Modex
 				return ICON_LC_WAND;
 			case PropertyType::kTomeSkill:
 				return ICON_LC_BOOK_USER;
+			case PropertyType::kOutfit:
+				return ICON_LC_SHIRT;
+			case PropertyType::kLeveledItem:
+				return ICON_LC_LIST_PLUS;
+			case PropertyType::kLeveledNPC:
+				return ICON_LC_LIST_PLUS;
+			case PropertyType::kLeveledSpell:
+				return ICON_LC_LIST_PLUS;
+			case PropertyType::kLeveledAllLevelsFlag:
+				return ICON_LC_FLAG;
+			case PropertyType::kLeveledEachFlag:
+				return ICON_LC_FLAG;
+			case PropertyType::kLeveledUseAllFlag:
+				return ICON_LC_FLAG;
+			case PropertyType::kLeveledSpecialFlag:
+				return ICON_LC_FLAG;
+			case PropertyType::kLeveledChance:
+				return ICON_LC_DICES;
 			default:
 				return ICON_LC_MESSAGE_CIRCLE_QUESTION;
 			}
@@ -978,6 +1005,18 @@ namespace Modex
 			return std::nullopt;
 		}
 
+		inline const std::optional<RE::BGSOutfit*> GetTESOutfit() const
+		{
+			if (auto outfit = m_formWrapper.As<RE::BGSOutfit>(); outfit.has_value()) {
+				if (outfit.value() == nullptr)
+					return std::nullopt;
+				
+				return outfit.value();
+			}
+
+			return std::nullopt;
+		}
+
 		inline const std::string GetWeaponType() const {
 			if (auto weapon = m_formWrapper.As<RE::TESObjectWEAP>(); weapon.has_value()) {
 				if (weapon.value() == nullptr) 
@@ -1307,6 +1346,34 @@ namespace Modex
 			return "";
 		}
 
+		bool HasLeveledFlag(RE::TESLeveledList::Flag a_flag) const
+		{
+			auto* form = m_formWrapper.Get();
+			if (!form) return false;
+
+			RE::TESLeveledList* list = nullptr;
+			if (auto* levItem = form->As<RE::TESLevItem>()) {
+				list = levItem;
+			}
+
+			if (!list) return false;
+			return (list->llFlags & a_flag) != 0;
+		}
+
+		std::string GetLeveledListChance() const
+		{
+			auto* form = m_formWrapper.Get();
+			if (!form) return "0%";
+
+			RE::TESLeveledList* list = nullptr;
+			if (auto* levItem = form->As<RE::TESLevItem>()) {
+				list = levItem;
+			}
+
+			if (!list) return "0%";
+			return std::to_string(list->chanceNone) + "%";
+		}
+
 		// Returns: icon + property type string
 		std::string GetPropertyTypeWithIcon(PropertyType a_property) const
 		{
@@ -1382,6 +1449,14 @@ namespace Modex
 					return (PropertyType::kFurniture);
 				case RE::FormType::Flora:
 					return (PropertyType::kFlora);
+				case RE::FormType::Outfit:
+					return (PropertyType::kOutfit);
+				case RE::FormType::LeveledItem:
+					return (PropertyType::kLeveledItem);
+				case RE::FormType::LeveledNPC:
+					return (PropertyType::kLeveledNPC);
+				case RE::FormType::LeveledSpell:
+					return (PropertyType::kLeveledSpell);
 				default:
 					return PropertyType::kNone;
 			}
@@ -1438,6 +1513,7 @@ namespace Modex
 				case PropertyType::kFlora:
 				case PropertyType::kCell:
 				case PropertyType::kLand:
+				case PropertyType::kOutfit:
 				case PropertyType::kImGuiSeparator:
 					return "";
 				case PropertyType::kFormType:
@@ -1538,6 +1614,20 @@ namespace Modex
 					return GetBookSkill();
 				case PropertyType::kKitItemCount:
 					return std::to_string(m_quantity); 
+				case PropertyType::kLeveledItem: // Chance, flagged, count?
+				case PropertyType::kLeveledNPC:
+				case PropertyType::kLeveledSpell:
+					return ""; // BUG: No implementation yet.
+				case PropertyType::kLeveledEachFlag:
+					return HasLeveledFlag(RE::TESLeveledList::Flag::kCalculateForEachItemInCount) ? "true" : "false";
+				case PropertyType::kLeveledAllLevelsFlag:
+					return HasLeveledFlag(RE::TESLeveledList::Flag::kCalculateFromAllLevelsLTOrEqPCLevel) ? "true" : "false";
+				case PropertyType::kLeveledUseAllFlag:
+					return HasLeveledFlag(RE::TESLeveledList::Flag::kUseAll) ? "true" : "false";
+				case PropertyType::kLeveledSpecialFlag:
+					return HasLeveledFlag(RE::TESLeveledList::Flag::kSpecialLoot) ? "true" : "false";
+				case PropertyType::kLeveledChance:
+					return GetLeveledListChance();
 			}
 
 			ASSERT_MSG(true, "BaseObject -> GetProperty(PropertyType a_property): Unhandled property type: " + std::to_string(static_cast<int>(a_property)));

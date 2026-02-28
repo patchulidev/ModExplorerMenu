@@ -1,5 +1,4 @@
 #include "PlayerChestSpawn.h"
-#include "RE/B/BSContainer.h"
 #include "data/BaseObject.h"
 #include "ui/core/UIManager.h"
 #include "core/Commands.h"
@@ -91,7 +90,7 @@ namespace Modex
 		// }
 	}
 
-	void PlayerChestSpawn::PopulateChestWithOutfit(const RE::BGSOutfit* a_outfit)
+	void PlayerChestSpawn::PopulateChestWithOutfit(const RE::BGSOutfit* a_outfit, uint16_t a_level)
 	{
 		if (!a_outfit) return;
 
@@ -107,18 +106,11 @@ namespace Modex
 		container->SetDisplayName(displayName.c_str(), true);
 
 
-		a_outfit->ForEachItem([&container](RE::TESForm* a_item) {
-			if (auto boundObject = a_item->As<RE::TESBoundObject>(); boundObject) {
-				container->AddObjectToContainer(
-					boundObject, 
-					nullptr,
-					1,
-					nullptr
-				);
-			}
+		auto resolved = Commands::ResolveOutfitItems(a_outfit, Commands::GetPlayerReference(), a_level);
 
-			return RE::BSContainer::ForEachResult::kContinue;
-		});
+		for (auto& entry : resolved) {
+			container->AddObjectToContainer(entry.object, nullptr, entry.count, nullptr);
+		}
 
 		OpenChest();
 	}

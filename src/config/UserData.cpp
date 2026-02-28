@@ -202,6 +202,10 @@ namespace Modex
 				RemoveFromFavorites(a_item);
 				UINotification::ShowAction(Translate("REMOVE_FROM_FAVORITES"), a_item->GetName(), ICON_LC_HEART_OFF);
 				break;
+			case ModexActionType::EquipOutfit:
+				AddToRecentList(a_item);
+				UINotification::ShowAction(Translate("EQUIP_OUTFIT"), a_item->GetName(), ICON_LC_SHIRT);
+				break;
 			default: Error("Missed switch case for SendEvent(ModexActionType a_actionType, const std::unique_ptr<BaseObject>& a_item)");
 				break;
 		}

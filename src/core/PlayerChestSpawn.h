@@ -15,7 +15,7 @@ namespace Modex
 
 		void PopulateChestWithItems(const std::vector<std::unique_ptr<BaseObject>>& a_items);
 		void PopulateChestWithKit(const Modex::Kit& a_kit);
-		void PopulateChestWithOutfit(const RE::BGSOutfit* a_outfit);
+		void PopulateChestWithOutfit(const RE::BGSOutfit* a_outfit, uint16_t a_level = 0);
 
 	private:
 		void Reset();

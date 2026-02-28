@@ -34,6 +34,7 @@ namespace Modex
 		Unfavorited,
 		SetDefaultOutfit,
 		SetSleepOutfit,
+		EquipOutfit,
 		Total,
 	};
 

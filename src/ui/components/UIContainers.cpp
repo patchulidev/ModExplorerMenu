@@ -5,6 +5,8 @@
 #include "core/PlayerChestSpawn.h"
 #include "config/EquipmentConfig.h"
 #include "config/ThemeConfig.h"
+#include "external/icons/IconsLucide.h"
+#include "imgui_internal.h"
 #include "localization/Locale.h"
 #include "ui/components/ItemPreview.h"
 
@@ -203,6 +205,7 @@ namespace Modex
 
 	}
 
+	static inline int16_t s_outfitLevel = 0;
 	void UIContainers::DrawOutfitActionPanel(const ImVec2 &a_pos, const ImVec2 &a_size, std::unique_ptr<UITable> &a_view)
 	{
 		const float button_height = ImGui::GetFontSize() * 1.5f;
@@ -212,6 +215,8 @@ namespace Modex
 		if (ImGui::BeginChild("Modex::OutfitWindow::Actions", a_size)) {
 			const float max_width = ImGui::GetContentRegionAvail().x;
 			const bool action_allowed = a_view->IsActionAllowed();
+			const auto shift_down = ImGui::GetIO().KeyShift;
+			const auto& selection = a_view->GetSelection();
 
 			UICustom::SubCategoryHeader(Translate("HEADER_ACTIONS"));
 
@@ -221,44 +226,7 @@ namespace Modex
 			if (UICustom::ActionButton("CONTAINER_VIEW", ImVec2(max_width, button_height), action_allowed && a_view->GetSelectionCount() == 1)) {
 				if (auto form = a_view->GetSelection()[0]->GetTESForm(); form) {
 					if (auto outfit = form->As<RE::BGSOutfit>(); outfit) {
-						PlayerChestSpawn::GetSingleton()->PopulateChestWithOutfit(outfit);
-					}
-				}
-			}
-			ImGui::PopStyleColor(3);
-
-			if (UICustom::ActionButton("ADD_OUTFIT_ITEMS", ImVec2(max_width, button_height), action_allowed && a_view->IsValidTargetReference())) {
-				const auto& selection = a_view->GetSelection();
-				for (const auto& item : selection) {
-					if (auto outfit = item->GetTESForm()->As<RE::BGSOutfit>()) {
-						Commands::AddOutfitItemsToInventory(a_view->GetOwnership(), a_view->GetTableTargetRef(), outfit);
-					}
-				}
-			}
-
-			if (UICustom::ActionButton("EQUIP_OUTFIT_ITEMS", ImVec2(max_width, button_height), action_allowed && a_view->IsValidTargetReference() && a_view->GetSelectionCount() == 1)) {
-				const auto& selection = a_view->GetSelection();
-				if (!selection.empty()) {	
-					if (auto outfit = selection[0]->GetTESForm()->As<RE::BGSOutfit>()) {
-						Commands::EquipOutfit(a_view->GetOwnership(), a_view->GetTableTargetRef(), outfit);
-					}
-				}
-			}
-
-			if (UICustom::ActionButton("SET_DEFAULT_OUTFIT", ImVec2(max_width, button_height), action_allowed && a_view->IsValidTargetReference() && a_view->GetSelectionCount() == 1)) {
-				const auto& selection = a_view->GetSelection();
-				if (!selection.empty()) {
-					if (auto outfit = selection[0]->GetTESForm()->As<RE::BGSOutfit>()) {
-						Commands::SetDefaultOutfitOnActor(a_view->GetOwnership(), a_view->GetTableTargetRef(), outfit);
-					}
-				}
-			}
-
-			if (UICustom::ActionButton("SET_SLEEP_OUTFIT", ImVec2(max_width, button_height), action_allowed && a_view->IsValidTargetReference() && a_view->GetSelectionCount() == 1)) {
-				const auto& selection = a_view->GetSelection();
-				if (!selection.empty()) {
-					if (auto outfit = selection[0]->GetTESForm()->As<RE::BGSOutfit>()) {
-						Commands::SetSleepOutfitOnActor(a_view->GetOwnership(), a_view->GetTableTargetRef(), outfit);
+						PlayerChestSpawn::GetSingleton()->PopulateChestWithOutfit(outfit, s_outfitLevel);
 					}
 				}
 			}
@@ -282,39 +250,96 @@ namespace Modex
 			if (!new_kit_name.empty() && a_view->GetSelectionCount() == 1) {
 				if (auto form = a_view->GetSelection()[0]->GetTESForm(); form) {
 					if (auto outfit = form->As<RE::BGSOutfit>(); outfit) {
-						EquipmentConfig::CreateKitFromOutfit(new_kit_name, outfit);
+						EquipmentConfig::CreateKitFromOutfit(new_kit_name, outfit, s_outfitLevel);
 					}
 				}
 
 				new_kit_name.clear();
 			}
 
-			ImGui::Spacing();
-			ImGui::Spacing();
+			ImGui::PopStyleColor(3);
 
-			UICustom::SubCategoryHeader(Translate("HEADER_OUTFIT_ITEMS"));
-
-			// Show the item list of the selected outfit
-			const auto& preview = a_view->GetItemPreview();
-			if (preview) {
-				if (auto outfit = preview->GetTESForm()->As<RE::BGSOutfit>()) {
-					outfit->ForEachItem([](RE::TESForm* a_item) {
-						if (a_item) {
-							std::string name = a_item->GetName();
-							if (name.empty()) {
-								name = po3_GetEditorID(a_item->GetFormID());
-							}
-
-							std::string formid = std::format("{:08X}", a_item->GetFormID());
-							ImGui::Text("%s", name.c_str());
-							ImGui::SameLine();
-							ImGui::TextDisabled("[%s]", formid.c_str());
-						}
-
-						return RE::BSContainer::ForEachResult::kContinue;
-					});
+			if (UICustom::ActionButton("ADD_OUTFIT_ITEMS", ImVec2(max_width, button_height), action_allowed)) {
+				for (const auto& item : selection) {
+					if (auto outfit = item->GetTESForm()->As<RE::BGSOutfit>()) {
+						Commands::AddOutfitItemsToInventory(a_view->GetOwnership(), a_view->GetTableTargetRef(), outfit, s_outfitLevel);
+					}
 				}
 			}
+
+			if (UICustom::ActionButton("EQUIP_OUTFIT_ITEMS", ImVec2(max_width, button_height), action_allowed && a_view->GetSelectionCount() == 1)) {
+				if (!selection.empty()) {	
+					if (auto outfit = selection[0]->GetTESForm()->As<RE::BGSOutfit>()) {
+						Commands::EquipOutfit(a_view->GetOwnership(), a_view->GetTableTargetRef(), outfit, s_outfitLevel);
+					}
+				}
+			}
+
+			if (action_allowed && a_view->GetSelectionCount() == 1 && !a_view->GetTableTargetRef()->IsPlayerRef()) {
+				ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
+
+				if (UICustom::ActionButton("SET_DEFAULT_OUTFIT", ImVec2(max_width, button_height), action_allowed && a_view->GetSelectionCount() == 1)) {
+					if (!selection.empty()) {
+						if (auto outfit = selection[0]->GetTESForm()->As<RE::BGSOutfit>()) {
+							Commands::SetDefaultOutfitOnActor(a_view->GetOwnership(), a_view->GetTableTargetRef(), outfit);
+						}
+					}
+				}
+
+				if (UICustom::ActionButton("SET_SLEEP_OUTFIT", ImVec2(max_width, button_height), action_allowed && a_view->GetSelectionCount() == 1)) {
+					if (!selection.empty()) {
+						if (auto outfit = selection[0]->GetTESForm()->As<RE::BGSOutfit>()) {
+							Commands::SetSleepOutfitOnActor(a_view->GetOwnership(), a_view->GetTableTargetRef(), outfit);
+						}
+					}
+				}
+
+				ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
+			}
+
+			const auto title = shift_down ? Translate("RESET_INVENTORY") : Translate("CLEAR_INVENTORY");
+			const auto description = shift_down ? Translate("RESET_INVENTORY_DESC") : Translate("CLEAR_INVENTORY_DESC");
+
+			ImGui::PushStyleColor(ImGuiCol_Button, ThemeConfig::GetColor("DECLINE"));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ThemeConfig::GetHover("DECLINE"));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ThemeConfig::GetActive("DECLINE"));
+
+			if (UICustom::ActionButton(title, ImVec2(max_width, button_height), !Commands::IsGameMenuOpen() && a_view->IsValidTargetReference())) {
+				UIManager::GetSingleton()->ShowWarning(Translate("CLEAR_INVENTORY"), description, true, [&a_view, shift_down]() {
+					if (auto target = a_view->GetTableTargetRef(); target) {
+						if (shift_down) {
+							Commands::ResetTargetInventory(a_view->GetOwnership(), target);
+						} else {
+							Commands::RemoveAllItemsFromInventory(a_view->GetOwnership(), target);
+						}
+					}
+				});
+			}
+			ImGui::PopStyleColor(3);
+
+			ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
+			ImGui::Text("%s", Translate("DISTRIBUTE_AT_LEVEL"));
+			ImGui::SameLine();
+			ImGui::Text(ICON_LC_MESSAGE_CIRCLE_QUESTION);
+
+			if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNone)) {
+				UICustom::FancyTooltip("DISTRIBUTE_AT_LEVEL_TOOLTIP");
+			}
+
+			int _level = static_cast<int>(s_outfitLevel); 
+			const float input_width = ImGui::GetContentRegionAvail().x / 3.0f;
+			ImGui::SameLine(ImGui::GetContentRegionAvail().x - input_width);
+			ImGui::SetNextItemWidth(input_width);
+			if (ImGui::InputInt("##NoLabel", &_level, 1, 10)) {
+				s_outfitLevel = max(0, static_cast<int16_t>(_level));
+			}
+
+			ImGui::Spacing();
+			ImGui::Spacing();
+
+			UICustom::SubCategoryHeader(Translate("HEADER_PREVIEW"));
+
+			ShowItemPreview(a_view->GetItemPreview());
 		}
 		ImGui::EndChild();
 	}

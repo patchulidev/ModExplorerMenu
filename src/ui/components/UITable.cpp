@@ -1488,7 +1488,9 @@ namespace Modex
 		if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
 			if (a_item->IsItem() && !Commands::IsGameMenuOpen()) {
 				UICustom::InputAmountHandler(ImGui::GetIO().KeyShift, [&a_item, this](uint32_t amount = 1) {
-					Commands::AddItemToPlayerInventory(pluginType, a_item->GetEditorID(), amount);
+					if (auto targetRef = this->GetTableTargetRef(); targetRef) {
+						Commands::AddItemToRefInventory(pluginType, targetRef, a_item->GetEditorID(), amount);
+					}
 				});
 			}
 
