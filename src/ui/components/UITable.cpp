@@ -2107,7 +2107,7 @@ namespace Modex
 			}
 		}
 
-		const std::string plugin_name = TRUNCATE(a_item->GetPluginName(), spacing - padding);
+		const std::string plugin_name = showFormID ? a_item->GetFormID() : TRUNCATE(a_item->GetPluginName(), spacing - padding);
 		draw_list->AddText(center_left_align, colors.text, plugin_name.c_str());
 
 		const ImVec2 name_pos = ImVec2(bb.Min.x + spacing - 5.0f, center_align);
