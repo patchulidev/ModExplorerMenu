@@ -35,6 +35,7 @@ namespace Modex
 		SetDefaultOutfit,
 		SetSleepOutfit,
 		EquipOutfit,
+		AddOutfit,
 		Total,
 	};
 

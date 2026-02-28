@@ -5,6 +5,7 @@
 #include "core/PlayerChestSpawn.h"
 #include "config/EquipmentConfig.h"
 #include "config/ThemeConfig.h"
+#include "data/BaseObject.h"
 #include "external/icons/IconsLucide.h"
 #include "imgui_internal.h"
 #include "localization/Locale.h"
@@ -308,9 +309,9 @@ namespace Modex
 				UIManager::GetSingleton()->ShowWarning(Translate("CLEAR_INVENTORY"), description, true, [&a_view, shift_down]() {
 					if (auto target = a_view->GetTableTargetRef(); target) {
 						if (shift_down) {
-							Commands::ResetTargetInventory(a_view->GetOwnership(), target);
+							Commands::ResetTargetInventory(Ownership::Actor, target);
 						} else {
-							Commands::RemoveAllItemsFromInventory(a_view->GetOwnership(), target);
+							Commands::RemoveAllItemsFromInventory(Ownership::Actor, target);
 						}
 					}
 				});

@@ -535,15 +535,13 @@ namespace Modex::Commands
 		if (!a_targetRef || !a_outfit)
 			return;
 
-		// override a_owner until we workout different implementation
-		a_owner = Ownership::Item;
-
 		auto resolved = ResolveOutfitItems(a_outfit, a_targetRef, a_level);
 
 		for (auto& entry : resolved) {
 			a_targetRef->AddObjectToContainer(entry.object, nullptr, entry.count, nullptr);
-			UserData::SendEvent(ModexActionType::AddItem, po3_GetEditorID(entry.object->GetFormID()), a_owner);
 		}
+
+		UserData::SendEvent(ModexActionType::AddItem, po3_GetEditorID(a_outfit->GetFormID()), a_owner);
 	}
 
 	// RE::Actor::AddWornOutfit doesn't behave as expected. Using alternative implementation with
@@ -558,11 +556,10 @@ namespace Modex::Commands
 
 		for (auto& entry : resolved) {
 			a_targetRef->AddObjectToContainer(entry.object, nullptr, entry.count, nullptr);
-			UserData::SendEvent(ModexActionType::AddItem, po3_GetEditorID(entry.object->GetFormID()), Ownership::Item);
 		}
 
 		// Queued task to allow game to catch up with inventory events (unsure).
-		SKSE::GetTaskInterface()->AddTask([a_owner, a_targetRef, resolved]() {
+		SKSE::GetTaskInterface()->AddTask([a_targetRef, resolved]() {
 			auto actor = a_targetRef->As<RE::Actor>();
 			if (!actor)
 				return;
@@ -574,10 +571,12 @@ namespace Modex::Commands
 				InventoryBoundObjects(a_targetRef, entry.object, equipObject, extraData);
 				if (equipObject) {
 					actor->AddWornItem(equipObject, 1, false, 0, 0);
-					UserData::SendEvent(ModexActionType::EquipOutfit, po3_GetEditorID(entry.object->GetFormID()), a_owner);
 				}
 			}
 		});
+
+		UserData::SendEvent(ModexActionType::EquipOutfit, po3_GetEditorID(a_outfit->GetFormID()), a_owner);
+
 	}
 
 	// TEST: What happens when we call this on Player?
@@ -591,9 +590,10 @@ namespace Modex::Commands
 		if (auto npc = a_targetRef->As<RE::Actor>()) {
 			if (auto base = npc->GetActorBase()) {
 				base->sleepOutfit = a_outfit;
-				UserData::SendEvent(ModexActionType::SetSleepOutfit, a_targetRef->GetFormID(), a_owner);
 			}
 		}
+
+		UserData::SendEvent(ModexActionType::SetSleepOutfit, po3_GetEditorID(a_outfit->GetFormID()), a_owner);
 	}
 
 	// TEST: Is this okay being applied to the actor base?
@@ -607,9 +607,10 @@ namespace Modex::Commands
 		if (auto npc = a_targetRef->As<RE::Actor>()) {
 			if (auto base = npc->GetActorBase()) {
 				base->defaultOutfit = a_outfit;
-				UserData::SendEvent(ModexActionType::SetDefaultOutfit, a_targetRef->GetFormID(), a_owner);
 			}
 		}
+
+		UserData::SendEvent(ModexActionType::SetDefaultOutfit, po3_GetEditorID(a_outfit->GetFormID()), a_owner);
 	}
 
 	static inline void PlaceAtMe(Ownership a_owner, const std::string& a_editorID, uint32_t a_count = 1, bool persistent = true, bool disabled = false) 
