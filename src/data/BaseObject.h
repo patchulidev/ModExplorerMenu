@@ -1164,6 +1164,15 @@ namespace Modex
 			return spells;
 		}
 
+		inline bool IsOutfit() const
+		{
+			if (auto outfit = GetTESOutfit(); outfit.has_value()) {
+				return outfit.value() != nullptr;
+			}
+
+			return false;
+		}
+
 		inline std::string GetDefaultOutfit() const
 		{
 			if (auto npc = GetTESNPC(); npc.has_value()) {

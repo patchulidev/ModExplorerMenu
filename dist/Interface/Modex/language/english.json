@@ -166,7 +166,7 @@
 	"ENABLE_REFERENCE": "Enable Reference",
 	"DISABLE_REFERENCE": "Disable Reference",
 	"DISTRIBUTE_AT_LEVEL": "Distribution Level",
-	"DISTRIBUTE_AT_LEVEL_TOOLTIP": "Distribution Level\n\nSome outfits contain leveled items which calculate their selection based on a level. Settings this to <0> will default to the <Target> level.\n\nSetting this to any value above <0> will override the targets level. Only applies when adding, not when assigning default or sleep outfits.",
+	"DISTRIBUTE_AT_LEVEL_TOOLTIP": "Distribution Level\n\nSome outfits contain leveled items which calculate their selection based on a level. Settings this to <0> will default to the <Target> level.\n\nSetting this to any value above <0> will override the targets level. Only applies when adding, not when assigning default or sleep outfits. This does not apply to right-click menu options.",
 
 	"GOTO_NPC_REFERENCE": "Teleport To Actor",
 	"GOTO_NPC_REFERENCE_TOOLTIP": "Goto Actor Reference\n\nTeleports the player to the targeted Actor's current location in the world.",
@@ -237,6 +237,7 @@
 	"TABLE_SETTINGS_SHOW_BG": "Alt Row Background",
 	"TABLE_SETTINGS_SHOW_EDITORID": "Name <-> EditorID",
 	"TABLE_SETTINGS_SHOW_ICON": "Item Icon",
+	"TABLE_SETTINGS_QUICK_SEARCH": "Quick Search Mode",
 	"TABLE_SET_TARGET": "Set As Modex Target",
 	"TABLE_SET_TARGET_TOOLTIP": "Set As Modex Target\n\nSet the currently selected reference as the active Target Reference for Modex. Most tables in other modules will share this target!\n\nThis is a quick alternative to manually entering a FormID in the status bar, or using the console selection method.",
 

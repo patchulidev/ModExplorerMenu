@@ -3,6 +3,7 @@
 #include "core/Commands.h"
 #include "data/BaseObject.h"
 #include "external/icons/IconsLucide.h"
+#include "imgui_internal.h"
 #include "localization/FontManager.h"
 #include "localization/Locale.h"
 #include "ui/core/UIManager.h"
@@ -1470,6 +1471,7 @@ namespace Modex
 	void UITable::HandleItemHoverPreview(const std::unique_ptr<BaseObject>& a_item)
 	{
 		itemPreview = std::make_unique<BaseObject>(*a_item);
+
 		if (HasFlag(ModexTableFlag_EnableItemPreviewOnHover) && !a_item->IsDummy()) {
 			if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort | ImGuiHoveredFlags_NoSharedDelay)) {
 				const auto size = ImVec2(ImGui::GetWindowSize().x / 3.0f, 0.f);
@@ -1537,6 +1539,18 @@ namespace Modex
 			ImGui::TextColored(color, "%s %s", ICON_LC_ASTERISK " ", tableTargetRef->GetName());
 			ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 
+			if (!HasFlag(ModexTableFlag_Inventory)) {
+				if (a_item->m_refID == 0 ? UserData::IsFavorited(a_item->GetEditorID()) : UserData::IsFavorited(a_item->m_refID)) {
+					if (ImGui::MenuItem(Translate("REMOVE_FROM_FAVORITES"))) {
+						RemoveSelectionFromFavorites();
+					}
+				} else {
+					if (ImGui::MenuItem(Translate("ADD_TO_FAVORITES"))) {
+						AddSelectionToFavorites();
+					}
+				}
+			}
+
 			if (a_item->IsItem()) {
 				if (HasFlag(ModexTableFlag_Inventory)) {
 					if (ImGui::MenuItem(Translate("REMOVE_SELECTION"))) {
@@ -1547,11 +1561,11 @@ namespace Modex
 						this->PlaceSelectionOnGround(click_amount);
 						this->RemoveSelectionFromTargetInventory();
 					}
-
-					ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 				}
 
 				if (HasFlag(ModexTableFlag_Base) && !Commands::IsGameMenuOpen()) {
+					ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
+
 					if (ImGui::MenuItem(Translate("ADD_SELECTION"))) {
 						UICustom::InputAmountHandler(shift_down, [&](uint32_t amount) {
 							this->AddSelectionToTargetInventory(amount);
@@ -1570,27 +1584,26 @@ namespace Modex
 						});
 					}
 
-					ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 
 					if (a_item->GetFormType() == RE::FormType::Book) {
 						if (GetSelectionCount() <= 1) {
+							ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
+
 							if (ImGui::MenuItem(Translate("READ"))) {
 								Commands::ReadBook(pluginType, a_item->GetEditorID());
 								UIManager::GetSingleton()->Close();
 							}
 						}
-
-						ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 					}
 				}
 
 				if (HasFlag(ModexTableFlag_Kit)) { // Kit Table View Window
+					ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
+
 					if (ImGui::MenuItem(Translate("KIT_REMOVE"))) {
 						this->RemoveSelectionFromKit();
 						this->SyncChangesToKit();
 					}
-
-					ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 				}
 
 				// We use dragDropSourceList to find paired Kit tables, since selectedKit is stored in the kit table.
@@ -1602,8 +1615,6 @@ namespace Modex
 								this->AddSelectionToActiveKit();
 								destination->SyncChangesToKit();
 							}
-
-							ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 						}
 					}
 				}
@@ -1611,6 +1622,7 @@ namespace Modex
 
 			if (a_item->IsNPC()) { // ModexTableFlag_Base (?)
 				if (a_item->m_refID != 0) {
+					ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 					if (ImGui::MenuItem(Translate("TABLE_SET_TARGET"))) {
 						SetTargetByReference(RE::TESForm::LookupByID<RE::TESObjectREFR>(itemPreview->GetRefID()));
 					}
@@ -1651,14 +1663,37 @@ namespace Modex
 						}
 					}
 				}
+			}
 
-				if (a_item->m_refID == 0 ? UserData::IsFavorited(a_item->GetEditorID()) : UserData::IsFavorited(a_item->m_refID)) {
-					if (ImGui::MenuItem(Translate("REMOVE_FROM_FAVORITES"))) {
-						RemoveSelectionFromFavorites();
+			if (a_item->IsOutfit()) {
+				if (!Commands::IsGameMenuOpen() && this->GetTableTargetRef() != nullptr) {
+					ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
+
+					if (ImGui::MenuItem(Translate("ADD_OUTFIT_ITEMS"))) {
+						ExecuteCommandOnSelection([this](const std::unique_ptr<BaseObject>& a_item) {
+							Commands::AddOutfitItemsToInventory(pluginType, this->GetTableTargetRef(), a_item->GetTESOutfit().value()); 	
+						});
 					}
-				} else {
-					if (ImGui::MenuItem(Translate("ADD_TO_FAVORITES"))) {
-						AddSelectionToFavorites();
+
+					if (ImGui::MenuItem(Translate("EQUIP_OUTFIT_ITEMS"))) {
+						ExecuteCommandOnSelection([this](const std::unique_ptr<BaseObject>& a_item) {
+							Commands::EquipOutfit(pluginType, this->GetTableTargetRef(), a_item->GetTESOutfit().value());
+						});
+					}
+
+					if (GetSelectionCount() <= 1 && !this->GetTableTargetRef()->IsPlayerRef()) {
+						ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
+						if (ImGui::MenuItem(Translate("SET_DEFAULT_OUTFIT"))) {
+							ExecuteCommandOnSelection([this](const std::unique_ptr<BaseObject>& a_item) {
+								Commands::SetDefaultOutfitOnActor(pluginType, this->GetTableTargetRef(), a_item->GetTESOutfit().value());	
+							});
+						}
+
+						if (ImGui::MenuItem(Translate("SET_SLEEP_OUTFIT"))) {
+							ExecuteCommandOnSelection([this](const std::unique_ptr<BaseObject>& a_item) {
+								Commands::SetSleepOutfitOnActor(pluginType, this->GetTableTargetRef(), a_item->GetTESOutfit().value());
+							});
+						}
 					}
 				}
 			}
@@ -2796,6 +2831,18 @@ namespace Modex
 
 						if (ImGui::IsItemHovered()) {
 							HandleItemHoverPreview(item_data);
+						}
+
+						if (item_data != itemPreview) {
+							if (!ImGui::IsAnyItemHovered()) {
+								if (GetSelectionCount() > 0) {
+									itemPreview = std::make_unique<BaseObject>(*GetSelection()[0]);
+								} else {
+									if (!ImGui::IsPopupOpen("", ImGuiPopupFlags_AnyPopup | ImGuiPopupFlags_AnyPopupLevel)) {
+										itemPreview = nullptr;
+									}
+								}
+							}
 						}
 
 						if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {

@@ -61,6 +61,10 @@ namespace Modex::UICustom
 			return ThemeConfig::GetColorU32("DOOR", alpha);
 		case RE::FormType::Furniture:
 			return ThemeConfig::GetColorU32("FURN", alpha);
+		case RE::FormType::Outfit:
+			return ThemeConfig::GetColorU32("OTFT", alpha);
+		case RE::FormType::LeveledItem:
+			return ThemeConfig::GetColorU32("LVLI", alpha);
 		default:
 			return IM_COL32(169, 169, 169, 100 * alpha);  // Dark Gray
 		}

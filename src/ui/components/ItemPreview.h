@@ -457,6 +457,8 @@ namespace
 	inline void drawOutfitItem(int a_index, RE::TESForm* a_form, uint16_t a_level)
 	{
 		const auto displayObject = std::make_unique<BaseObject>(a_form, Ownership::Outfit);
+		const auto& draw_list = ImGui::GetWindowDrawList();
+		const float pillar_width = 5.0f;
 
 		std::string icon = displayObject->GetItemIcon();
 		std::string formid = std::format("{:08X}", a_form->GetFormID());
@@ -465,6 +467,7 @@ namespace
 
 		ImGui::PushID(a_index);
 		ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.0f, 0.5f));
+		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetStyle().WindowPadding.x + pillar_width);
 		if (ImGui::Selectable(text.c_str(), false, ImGuiSelectableFlags_SpanAvailWidth)) {
 			const auto player = RE::PlayerCharacter::GetSingleton();
 			if (player) {
@@ -474,6 +477,14 @@ namespace
 			}
 		}
 		ImGui::PopStyleVar();
+
+		// Type Pillar
+		const ImRect bb(ImGui::GetItemRectMin() - ImVec2(pillar_width, 0.0f), ImGui::GetItemRectMax()); 
+		draw_list->AddRectFilled(
+			ImVec2(bb.Min.x, bb.Min.y),
+			ImVec2(bb.Min.x + pillar_width, bb.Max.y),
+			UICustom::GetFormTypeColor(a_form->GetFormType())
+		);
 
 		if (ImGui::IsItemHovered(ImGuiHoveredFlags_NoSharedDelay | ImGuiHoveredFlags_DelayShort)) {
 			ImGui::BeginTooltip();
@@ -498,8 +509,8 @@ namespace
 	inline void drawLeveledListTree(int a_index, RE::TESForm* a_form, RE::TESLeveledList* a_list)
 	{
 		ImGui::PushID(a_index);
-		auto label = std::format("{} {} [{}]",
-			ICON_LC_LIST, po3_GetEditorID(a_form->GetFormID()), a_list->entries.size());
+		auto label = std::format("{} {}",
+			ICON_LC_LIST, po3_GetEditorID(a_form->GetFormID()));
 
 		auto showTreeNodePreview = [&a_form]() {
 			if (ImGui::IsItemHovered(ImGuiHoveredFlags_NoSharedDelay | ImGuiHoveredFlags_DelayShort)) {
@@ -511,8 +522,20 @@ namespace
 			}
 		};
 
-		// constexpr auto flags = ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Bullet;
+		auto renderTypePillar = [&a_form]() {
+			const auto& draw_list = ImGui::GetWindowDrawList();
+			const float pillar_width = 5.0f;
+			const ImRect bb(ImGui::GetItemRectMin() - ImVec2(pillar_width, 0.0f), ImGui::GetItemRectMax()); 
+			draw_list->AddRectFilled(
+				ImVec2(bb.Min.x, bb.Min.y),
+				ImVec2(bb.Min.x + pillar_width, bb.Max.y),
+				UICustom::GetFormTypeColor(a_form->GetFormType())
+			);
+		};
+
+		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 5.0f);
 		if (ImGui::TreeNode(label.c_str())) {
+			renderTypePillar();
 			showTreeNodePreview();
 			Commands::ForEachLeveledEntry(a_list,
 				[](int a_index, RE::TESForm* a_item, [[maybe_unused]] uint16_t a_level, [[maybe_unused]] std::int32_t a_count) {
@@ -524,9 +547,12 @@ namespace
 			);
 			ImGui::TreePop();
 		} else {
+			renderTypePillar();
 			showTreeNodePreview();
 		}
 
+		ImGui::SameLine();
+		ImGui::TextDisabled("[%zu]", a_list->entries.size());
 
 		ImGui::PopID();
 	}
@@ -554,7 +580,8 @@ namespace
 		ImGui::Spacing();
 		ImGui::Spacing();
 
-		// Load Order Header with Tooltip
+		// Outfit Item List Header
+		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 		ImGui::SetCursorPosX(UICustom::GetCenterTextPosX(Translate("HEADER_OUTFIT_ITEMS")));
 		ImGui::AlignTextToFramePadding();
 		ImGui::Text("%s", Translate("HEADER_OUTFIT_ITEMS"));
