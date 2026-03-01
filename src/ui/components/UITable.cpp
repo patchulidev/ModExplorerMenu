@@ -18,8 +18,6 @@
 
 #include "ui/components/UIModule.h"
 
-// TODO: Serialize table selection in state
-
 namespace Modex
 {
 	bool UITable::IsValidTargetReference(RE::TESObjectREFR* a_reference) {
@@ -183,6 +181,14 @@ namespace Modex
 		UserData::Set<bool>(data_id + "::ShowFormID", showFormID);
 		UserData::Set<std::string>(data_id + "::LastSelectedPlugin", selectedPlugin);
 		UserData::Set<uint32_t>(data_id + "::TableMode", tableMode);
+
+		std::vector<uint32_t> selectedFormIDs;
+		for (auto& item : tableList) {
+			if (selectionStorage.Contains(item->m_tableID)) {
+				selectedFormIDs.push_back(item->GetBaseFormID());
+			}
+		}
+		UserData::Set<std::vector<uint32_t>>(data_id + "::Selection", selectedFormIDs);
 	}
 
 	void UITable::LoadSystemState()
@@ -190,6 +196,9 @@ namespace Modex
 		filterSystem->LoadState(data_id + "::FilterState");
 		sortSystem->LoadState(data_id + "::SortState");
 		searchSystem->LoadState(data_id + "::SearchState");
+
+		auto savedSelection = UserData::Get<std::vector<uint32_t>>(data_id + "::Selection");
+		m_pendingSelection.insert(savedSelection.begin(), savedSelection.end());
 	}
 
 	void UITable::CleanupResources()
@@ -781,6 +790,14 @@ namespace Modex
 			tableList[i]->m_tableID = i;
 		}
 
+		if (!m_pendingSelection.empty()) {
+			for (auto& item : tableList) {
+				if (m_pendingSelection.contains(item->GetBaseFormID())) {
+					selectionStorage.SetItemSelected(item->m_tableID, true);
+				}
+			}
+			m_pendingSelection.clear();
+		}
 	}
 
 	std::vector<BaseObject> UITable::GetReferenceInventory()

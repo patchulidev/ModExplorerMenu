@@ -88,6 +88,7 @@ namespace Modex
 		ImVec2                  ItemSize;
 
 		ImGuiID                 navPositionID = 0;
+		std::unordered_set<RE::FormID> m_pendingSelection;
 
 		inline static bool test_selection = false;
 		inline static bool test_filters = false;
