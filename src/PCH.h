@@ -53,6 +53,7 @@ namespace Modex
 		Kit,
 		Object,
 		Cell,
+		Outfit,
 		All
 	};
 

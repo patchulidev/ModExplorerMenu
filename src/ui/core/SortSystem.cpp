@@ -275,6 +275,12 @@ namespace Modex
 				delta = lhs_cost - rhs_cost;
 				break;
 			}
+			case PropertyType::kOutfitItems: {
+				const auto lhs_cost = std::stoi(lhs_value);
+				const auto rhs_cost = std::stoi(rhs_value);
+				delta = lhs_cost - rhs_cost;
+				break;
+			}
 		}
 
 		// Both have valid values, sort normally

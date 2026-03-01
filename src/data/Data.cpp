@@ -436,14 +436,29 @@ namespace Modex
 		}
 	}
 
-	// TODO: Outfit Module Implementation
-	// OTFT is the outfit form type / record header
-	// Outfits contain EDID and INAM records
-	// INAM is a leveled list of sorted forms of items
-	
-	// TESNPC.h
-	// BGSOutfit.h
-	// Actor.h
+	void Data::GenerateOutfitList()
+	{
+		m_outfitCache.clear();
+
+		Debug("Generating Outfit List...");
+
+		if (auto dataHandler = RE::TESDataHandler::GetSingleton()) {
+			for (RE::TESForm* form : dataHandler->GetFormArray<RE::BGSOutfit>()) {
+				if (!form)
+					continue;
+
+				const RE::TESFile* mod = form->GetFile(0);
+
+				if (!mod)
+					continue;
+
+				m_outfitCache.push_back(BaseObject{ form, Ownership::Outfit });
+				AddModToIndex(mod, m_outfitModList);
+			}
+		}
+
+		Debug("Cached {} outfits.", m_outfitCache.size());
+	}
 
 
 	void Data::GenerateCellList()
@@ -522,6 +537,7 @@ namespace Modex
 		GenerateNPCFactionList();
 		GenerateObjectList();
 		GenerateCellList();
+		GenerateOutfitList();
 		
 
 		Info("Successfully registered data from {} mods.", m_modList.size());

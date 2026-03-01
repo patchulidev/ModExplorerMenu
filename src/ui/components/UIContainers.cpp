@@ -1,9 +1,13 @@
 #include "UIContainers.h"
+#include "RE/B/BSContainer.h"
 #include "core/Commands.h"
 #include "config/UserData.h"
 #include "core/PlayerChestSpawn.h"
 #include "config/EquipmentConfig.h"
 #include "config/ThemeConfig.h"
+#include "data/BaseObject.h"
+#include "external/icons/IconsLucide.h"
+#include "imgui_internal.h"
 #include "localization/Locale.h"
 #include "ui/components/ItemPreview.h"
 
@@ -200,6 +204,145 @@ namespace Modex
 		}
 		ImGui::EndChild();
 
+	}
+
+	static inline int16_t s_outfitLevel = 0;
+	void UIContainers::DrawOutfitActionPanel(const ImVec2 &a_pos, const ImVec2 &a_size, std::unique_ptr<UITable> &a_view)
+	{
+		const float button_height = ImGui::GetFontSize() * 1.5f;
+
+		ImGui::SameLine();
+		ImGui::SetCursorPos(a_pos);
+		if (ImGui::BeginChild("Modex::OutfitWindow::Actions", a_size)) {
+			const float max_width = ImGui::GetContentRegionAvail().x;
+			const bool action_allowed = a_view->IsActionAllowed();
+			const auto shift_down = ImGui::GetIO().KeyShift;
+			const auto& selection = a_view->GetSelection();
+
+			UICustom::SubCategoryHeader(Translate("HEADER_ACTIONS"));
+
+			ImGui::PushStyleColor(ImGuiCol_Button, ThemeConfig::GetColor("SECONDARY"));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ThemeConfig::GetHover("SECONDARY"));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ThemeConfig::GetActive("SECONDARY"));
+			if (UICustom::ActionButton("CONTAINER_VIEW", ImVec2(max_width, button_height), action_allowed && a_view->GetSelectionCount() == 1)) {
+				if (auto form = a_view->GetSelection()[0]->GetTESForm(); form) {
+					if (auto outfit = form->As<RE::BGSOutfit>(); outfit) {
+						PlayerChestSpawn::GetSingleton()->PopulateChestWithOutfit(outfit, s_outfitLevel);
+					}
+				}
+			}
+
+			static std::string new_kit_name = "";
+			if (UICustom::ActionButton("KIT_FROM_OUTFIT", ImVec2(max_width, button_height), a_view->GetSelectionCount() == 1)) {
+				UIManager::GetSingleton()->ShowInputBox(
+					Translate("POPUP_KIT_CREATE_TITLE"),
+					Translate("POPUP_KIT_CREATE_DESC"),
+					"",
+					[](const std::string& a_output) {
+						new_kit_name = a_output;
+					}
+				);
+			}
+
+			// OPTIMIZE: Handled next frame for pointer lifetime. Can be put inside the previous
+			// ShowInputBox lambda if we copy the data we need instead of using references which may
+			// fall out of scope when we popup a window.
+
+			if (!new_kit_name.empty() && a_view->GetSelectionCount() == 1) {
+				if (auto form = a_view->GetSelection()[0]->GetTESForm(); form) {
+					if (auto outfit = form->As<RE::BGSOutfit>(); outfit) {
+						EquipmentConfig::CreateKitFromOutfit(new_kit_name, outfit, s_outfitLevel);
+					}
+				}
+
+				new_kit_name.clear();
+			}
+
+			ImGui::PopStyleColor(3);
+
+			if (UICustom::ActionButton("ADD_OUTFIT_ITEMS", ImVec2(max_width, button_height), action_allowed)) {
+				for (const auto& item : selection) {
+					if (auto outfit = item->GetTESForm()->As<RE::BGSOutfit>()) {
+						Commands::AddOutfitItemsToInventory(a_view->GetOwnership(), a_view->GetTableTargetRef(), outfit, s_outfitLevel);
+					}
+				}
+			}
+
+			if (UICustom::ActionButton("EQUIP_OUTFIT_ITEMS", ImVec2(max_width, button_height), action_allowed && a_view->GetSelectionCount() == 1)) {
+				if (!selection.empty()) {	
+					if (auto outfit = selection[0]->GetTESForm()->As<RE::BGSOutfit>()) {
+						Commands::EquipOutfit(a_view->GetOwnership(), a_view->GetTableTargetRef(), outfit, s_outfitLevel);
+					}
+				}
+			}
+
+			if (action_allowed && a_view->GetSelectionCount() == 1 && !a_view->GetTableTargetRef()->IsPlayerRef()) {
+				ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
+
+				if (UICustom::ActionButton("SET_DEFAULT_OUTFIT", ImVec2(max_width, button_height), action_allowed && a_view->GetSelectionCount() == 1)) {
+					if (!selection.empty()) {
+						if (auto outfit = selection[0]->GetTESForm()->As<RE::BGSOutfit>()) {
+							Commands::SetDefaultOutfitOnActor(a_view->GetOwnership(), a_view->GetTableTargetRef(), outfit);
+						}
+					}
+				}
+
+				if (UICustom::ActionButton("SET_SLEEP_OUTFIT", ImVec2(max_width, button_height), action_allowed && a_view->GetSelectionCount() == 1)) {
+					if (!selection.empty()) {
+						if (auto outfit = selection[0]->GetTESForm()->As<RE::BGSOutfit>()) {
+							Commands::SetSleepOutfitOnActor(a_view->GetOwnership(), a_view->GetTableTargetRef(), outfit);
+						}
+					}
+				}
+
+				ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
+			}
+
+			const auto title = shift_down ? Translate("RESET_INVENTORY") : Translate("CLEAR_INVENTORY");
+			const auto description = shift_down ? Translate("RESET_INVENTORY_DESC") : Translate("CLEAR_INVENTORY_DESC");
+
+			ImGui::PushStyleColor(ImGuiCol_Button, ThemeConfig::GetColor("DECLINE"));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ThemeConfig::GetHover("DECLINE"));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ThemeConfig::GetActive("DECLINE"));
+
+			if (UICustom::ActionButton(title, ImVec2(max_width, button_height), !Commands::IsGameMenuOpen() && a_view->IsValidTargetReference())) {
+				UIManager::GetSingleton()->ShowWarning(Translate("CLEAR_INVENTORY"), description, true, [&a_view, shift_down]() {
+					if (auto target = a_view->GetTableTargetRef(); target) {
+						if (shift_down) {
+							Commands::ResetTargetInventory(Ownership::Actor, target);
+						} else {
+							Commands::RemoveAllItemsFromInventory(Ownership::Actor, target);
+						}
+					}
+				});
+			}
+			ImGui::PopStyleColor(3);
+
+			ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
+			ImGui::Text("%s", Translate("DISTRIBUTE_AT_LEVEL"));
+			ImGui::SameLine();
+			ImGui::Text(ICON_LC_MESSAGE_CIRCLE_QUESTION);
+
+			if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNone)) {
+				UICustom::FancyTooltip("DISTRIBUTE_AT_LEVEL_TOOLTIP");
+			}
+
+			int _level = static_cast<int>(s_outfitLevel); 
+			const float input_width = ImGui::GetContentRegionAvail().x / 3.0f;
+			ImGui::SameLine(ImGui::GetContentRegionAvail().x - input_width);
+			ImGui::SetNextItemWidth(input_width);
+			if (ImGui::InputInt("##NoLabel", &_level, 1, 10)) {
+				s_outfitLevel = max(0, static_cast<int16_t>(_level));
+			}
+
+			ImGui::Spacing();
+			ImGui::Spacing();
+
+			UICustom::SubCategoryHeader(Translate("HEADER_PREVIEW"));
+
+			ShowItemPreview(a_view->GetItemPreview());
+		}
+		ImGui::EndChild();
 	}
 
 	// Can be used globally as a general purpose BaseObject table.

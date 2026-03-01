@@ -37,6 +37,7 @@ namespace Modex
 		static std::vector<BaseObject> 	GetItems(const KitData& a_metadata); // deprecated?
 		static std::optional<Kit> 		KitLookup(const std::string& a_name);
 		static std::shared_ptr<KitItem> CreateKitItem(const BaseObject& a_object);
+		static bool                     CreateKitFromOutfit(const std::string& a_name, RE::BGSOutfit* a_outfit, uint16_t a_level = 0);
 
 		static std::vector<std::string> GetEquipmentListSortedKeys();
 		static std::vector<std::string> GetEquipmentListSortedTails();

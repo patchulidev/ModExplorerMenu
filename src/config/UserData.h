@@ -32,6 +32,10 @@ namespace Modex
 		CopyKit,
 		Favorited,
 		Unfavorited,
+		SetDefaultOutfit,
+		SetSleepOutfit,
+		EquipOutfit,
+		AddOutfit,
 		Total,
 	};
 

@@ -54,6 +54,7 @@
 	"MODULE_ACTOR": "Actor",
 	"MODULE_OBJECT": "Objects",
 	"MODULE_TELEPORT": "Teleport",
+	"MODULE_OUTFIT": "Outfit",
 	"MODULE_SETTINGS": "Settings",
 	"MODULE_EXIT": "Exit",
 
@@ -63,6 +64,7 @@
 	"TABLE_OBJECT": "Object Table",
 	"TABLE_ACTOR": "Actor Table",
 	"TABLE_CELL": "Cell Table",
+	"TABLE_OUTFIT": "Outfit Table",
 
 	"KIT": "Kit",
 	"KIT_SAVE": "Saved Kit",
@@ -78,6 +80,7 @@
 	"KIT_COPY_TOOLTIP": "Copy Kit\n\nCreate a copy of the selected kit in your 'equipment' folder.",
 	"KIT_BROWSE": "Browse Kit Collections",
 	"KIT_BROWSE_TOOLTIP": "Browse Kits\n\nOpen the kit browser to view and manage your kits and collections.",
+	"KIT_FROM_OUTFIT": "Create Kit from Outfit",
 
 	"NONE": "None",
 	"COPY": "Copy",
@@ -96,6 +99,7 @@
 	"TAB_ACTOR": "Actor Table Layout",
 	"TAB_OBJECT": "Object Table Layout",
 	"TAB_TELEPORT": "Teleport Table Layout",
+	"TAB_OUTFIT": "Outfit Table Layout",
 
 	"CENTER_ON_CELL": "Center On Cell",
 
@@ -105,6 +109,8 @@
 	"HEADER_BROWSER": "File Browser",
 	"HEADER_ACTIONS": "Actions",
 	"HEADER_PREVIEW": "Form Preview",
+	"HEADER_OUTFIT_ITEMS": "Outfit Items",
+	"HEADER_OUTFIT_TOOLTIP": "Outfit Item List\n\nClick to Add a single Item to the Target's inventory Directly.\n\nClicking a Leveled Item will add all its entries to the Target's inventory!",
 	"HEADER_KIT_TABLE": "Select and Manage Kits",
 	"HEADER_KIT_ACTIONS": "Selected Kit Actions",
 	"HEADER_KIT_SELECTION": "Kit Selection",
@@ -145,6 +151,13 @@
 	"REMOVE_SELECTION": "Remove Selection from Inventory",
 	"PLACE_SELECTION": "Place Selection On Ground",
 	"EQUIP_SELECTION": "Equip Selection To Target",
+	"EQUIP_OUTFIT_ITEMS": "Equip Outfit to Target",
+	"ADD_OUTFIT_ITEMS": "Add Outfit Items To Inventory",
+	"REMOVE_OUTFIT": "Remove Selected Outfit Items",
+	"SET_DEFAULT_OUTFIT": "Set As Default Outfit",
+	"SET_DEFAULT_OUTFIT_TOOLTIP": "Default Outfit\n\nOverwrite this base forms DefaultOutfit entry with the selected outfit.\n\nThis typically is used when the Actor's inventory is Reset.",
+	"SET_SLEEP_OUTFIT": "Set As Sleep Outfit",
+	"SET_SLEEP_OUTFIT_TOOLTIP": "Sleep Outfit\n\nAssign/Overwrite this base forms SleepOutfit entry with the selected outfit.\n\nThis is typically used when an Actor AI activates a bed.",
 	"EQUIP_SELECTION_TOOLTIP": "Add & Equip\n\nAdd & Equip the selected item(s) from the Table to your Target directly.",
 	"BRING_SELECTION": "Bring Selection To Player",
 	"GOTO_SELECTION": "Teleport To Selection",
@@ -152,6 +165,8 @@
 	"KILL_ACTOR": "Kill Actor",
 	"ENABLE_REFERENCE": "Enable Reference",
 	"DISABLE_REFERENCE": "Disable Reference",
+	"DISTRIBUTE_AT_LEVEL": "Distribution Level",
+	"DISTRIBUTE_AT_LEVEL_TOOLTIP": "Distribution Level\n\nSome outfits contain leveled items which calculate their selection based on a level. Settings this to <0> will default to the <Target> level.\n\nSetting this to any value above <0> will override the targets level. Only applies when adding, not when assigning default or sleep outfits. This does not apply to right-click menu options.",
 
 	"GOTO_NPC_REFERENCE": "Teleport To Actor",
 	"GOTO_NPC_REFERENCE_TOOLTIP": "Goto Actor Reference\n\nTeleports the player to the targeted Actor's current location in the world.",
@@ -222,6 +237,7 @@
 	"TABLE_SETTINGS_SHOW_BG": "Alt Row Background",
 	"TABLE_SETTINGS_SHOW_EDITORID": "Name <-> EditorID",
 	"TABLE_SETTINGS_SHOW_ICON": "Item Icon",
+	"TABLE_SETTINGS_QUICK_SEARCH": "Quick Search Mode",
 	"TABLE_SET_TARGET": "Set As Modex Target",
 	"TABLE_SET_TARGET_TOOLTIP": "Set As Modex Target\n\nSet the currently selected reference as the active Target Reference for Modex. Most tables in other modules will share this target!\n\nThis is a quick alternative to manually entering a FormID in the status bar, or using the console selection method.",
 
@@ -308,6 +324,11 @@
 	"kTomeSpell": "Tome Spell",
 	"kTomeSkill": "Tome Skill",
 	"kKitItemCount": "Item Count",
+	"kLeveledAllLevelsFlag": "Calculate All Levels",
+	"kLeveledEachFlag": "Calculate For Each",
+	"kLeveledUseAllFlag": "Return All",
+	"kLeveledSpecialFlag": "Special Loot",
+	"kLeveledChance": "Chance None",
 
 	"kNone_TOOLTIP": "None",
 	"kSpell_TOOLTIP": "Spell: Known to this actor and can be used based on their AI package.",
@@ -359,6 +380,11 @@
 	"kFactionList_TOOLTIP": "Factions: A list of factions which an Actor is a member of. (Ranks Unsupported)",
 	"kDefaultOutfit_TOOLTIP": "Default Outfit: The default outfit assigned to this actor. Used by some scripts in the game to manage Actor clothing.",
 	"kSleepOutfit_TOOLTIP": "Sleep Outfit: The assigned outfit to use when an Actor sleeps. May not always be reflected correctly in-game.",
+	"kLeveledAllLevelsFlag_TOOLTIP": "If set, the list will not ignore items with an item level less than the greatest item level in the list which does not exceed the player's level.",
+	"kLeveledEachFlag_TOOLTIP": "If set, the list is eligible to return multiple item based on evaluation.",
+	"kLeveledUseAllFlag_TOOLTIP": "If set, the list always returns ALL of its contents, 1 of each selection.",
+	"kLeveledSpecialFlag_TOOLTIP": "If set, additional methods are use to calculate distributions of selection.",
+	"kLeveledChance_TOOLTIP": "The chance, whenever the list is consulted, that it will return nothing.",
 
 	"DUMMY_OBJECT_INFO": "Dummy Object: This form was previously valid, but could not be resolved. This could be due to a missing plugin, update, or once valid reference being nonexistent.",
 	"INVALID_REFERENCE_POPUP_TITLE": "Could not locate FormID: ",

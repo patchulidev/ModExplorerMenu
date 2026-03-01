@@ -1,5 +1,11 @@
 #pragma once
 
+#include <functional>
+
+#include "RE/B/BSContainer.h"
+#include "RE/B/BSTArray.h"
+#include "RE/P/PlayerCharacter.h"
+#include "RE/T/TESLeveledList.h"
 #include "data/BaseObject.h"
 #include "localization/Locale.h"
 #include "ui/core/UIManager.h"
@@ -28,7 +34,7 @@ namespace Modex::Commands
 	// which are suspected for logging. Added the *a_count* argument for my implementation.
 	static inline RE::TESObjectREFR* Papyrus_PlaceAtMe(RE::TESObjectREFR* a_target, RE::TESForm* a_form, uint32_t a_count, bool a_persistent, bool a_initiallyDisabled) {
 		if (a_form->GetFormType() != RE::FormType::Explosion || !a_initiallyDisabled) {
-			using func_t = RE::TESObjectREFR*(*)(std::int64_t, std::int32_t, RE::TESObjectREFR*, RE::TESForm*, std::int32_t, bool, bool);
+			using func_t = RE::TESObjectREFR*(*)(int64_t, int32_t, RE::TESObjectREFR*, RE::TESForm*, int32_t, bool, bool);
 			static REL::Relocation<func_t> func{ REL::RelocationID(55672, 56203, 55672) };
 			return func(NULL, NULL, a_target, a_form, a_count, a_persistent, a_initiallyDisabled);
 		}
@@ -80,7 +86,119 @@ namespace Modex::Commands
 		return playerReference;
 	}
 
-	static inline const std::vector<BaseObject> GetInventoryList(RE::TESObjectREFR* reference = nullptr) 
+	// Walks a LeveledList's direct entries, calling a_onItem for concrete forms
+	// and a_onLeveledList for nested LeveledList entries (without resolving them).
+	// a_onLeveledList receives the original TESForm* (for GetFormID) and the cast TESLeveledList*.
+	static inline void ForEachLeveledEntry(RE::TESLeveledList* a_list,
+		const std::function<void(int a_index, RE::TESForm*, uint16_t, int32_t)>& a_onItem,
+		const std::function<void(int a_index, RE::TESForm*, RE::TESLeveledList*)>& a_onLeveledList)
+	{
+		int index = 0;
+		for (auto& entry : a_list->entries) {
+			index++;
+
+			if (!entry.form) continue;
+			if (entry.form->GetFormType() == RE::FormType::LeveledItem) {
+				if (auto nested = entry.form->As<RE::TESLeveledList>()) {
+					a_onLeveledList(index, entry.form, nested);
+				}
+			} else {
+				a_onItem(index, entry.form, entry.level, entry.count);
+			}
+		}
+	}
+
+	struct ResolvedItem {
+		RE::TESBoundObject* object;
+		uint16_t       count;
+	};
+
+	// Resolves a leveled list using the engine's native CalculateCurrentFormList.
+	// Respects flags (UseAll, AllLevels, ForEach), chanceNone, custom level, and nested lists.
+	static inline std::vector<ResolvedItem> ResolveLeveledList(
+		RE::TESLeveledList* a_list,
+		RE::TESObjectREFR*  a_targetRef = nullptr,
+		int16_t        a_count = 1,
+		uint16_t       a_level = 0)
+	{
+		std::vector<ResolvedItem> result;
+
+		if (!a_list)
+			return result;
+
+		// Determine the level to resolve at. 0 = target
+		if (a_level == 0) {
+			if (a_targetRef) {
+				a_level = a_targetRef->GetCalcLevel(true);
+			} else if (auto player = RE::PlayerCharacter::GetSingleton()) {
+				a_level = player->AsReference()->GetCalcLevel(true);
+			}
+		}
+
+		RE::BSScrapArray<RE::CALCED_OBJECT> calcedObjects;
+		a_list->CalculateCurrentFormList(a_level, a_count, calcedObjects, 0, false);
+
+		for (auto& calced : calcedObjects) {
+			if (!calced.form)
+				continue;
+
+			if (auto bound = calced.form->As<RE::TESBoundObject>()) {
+				result.push_back({ bound, calced.count });
+			}
+		}
+
+		return result;
+	}
+
+	// Resolves all items in an outfit, using engine-native leveled list resolution.
+	// Concrete items are passed through; leveled lists are resolved via ResolveLeveledList.
+	// a_level > 0 overrides the resolved level; 0 falls back to target/player level.
+	static inline std::vector<ResolvedItem> ResolveOutfitItems(
+		const RE::BGSOutfit* a_outfit,
+		RE::TESObjectREFR*   a_targetRef = nullptr,
+		uint16_t             a_level = 0)
+	{
+		std::vector<ResolvedItem> result;
+
+		if (!a_outfit || a_outfit->outfitItems.size() == 0)
+			return result;
+
+		a_outfit->ForEachItem([&](RE::TESForm* a_form) {
+			if (!a_form)
+				return RE::BSContainer::ForEachResult::kContinue;
+
+			if (a_form->GetFormType() == RE::FormType::LeveledItem) {
+				if (auto leveledList = a_form->As<RE::TESLeveledList>()) {
+					auto resolved = ResolveLeveledList(leveledList, a_targetRef, 1, a_level);
+					result.insert(result.end(), resolved.begin(), resolved.end());
+				}
+			} else {
+				if (auto bound = a_form->As<RE::TESBoundObject>()) {
+					result.push_back({ bound, 1 });
+				}
+			}
+
+			return RE::BSContainer::ForEachResult::kContinue;
+		});
+
+		return result;
+	}
+
+	static inline const std::vector<BaseObject> GetOutfitItems(const RE::BGSOutfit* a_outfit, uint16_t a_level = 0)
+	{
+		if (!a_outfit || a_outfit->outfitItems.size() == 0) return {};
+
+		auto resolved = ResolveOutfitItems(a_outfit, GetPlayerReference(), a_level);
+
+		std::vector<BaseObject> items;
+		for (auto& entry : resolved) {
+			items.emplace_back(entry.object, Ownership::Outfit, 0, 0, entry.count);
+		}
+
+		return items;
+	}
+
+	static inline const std::vector<BaseObject> GetInventoryList(RE::TESObjectREFR* reference = nullptr) // deprecated
 	{
 		Trace("Generating Inventory List...");
 
@@ -128,14 +246,21 @@ namespace Modex::Commands
 		Commands::AddItemToInventory(a_owner, a_targetRef, a_editorID, a_amount);
 	}
 
-	static inline void AddItemToPlayerInventory(Ownership a_owner, const std::string& a_editorID, uint32_t a_amount = 1)
+	static inline void AddLeveledListToRefInventory(Ownership a_owner, RE::TESObjectREFR* a_targetRef, const std::string& a_editorID, int16_t a_amount = 1)
 	{
-		auto player = RE::PlayerCharacter::GetSingleton();
-
-		if (!player)
+		if (!a_targetRef || a_editorID.empty())
 			return;
 
-		AddItemToInventory(a_owner, player->AsReference(), a_editorID, a_amount);
+		if (auto leveled = RE::TESForm::LookupByEditorID<RE::TESLeveledList>(a_editorID)) {
+			auto resolved = ResolveLeveledList(leveled, a_targetRef, a_amount);
+
+			for (auto& entry : resolved) {
+				a_targetRef->AddObjectToContainer(entry.object, nullptr, entry.count, nullptr);
+
+				auto editorid = po3_GetEditorID(entry.object->GetFormID());
+				UserData::SendEvent(ModexActionType::AddItem, editorid, a_owner);
+			}
+		}
 	}
 
 	static inline void RemoveAllItemsFromInventory(Ownership a_owner, RE::TESObjectREFR* a_targetRef)
@@ -221,7 +346,7 @@ namespace Modex::Commands
 	}
 
     // Helper function for inventory item binding
-    inline int InventoryBoundObjects(RE::TESObjectREFR* a_targetRef, const RE::TESForm* a_form, RE::TESBoundObject*& out_object, RE::ExtraDataList* out_extra)
+    inline int InventoryBoundObjects(RE::TESObjectREFR* a_targetRef, const RE::TESForm* a_form, RE::TESBoundObject*& out_object, RE::ExtraDataList*& out_extra)
 	{
 		// auto player = RE::PlayerCharacter::GetSingleton();
 		RE::TESBoundObject* foundObject = nullptr;
@@ -309,7 +434,18 @@ namespace Modex::Commands
 	{
 		SKSE::GetTaskInterface()->AddTask([a_owner, a_editorID]() {
 			RE::TESForm* form = RE::TESForm::LookupByEditorID(a_editorID);
-			Commands::AddItemToPlayerInventory(a_owner, a_editorID, 1); // Ensure the book is in inventory
+
+			const auto player = RE::PlayerCharacter::GetSingleton();
+
+			if (!player)
+				return;
+
+			auto playerRef = player->AsReference();
+
+			if (!playerRef)
+				return;
+
+			Commands::AddItemToRefInventory(a_owner, playerRef, a_editorID);
 
 			if (!form) 
 				return;
@@ -317,11 +453,6 @@ namespace Modex::Commands
 			RE::TESObjectBOOK* book = form->As<RE::TESObjectBOOK>();
 
 			if (!book) 
-				return;
-
-			RE::PlayerCharacter* player = RE::PlayerCharacter::GetSingleton();
-
-			if (!player)
 				return;
 
 			RE::NiPoint3 defaultPos{};
@@ -397,6 +528,89 @@ namespace Modex::Commands
 				}
 			}
 		}
+	}
+
+	static inline void AddOutfitItemsToInventory(Ownership a_owner, RE::TESObjectREFR* a_targetRef, RE::BGSOutfit* a_outfit, uint16_t a_level = 0)
+	{
+		if (!a_targetRef || !a_outfit)
+			return;
+
+		auto resolved = ResolveOutfitItems(a_outfit, a_targetRef, a_level);
+
+		for (auto& entry : resolved) {
+			a_targetRef->AddObjectToContainer(entry.object, nullptr, entry.count, nullptr);
+		}
+
+		UserData::SendEvent(ModexActionType::AddItem, po3_GetEditorID(a_outfit->GetFormID()), a_owner);
+	}
+
+	// RE::Actor::AddWornOutfit doesn't behave as expected. Using alternative implementation with
+	// existing methods provided in this header file.
+	static inline void EquipOutfit(Ownership a_owner, RE::TESObjectREFR* a_targetRef, RE::BGSOutfit* a_outfit, uint16_t a_level = 0)
+	{
+		if (!a_targetRef || !a_outfit)
+			return;
+
+		// Resolve once, add to inventory, then equip from the resolved list.
+		auto resolved = ResolveOutfitItems(a_outfit, a_targetRef, a_level);
+
+		for (auto& entry : resolved) {
+			a_targetRef->AddObjectToContainer(entry.object, nullptr, entry.count, nullptr);
+		}
+
+		// Queued task to allow game to catch up with inventory events (unsure).
+		SKSE::GetTaskInterface()->AddTask([a_targetRef, resolved]() {
+			auto actor = a_targetRef->As<RE::Actor>();
+			if (!actor)
+				return;
+
+			for (auto& entry : resolved) {
+				RE::TESBoundObject* equipObject = nullptr;
+				RE::ExtraDataList* extraData = nullptr;
+
+				InventoryBoundObjects(a_targetRef, entry.object, equipObject, extraData);
+				if (equipObject) {
+					actor->AddWornItem(equipObject, 1, false, 0, 0);
+				}
+			}
+		});
+
+		UserData::SendEvent(ModexActionType::EquipOutfit, po3_GetEditorID(a_outfit->GetFormID()), a_owner);
+
+	}
+
+	// TEST: What happens when we call this on Player?
+	static inline void SetSleepOutfitOnActor(Ownership a_owner, RE::TESObjectREFR* a_targetRef, RE::BGSOutfit* a_outfit)
+	{
+		(void) a_owner;
+
+		if (!a_targetRef || !a_outfit)
+			return;
+
+		if (auto npc = a_targetRef->As<RE::Actor>()) {
+			if (auto base = npc->GetActorBase()) {
+				base->sleepOutfit = a_outfit;
+			}
+		}
+
+		UserData::SendEvent(ModexActionType::SetSleepOutfit, po3_GetEditorID(a_outfit->GetFormID()), a_owner);
+	}
+
+	// TEST: Is this okay being applied to the actor base?
+	static inline void SetDefaultOutfitOnActor(Ownership a_owner, RE::TESObjectREFR* a_targetRef, RE::BGSOutfit* a_outfit)
+	{
+		(void)a_owner;
+
+		if (!a_targetRef || !a_outfit)
+			return;
+
+		if (auto npc = a_targetRef->As<RE::Actor>()) {
+			if (auto base = npc->GetActorBase()) {
+				base->defaultOutfit = a_outfit;
+			}
+		}
+
+		UserData::SendEvent(ModexActionType::SetDefaultOutfit, po3_GetEditorID(a_outfit->GetFormID()), a_owner);
 	}
 
 	static inline void PlaceAtMe(Ownership a_owner, const std::string& a_editorID, uint32_t a_count = 1, bool persistent = true, bool disabled = false) 
