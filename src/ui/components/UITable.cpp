@@ -851,6 +851,8 @@ namespace Modex
 				return Filter(Data::GetSingleton()->GetObjectList());
 			if (pluginType == Ownership::Outfit)
 				return Filter(Data::GetSingleton()->GetOutfitList());
+			if (pluginType == Ownership::Cell)
+				return Filter(Data::GetSingleton()->GetTeleportList());
 		}
 	}
 	

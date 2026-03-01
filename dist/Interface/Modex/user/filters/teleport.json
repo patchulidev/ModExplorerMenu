@@ -1,5 +1,13 @@
 {
-    "SearchProperty": [],
-    "SortProperty": [],
+    "SearchProperty": [
+		"kName",
+		"kEditorID",
+		"kCellLocation"
+	],
+    "SortProperty": [
+		"kNone",
+		"kIsExteriorCell",
+		"kCellLocation"
+	],
     "FilterProperty": []
 }

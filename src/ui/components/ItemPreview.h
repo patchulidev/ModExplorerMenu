@@ -619,6 +619,16 @@ namespace
 		}
 	}
 
+	inline void drawCellPreview(const std::unique_ptr<BaseObject>& a_item)
+	{
+		ImGui::Spacing();
+		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
+		ImGui::Spacing();
+
+		inlineCheckbox(a_item, PropertyType::kIsExteriorCell);
+		inlineText(a_item, PropertyType::kName);
+	}
+
 	inline float getDesiredWidth(const std::unique_ptr<BaseObject>& a_item, float a_min)
 	{
 		const auto& edid = a_item->GetEditorID();
@@ -687,6 +697,10 @@ namespace
 
 			if (auto outfit = a_item->GetTESOutfit(); outfit.has_value()) {
 				drawOutfitPreview(a_item);
+			}
+
+			if (a_item->GetFormType() == RE::FormType::Cell) {
+				drawCellPreview(a_item);
 			}
 
 			if (auto form = a_item->GetTESForm(); form) {

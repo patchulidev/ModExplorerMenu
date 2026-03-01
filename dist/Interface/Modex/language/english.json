@@ -329,6 +329,7 @@
 	"kLeveledUseAllFlag": "Return All",
 	"kLeveledSpecialFlag": "Special Loot",
 	"kLeveledChance": "Chance None",
+	"kIsExteriorCell": "Is Exterior",
 
 	"kNone_TOOLTIP": "None",
 	"kSpell_TOOLTIP": "Spell: Known to this actor and can be used based on their AI package.",

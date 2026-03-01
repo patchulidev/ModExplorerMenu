@@ -483,48 +483,22 @@ namespace Modex
 				}
 			}
 
-			Debug("Found a total of {} mods containing CELL records", m_cellModList.size());
 			if (rawCellMap.empty()) {
 				Debug("No cells found in loaded worldspaces.");
 			} else {
 				for (const auto& [key, value] : rawCellMap) {
 					const std::string& editorID = std::get<1>(key);
-					const RE::TESFile* modFile = dataHandler->LookupLoadedModByName(value);
-					std::string full = "";
 
 					// What is causing the cell formid to not be found using LookupByID?
 					// const auto& form = RE::TESForm::LookupByID<RE::TESObjectCELL>(cidx);
 
 					if (const auto& form = RE::TESForm::LookupByEditorID<RE::TESObjectCELL>(editorID)) {
-						full = form->GetFullName();
+						m_cellCache.emplace_back(form, Ownership::Cell);
 					}
-
-					m_cellCache.emplace_back(
-						ValidateTESFileName(modFile),
-						full,
-						editorID,
-						modFile);
 				}
 			}
+			Trace("Found a total of {} cells in {} mods", m_cellCache.size(), m_cellModList.size());
 		}
-	}
-
-	// Returns a reference to the CellData object with the specified editor ID for PersistentData
-	CellData& Data::GetCellByEditorID(const std::string& a_editorid)
-	{
-		for (auto& cell : m_cellCache) {
-			if (cell.GetEditorID() == a_editorid) {
-				return cell;
-			}
-		}
-
-		static CellData emptyCell(
-			"MODEX_ERR",
-			"MODEX_ERR",
-			a_editorid,
-			nullptr);
-
-		return emptyCell;
 	}
 
 	// OPTIMIZE: Optimize this by loading on demand rather than all at once.

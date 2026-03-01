@@ -103,7 +103,7 @@ namespace Modex::UICustom
 		}
 	}
 
-	void SubCategoryHeader(const char* a_label)
+	void SubCategoryHeader(const char* a_label, const char* a_suffix)
 	{
 		ImGui::Spacing();
 		ImGui::PushFontBold(ImGui::GetFontSize());
@@ -111,6 +111,8 @@ namespace Modex::UICustom
 		ImGui::SetCursorPosX(center_x);
 		ImGui::Text("%s", a_label);
 		ImGui::PopFont();
+		ImGui::SameLine();
+		ImGui::TextDisabled("%s", a_suffix);
 		ImGui::Spacing();
 	}
 
@@ -199,7 +201,7 @@ namespace Modex::UICustom
 		std::string current_item;
 		if (!a_items.empty() && Locale::GetSingleton()->HasEntry(a_items[a_currentItem].c_str())) {
 			current_item = Translate(a_items[a_currentItem].c_str());
-		} else {
+		} else { // BUG: We should probably re-do this instead of relying on it as an assertion.
 			current_item = a_items[a_currentItem];
 		}
 

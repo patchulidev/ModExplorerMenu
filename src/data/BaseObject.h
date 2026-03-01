@@ -98,6 +98,8 @@ namespace Modex
 		kLeveledUseAllFlag,
 		kLeveledSpecialFlag,
 		kLeveledChance,
+		kIsExteriorCell,
+		kCellLocation,
 		kTotal
 	};
 
@@ -304,6 +306,10 @@ namespace Modex
 				return ICON_LC_FLAG;
 			case PropertyType::kLeveledChance:
 				return ICON_LC_DICES;
+			case PropertyType::kIsExteriorCell:
+				return ICON_LC_FLAG;
+			case PropertyType::kCellLocation:
+				return ICON_LC_PIN;
 			default:
 				return ICON_LC_MESSAGE_CIRCLE_QUESTION;
 			}
@@ -1384,6 +1390,34 @@ namespace Modex
 			return (list->llFlags & a_flag) != 0;
 		}
 
+		bool IsExteriorCell() const
+		{
+			auto* form = m_formWrapper.Get();
+			if (!form) return false;
+
+			if (auto* cell = form->As<RE::TESObjectCELL>(); cell) {
+				return cell->IsExteriorCell();
+			}
+
+			return false;
+		}
+
+		std::string GetCellLocation() const
+		{
+			auto* form = m_formWrapper.Get();
+			if (!form) return "";
+
+			if (auto* cell = form->As<RE::TESObjectCELL>(); cell) {
+				if (auto* location = cell->GetLocation(); location) {
+					if (auto* name = location->GetFullName(); name && name[0] != '\0') {
+						return name;
+					}
+				}
+			}
+
+			return "";
+		}
+
 		std::string GetLeveledListChance() const
 		{
 			auto* form = m_formWrapper.Get();
@@ -1481,6 +1515,8 @@ namespace Modex
 					return (PropertyType::kLeveledNPC);
 				case RE::FormType::LeveledSpell:
 					return (PropertyType::kLeveledSpell);
+				case RE::FormType::Cell:
+					return (PropertyType::kCell);
 				default:
 					return PropertyType::kNone;
 			}
@@ -1640,6 +1676,10 @@ namespace Modex
 					return std::to_string(m_quantity); 
 				case PropertyType::kOutfitItems:
 					return GetOutfitItemCount();
+				case PropertyType::kIsExteriorCell:
+					return IsExteriorCell() ? "true" : "false";
+				case PropertyType::kCellLocation:
+					return GetCellLocation();
 				case PropertyType::kLeveledItem: // Chance, flagged, count?
 				case PropertyType::kLeveledNPC:
 				case PropertyType::kLeveledSpell:
@@ -1660,29 +1700,6 @@ namespace Modex
 
 			return "";
 		}
-	};
-
-	class CellData
-	{
-	public:
-		const std::string 	filename;
-		const std::string 	cellName;
-		const std::string 	editorid;
-
-		const RE::TESFile* 	mod;
-
-		[[nodiscard]] inline std::string_view 		GetPluginName() const { return filename; }
-		[[nodiscard]] inline std::string_view 		GetPluginNameView() const { return filename; }
-		[[nodiscard]] inline std::string_view 		GetCellName() const { return cellName; }
-		[[nodiscard]] inline std::string_view 		GetEditorIDView() const { return editorid; }
-		[[nodiscard]] inline std::string_view 		GetEditorID() const { return editorid; }
-
-		CellData(std::string filename, std::string cellName, std::string editorid, const RE::TESFile* mod = nullptr) :
-			filename(filename), 
-			cellName(cellName), 
-			editorid(editorid), 
-			mod(mod) 
-		{}
 	};
 
 	struct KitBase

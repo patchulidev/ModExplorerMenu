@@ -345,13 +345,43 @@ namespace Modex
 		ImGui::EndChild();
 	}
 
+	void UIContainers::DrawTeleportActionPanel(const ImVec2 &a_pos, const ImVec2 &a_size, std::unique_ptr<UITable> &a_view)
+	{
+		const float button_height = ImGui::GetFontSize() * 1.5f;
+
+		ImGui::SameLine();
+		ImGui::SetCursorPos(a_pos);
+		if (ImGui::BeginChild("Modex::TeleportWindow::Actions", a_size)) {
+			const float max_width = ImGui::GetContentRegionAvail().x;
+			const bool action_allowed = a_view->GetSelectionCount() > 0;
+
+			UICustom::SubCategoryHeader(Translate("HEADER_ACTIONS"));
+
+			if (UICustom::ActionButton("CENTER_ON_CELL", ImVec2(max_width, button_height), action_allowed && a_view->GetSelectionCount() == 1)) {
+				const auto& selection = a_view->GetSelection();
+				if (!selection.empty()) {
+					Commands::CenterOnCell(a_view->GetOwnership(), selection[0]->GetEditorID());
+				}
+			}
+
+			ImGui::Spacing();
+			ImGui::Spacing();
+
+			UICustom::SubCategoryHeader(Translate("HEADER_PREVIEW"));
+
+			ShowItemPreview(a_view->GetItemPreview());
+		}
+		ImGui::EndChild();
+	}
+
 	// Can be used globally as a general purpose BaseObject table.
 	void UIContainers::DrawBasicTablePanel(const char* a_localeText, const ImVec2 &a_pos, const ImVec2 &a_size, std::unique_ptr<UITable> &a_view)
 	{
 		ImGui::SameLine();
 		ImGui::SetCursorPos(a_pos);
 		if (ImGui::BeginChild(a_localeText, a_size, false, ImGuiWindowFlags_NoBringToFrontOnFocus)) {
-			UICustom::SubCategoryHeader(Translate(a_localeText));
+			std::string count = std::format("[{}]", a_view->GetTableList().size());
+			UICustom::SubCategoryHeader(Translate(a_localeText), count.c_str());
 			ImGui::Spacing();
 			a_view->Draw(a_view->GetTableList());
 		}
