@@ -209,6 +209,11 @@ namespace Modex
 			case ModexActionType::AddOutfit:
 				AddToRecentList(a_item);
 				UINotification::ShowAction(Translate("ADD_OUTFIT_ITEMS"), a_item->GetName(), ICON_LC_SHIRT);
+				break;
+			case ModexActionType::CenterOnCell:
+				AddToRecentList(a_item);
+				UINotification::ShowAction(Translate("CENTER_ON_CELL"), a_item->GetName(), ICON_LC_PIN);
+				break;
 			default: Error("Missed switch case for SendEvent(ModexActionType a_actionType, const std::unique_ptr<BaseObject>& a_item)");
 				break;
 		}

@@ -625,8 +625,8 @@ namespace
 		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 		ImGui::Spacing();
 
-		inlineCheckbox(a_item, PropertyType::kIsExteriorCell);
 		inlineText(a_item, PropertyType::kName);
+		inlineText(a_item, PropertyType::kEditorID);
 	}
 
 	inline float getDesiredWidth(const std::unique_ptr<BaseObject>& a_item, float a_min)

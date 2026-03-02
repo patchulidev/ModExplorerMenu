@@ -360,7 +360,9 @@ namespace Modex
 			if (UICustom::ActionButton("CENTER_ON_CELL", ImVec2(max_width, button_height), action_allowed && a_view->GetSelectionCount() == 1)) {
 				const auto& selection = a_view->GetSelection();
 				if (!selection.empty()) {
-					Commands::CenterOnCell(a_view->GetOwnership(), selection[0]->GetEditorID());
+					const auto& selected = selection[0];
+					Commands::CenterOnCell(a_view->GetOwnership(), selected->GetEditorID());
+					UserData::SendEvent(ModexActionType::CenterOnCell, selected);
 				}
 			}
 

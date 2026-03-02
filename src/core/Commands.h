@@ -688,20 +688,15 @@ namespace Modex::Commands
 		if (a_cellEditorID.empty())
 			return;
 
-		auto player = RE::PlayerCharacter::GetSingleton();
 
-		if (!player)
-			return;
 
-		auto cell = RE::TESForm::LookupByEditorID<RE::TESObjectCELL>(a_cellEditorID);
+		SKSE::GetTaskInterface()->AddTask([a_cellEditorID]() {
+			auto player = RE::PlayerCharacter::GetSingleton();
 
-		if (!cell)
-			return;
+			if (!player)
+				return;
 
-		SKSE::GetTaskInterface()->AddTask([player, cell]() {
-			player->CenterOnCell(cell);
+			player->CenterOnCell(a_cellEditorID.c_str());
 		});
-
-		// UserData::SendEvent(ModexActionType::CenterOnCell, a_cellEditorID);
 	}
 }

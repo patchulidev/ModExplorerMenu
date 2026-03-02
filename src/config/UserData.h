@@ -36,6 +36,7 @@ namespace Modex
 		SetSleepOutfit,
 		EquipOutfit,
 		AddOutfit,
+		CenterOnCell,
 		Total,
 	};
 
