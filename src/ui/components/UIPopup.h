@@ -3,6 +3,8 @@
 #include "UIWindow.h"
 #include "data/Data.h"
 
+// TODO: On 0.5x resolution scale, popups are rendered offcenter.
+
 namespace Modex
 { 
 	static inline void DrawPopupBackground(float a_alpha)

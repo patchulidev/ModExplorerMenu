@@ -298,49 +298,6 @@ namespace Modex
 		}
 	}
 
-	// https://github.com/shad0wshayd3-TES5/BakaHelpExtender | License : MIT
-	// Absolute unit of code here. Super grateful for the author's work!
-	void Data::CacheCells(RE::TESFile* a_file, std::map<std::tuple<std::uint32_t, const std::string, const std::string>, std::string_view>& out_map)
-	{
-		if (!a_file->OpenTES(RE::NiFile::OpenMode::kReadOnly, false)) {
-			Warn("Failed to open file: {:s}", a_file->fileName);
-			return;
-		}
-
-		int count = 0;
-
-		do {
-			if (a_file->currentform.form == 'LLEC') {
-				char edid[512]{ '\0' };
-				bool gotEDID{ false };
-
-				std::uint32_t cidx{ a_file->currentform.formID };
-				cidx += a_file->compileIndex << 24;
-				cidx += a_file->smallFileCompileIndex << 12;
-
-				do {
-					switch (a_file->GetCurrentSubRecordType()) {
-					case 'DIDE':
-						gotEDID = a_file->ReadData(edid, a_file->actualChunkSize);
-						if (gotEDID) {
-							count++;
-							out_map.insert_or_assign(std::make_tuple(cidx, edid, "First Pass"), a_file->fileName);
-							Trace(" - {:s} -> {:s}", a_file->fileName, edid);
-						}
-						break;
-					default:
-						break;
-					}
-				} while (a_file->SeekNextSubrecord());
-			}
-		} while (a_file->SeekNextForm(true));
-
-		Debug("Found {} cells in mod: {:s}", count, a_file->fileName);
-
-		if (!a_file->CloseTES(false)) {
-			Error("Failed to close file: {:s}", a_file->fileName);
-		}
-	}
 
 
 	void Data::GenerateItemList()
@@ -461,44 +418,98 @@ namespace Modex
 	}
 
 
+	// Source: https://github.com/shad0wshayd3-TES5/BakaHelpExtender | License: MIT
+	// Reads cell FormIDs and editor IDs directly from plugin files on disk,
+	// since cells are not fully loaded in memory and cannot be enumerated via GetFormArray.
+	int Data::CacheCells(RE::TESFile* a_file, std::unordered_map<RE::FormID, CellRecord>& out_cells)
+	{
+		if (!a_file->OpenTES(RE::NiFile::OpenMode::kReadOnly, false)) {
+			Warn("Failed to open file: {:s}", a_file->fileName);
+			return 0;
+		}
+
+		int count = 0;
+		std::string pluginName = ValidateTESFileName(a_file);
+
+		do {
+			if (a_file->currentform.form == 'LLEC') {
+				uint32_t formID = a_file->GetRuntimeFormID(a_file->currentform.formID);
+
+				char edid[512]{ '\0' };
+				bool gotEDID = false;
+
+				do {
+					switch (a_file->GetCurrentSubRecordType()) {
+					case 'DIDE':
+						gotEDID = a_file->ReadData(edid, a_file->actualChunkSize);
+						break;
+					default:
+						break;
+					}
+
+					if (gotEDID) {
+						count++;
+						break;
+					}
+				} while (a_file->SeekNextSubrecord());
+
+				// Only insert if not already present (first plugin to define wins).
+				out_cells.try_emplace(formID, CellRecord{ gotEDID ? edid : "", pluginName });
+			}
+		} while (a_file->SeekNextForm(true));
+
+		if (!a_file->CloseTES(false)) {
+			Error("Failed to close file: {:s}", a_file->fileName);
+		}
+
+		return count;
+	}
+
 	void Data::GenerateCellList()
 	{
 		m_cellCache.clear();
+		m_cellModList.clear();
 
 		Debug("Generating Cell List...");
 
-		std::map<std::tuple<std::uint32_t, const std::string, const std::string>, std::string_view> rawCellMap;
-		if (auto dataHandler = RE::TESDataHandler::GetSingleton()) {
-			auto [forms, lock] = RE::TESForm::GetAllForms();
-			for (auto& iter : *forms) {
-				if (iter.second->GetFormType() == RE::FormType::Cell) {
-					auto file = iter.second->GetFile(-1);
-
-					if (!file || m_cellModList.contains(file)) {
-						continue;
-					}
-
-					CacheCells(file, rawCellMap);
-					m_cellModList.insert(file);
-				}
-			}
-
-			if (rawCellMap.empty()) {
-				Debug("No cells found in loaded worldspaces.");
-			} else {
-				for (const auto& [key, value] : rawCellMap) {
-					const std::string& editorID = std::get<1>(key);
-
-					// What is causing the cell formid to not be found using LookupByID?
-					// const auto& form = RE::TESForm::LookupByID<RE::TESObjectCELL>(cidx);
-
-					if (const auto& form = RE::TESForm::LookupByEditorID<RE::TESObjectCELL>(editorID)) {
-						m_cellCache.emplace_back(form, Ownership::Cell);
-					}
-				}
-			}
-			Trace("Found a total of {} cells in {} mods", m_cellCache.size(), m_cellModList.size());
+		auto dataHandler = RE::TESDataHandler::GetSingleton();
+		if (!dataHandler) {
+			return;
 		}
+
+		// FormID -> { EDID, plugin name } read from plugin files.
+		std::unordered_map<RE::FormID, CellRecord> cellMap;
+
+		auto scanFile = [&](RE::TESFile* file) {
+			if (!file) {
+				return;
+			}
+
+			if (CacheCells(file, cellMap) > 0) {
+				AddModToIndex(file, m_cellModList);
+			};
+		};
+
+		for (uint8_t i = 0; i < dataHandler->GetLoadedModCount(); i++) {
+			scanFile(dataHandler->GetLoadedMods()[i]);
+		}
+
+		for (uint16_t i = 0; i < dataHandler->GetLoadedLightModCount(); i++) {
+			scanFile(dataHandler->GetLoadedLightMods()[i]);
+		}
+
+		for (const auto& [formID, record] : cellMap) {
+			if (!record.edid.empty()) {
+				if (auto cell = RE::TESForm::LookupByEditorID<RE::TESObjectCELL>(record.edid); cell) {
+					const char* name = cell->GetFullName();
+					m_cellCache.emplace_back(name ? name : "", record.edid, record.plugin, Ownership::Cell, 0, 0, 0, false, formID);
+				} else {
+					m_cellCache.emplace_back("", record.edid, record.plugin, Ownership::Cell, 0, 0, 0, false, formID);
+				}
+			}
+		}
+
+		Info("Cached {} cells from {} mods. Raw records {}", m_cellCache.size(), m_cellModList.size(), cellMap.size());
 	}
 
 	// OPTIMIZE: Optimize this by loading on demand rather than all at once.

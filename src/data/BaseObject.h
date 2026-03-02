@@ -98,8 +98,6 @@ namespace Modex
 		kLeveledUseAllFlag,
 		kLeveledSpecialFlag,
 		kLeveledChance,
-		kIsExteriorCell,
-		kCellLocation,
 		kTotal
 	};
 
@@ -306,10 +304,6 @@ namespace Modex
 				return ICON_LC_FLAG;
 			case PropertyType::kLeveledChance:
 				return ICON_LC_DICES;
-			case PropertyType::kIsExteriorCell:
-				return ICON_LC_FLAG;
-			case PropertyType::kCellLocation:
-				return ICON_LC_PIN;
 			default:
 				return ICON_LC_MESSAGE_CIRCLE_QUESTION;
 			}
@@ -383,22 +377,22 @@ namespace Modex
 		}
 		
 		// Safe accessors with default fallbacks
-		[[nodiscard]] const std::string WGetName() const {
-			return m_form ? ValidateName() : "[NULL FORM]";
+		[[nodiscard]] const std::string WGetName(const std::string& a_fallback) const {
+			return m_form ? ValidateName() : a_fallback;
 		}
 		
-		[[nodiscard]] const std::string WGetEditorID() const {
-			return m_form ? po3_GetEditorID(m_form->GetFormID()) : "[NULL FORM]";
+		[[nodiscard]] const std::string WGetEditorID(const std::string& a_fallback) const {
+			return m_form ? po3_GetEditorID(m_form->GetFormID()) : a_fallback;
 		}
 		
 		// TODO: Handle cache validation after compile index setting changes.
-		[[nodiscard]] const std::string WGetPluginName() const {
+		[[nodiscard]] const std::string WGetPluginName(const std::string& a_fallback) const {
 			const int32_t idx = UserConfig::GetCompileIndex();
-			return m_form ? ValidateFilename(idx) : "[NULL FORM]";
+			return m_form ? ValidateFilename(idx) : a_fallback;
 		}
 		
-		[[nodiscard]] const std::string WGetFormID() const {
-			return m_form ? std::format("{:08X}", m_form->GetFormID()) : "[NULL FORM]";
+		[[nodiscard]] const std::string WGetFormID(const std::string& a_fallback) const {
+			return m_form ? std::format("{:08X}", m_form->GetFormID()) : a_fallback;
 		}
 
 		[[nodiscard]] RE::FormID WGetBaseFormID() const {
@@ -433,10 +427,10 @@ namespace Modex
 		// Constructor from TESForm pointer where Ownership represents the module its used.
 		BaseObject(RE::TESForm* form, Ownership a_owner, ImGuiID a_id = 0, RE::FormID a_refID = 0, int a_quantity = 1, bool a_equipped = false)
 			: m_formWrapper{ form }
-			, m_name{ m_formWrapper.WGetName() }
-			, m_editorid{ m_formWrapper.WGetEditorID() }
-			, m_plugin{ m_formWrapper.WGetPluginName() }
-			, m_formid{ m_formWrapper. WGetFormID() }
+			, m_name{ m_formWrapper.WGetName("[Missing Name]") }
+			, m_editorid{ m_formWrapper.WGetEditorID("[Missing EditorID]") }
+			, m_plugin{ m_formWrapper.WGetPluginName("[Missing Plugin]") }
+			, m_formid{ m_formWrapper. WGetFormID("[Missing FormID]") }
 			, m_baseid{ m_formWrapper.WGetBaseFormID() }
 			, m_owner(a_owner)
 			, m_refID{ a_refID }
@@ -446,13 +440,13 @@ namespace Modex
 		{}
 
 		// Explicit dummy object constructor
-		BaseObject(std::string a_name, std::string a_editorid, std::string a_plugin, Ownership a_owner, uint32_t a_refid = 0, ImGuiID a_id = 0, int a_quantity = 1, bool a_equipped = false) 
+		BaseObject(std::string a_name, std::string a_editorid, std::string a_plugin, Ownership a_owner, uint32_t a_refid = 0, ImGuiID a_id = 0, int a_quantity = 1, bool a_equipped = false, RE::FormID a_formID = 0) 
 			: m_formWrapper{ nullptr }
 			, m_name{ a_name }
 			, m_editorid{ a_editorid }
 			, m_plugin{ a_plugin }
-			, m_formid{ "" }
-			, m_baseid{ 0 }
+			, m_formid{ std::format("{:08X}", a_formID) }
+			, m_baseid{ a_formID }
 			, m_owner(a_owner)
 			, m_refID{ a_refid }
 			, m_tableID{ a_id }
@@ -1390,34 +1384,6 @@ namespace Modex
 			return (list->llFlags & a_flag) != 0;
 		}
 
-		bool IsExteriorCell() const
-		{
-			auto* form = m_formWrapper.Get();
-			if (!form) return false;
-
-			if (auto* cell = form->As<RE::TESObjectCELL>(); cell) {
-				return cell->IsExteriorCell();
-			}
-
-			return false;
-		}
-
-		std::string GetCellLocation() const
-		{
-			auto* form = m_formWrapper.Get();
-			if (!form) return "";
-
-			if (auto* cell = form->As<RE::TESObjectCELL>(); cell) {
-				if (auto* location = cell->GetLocation(); location) {
-					if (auto* name = location->GetFullName(); name && name[0] != '\0') {
-						return name;
-					}
-				}
-			}
-
-			return "";
-		}
-
 		std::string GetLeveledListChance() const
 		{
 			auto* form = m_formWrapper.Get();
@@ -1676,10 +1642,6 @@ namespace Modex
 					return std::to_string(m_quantity); 
 				case PropertyType::kOutfitItems:
 					return GetOutfitItemCount();
-				case PropertyType::kIsExteriorCell:
-					return IsExteriorCell() ? "true" : "false";
-				case PropertyType::kCellLocation:
-					return GetCellLocation();
 				case PropertyType::kLeveledItem: // Chance, flagged, count?
 				case PropertyType::kLeveledNPC:
 				case PropertyType::kLeveledSpell:

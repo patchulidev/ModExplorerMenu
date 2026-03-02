@@ -110,7 +110,13 @@ namespace Modex
 		template <class T>
 		void CacheStaticObjects(RE::TESDataHandler* a_data);
 
-		void CacheCells(RE::TESFile* a_file, std::map<std::tuple<std::uint32_t, const std::string, const std::string>, std::string_view>& out_map);
+		struct CellRecord
+		{
+			std::string edid;
+			std::string plugin;
+		};
+
+		int CacheCells(RE::TESFile* a_file, std::unordered_map<RE::FormID, CellRecord>& out_cells);
 		void MergeNPCRefIds(std::shared_ptr<std::unordered_map<RE::FormID, RE::FormID>> npc_ref_map);
 	};
 

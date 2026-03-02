@@ -48,7 +48,7 @@ namespace Modex
 		std::unordered_set<const RE::TESFile*>  pluginSet;
 
 		std::string             data_id;
-		const Ownership         pluginType;
+		const Ownership         owner;
 		uint32_t                flags = 0;
 		uint32_t                tableID;
 		uint32_t                tableMode;
@@ -139,7 +139,7 @@ namespace Modex
 		void                    Draw(const TableList& a_tableList);
 		void                    Refresh();
 
-		Ownership               GetOwnership() { return pluginType; };
+		Ownership               GetOwnership() { return owner; };
 		TableList*              GetTableListPtr() { return &tableList; }
 		TableList&              GetTableListRef() { return tableList; }
 		const PluginList&       GetPluginList() const { return pluginList; };
