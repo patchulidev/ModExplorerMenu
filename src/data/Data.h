@@ -60,12 +60,11 @@ namespace Modex
 		[[nodiscard]] inline std::vector<BaseObject>& 	GetAddItemList() 	{ return m_cache; 			}
 		[[nodiscard]] inline std::vector<BaseObject>& 	GetNPCList() 		{ return m_npcCache; 		}
 		[[nodiscard]] inline std::vector<BaseObject>& 	GetObjectList() 	{ return m_staticCache;		}
-		[[nodiscard]] inline std::vector<CellData>& 	GetTeleportList() 	{ return m_cellCache; 		}
+		[[nodiscard]] inline std::vector<BaseObject>& 	GetTeleportList() 	{ return m_cellCache; 		}
 		[[nodiscard]] inline std::vector<BaseObject>& 	GetOutfitList() 	{ return m_outfitCache; 	}
 		[[nodiscard]] inline std::set<std::string> 		GetNPCClassList() 	{ return m_npcClassList; 	}
 		[[nodiscard]] inline std::set<std::string> 		GetNPCRaceList() 	{ return m_npcRaceList; 	}
 		[[nodiscard]] inline std::set<std::string> 		GetNPCFactionList() { return m_npcFactionList; 	}
-		[[nodiscard]] CellData& 						GetCellByEditorID(const std::string& a_editorid);
 
 		void											GenerateInventoryList();
 		void 											GenerateItemList();
@@ -82,7 +81,7 @@ namespace Modex
 		std::vector<BaseObject> 						m_cache;
 		std::vector<BaseObject> 						m_staticCache;
 		std::vector<BaseObject> 						m_npcCache;
-		std::vector<CellData>	 						m_cellCache;
+		std::vector<BaseObject>	 						m_cellCache;
 		std::vector<BaseObject> 						m_outfitCache;
 		std::vector<RE::TESObjectREFR*> 				m_npcRefIds;
 		std::unordered_set<const RE::TESFile*> 			m_modList;
@@ -111,7 +110,13 @@ namespace Modex
 		template <class T>
 		void CacheStaticObjects(RE::TESDataHandler* a_data);
 
-		void CacheCells(RE::TESFile* a_file, std::map<std::tuple<std::uint32_t, const std::string, const std::string>, std::string_view>& out_map);
+		struct CellRecord
+		{
+			std::string edid;
+			std::string plugin;
+		};
+
+		int CacheCells(RE::TESFile* a_file, std::unordered_map<RE::FormID, CellRecord>& out_cells);
 		void MergeNPCRefIds(std::shared_ptr<std::unordered_map<RE::FormID, RE::FormID>> npc_ref_map);
 	};
 

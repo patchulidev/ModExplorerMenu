@@ -317,7 +317,7 @@ namespace Modex
 			{Translate("MODULE_INVENTORY"), ICON_LC_PACKAGE, .0f, ModuleType::Inventory},
 			{Translate("MODULE_ACTOR"), ICON_LC_USER, .0f, ModuleType::Actor},
 			// {Translate("MODULE_OBJECT"), ICON_LC_BLOCKS, .0f, ModuleType::Object},
-			// {Translate("MODULE_TELEPORT"), ICON_LC_MAP_PIN, .0f, ModuleType::Teleport},
+			{Translate("MODULE_TELEPORT"), ICON_LC_MAP_PIN, .0f, ModuleType::Teleport},
 			{Translate("MODULE_OUTFIT"), ICON_LC_SHIRT, .0f, ModuleType::Outfit},
 			{Translate("MODULE_SETTINGS"), ICON_LC_SETTINGS, .0f, ModuleType::Settings}
 		};

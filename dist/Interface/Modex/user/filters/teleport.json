@@ -1,5 +1,10 @@
 {
-    "SearchProperty": [],
-    "SortProperty": [],
+    "SearchProperty": [
+		"kEditorID",
+		"kName"
+	],
+    "SortProperty": [
+		"kNone"
+	],
     "FilterProperty": []
 }

@@ -377,22 +377,22 @@ namespace Modex
 		}
 		
 		// Safe accessors with default fallbacks
-		[[nodiscard]] const std::string WGetName() const {
-			return m_form ? ValidateName() : "[NULL FORM]";
+		[[nodiscard]] const std::string WGetName(const std::string& a_fallback) const {
+			return m_form ? ValidateName() : a_fallback;
 		}
 		
-		[[nodiscard]] const std::string WGetEditorID() const {
-			return m_form ? po3_GetEditorID(m_form->GetFormID()) : "[NULL FORM]";
+		[[nodiscard]] const std::string WGetEditorID(const std::string& a_fallback) const {
+			return m_form ? po3_GetEditorID(m_form->GetFormID()) : a_fallback;
 		}
 		
 		// TODO: Handle cache validation after compile index setting changes.
-		[[nodiscard]] const std::string WGetPluginName() const {
+		[[nodiscard]] const std::string WGetPluginName(const std::string& a_fallback) const {
 			const int32_t idx = UserConfig::GetCompileIndex();
-			return m_form ? ValidateFilename(idx) : "[NULL FORM]";
+			return m_form ? ValidateFilename(idx) : a_fallback;
 		}
 		
-		[[nodiscard]] const std::string WGetFormID() const {
-			return m_form ? std::format("{:08X}", m_form->GetFormID()) : "[NULL FORM]";
+		[[nodiscard]] const std::string WGetFormID(const std::string& a_fallback) const {
+			return m_form ? std::format("{:08X}", m_form->GetFormID()) : a_fallback;
 		}
 
 		[[nodiscard]] RE::FormID WGetBaseFormID() const {
@@ -427,10 +427,10 @@ namespace Modex
 		// Constructor from TESForm pointer where Ownership represents the module its used.
 		BaseObject(RE::TESForm* form, Ownership a_owner, ImGuiID a_id = 0, RE::FormID a_refID = 0, int a_quantity = 1, bool a_equipped = false)
 			: m_formWrapper{ form }
-			, m_name{ m_formWrapper.WGetName() }
-			, m_editorid{ m_formWrapper.WGetEditorID() }
-			, m_plugin{ m_formWrapper.WGetPluginName() }
-			, m_formid{ m_formWrapper. WGetFormID() }
+			, m_name{ m_formWrapper.WGetName("[Missing Name]") }
+			, m_editorid{ m_formWrapper.WGetEditorID("[Missing EditorID]") }
+			, m_plugin{ m_formWrapper.WGetPluginName("[Missing Plugin]") }
+			, m_formid{ m_formWrapper. WGetFormID("[Missing FormID]") }
 			, m_baseid{ m_formWrapper.WGetBaseFormID() }
 			, m_owner(a_owner)
 			, m_refID{ a_refID }
@@ -440,13 +440,13 @@ namespace Modex
 		{}
 
 		// Explicit dummy object constructor
-		BaseObject(std::string a_name, std::string a_editorid, std::string a_plugin, Ownership a_owner, uint32_t a_refid = 0, ImGuiID a_id = 0, int a_quantity = 1, bool a_equipped = false) 
+		BaseObject(std::string a_name, std::string a_editorid, std::string a_plugin, Ownership a_owner, uint32_t a_refid = 0, ImGuiID a_id = 0, int a_quantity = 1, bool a_equipped = false, RE::FormID a_formID = 0) 
 			: m_formWrapper{ nullptr }
 			, m_name{ a_name }
 			, m_editorid{ a_editorid }
 			, m_plugin{ a_plugin }
-			, m_formid{ "" }
-			, m_baseid{ 0 }
+			, m_formid{ std::format("{:08X}", a_formID) }
+			, m_baseid{ a_formID }
 			, m_owner(a_owner)
 			, m_refID{ a_refid }
 			, m_tableID{ a_id }
@@ -1481,6 +1481,8 @@ namespace Modex
 					return (PropertyType::kLeveledNPC);
 				case RE::FormType::LeveledSpell:
 					return (PropertyType::kLeveledSpell);
+				case RE::FormType::Cell:
+					return (PropertyType::kCell);
 				default:
 					return PropertyType::kNone;
 			}
@@ -1660,29 +1662,6 @@ namespace Modex
 
 			return "";
 		}
-	};
-
-	class CellData
-	{
-	public:
-		const std::string 	filename;
-		const std::string 	cellName;
-		const std::string 	editorid;
-
-		const RE::TESFile* 	mod;
-
-		[[nodiscard]] inline std::string_view 		GetPluginName() const { return filename; }
-		[[nodiscard]] inline std::string_view 		GetPluginNameView() const { return filename; }
-		[[nodiscard]] inline std::string_view 		GetCellName() const { return cellName; }
-		[[nodiscard]] inline std::string_view 		GetEditorIDView() const { return editorid; }
-		[[nodiscard]] inline std::string_view 		GetEditorID() const { return editorid; }
-
-		CellData(std::string filename, std::string cellName, std::string editorid, const RE::TESFile* mod = nullptr) :
-			filename(filename), 
-			cellName(cellName), 
-			editorid(editorid), 
-			mod(mod) 
-		{}
 	};
 
 	struct KitBase

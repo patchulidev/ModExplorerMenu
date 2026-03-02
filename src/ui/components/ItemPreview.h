@@ -619,6 +619,16 @@ namespace
 		}
 	}
 
+	inline void drawCellPreview(const std::unique_ptr<BaseObject>& a_item)
+	{
+		ImGui::Spacing();
+		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
+		ImGui::Spacing();
+
+		inlineText(a_item, PropertyType::kName);
+		inlineText(a_item, PropertyType::kEditorID);
+	}
+
 	inline float getDesiredWidth(const std::unique_ptr<BaseObject>& a_item, float a_min)
 	{
 		const auto& edid = a_item->GetEditorID();
@@ -633,6 +643,49 @@ namespace
 	}
 }
 
+	inline void ShowFavoriteList()
+	{
+		ImGui::Spacing();
+		UICustom::SubCategoryHeader(Translate("SHOWFAVORITE"));
+		ImGui::Spacing();
+
+		ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.f, 0.5f));
+		if (ImGui::BeginChild("##Modex::Favorite::List", ImVec2(0.f, 0.f), 0, 0)) {
+			const auto& favorites = UserData::GetFavoritesAsVector();
+			auto temp = std::vector<std::unique_ptr<BaseObject>>();
+
+			// NOTE: Exterior cells that lack a FULL record likely aren't preloaded, and won't be
+			// picked up by LookupByEditorID. So we create them with serialized favorited data.
+
+			for (const auto& favoriteItem : favorites) {
+				if (favoriteItem.owner == Ownership::Cell) {
+					if (RE::TESForm* form = RE::TESForm::LookupByEditorID(favoriteItem.editorid); form != nullptr) {
+						temp.emplace_back(std::make_unique<BaseObject>(form->GetName(), favoriteItem.editorid, favoriteItem.plugin, Ownership::Cell));
+					} else {
+						temp.emplace_back(std::make_unique<BaseObject>("", favoriteItem.editorid, favoriteItem.plugin, Ownership::Cell));
+					}
+				}
+			}
+
+			// OPTIMIZE: Should maybe store and maintain this list instead of reconstructing it
+			// every frame. This is a semi-common pattern found in Modex that could be improved.
+
+			for (const auto& favoriteItem : temp) {
+				if (ImGui::Selectable(("##" + favoriteItem->GetEditorID()).c_str(), false, ImGuiSelectableFlags_SpanAvailWidth)) {
+					Commands::CenterOnCell(Ownership::Cell, favoriteItem->GetEditorID());
+				}	
+
+				ImGui::SetNextItemAllowOverlap();
+				ImGui::SameLine();
+
+				ImGui::Text("%s", favoriteItem->GetEditorID().c_str());
+				ImGui::SameLine();
+				ImGui::TextDisabled("%s", favoriteItem->GetName().c_str());
+			}
+		}
+		ImGui::EndChild();
+		ImGui::PopStyleVar();
+	}
 
 	// @arg a_tooltip: the item preview is shown in a tooltip instead of a widget.
 	inline void ShowItemPreview(const std::unique_ptr<BaseObject>& a_item, bool a_tooltip)
@@ -687,6 +740,10 @@ namespace
 
 			if (auto outfit = a_item->GetTESOutfit(); outfit.has_value()) {
 				drawOutfitPreview(a_item);
+			}
+
+			if (a_item->GetFormType() == RE::FormType::Cell) {
+				drawCellPreview(a_item);
 			}
 
 			if (auto form = a_item->GetTESForm(); form) {
