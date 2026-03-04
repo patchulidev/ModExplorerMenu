@@ -349,6 +349,13 @@ namespace Modex
 		popup->OpenWindow(this);
 	}
 
+	void UIManager::NavigateToModule(uint8_t a_moduleIndex)
+	{
+		if (m_menu) {
+			m_menu->LoadModule(a_moduleIndex, 0);
+		}
+	}
+
 	void UIManager::ShowInfoBox(const std::string& a_title, const std::string& a_message)
 	{
 		m_windowStack.push_back(std::make_unique<UIPopupInfo>());

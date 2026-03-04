@@ -86,7 +86,7 @@ namespace Modex
 		ImGui::SetCursorPos(start_pos);
 
 		for (const auto& layout : m_layouts) {
-			if (layout.selected) {
+			if (layout.selected && layout.DrawFunc) {
 				layout.DrawFunc(m_tables);
 			}
 		}

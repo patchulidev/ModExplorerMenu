@@ -78,6 +78,7 @@ namespace Modex
 		void ShowInputBox(const std::string& a_title, const std::string& a_message, std::string a_hint = "", std::function<void(const std::string&)> onConfirmCallback = nullptr);
 		void ShowBrowser(const std::string& a_title, const std::vector<std::string>& a_items, std::function<void(const std::string&)> onSelectCallback = nullptr);
 		void ShowInfoBox(const std::string& a_title, const std::string& a_message);
+		void NavigateToModule(uint8_t a_moduleIndex);
 
 		template<typename T>
 		UIWindow* GetPopupWindowRef() const;
