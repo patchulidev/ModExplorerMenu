@@ -42,7 +42,7 @@ namespace Modex
 			bool fullscreen 		= false;
 			bool lockPosition 		= true;
 			bool pauseGame 			= false;
-			bool disableSplash		= false;
+			bool showSplash			= false;
 			bool disableAlt			= false;
 			bool smoothScroll 		= true;
 			bool basePlugin			= false;
@@ -55,7 +55,7 @@ namespace Modex
 			std::string globalFont 		= "Ubuntu-Regular";
 
 			ImVec2 screenScaleRatio		= ImVec2(1.0f, 1.0f);
-			ImVec2 welcomeBannerScale   = ImVec2(1.0f, 1.0f); // hidden
+			ImVec2 splashScale   = ImVec2(1.0f, 1.0f); // hidden
 		};
 
 		UserSettings _default;
