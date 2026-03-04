@@ -123,10 +123,12 @@ namespace Modex
 
 	void ModexGUIMenu::ForceCursor()
 	{
-		if (auto* ui = RE::UI::GetSingleton(); ui && ui->IsMenuOpen(RE::CursorMenu::MENU_NAME)) {
-			if (const auto messagingQueue = RE::UIMessageQueue::GetSingleton(); messagingQueue) {
-				messagingQueue->AddMessage(RE::CursorMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kShow, nullptr);
-			}
+		if (auto* ui = RE::UI::GetSingleton(); ui && !ui->IsMenuOpen(RE::CursorMenu::MENU_NAME)) {
+			SKSE::GetTaskInterface()->AddUITask([]() {
+				if (const auto messagingQueue = RE::UIMessageQueue::GetSingleton(); messagingQueue) {
+					messagingQueue->AddMessage(RE::CursorMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kShow, nullptr);
+				}
+			});
 		}
 	}
 
