@@ -36,7 +36,7 @@ struct
 	{RE::GFxKey::kControl,      ImGuiMod_Ctrl       },
 	{RE::GFxKey::kShift,        ImGuiMod_Shift      },
 	{RE::GFxKey::kCapsLock,     ImGuiKey_CapsLock      },
-	// {RE::GFxKey::kTab,          ImGuiKey_Tab           }, // Don't sent tab key: bug when use tab close menu
+	// {RE::GFxKey::kTab,          ImGuiKey_Tab           }, // Don't send tab key: bug when use tab close menu
 	{RE::GFxKey::kHome,         ImGuiKey_Home          },
 	{RE::GFxKey::kEnd,          ImGuiKey_End           },
 	{RE::GFxKey::kPageUp,       ImGuiKey_PageUp        },
@@ -268,13 +268,8 @@ namespace Modex
 		const auto *mouseEvent  = reinterpret_cast<RE::GFxMouseEvent *>(event);
 		auto       &io          = ImGui::GetIO();
 
-		if (down) {
-			// FlushInputState(); // FIXME
-		}
-
 		io.AddMouseSourceEvent(mouseSource);
 		io.AddMouseButtonEvent(static_cast<int>(mouseEvent->button), down);
-
 	}
 
 	void ModexGUIMenu::OnMouseWheelEvent(RE::GFxEvent *event)

@@ -87,7 +87,6 @@ namespace Modex
 		}
 	}
 
-	// FIX: Need to write-down and verify Tab button behavior in v2.0.
 	void UIManager::PopWindow()
 	{
 		if (!m_windowStack.empty()) {
@@ -95,17 +94,6 @@ namespace Modex
 		} else {
 			Close();
 		}
-
-		// if (const auto& inputMgr = RE::BSInputDeviceManager::GetSingleton()) {
-		// 	if (const auto& device = inputMgr->GetKeyboard()) {
-		// 		device->Reset();
-		// 	}
-		// }
-		
-		// ImGui::GetIO().AddKeyEvent(ImGuiKey_Tab, false); // ?
-		// ImGui::GetIO().AddKeyEvent(ImGuiKey_Escape, false);
-		// ImGui::GetIO().AddKeyEvent(ImGuiKey_LeftAlt, false);
-		// ImGui::GetIO().ClearInputKeys();
 	}
 
 	bool UIManager::IsMenuOpen() const

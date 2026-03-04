@@ -3,8 +3,6 @@
 #include <filesystem>
 #include <fstream>
 
-#include "external/json_serializers.cpp"
-
 namespace Modex
 {
 	struct SerializedObject {
@@ -83,7 +81,6 @@ namespace Modex
 		const std::filesystem::path& GetFilePath() const { return m_file_path; }
 
 		nlohmann::json& GetData() { return m_data; }
-		// const nlohmann::json& GetData() const { return m_data; }
 	};
 }
 

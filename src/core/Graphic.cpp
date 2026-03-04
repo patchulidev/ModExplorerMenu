@@ -1,7 +1,7 @@
-#include "config/Keycodes.h"
 #define STB_IMAGE_IMPLEMENTATION
 
 #include "Graphic.h"
+#include "config/Keycodes.h"
 #include "external/stb_image.h"
 
 namespace Modex
