@@ -32,7 +32,7 @@ namespace Modex
 			uint32_t showMenuModifier 	= 0;
 			uint32_t modListSort 		= 0;
 			uint32_t filterLogic		= 0;
-			uint32_t logLevel 			= 1;
+			uint32_t logLevel 			= 2;
 
 			int uiScaleVertical 	= 100;
 			int uiScaleHorizontal 	= 100;
@@ -48,7 +48,6 @@ namespace Modex
 			bool basePlugin			= false;
 			bool showMissing		= true;
 			bool developerMode		= false;
-			bool welcomeBanner 		= true; // hidden
 
 			std::string language 		= "English";
 			std::string theme 			= "default";

@@ -3,7 +3,6 @@
 #include "ui/Menu.h"
 #include "config/UserConfig.h"
 #include "config/UserData.h"
-#include "ui/components/UIBanner.h"
 #include "ui/components/UIPopup.h"
 
 #include "ui/modules/actor/ActorModule.h"
@@ -293,14 +292,6 @@ namespace Modex
 
 		m_scrollEnergy.x += scroll_x;
 		m_scrollEnergy.y += scroll_y;
-	}
-
-	void UIManager::ShowBanner()
-	{
-		m_windowStack.push_back(std::make_unique<UIBanner>());
-		UIBanner* banner = static_cast<UIBanner*>(m_windowStack.back().get());
-		banner->OpenWindow(this);
-		banner->Display();
 	}
 
 	void UIManager::ShowWarning(const std::string& a_title, const std::string& a_message, bool a_showCondition, std::function<void()> onConfirmCallback)

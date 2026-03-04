@@ -71,7 +71,6 @@ namespace Modex
 		void DeleteWindow(UIWindow* a_window);
 		void SetActiveWindow(uint8_t a_module) { m_lastActiveWindow = a_module; }
 		
-		void ShowBanner();
 		void ShowReferenceLookup(const std::string& a_title, const std::string& a_message, std::function<void(RE::FormID)> onSelectCallback = nullptr);
 		void ShowWarning(const std::string& a_title, const std::string& a_message, bool a_showCondition = true, std::function<void()> onConfirmCallback = nullptr);
 		void ShowHotkey(const char* a_title, const char* a_desc, uint32_t* a_hotkey, uint32_t a_default, uint32_t* a_modifier = nullptr, std::function<void()> onConfirmHotkeyCallback = nullptr);

@@ -49,11 +49,6 @@ namespace
 			
 			Modex::PrettyLog::Info("Done!");
 			Modex::PrettyLog::ReportSummary();
-			
-			// TODO: Re-implement banner post ImGui update & new RAII menu initialization.
-			// Modex::UIManager::GetSingleton()->ShowBanner();
-			// Modex::UIBanner::GetSingleton()->Display();
-
 			break;
 		case SKSE::MessagingInterface::kPostLoad:
 			break;

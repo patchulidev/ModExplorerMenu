@@ -51,7 +51,6 @@ namespace Modex
 		user.fullscreen 	= ConfigManager::Get<bool>("Fullscreen", _default.fullscreen);
 		user.lockPosition 	= ConfigManager::Get<bool>("Lock Menu Position", _default.lockPosition);
 		user.pauseGame 		= ConfigManager::Get<bool>("Pause Game While Open", _default.pauseGame);
-		user.welcomeBanner 	= ConfigManager::Get<bool>("Welcome Banner", _default.welcomeBanner);
 		user.smoothScroll 	= ConfigManager::Get<bool>("Smooth Scroll", _default.smoothScroll);
 		user.disableAlt		= ConfigManager::Get<bool>("Disable Alt Key Shortcut", _default.disableAlt);
 		user.basePlugin 	= ConfigManager::Get<bool>("Use Base Plugin", _default.basePlugin);
@@ -63,7 +62,6 @@ namespace Modex
 		user.globalFont 	= ConfigManager::Get<std::string>("Global Font", _default.globalFont);
 
 		user.screenScaleRatio 	= ConfigManager::Get<ImVec2>("Screen Scale Ratio", _default.screenScaleRatio);
-		user.splashScale 	= ConfigManager::Get<ImVec2>("Welcome Banner Scale", _default.splashScale);
 
 		Locale::GetSingleton()->SetFilePath(LOCALE_JSON_DIR / (user.language + ".json"));
 		ThemeConfig::GetSingleton()->SetFilePath(THEMES_JSON_PATH / (user.theme + ".json"));
@@ -88,7 +86,6 @@ namespace Modex
 		ConfigManager::Set<bool>("Fullscreen", user.fullscreen);
 		ConfigManager::Set<bool>("Lock Menu Position", user.lockPosition);
 		ConfigManager::Set<bool>("Pause Game While Open", user.pauseGame);
-		ConfigManager::Set<bool>("Welcome Banner", user.welcomeBanner);
 		ConfigManager::Set<bool>("Smooth Scroll", user.smoothScroll);
 		ConfigManager::Set<bool>("Disable Alt Key Shortcut", user.disableAlt);
 		ConfigManager::Set<bool>("Use Base Plugin", user.basePlugin);
@@ -100,7 +97,6 @@ namespace Modex
 		ConfigManager::Set<std::string>("Global Font", user.globalFont);
 
 		ConfigManager::Set<ImVec2>("Screen Scale Ratio", user.screenScaleRatio);
-		ConfigManager::Set<ImVec2>("Welcome Banner Scale", user.splashScale);
 	
 		this->Save();
 	}

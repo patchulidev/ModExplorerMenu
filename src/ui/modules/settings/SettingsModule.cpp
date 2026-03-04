@@ -97,11 +97,6 @@ namespace Modex
 				UserConfig::GetSingleton()->SaveSettings();
 			}
 
-			if (UICustom::Settings_ToggleButton("SETTINGS_WELCOME_BANNER", config.welcomeBanner))
-			{
-				UserConfig::GetSingleton()->SaveSettings();
-			}
-
 			ImGui::NewLine();
 			UICustom::Settings_Header(Translate("SETTINGS_HEADER_GENERAL"));
 

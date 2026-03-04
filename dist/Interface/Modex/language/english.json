@@ -216,7 +216,6 @@
 	"SETTINGS_SMOOTH_SCROLL": "Smooth Scroll Animations",
 	"SETTINGS_LOG_LEVEL": "Modex Log Level",
 	"SETTINGS_LOG_LEVEL_TOOLTIP": "Modex Log Level\n\nControls what level of information is outputted to the log file. (Trace = Maximum). Typically this can remain off, or set to Info. Any option above Info is subject to potential performance impacts while Modex is being used.\n\nI only recommend changing this if you encounter bugs, errors, or crashes and need more debugging information.\n\nDefault (info).",
-	"SETTINGS_WELCOME_BANNER": "Show Startup Welcome Banner",
 	"SETTINGS_FONT": "Font",
 	"SETTINGS_FONT_SIZE": "Font Size",
 	"SETTINGS_LANGUAGE": "Language / Translation File",
