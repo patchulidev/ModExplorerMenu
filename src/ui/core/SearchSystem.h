@@ -39,7 +39,6 @@ namespace Modex
 		SearchItem     m_searchKey;
 		ImGuiKey       m_lastNavKey;
 		char           m_searchBuffer[MAX_PATH];
-		// char           m_lastSearchBuffer[MAX_PATH];
 
 		bool           m_forceDropdown;
 		int            m_topComparisonIdx;
@@ -55,7 +54,6 @@ namespace Modex
 			m_searchKey(PropertyType::kNone),
 			m_lastNavKey(ImGuiKey_None),
 			m_searchBuffer(),
-			// m_lastSearchBuffer(),
 
 			m_forceDropdown(false),
 			m_topComparisonIdx(-1),

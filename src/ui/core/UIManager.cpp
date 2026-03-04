@@ -3,7 +3,6 @@
 #include "ui/Menu.h"
 #include "config/UserConfig.h"
 #include "config/UserData.h"
-#include "ui/components/UIBanner.h"
 #include "ui/components/UIPopup.h"
 
 #include "ui/modules/actor/ActorModule.h"
@@ -88,7 +87,6 @@ namespace Modex
 		}
 	}
 
-	// FIX: Need to write-down and verify Tab button behavior in v2.0.
 	void UIManager::PopWindow()
 	{
 		if (!m_windowStack.empty()) {
@@ -96,17 +94,6 @@ namespace Modex
 		} else {
 			Close();
 		}
-
-		// if (const auto& inputMgr = RE::BSInputDeviceManager::GetSingleton()) {
-		// 	if (const auto& device = inputMgr->GetKeyboard()) {
-		// 		device->Reset();
-		// 	}
-		// }
-		
-		// ImGui::GetIO().AddKeyEvent(ImGuiKey_Tab, false); // ?
-		// ImGui::GetIO().AddKeyEvent(ImGuiKey_Escape, false);
-		// ImGui::GetIO().AddKeyEvent(ImGuiKey_LeftAlt, false);
-		// ImGui::GetIO().ClearInputKeys();
 	}
 
 	bool UIManager::IsMenuOpen() const
@@ -295,14 +282,6 @@ namespace Modex
 		m_scrollEnergy.y += scroll_y;
 	}
 
-	void UIManager::ShowBanner()
-	{
-		m_windowStack.push_back(std::make_unique<UIBanner>());
-		UIBanner* banner = static_cast<UIBanner*>(m_windowStack.back().get());
-		banner->OpenWindow(this);
-		banner->Display();
-	}
-
 	void UIManager::ShowWarning(const std::string& a_title, const std::string& a_message, bool a_showCondition, std::function<void()> onConfirmCallback)
 	{
 		if (a_showCondition) {
@@ -325,11 +304,11 @@ namespace Modex
 		popup->OpenWindow(this);
 	}
 
-	void UIManager::ShowHotkey(const char* a_title, const char* a_desc, uint32_t* a_hotkey, uint32_t& a_default, bool a_modifierOnly, std::function<void()> onConfirmHotkeyCallback)
+	void UIManager::ShowHotkey(const char* a_title, const char* a_desc, uint32_t* a_hotkey, uint32_t a_default, uint32_t* a_modifier, std::function<void()> onConfirmHotkeyCallback)
 	{
 		m_windowStack.push_back(std::make_unique<UIPopupHotkey>());
 		UIPopupHotkey* popup = static_cast<UIPopupHotkey*>(m_windowStack.back().get());
-		popup->PopupHotkey(a_title, a_desc, a_hotkey, a_default, a_modifierOnly, onConfirmHotkeyCallback);
+		popup->PopupHotkey(a_title, a_desc, a_hotkey, a_default, a_modifier, onConfirmHotkeyCallback);
 		popup->OpenWindow(this);
 	}
 
@@ -347,6 +326,13 @@ namespace Modex
 		UIPopupBrowser* popup = static_cast<UIPopupBrowser*>(m_windowStack.back().get());
 		popup->PopupBrowser(a_title, a_items, onSelectCallback);
 		popup->OpenWindow(this);
+	}
+
+	void UIManager::NavigateToModule(uint8_t a_moduleIndex)
+	{
+		if (m_menu) {
+			m_menu->LoadModule(a_moduleIndex, 0);
+		}
 	}
 
 	void UIManager::ShowInfoBox(const std::string& a_title, const std::string& a_message)

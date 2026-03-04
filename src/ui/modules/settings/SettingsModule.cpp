@@ -29,7 +29,6 @@ namespace Modex
 		(void)a_tables;
 
 		if (ImGui::BeginChild("##Modex::UserSettings::Layout", ImVec2(0, 0), false)) {
-
 			auto& config = UserConfig::Get();
 
 			ImGui::NewLine();
@@ -44,8 +43,7 @@ namespace Modex
 
 			UICustom::Settings_Header(Translate("SETTINGS_HEADER_INPUT"));
 
-			UICustom::Settings_Keybind("SETTINGS_MENU_KEYBIND", "SETTINGS_MENU_KEYBIND_DESC", config.showMenuKey, 211, false);
-			UICustom::Settings_Keybind("SETTINGS_MENU_MODIFIER", "SETTINGS_MENU_KEYBIND_DESC", config.showMenuModifier, 0, true);
+			UICustom::Settings_Keybind("SETTINGS_MENU_KEYBIND", "SETTINGS_MENU_KEYBIND_DESC", config.showMenuKey, 211, config.showMenuModifier);
 
 			ImGui::NewLine();
 			UICustom::Settings_Header(Translate("SETTINGS_HEADER_STYLE"));
@@ -53,6 +51,19 @@ namespace Modex
 			if (UICustom::Settings_ThemeDropdown("SETTINGS_THEME", &config.theme))
 			{
 				UserConfig::GetSingleton()->SaveSettings();
+			}
+
+			if (UICustom::Settings_ToggleButton("SETTINGS_SHOW_SPLASH", config.showSplash))
+			{
+				UserConfig::GetSingleton()->SaveSettings();
+			}
+
+			if (config.showSplash) {
+				if (UICustom::Settings_SliderFloat("SETTINGS_SPLASH_SCALE", config.splashScale.x, 0.0f, 2.0f))
+				{
+					config.splashScale.y = config.splashScale.x;
+					UserConfig::GetSingleton()->SaveSettings();
+				}
 			}
 
 			if (config.fullscreen) ImGui::BeginDisabled();
@@ -82,11 +93,6 @@ namespace Modex
 			}
 
 			if (UICustom::Settings_ToggleButton("SETTINGS_SMOOTH_SCROLL", config.smoothScroll))
-			{
-				UserConfig::GetSingleton()->SaveSettings();
-			}
-
-			if (UICustom::Settings_ToggleButton("SETTINGS_WELCOME_BANNER", config.welcomeBanner))
 			{
 				UserConfig::GetSingleton()->SaveSettings();
 			}
@@ -155,6 +161,14 @@ namespace Modex
 
 			if (UICustom::Settings_ToggleButton("Developer Mode", config.developerMode)) {
 				UserConfig::GetSingleton()->SaveSettings();
+			}
+
+			if (config.developerMode) {
+				bool _throwaway = false;
+				if (UICustom::Settings_ToggleButton("Reset Input Lock", _throwaway)) {
+					RE::PlayerControls::GetSingleton()->readyWeaponHandler->SetInputEventHandlingEnabled(true);
+					RE::PlayerControls::GetSingleton()->attackBlockHandler->SetInputEventHandlingEnabled(true);
+				}
 			}
 
 			ImGui::NewLine();

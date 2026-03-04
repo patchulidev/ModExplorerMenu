@@ -136,6 +136,11 @@ namespace Modex
 
 		if (useSharedTarget) {
 			auto target = UIModule::GetTargetReference();
+
+			if (target == nullptr) {
+				target = UIModule::LookupReferenceByFormID(20);
+			}
+
 			SetTargetByReference(target);
 		} else {
 			const auto formID = UserData::Get<RE::FormID>(data_id + "::LastTargetRef", 0);
