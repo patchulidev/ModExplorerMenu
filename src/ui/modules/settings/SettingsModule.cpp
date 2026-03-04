@@ -43,8 +43,7 @@ namespace Modex
 
 			UICustom::Settings_Header(Translate("SETTINGS_HEADER_INPUT"));
 
-			UICustom::Settings_Keybind("SETTINGS_MENU_KEYBIND", "SETTINGS_MENU_KEYBIND_DESC", config.showMenuKey, 211, false);
-			UICustom::Settings_Keybind("SETTINGS_MENU_MODIFIER", "SETTINGS_MENU_KEYBIND_DESC", config.showMenuModifier, 0, true);
+			UICustom::Settings_Keybind("SETTINGS_MENU_KEYBIND", "SETTINGS_MENU_KEYBIND_DESC", config.showMenuKey, 211, config.showMenuModifier);
 
 			ImGui::NewLine();
 			UICustom::Settings_Header(Translate("SETTINGS_HEADER_STYLE"));

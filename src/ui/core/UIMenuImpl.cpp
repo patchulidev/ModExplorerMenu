@@ -1,6 +1,7 @@
 #include "UIMenuImpl.h"
 #include "ui/core/UIManager.h"
 #include "core/InputManager.h"
+#include "config/Keycodes.h"
 #include "config/UserConfig.h"
 
 // Credit toward cyfewlp of SimpleIME for introducing this alternative to the DX present draw method.
@@ -116,7 +117,7 @@ namespace Modex
 		}
 	}
 
-	void ModexGUIMenu::RegisterListener(std::function<void(uint32_t)> a_func)
+	void ModexGUIMenu::RegisterListener(std::function<void(uint32_t, uint32_t)> a_func)
 	{
 		m_listeners.push_back(a_func);
 	}
@@ -291,8 +292,24 @@ namespace Modex
 		const auto modifier = InputManager::GetSingleton()->IsBoundModifierDown();
 
 		if (m_listeners.size() > 0) {
+			// If the pressed key is a modifier, feed it to ImGui so it tracks the held state, but don't fire the listener yet.
+			if (KeyCode::IsKeyModifier(scanCode)) {
+				ImGui::GetIO().AddKeyEvent(imguiKey, down);
+				return;
+			}
+
+			// Detect held modifier via ImGui key state.
+			uint32_t heldModifier = 0;
+			if (ImGui::IsKeyDown(ImGuiMod_Shift)) {
+				heldModifier = 0x2A; // Left Shift scan code
+			} else if (ImGui::IsKeyDown(ImGuiMod_Ctrl)) {
+				heldModifier = 0x1D; // Left Control scan code
+			} else if (ImGui::IsKeyDown(ImGuiMod_Alt)) {
+				heldModifier = 0x38; // Left Alt scan code
+			}
+
 			for (const auto& func : m_listeners) {
-				func(scanCode);
+				func(scanCode, heldModifier);
 			}
 
 			m_listeners.clear();

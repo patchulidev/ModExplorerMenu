@@ -325,11 +325,11 @@ namespace Modex
 		popup->OpenWindow(this);
 	}
 
-	void UIManager::ShowHotkey(const char* a_title, const char* a_desc, uint32_t* a_hotkey, uint32_t& a_default, bool a_modifierOnly, std::function<void()> onConfirmHotkeyCallback)
+	void UIManager::ShowHotkey(const char* a_title, const char* a_desc, uint32_t* a_hotkey, uint32_t a_default, uint32_t* a_modifier, std::function<void()> onConfirmHotkeyCallback)
 	{
 		m_windowStack.push_back(std::make_unique<UIPopupHotkey>());
 		UIPopupHotkey* popup = static_cast<UIPopupHotkey*>(m_windowStack.back().get());
-		popup->PopupHotkey(a_title, a_desc, a_hotkey, a_default, a_modifierOnly, onConfirmHotkeyCallback);
+		popup->PopupHotkey(a_title, a_desc, a_hotkey, a_default, a_modifier, onConfirmHotkeyCallback);
 		popup->OpenWindow(this);
 	}
 

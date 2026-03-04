@@ -54,40 +54,35 @@ namespace Modex
 		ImGui::PopStyleVar();
 	}
 
-	void UIPopupHotkey::PopupHotkey(const char* a_title, const char* a_desc, uint32_t* a_hotkey, uint32_t a_default, bool a_modifierOnly, std::function<void()> onConfirmHotkeyCallback)
+	void UIPopupHotkey::PopupHotkey(const char* a_title, const char* a_desc, uint32_t* a_hotkey, uint32_t a_default, uint32_t* a_modifier, std::function<void()> onConfirmHotkeyCallback)
 	{
 		m_pendingHotkeyTitle = a_title;
 		m_pendingHotkeyDesc = a_desc;
-		m_hotkeyModifierOnly = a_modifierOnly;
 		m_hotkeyCurrent = a_hotkey;
 		m_hotkeyDefault = a_default;
+		m_modifierCurrent = a_modifier;
 		m_onConfirmCallback = onConfirmHotkeyCallback;
 		m_captureInput = true;
 
-		ModexGUIMenu::RegisterListener([this](uint32_t a_key) { AcceptHotkey(a_key); });
+		ModexGUIMenu::RegisterListener([this](uint32_t a_key, uint32_t a_modifier) { AcceptHotkey(a_key, a_modifier); });
 	}
 
-	void UIPopupHotkey::AcceptHotkey(uint32_t a_key)
+	void UIPopupHotkey::AcceptHotkey(uint32_t a_key, uint32_t a_modifier)
 	{
 		bool success = false;
-		if (KeyCode::IsValidHotkey(a_key)) {
-			if (m_hotkeyModifierOnly) {
-				if (KeyCode::IsKeyModifier(a_key)) {
-					*m_hotkeyCurrent = a_key;
-					success = true;
-				}
-			}
 
-			if (!m_hotkeyModifierOnly) {
-				if (!KeyCode::IsKeyModifier(a_key)) {
-					*m_hotkeyCurrent = a_key;
-					success = true;
-				}
-			}
-		}
-
-		if (success == false && a_key == 0x14) {
+		// T-key (0x14) resets both key and modifier to defaults.
+		if (a_key == 0x14) {
 			*m_hotkeyCurrent = m_hotkeyDefault;
+			if (m_modifierCurrent) {
+				*m_modifierCurrent = 0;
+			}
+			success = true;
+		} else if (KeyCode::IsValidHotkey(a_key) && !KeyCode::IsKeyModifier(a_key)) {
+			*m_hotkeyCurrent = a_key;
+			if (m_modifierCurrent) {
+				*m_modifierCurrent = a_modifier;
+			}
 			success = true;
 		}
 

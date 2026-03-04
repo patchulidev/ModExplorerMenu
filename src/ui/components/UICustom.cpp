@@ -471,48 +471,82 @@ namespace Modex::UICustom
 		return changes;
 	}
 
-	void Settings_Keybind(const char* a_title, const char* a_desc, uint32_t& a_keybind, uint32_t defaultKey, bool a_modifierOnly)
+	// Helper to get an image from the key library, with fallback to UnknownKey.
+	static GraphicManager::Image GetKeyImage(uint32_t a_scanCode)
+	{
+		const auto keyIt = KeyCode::SkyrimKeymap.find(a_scanCode);
+		if (a_scanCode == 0 || keyIt == KeyCode::SkyrimKeymap.end()) {
+			return GraphicManager::imgui_library.at("UnknownKey");
+		}
+		return GraphicManager::imgui_library.at(keyIt->second);
+	}
+
+	// Helper to get the display name for a scan code.
+	static std::string GetKeyName(uint32_t a_scanCode)
+	{
+		if (a_scanCode == 0) return Translate("NONE");
+		const auto keyIt = KeyCode::SkyrimKeymap.find(a_scanCode);
+		if (keyIt == KeyCode::SkyrimKeymap.end()) return "???";
+		return keyIt->second;
+	}
+
+	void Settings_Keybind(const char* a_title, const char* a_desc, uint32_t& a_keybind, uint32_t defaultKey, uint32_t& a_modifier)
 	{
 		ImGui::Indent();
 
 		auto id = "##Keybind" + std::string(a_title);
 
-		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + (ImGui::GetFrameHeightWithSpacing() / 2.0f)); 
+		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + (ImGui::GetFrameHeightWithSpacing() / 2.0f));
 		ImGui::AlignTextToFramePadding();
 		ImGui::Text("%s", Translate(a_title));
 
 		ImGui::HelpMarker(a_title);
 
-		if (GraphicManager::imgui_library.empty()) {
-			const float height = ImGui::GetFrameHeight() * 2.0f;
-			const std::string label = a_keybind == 0 ? Translate("NONE") : KeyCode::SkyrimKeymap.at(a_keybind);
+		auto openPopup = [&]() {
+			UIManager::GetSingleton()->ShowHotkey(Translate(a_title), Translate(a_desc), &a_keybind, defaultKey, &a_modifier, []() {
+				UserConfig::GetSingleton()->SaveSettings();
+			});
+		};
 
-			ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth);  // Right Align
+		if (GraphicManager::imgui_library.empty()) {
+			// Fallback: text button with "Modifier + Key" format.
+			const float height = ImGui::GetFrameHeight() * 2.0f;
+			std::string label;
+			if (a_modifier != 0) {
+				label = GetKeyName(a_modifier) + " + " + GetKeyName(a_keybind);
+			} else {
+				label = GetKeyName(a_keybind);
+			}
+
+			ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth);
 			ImGui::SetCursorPosY(ImGui::GetCursorPosY() - (ImGui::GetFrameHeight() / 2.0f));
 
 			if (ImGui::Button(label.c_str(), ImVec2(s_widgetWidth, height))) {
-				UIManager::GetSingleton()->ShowHotkey(Translate(a_title), Translate(a_desc), &a_keybind, defaultKey, a_modifierOnly, [&]() {
-					UserConfig::GetSingleton()->SaveSettings();
-				});
+				openPopup();
 			}
 		} else {
-			GraphicManager::Image img;
+			// Image-based display: [modifier image] + [key image]
+			const float imageHeight = ImGui::GetFrameHeight() * 2.0f;
 
-			const auto keyIt = KeyCode::SkyrimKeymap.find(a_keybind);
-			if (a_keybind == 0 || keyIt == KeyCode::SkyrimKeymap.end()) {
-				img = GraphicManager::imgui_library.at("UnknownKey");
-			} else {
-				const std::string& keyName = keyIt->second;
-				img = GraphicManager::imgui_library.at(keyName);
+			auto keyImg = GetKeyImage(a_keybind);
+			const float keyRatio = static_cast<float>(keyImg.width) / static_cast<float>(keyImg.height);
+			const float keyWidth = imageHeight * keyRatio;
+
+			float totalWidth = keyWidth;
+			float modWidth = 0.0f;
+			float plusWidth = 0.0f;
+			GraphicManager::Image modImg;
+
+			if (a_modifier != 0) {
+				modImg = GetKeyImage(a_modifier);
+				const float modRatio = static_cast<float>(modImg.width) / static_cast<float>(modImg.height);
+				modWidth = imageHeight * modRatio;
+				plusWidth = ImGui::CalcTextSize(" + ").x;
+				totalWidth = modWidth + plusWidth + keyWidth;
 			}
 
-			// Scale the image to FrameHeight, while keeping aspect ratio maintained.
-			const float imageRatio = static_cast<float>(img.width) / static_cast<float>(img.height);
-			const float imageWidth = (ImGui::GetFrameHeight() * 2.0f) * imageRatio;
-			const float imageHeight = ImGui::GetFrameHeight() * 2.0f;
-			const ImVec2 size = ImVec2(imageWidth, imageHeight);
-
-			ImGui::SameLine(ImGui::GetContentRegionAvail().x - imageWidth);
+			ImGui::SameLine(ImGui::GetContentRegionAvail().x - totalWidth);
+			ImGui::SetCursorPosY(ImGui::GetCursorPosY() - (ImGui::GetFrameHeight() / 2.0f));
 
 			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.f, 0.f, 0.f, 0.f));
 			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(1.f, 1.f, 1.f, 0.05f));
@@ -520,17 +554,43 @@ namespace Modex::UICustom
 			ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.f, 0.f, 0.f, 0.f));
 			ImGui::PushStyleColor(ImGuiCol_BorderShadow, ImVec4(0.f, 0.f, 0.f, 0.f));
 
-			ImTextureID texture = (ImTextureID)(intptr_t)img.texture;
-			ImGui::SetCursorPosY(ImGui::GetCursorPosY() - (ImGui::GetFrameHeight() / 2.0f));
-			if (ImGui::ImageButton(id.c_str(), texture, size)) {
-				UIManager::GetSingleton()->ShowHotkey(Translate(a_title), Translate(a_desc), &a_keybind, defaultKey, a_modifierOnly, []() {
-						UserConfig::GetSingleton()->SaveSettings();
-				});
+			// Use an InvisibleButton spanning the full width for click detection.
+			ImVec2 buttonSize = ImVec2(totalWidth, imageHeight);
+			ImVec2 buttonPos = ImGui::GetCursorScreenPos();
+
+			if (ImGui::InvisibleButton(id.c_str(), buttonSize)) {
+				openPopup();
 			}
 
-			if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNone)) {
+			bool hovered = ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNone);
+
+			// Draw the images on top of the invisible button.
+			auto* drawList = ImGui::GetWindowDrawList();
+			float cursorX = buttonPos.x;
+
+			if (a_modifier != 0) {
+				ImTextureID modTexture = (ImTextureID)(intptr_t)modImg.texture;
+				ImVec4 modTint = hovered ? ImVec4(0.9f, 0.9f, 0.9f, 0.9f) : ImVec4(1.f, 1.f, 1.f, 1.f);
+				drawList->AddImage(modTexture, ImVec2(cursorX, buttonPos.y), ImVec2(cursorX + modWidth, buttonPos.y + imageHeight),
+					ImVec2(0, 0), ImVec2(1, 1), ImGui::GetColorU32(modTint));
+				cursorX += modWidth;
+
+				// Draw "+" text centered vertically.
+				float plusY = buttonPos.y + (imageHeight / 2.0f) - (ImGui::GetFontSize() / 2.0f);
+				drawList->AddText(ImVec2(cursorX, plusY), ImGui::GetColorU32(ImGuiCol_Text), " + ");
+				cursorX += plusWidth;
+			}
+
+			ImTextureID keyTexture = (ImTextureID)(intptr_t)keyImg.texture;
+			ImVec4 keyTint = hovered ? ImVec4(0.9f, 0.9f, 0.9f, 0.9f) : ImVec4(1.f, 1.f, 1.f, 1.f);
+			drawList->AddImage(keyTexture, ImVec2(cursorX, buttonPos.y), ImVec2(cursorX + keyWidth, buttonPos.y + imageHeight),
+				ImVec2(0, 0), ImVec2(1, 1), ImGui::GetColorU32(keyTint));
+
+			// T-key reset on hover.
+			if (hovered) {
 				if (ImGui::IsKeyPressed(ImGuiKey_T, false)) {
 					a_keybind = defaultKey;
+					a_modifier = 0;
 					UserConfig::GetSingleton()->SaveSettings();
 				}
 			}
