@@ -176,7 +176,7 @@ namespace Modex
 				break;
 			case ModexActionType::ReviveActor:
 				AddToRecentList(a_item);
-				UINotification::ShowAction(Translate("RESURRECT_ACTOR"), a_item->GetName(), ICON_LC_USER);
+				UINotification::ShowAction(Translate("RESURRECT"), a_item->GetName(), ICON_LC_USER);
 				break;
 			case ModexActionType::EnableReference:
 				AddToRecentList(a_item);

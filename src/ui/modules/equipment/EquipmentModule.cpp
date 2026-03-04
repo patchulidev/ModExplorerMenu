@@ -150,16 +150,16 @@ namespace Modex
 					auto pluginList = Data::GetSingleton()->GetModulePluginListSorted(Ownership::All, PluginSort::Load_Order_Ascending);
 					for (auto& plugin : pluginList) {
 						if (dependencies.contains(plugin->fileName)) {
-							message += std::format("[{}] - {}\n", Translate("Found"), plugin->fileName);
+							message += std::format("[{}] - {}\n", Translate("PLUGIN_DEP_FOUND"), plugin->fileName);
 							dependencies.erase(plugin->fileName);
 						}
 					}
 
 					for (auto& dependency : dependencies) {
-						message += std::format("[{}] - {}\n", Translate("Missing"), dependency);
+						message += std::format("[{}] - {}\n", Translate("PLUGIN_DEP_MISSING"), dependency);
 					}
 
-					UIManager::GetSingleton()->ShowInfoBox(Translate("Plugin Dependencies"), message);
+					UIManager::GetSingleton()->ShowInfoBox(Translate("PLUGIN_DEP_TITLE"), message);
 				}
 
 				const auto title = shift_down ? Translate("RESET_INVENTORY") : Translate("CLEAR_INVENTORY");
