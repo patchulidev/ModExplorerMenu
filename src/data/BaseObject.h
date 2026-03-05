@@ -1213,9 +1213,14 @@ namespace Modex
 		{
 			std::vector<std::string> keywords;
 
+			if (!m_formWrapper.IsValid()) return keywords;
+
 			if (auto object = GetTESForm()->As<RE::BGSKeywordForm>(); object != nullptr) {
-				object->ForEachKeyword([&](const RE::BGSKeyword* a_keyword) {
-					keywords.push_back(a_keyword->GetFormEditorID());
+				object->ForEachKeyword([&](RE::BGSKeyword* a_keyword) {
+					if (const char* name = a_keyword->GetFormEditorID()) {
+						keywords.push_back(name);
+					}
+
 					return RE::BSContainer::ForEachResult::kContinue;
 				});
 			}
