@@ -76,7 +76,7 @@ namespace Modex
 				continue;
 			}
 
-			auto relativePath = std::filesystem::relative(entry.path(), EQUIPMENT_JSON_PATH);
+			auto relativePath = entry.path().lexically_relative(EQUIPMENT_JSON_PATH);
 			auto parentPath = relativePath.parent_path();
 
 			// Validate the relative path doesn't escape. Otherwise our m_key will be invalid
