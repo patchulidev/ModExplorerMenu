@@ -163,6 +163,12 @@ namespace Modex
 		ImGui_ImplDX11_NewFrame();
 		ImGui_ImplWin32_NewFrame();
 
+		// po3 Photo Mode / Fuzzles <3
+		auto& io = ImGui::GetIO();
+		static const auto screenSize = RE::BSGraphics::Renderer::GetScreenSize();
+		io.DisplaySize.x = static_cast<float>(screenSize.width);
+		io.DisplaySize.y = static_cast<float>(screenSize.height);
+
 		MouseHandler();
 		ScrollHandler();
 		ShortcutHandler();
@@ -247,9 +253,6 @@ namespace Modex
 			ASSERT_MSG(true, "Failed to get SwapChain description!");
 			return;
 		}
-
-		m_displayWidth = static_cast<float>(swapChainDesc.bufferDesc.width); // uin32_t
-		m_displayHeight = static_cast<float>(swapChainDesc.bufferDesc.height); // uin32_t
 
 		m_hWnd = reinterpret_cast<HWND>(swapChainDesc.outputWindow);
 		if (!this->DoInit(renderData, m_hWnd)) {
@@ -400,12 +403,7 @@ namespace Modex
 		return false;
 	}
 
-	UIManager::UIManager()
-	{
-		m_displayWidth = 1920.0f;
-		m_displayHeight = 1080.0f;
-	}
-
+	UIManager::UIManager() = default;
 	UIManager::~UIManager() noexcept = default;
 }
 

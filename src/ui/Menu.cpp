@@ -80,8 +80,8 @@ namespace Modex
 		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, m_alpha);
 
 		const auto& config = UserConfig::Get();
-		const auto displaySize = UIManager::GetSingleton()->GetDisplaySize();
-
+		const auto& displaySize = ImGui::GetIO().DisplaySize;
+		
 		// Predefined window size.
 		const float size_x = displaySize.x * 0.90f;
 		const float size_y = displaySize.y * 0.775f;
@@ -112,11 +112,14 @@ namespace Modex
 		// Push style for Modex Menu window
 		ImGui::PushStyleColor(ImGuiCol_WindowBg, ThemeConfig::GetColor("WINDOW_BACKGROUND", m_alpha));
 
-		if (ImGui::IsWindowAppearing()) {
+		if (config.fullscreen) {
+			ImGui::SetNextWindowPos(ImVec2(0.f, 0.f));
+			ImGui::SetNextWindowSize(ImVec2(displaySize.x, displaySize.y));
+		} else {
 			ImGui::SetNextWindowSize(ImVec2(window_w, window_h));
 		}
 
-		if (config.lockPosition) {
+		if (config.lockPosition && !config.fullscreen) {
 			ImGui::SetNextWindowPos(ImVec2(center_x, center_y));
 		}
 
