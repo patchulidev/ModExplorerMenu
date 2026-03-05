@@ -726,19 +726,19 @@ namespace
 			ImGui::PushStyleColor(ImGuiCol_Separator, ThemeConfig::GetColorU32("PRIMARY"));
 			drawBasePreview(a_item);
 
-			if (auto npc = a_item->GetTESNPC(); npc.has_value()) {
+			if (a_item->GetTESNPC()) {
 				drawActorPreview(a_item, a_tooltip);
 			}
 
-			if (auto armor = a_item->GetTESArmor(); armor.has_value()) {
+			if (a_item->GetTESArmor()) {
 				drawArmorPreview(a_item, a_tooltip);
 			}
 
-			if (auto weapon = a_item->GetTESWeapon(); weapon.has_value()) {
+			if (a_item->GetTESWeapon()) {
 				drawWeaponPreview(a_item);
 			}
 
-			if (auto outfit = a_item->GetTESOutfit(); outfit.has_value()) {
+			if (a_item->GetTESOutfit()) {
 				drawOutfitPreview(a_item);
 			}
 

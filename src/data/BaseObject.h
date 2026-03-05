@@ -400,8 +400,8 @@ namespace Modex
 		}
 		
 		template<typename T>
-		[[nodiscard]] std::optional<T*> As() const {
-			return m_form ? std::optional<T*>(m_form->As<T>()) : std::nullopt;
+		[[nodiscard]] T* As() const {
+			return m_form ? m_form->As<T>() : nullptr;
 		}
 	};
 
@@ -680,81 +680,55 @@ namespace Modex
 
 		inline bool IsPlayable() const
 		{
-			switch (GetFormType()) 
+			switch (GetFormType())
 			{
 				case RE::FormType::Misc:
-					if (auto misc = m_formWrapper.As<RE::TESObjectMISC>(); misc.has_value()) {
-						if (misc.value() == nullptr) 
-							return true;
-
-						return !(misc.value()->GetFormFlags() & static_cast<uint32_t>(RE::TESObjectMISC::RecordFlags::kNonPlayable));
+					if (auto misc = m_formWrapper.As<RE::TESObjectMISC>()) {
+						return !(misc->GetFormFlags() & static_cast<uint32_t>(RE::TESObjectMISC::RecordFlags::kNonPlayable));
 					}
+					break;
 				case RE::FormType::Ammo:
-					if (auto ammo = m_formWrapper.As<RE::TESAmmo>(); ammo.has_value()) {
-						if (ammo.value() == nullptr) 
-							return true;
-
-						return !(ammo.value()->GetFormFlags() & static_cast<uint32_t>(RE::TESAmmo::RecordFlags::kNonPlayable));
+					if (auto ammo = m_formWrapper.As<RE::TESAmmo>()) {
+						return !(ammo->GetFormFlags() & static_cast<uint32_t>(RE::TESAmmo::RecordFlags::kNonPlayable));
 					}
+					break;
 				case RE::FormType::KeyMaster:
-					if (auto key = m_formWrapper.As<RE::TESKey>(); key.has_value()) {
-						if (key.value() == nullptr) 
-							return true;
-
-						return !(key.value()->GetFormFlags() & static_cast<uint32_t>(RE::TESKey::RecordFlags::kNonPlayable));
+					if (auto key = m_formWrapper.As<RE::TESKey>()) {
+						return !(key->GetFormFlags() & static_cast<uint32_t>(RE::TESKey::RecordFlags::kNonPlayable));
 					}
+					break;
 				case RE::FormType::Weapon:
-					if (auto weapon = m_formWrapper.As<RE::TESObjectWEAP>(); weapon.has_value()) {
-						if (weapon.value() == nullptr) 
-							return true;
-
-						return !weapon.value()->weaponData.flags.any(RE::TESObjectWEAP::Data::Flag::kNonPlayable);
+					if (auto weapon = m_formWrapper.As<RE::TESObjectWEAP>()) {
+						return !weapon->weaponData.flags.any(RE::TESObjectWEAP::Data::Flag::kNonPlayable);
 					}
+					break;
 				case RE::FormType::Armor:
-					if (auto armor = m_formWrapper.As<RE::TESObjectARMO>(); armor.has_value()) {
-						if (armor.value() == nullptr) 
-							return true;
-
-						return !(armor.value()->GetFormFlags() & static_cast<uint32_t>(RE::TESObjectARMO::RecordFlags::kNonPlayable));
+					if (auto armor = m_formWrapper.As<RE::TESObjectARMO>()) {
+						return !(armor->GetFormFlags() & static_cast<uint32_t>(RE::TESObjectARMO::RecordFlags::kNonPlayable));
 					}
+					break;
 				default:
 					return true;
 			};
+
+			return true;
 		}
 
 		inline bool IsEnchanted() const {
-			if (const auto& enchantable = m_formWrapper.As<RE::TESEnchantableForm>(); enchantable.has_value()) {
-				if (enchantable.value() == nullptr) 
-					return false;
-					
-				if (enchantable.value()->formEnchanting != nullptr) {
-					return true;
-				}
+			if (auto enchantable = m_formWrapper.As<RE::TESEnchantableForm>()) {
+				return enchantable->formEnchanting != nullptr;
 			}
-			
+
 			return false;
 		}
 
 		inline bool IsArmor() const {
-			if (auto armor = m_formWrapper.As<RE::TESObjectARMO>(); armor.has_value()) {
-				if (armor.value() == nullptr) 
-					return false;
-
-				return true;
-			}
-			return false;
+			return m_formWrapper.As<RE::TESObjectARMO>() != nullptr;
 		}
 
 		inline bool IsWeapon() const {
 			if (GetFormType() != RE::FormType::Weapon) return false;
-
-			if (auto weapon = m_formWrapper.As<RE::TESObjectWEAP>(); weapon.has_value()) {
-				if (weapon.value() == nullptr) 
-					return false;
-
-				return true;
-			}
-			return false;
+			return m_formWrapper.As<RE::TESObjectWEAP>() != nullptr;
 		}
 
 		inline bool IsItem() const {
@@ -772,21 +746,15 @@ namespace Modex
 		}
 
 		inline uint32_t GetArmorRating() const {
-			if (auto armor = m_formWrapper.As<RE::TESObjectARMO>(); armor.has_value()) {
-				if (armor.value() == nullptr) 
-					return 0;
-
-				return static_cast<uint32_t>(armor.value()->armorRating / 100);
+			if (auto armor = m_formWrapper.As<RE::TESObjectARMO>()) {
+				return static_cast<uint32_t>(armor->armorRating / 100);
 			}
 			return 0;
 		}
 
 		inline std::string GetArmorType() const {
-			if (auto armor = m_formWrapper.As<RE::TESObjectARMO>(); armor.has_value()) {
-				if (armor.value() == nullptr) 
-					return "";
-
-				switch (armor.value()->GetArmorType()) 
+			if (auto armor = m_formWrapper.As<RE::TESObjectARMO>()) {
+				switch (armor->GetArmorType())
 				{
 					case RE::TESObjectARMO::ArmorType::kLightArmor:
 						return "Light";
@@ -804,45 +772,30 @@ namespace Modex
 
 		// Simplified these calculations from previous versions.
 		inline uint32_t GetWeaponDamage() const {
-			if (auto weapon = m_formWrapper.As<RE::TESObjectWEAP>(); weapon.has_value()) {
-				if (weapon.value() == nullptr) 
-					return 0;
-
-				return weapon.value()->attackDamage;
+			if (auto weapon = m_formWrapper.As<RE::TESObjectWEAP>()) {
+				return weapon->attackDamage;
 			}
-			
 			return 0;
 		}
 
 		inline float GetWeaponCritical() const {
-			if (auto weapon = m_formWrapper.As<RE::TESObjectWEAP>(); weapon.has_value()) {
-				if (weapon.value() == nullptr) 
-					return 0.0f;
-
-				return static_cast<float>(weapon.value()->GetCritDamage());
+			if (auto weapon = m_formWrapper.As<RE::TESObjectWEAP>()) {
+				return static_cast<float>(weapon->GetCritDamage());
 			}
-
 			return 0.0f;
 		}
 
 		// Probably needs reworked.
 		inline float GetSpellCost(RE::Actor* a_actor) const {
-			if (auto spell = m_formWrapper.As<RE::SpellItem>(); spell.has_value()) {
-				if (spell.value() == nullptr) 
-					return 0.0f;
-
-				return spell.value()->CalculateMagickaCost(a_actor);
+			if (auto spell = m_formWrapper.As<RE::SpellItem>()) {
+				return spell->CalculateMagickaCost(a_actor);
 			}
-
 			return 0.0f;
 		}
 
 		inline const std::string GetDeliveryType() const {
-			if (auto spell = m_formWrapper.As<RE::SpellItem>(); spell.has_value()) {
-				if (spell.value() == nullptr) 
-					return "";
-
-				switch (spell.value()->data.delivery) 
+			if (auto spell = m_formWrapper.As<RE::SpellItem>()) {
+				switch (spell->data.delivery) 
 				{
 					case RE::MagicSystem::Delivery::kSelf:
 						return "Self";
@@ -864,11 +817,8 @@ namespace Modex
 		}
 
 		inline const std::string GetCastType() const {
-			if (auto spell = m_formWrapper.As<RE::SpellItem>(); spell.has_value()) {
-				if (spell.value() == nullptr) 
-					return "";
-
-				switch (spell.value()->data.castingType) 
+			if (auto spell = m_formWrapper.As<RE::SpellItem>()) {
+				switch (spell->data.castingType) 
 				{
 					case RE::MagicSystem::CastingType::kConcentration:
 						return "Concentration";
@@ -888,11 +838,8 @@ namespace Modex
 		}
 
 		inline const std::string GetSpellType() const {
-			if (auto spell = m_formWrapper.As<RE::SpellItem>(); spell.has_value()) {
-				if (spell.value() == nullptr) 
-					return "";
-
-				switch (spell.value()->data.spellType) 
+			if (auto spell = m_formWrapper.As<RE::SpellItem>()) {
+				switch (spell->data.spellType) 
 				{
 					case RE::MagicSystem::SpellType::kAbility:
 						return "Ability";
@@ -936,11 +883,8 @@ namespace Modex
 
 		// Are there more skills?
 		inline const std::string GetWeaponSkill() const {
-			if (auto weapon = m_formWrapper.As<RE::TESObjectWEAP>(); weapon.has_value()) {
-				if (weapon.value() == nullptr) 
-					return "";
-
-				switch (weapon.value()->weaponData.skill.get()) 
+			if (auto weapon = m_formWrapper.As<RE::TESObjectWEAP>()) {
+				switch (weapon->weaponData.skill.get()) 
 				{
 					case RE::ActorValue::kUnarmedDamage:
 						return "Hand-to-Hand";
@@ -965,7 +909,7 @@ namespace Modex
 					case RE::ActorValue::kIllusion:
 						return "Illusion";
 					default:
-						ASSERT_MSG(true, "BaseObject -> Unhandled weapon skill in GetWeaponSkill(): {}" + std::to_string(static_cast<int>(weapon.value()->weaponData.skill.get())));
+						ASSERT_MSG(true, "BaseObject -> Unhandled weapon skill in GetWeaponSkill(): {}" + std::to_string(static_cast<int>(weapon->weaponData.skill.get())));
 						return "";
 				}
 			}
@@ -974,58 +918,30 @@ namespace Modex
 		}
 
 		inline float GetWeaponSpeed() const {
-			if (auto weapon = m_formWrapper.As<RE::TESObjectWEAP>(); weapon.has_value()) {
-				if (weapon.value() == nullptr) 
-					return 0.0f;
-
-				return weapon.value()->GetSpeed();
+			if (auto weapon = m_formWrapper.As<RE::TESObjectWEAP>()) {
+				return weapon->GetSpeed();
 			}
-			
 			return 0.0f;
 		}
 
-		inline const std::optional<RE::TESObjectWEAP*> GetTESWeapon() const
+		inline RE::TESObjectWEAP* GetTESWeapon() const
 		{
-			if (auto weapon = m_formWrapper.As<RE::TESObjectWEAP>(); weapon.has_value()) {
-				if (weapon.value() == nullptr) 
-					return std::nullopt;
-					
-				return weapon.value();
-			}
-
-			return std::nullopt;
+			return m_formWrapper.As<RE::TESObjectWEAP>();
 		}
 
-		inline const std::optional<RE::TESObjectARMO*> GetTESArmor() const
+		inline RE::TESObjectARMO* GetTESArmor() const
 		{
-			if (auto armor = m_formWrapper.As<RE::TESObjectARMO>(); armor.has_value()) {
-				if (armor.value() == nullptr)
-					return std::nullopt;
-					
-				return armor.value();
-			}
-
-			return std::nullopt;
+			return m_formWrapper.As<RE::TESObjectARMO>();
 		}
 
-		inline const std::optional<RE::BGSOutfit*> GetTESOutfit() const
+		inline RE::BGSOutfit* GetTESOutfit() const
 		{
-			if (auto outfit = m_formWrapper.As<RE::BGSOutfit>(); outfit.has_value()) {
-				if (outfit.value() == nullptr)
-					return std::nullopt;
-				
-				return outfit.value();
-			}
-
-			return std::nullopt;
+			return m_formWrapper.As<RE::BGSOutfit>();
 		}
 
 		inline const std::string GetWeaponType() const {
-			if (auto weapon = m_formWrapper.As<RE::TESObjectWEAP>(); weapon.has_value()) {
-				if (weapon.value() == nullptr) 
-					return "";
-
-				switch (weapon.value()->GetWeaponType()) {
+			if (auto weapon = m_formWrapper.As<RE::TESObjectWEAP>()) {
+				switch (weapon->GetWeaponType()) {
 					case RE::WEAPON_TYPE::kHandToHandMelee:
 						return "Hand";
 					case RE::WEAPON_TYPE::kOneHandSword:
@@ -1055,54 +971,36 @@ namespace Modex
 		}
 
 		inline float GetWeaponRange() const {
-			if (auto weapon = m_formWrapper.As<RE::TESObjectWEAP>(); weapon.has_value()) {
-				if (weapon.value() == nullptr) 
-					return 0.0f;
-
-				return weapon.value()->weaponData.reach;
+			if (auto weapon = m_formWrapper.As<RE::TESObjectWEAP>()) {
+				return weapon->weaponData.reach;
 			}
-			
 			return 0.0f;
 		}
 
 		inline float GetWeaponStagger() const {
-			if (auto weapon = m_formWrapper.As<RE::TESObjectWEAP>(); weapon.has_value()) {
-				if (weapon.value() == nullptr) 
-					return 0.0f;
-
-				return weapon.value()->weaponData.staggerValue;
+			if (auto weapon = m_formWrapper.As<RE::TESObjectWEAP>()) {
+				return weapon->weaponData.staggerValue;
 			}
-			
 			return 0.0f;
 		}
 
-		inline std::optional<RE::TESNPC*> GetTESNPC() const
+		inline RE::TESNPC* GetTESNPC() const
 		{
-			if (!m_formWrapper.IsValid()) return std::nullopt;
-
-			if (auto npc = m_formWrapper.As<RE::TESNPC>(); npc.has_value()) {
-				if (npc.value() == nullptr) 
-					return std::nullopt;
-					
-				return npc.value();
-			}
-
-			return std::nullopt;
+			return m_formWrapper.As<RE::TESNPC>();
 		}
 
 		inline bool IsNPC() const
 		{
-			if (auto npc = GetTESNPC(); npc.has_value()) {
-				return true;
-			}
-
-			return false;
+			return GetTESNPC() != nullptr;
 		}
 
 		inline const std::string GetClass() const
 		{
-			if (auto npc = GetTESNPC(); npc.has_value()) {
-				return npc.value()->npcClass->GetName();
+			if (auto npc = GetTESNPC()) {
+				if (!npc->npcClass)
+					return "";
+
+				return npc->npcClass->GetName();
 			}
 
 			return "";
@@ -1110,8 +1008,11 @@ namespace Modex
 
 		inline const std::string GetRace() const
 		{
-			if (auto npc = GetTESNPC(); npc.has_value()) {
-				return npc.value()->race->GetName();
+			if (auto npc = GetTESNPC()) {
+				if (!npc->race)
+					return "";
+
+				return npc->race->GetName();
 			}
 
 			return "";
@@ -1119,11 +1020,8 @@ namespace Modex
 
 		inline const std::string GetGender() const
 		{
-			if (auto npc = GetTESNPC(); npc.has_value()) {
-				if (npc.value() == nullptr)
-					return "";
-
-				return npc.value()->IsFemale() ? "Female" : "Male";
+			if (auto npc = GetTESNPC()) {
+				return npc->IsFemale() ? "Female" : "Male";
 			}
 
 			return "";
@@ -1131,8 +1029,8 @@ namespace Modex
 
 		inline uint32_t GetLevel() const
 		{
-			if (auto npc = GetTESNPC(); npc.has_value()) {
-				return npc.value()->GetLevel();
+			if (auto npc = GetTESNPC()) {
+				return npc->GetLevel();
 			}
 
 			return 0;
@@ -1142,8 +1040,8 @@ namespace Modex
 		{
 			std::vector<std::string> spells;
 
-			if (auto npc = GetTESNPC(); npc.has_value()) {
-				const auto spellList = npc.value()->GetSpellList();
+			if (auto npc = GetTESNPC()) {
+				const auto spellList = npc->GetSpellList();
 
 				if (spellList != nullptr && spellList->numSpells > 0) {
 					for (uint32_t i = 0; i < spellList->numSpells; i++) {
@@ -1166,20 +1064,16 @@ namespace Modex
 
 		inline bool IsOutfit() const
 		{
-			if (auto outfit = GetTESOutfit(); outfit.has_value()) {
-				return outfit.value() != nullptr;
-			}
-
-			return false;
+			return GetTESOutfit() != nullptr;
 		}
 
 		inline std::string GetDefaultOutfit() const
 		{
-			if (auto npc = GetTESNPC(); npc.has_value()) {
-				if (npc.value()->defaultOutfit == nullptr)
+			if (auto npc = GetTESNPC()) {
+				if (npc->defaultOutfit == nullptr)
 					return "";
 
-				return po3_GetEditorID(npc.value()->defaultOutfit->GetFormID());
+				return po3_GetEditorID(npc->defaultOutfit->GetFormID());
 			}
 
 			return "";
@@ -1187,11 +1081,11 @@ namespace Modex
 
 		inline std::string GetSleepOutfit() const
 		{
-			if (auto npc = GetTESNPC(); npc.has_value()) {
-				if (npc.value()->sleepOutfit == nullptr)
+			if (auto npc = GetTESNPC()) {
+				if (npc->sleepOutfit == nullptr)
 					return "";
 
-				return po3_GetEditorID(npc.value()->sleepOutfit->GetFormID());
+				return po3_GetEditorID(npc->sleepOutfit->GetFormID());
 			}
 			
 			return "";
@@ -1199,11 +1093,11 @@ namespace Modex
 
 		inline std::string GetOutfitItemCount() const
 		{
-			if (auto outfit = GetTESOutfit(); outfit.has_value()) {
-				if (outfit.value() == nullptr || outfit.value()->outfitItems.size() == 0)
+			if (auto outfit = GetTESOutfit()) {
+				if (outfit->outfitItems.size() == 0)
 					return "0";
 
-				return std::to_string(outfit.value()->outfitItems.size());
+				return std::to_string(outfit->outfitItems.size());
 			}
 
 			return "0";
@@ -1230,8 +1124,8 @@ namespace Modex
 
 		inline bool IsUnique() const
 		{
-			if (auto npc = GetTESNPC(); npc.has_value()) {
-				return npc.value()->IsUnique();
+			if (auto npc = GetTESNPC()) {
+				return npc->IsUnique();
 			}
 
 			return false;
@@ -1239,8 +1133,8 @@ namespace Modex
 
 		inline bool IsEssential() const
 		{
-			if (auto npc = GetTESNPC(); npc.has_value()) {
-				return npc.value()->IsEssential();
+			if (auto npc = GetTESNPC()) {
+				return npc->IsEssential();
 			}
 
 			return false;
@@ -1248,8 +1142,7 @@ namespace Modex
 
 		inline bool IsDisabled() const
 		{
-			if (auto npc = GetTESNPC(); npc.has_value()) {
-				auto targetRefr = RE::TESForm::LookupByID<RE::TESObjectREFR>(m_refID);
+			if (auto targetRefr = RE::TESForm::LookupByID<RE::TESObjectREFR>(m_refID)) {
 				if (targetRefr == nullptr)
 					return false;
 
@@ -1291,8 +1184,8 @@ namespace Modex
 		// TODO: Implement reference-aware actor value lookups for actor module.
 		inline int GetActorValue(const RE::ActorValue a_value) const
 		{
-			if (auto npc = GetTESNPC(); npc.has_value()) {
-				return static_cast<int>(npc.value()->GetActorValue(a_value));
+			if (auto npc = GetTESNPC()) {
+				return static_cast<int>(npc->GetActorValue(a_value));
 			}
 
 			return 0;
@@ -1300,8 +1193,8 @@ namespace Modex
 
 		inline std::optional<RE::TESNPC::Skills> GetSkills() const
 		{
-			if (auto npc = GetTESNPC(); npc.has_value()) {
-				return npc.value()->playerSkills;
+			if (auto npc = GetTESNPC()) {
+				return npc->playerSkills;
 			}
 
 			return std::nullopt;
@@ -1309,11 +1202,11 @@ namespace Modex
 
 		inline std::optional<RE::BSTArray<RE::FACTION_RANK>> GetFactions() const
 		{
-			if (auto npc = GetTESNPC(); npc.has_value()) {
-				return npc.value()->factions;
-			} else {
-				return std::nullopt;
+			if (auto npc = GetTESNPC()) {
+				return npc->factions;
 			}
+
+			return std::nullopt;
 		}
 
 		inline std::vector<std::string> GetFactionList() const
@@ -1333,14 +1226,11 @@ namespace Modex
 
 		inline std::string GetBookSkill() const
 		{
-			if (auto book = m_formWrapper.As<RE::TESObjectBOOK>(); book.has_value()) {
-				if (book.value() == nullptr) 
-					return "";
-
+			if (auto book = m_formWrapper.As<RE::TESObjectBOOK>()) {
 				// RE::ActorValueToString(RE::ActorValue a_value) doesn't work here. Idk why.
 
-				if (book.value()->TeachesSkill()) {
-					auto skillValue = static_cast<RE::ActorValue>(book.value()->GetSkill());
+				if (book->TeachesSkill()) {
+					auto skillValue = static_cast<RE::ActorValue>(book->GetSkill());
 					auto skillName = magic_enum::enum_name(skillValue);
 					if (!skillName.empty()) {
 						skillName = skillName.substr(1); // remove 'k' prefix
@@ -1354,12 +1244,9 @@ namespace Modex
 
 		inline std::string GetBookSpell() const
 		{
-			if (auto book = m_formWrapper.As<RE::TESObjectBOOK>(); book.has_value()) {
-				if (book.value() == nullptr) 
-					return "";
-
-				if (book.value()->TeachesSpell()) {
-					if (auto spell = book.value()->GetSpell(); spell != nullptr) {
+			if (auto book = m_formWrapper.As<RE::TESObjectBOOK>()) {
+				if (book->TeachesSpell()) {
+					if (auto spell = book->GetSpell(); spell != nullptr) {
 						if (spell->GetName() != nullptr) {
 							return spell->GetName();
 						}
