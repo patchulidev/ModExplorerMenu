@@ -78,6 +78,21 @@ struct
 
 namespace Modex
 {
+	using UEFlag = RE::ControlMap::UEFlag;
+
+	static constexpr auto kGameplayControls = static_cast<UEFlag>(
+		static_cast<std::underlying_type_t<UEFlag>>(UEFlag::kMovement)  |
+		static_cast<std::underlying_type_t<UEFlag>>(UEFlag::kLooking)   |
+		static_cast<std::underlying_type_t<UEFlag>>(UEFlag::kActivate)  |
+		static_cast<std::underlying_type_t<UEFlag>>(UEFlag::kFighting)  |
+		static_cast<std::underlying_type_t<UEFlag>>(UEFlag::kSneaking)  |
+		static_cast<std::underlying_type_t<UEFlag>>(UEFlag::kJumping)   |
+		static_cast<std::underlying_type_t<UEFlag>>(UEFlag::kPOVSwitch) |
+		static_cast<std::underlying_type_t<UEFlag>>(UEFlag::kMainFour)  |
+		static_cast<std::underlying_type_t<UEFlag>>(UEFlag::kWheelZoom) |
+		static_cast<std::underlying_type_t<UEFlag>>(UEFlag::kVATS)
+	);
+
 	void ModexGUIMenu::FlushInputState()
 	{
 		if (ImGui::GetCurrentContext() == nullptr)
@@ -139,43 +154,19 @@ namespace Modex
 		ForceCursor();
 	}
 
-	// FIX: This isn't very reliable. If menu state is edited outside of our input mapping
-	// the user can get stuck without controls. Return to this when implementing SkyrimSouls
-	// compatability.
-
-	void ModexGUIMenu::EnablePlayerControls()
-	{
-		// since we can't swallow input events in input manager.
-		RE::PlayerControls::GetSingleton()->readyWeaponHandler->SetInputEventHandlingEnabled(m_weaponHandlerState);
-		RE::PlayerControls::GetSingleton()->attackBlockHandler->SetInputEventHandlingEnabled(m_attackBlockHandlerState);
-	}
-
-	void ModexGUIMenu::DisablePlayerControls()
-	{   
-		if (RE::UI::GetSingleton()->IsMenuOpen(RE::MainMenu::MENU_NAME)) {
-			m_weaponHandlerState = true;
-			m_attackBlockHandlerState = true;
-		} else {
-			m_weaponHandlerState = RE::PlayerControls::GetSingleton()->readyWeaponHandler->IsInputEventHandlingEnabled();
-			m_attackBlockHandlerState = RE::PlayerControls::GetSingleton()->attackBlockHandler->IsInputEventHandlingEnabled();
-		}
-
-		RE::PlayerControls::GetSingleton()->readyWeaponHandler->SetInputEventHandlingEnabled(false);
-		RE::PlayerControls::GetSingleton()->attackBlockHandler->SetInputEventHandlingEnabled(false);
-	}
-
-
 	void ModexGUIMenu::OnShow()
 	{
 		m_fShow = true;
-		DisablePlayerControls();
+
+		RE::ControlMap::GetSingleton()->ToggleControls(kGameplayControls, false);
 		UIManager::GetSingleton()->OnShow();
 	}
 
 	void ModexGUIMenu::OnHide()
 	{
 		m_fShow = false;
-		EnablePlayerControls();
+
+		RE::ControlMap::GetSingleton()->ToggleControls(kGameplayControls, true);
 		UIManager::GetSingleton()->OnClose();
 	}
 
@@ -231,7 +222,7 @@ namespace Modex
 			menu->menuFlags.set(Flags::kPausesGame);
 		}
 
-		menu->inputContext.set(Context::kConsole);
+		menu->inputContext.set(Context::kMenuMode);
 		return menu;
 	}
 

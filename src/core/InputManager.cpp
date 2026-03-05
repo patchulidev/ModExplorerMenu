@@ -12,7 +12,7 @@ namespace Modex
 	}
 
 	// All other inputs are routed through the IMenu implementation.
-	void InputManager::AddEventToQueue(RE::InputEvent** a_event)
+	void InputManager::AddEventToQueue(RE::InputEvent* const* a_event)
 	{
 		if (a_event) {
 			for (auto inputEvent = *a_event; inputEvent; inputEvent = inputEvent->next) {

@@ -6,8 +6,6 @@ namespace Modex
 	{
 	private:
 		bool m_fShow = false;
-		bool m_weaponHandlerState = true;
-		bool m_attackBlockHandlerState = true;
 
 	public:
 		static constexpr std::string_view MENU_NAME = "ModexGUIMenu";
@@ -36,9 +34,6 @@ namespace Modex
 		static void OnKeyEvent(RE::GFxEvent *event, bool down);
 		static void OnCharEvent(RE::GFxEvent *event);
 		static void ForceCursor();
-
-		void DisablePlayerControls();
-		void EnablePlayerControls();
 
 		static auto GFxKeyToImGuiKey(RE::GFxKey::Code keyCode) -> ImGuiKey;
 	};

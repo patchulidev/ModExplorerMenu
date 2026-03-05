@@ -53,7 +53,6 @@ namespace Modex
 			std::string theme 			= "default";
 			std::string globalFont 		= "Ubuntu-Regular";
 
-			ImVec2 screenScaleRatio		= ImVec2(1.0f, 1.0f);
 			ImVec2 splashScale   = ImVec2(1.0f, 1.0f); // hidden
 		};
 

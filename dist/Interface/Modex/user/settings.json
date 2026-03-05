@@ -12,12 +12,8 @@
     "Modex Theme": "default",
     "Open Menu Keybind": 211,
     "Open Menu Modifier": 0,
-    "Pause Game While Open": false,
+    "Pause Game While Open": true,
     "Plugin List Sorting": 0,
-    "Screen Scale Ratio": [
-        1.0,
-        1.0
-    ],
     "Show Missing Plugins": true,
     "Show Splash Logo": false,
     "Smooth Scroll": true,

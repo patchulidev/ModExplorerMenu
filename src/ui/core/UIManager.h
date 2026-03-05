@@ -83,8 +83,6 @@ namespace Modex
 		UIWindow* GetPopupWindowRef() const;
 
 		int GetWindowCount() const { return static_cast<int>(m_windowStack.size()); }
-		ImVec2 GetDisplaySize() const { return ImVec2(m_displayWidth, m_displayHeight); }
-
 		static bool CloseAllGameMenus();
 
 	private:
@@ -110,9 +108,6 @@ namespace Modex
 		ImVec2                                  m_scrollEnergy = ImVec2(0.0f, 0.0f);
 		static constexpr float                  m_scrollMultiplier = 1.5f;
 		static constexpr float                  m_scrollSmoothing = 10.0f;
-
-		float                                   m_displayWidth;
-		float                                   m_displayHeight;
 
 		// Source: po3 @ https://github.com/powerof3/PhotoMode
 		static inline constexpr std::array GameMenus = {

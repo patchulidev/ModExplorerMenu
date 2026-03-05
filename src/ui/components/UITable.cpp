@@ -1705,13 +1705,13 @@ namespace Modex
 
 					if (ImGui::MenuItem(Translate("ADD_OUTFIT_ITEMS"))) {
 						ExecuteCommandOnSelection([this](const std::unique_ptr<BaseObject>& a_item) {
-							Commands::AddOutfitItemsToInventory(owner, this->GetTableTargetRef(), a_item->GetTESOutfit().value()); 	
+							Commands::AddOutfitItemsToInventory(owner, this->GetTableTargetRef(), a_item->GetTESOutfit()); 	
 						});
 					}
 
 					if (ImGui::MenuItem(Translate("EQUIP_OUTFIT_ITEMS"))) {
 						ExecuteCommandOnSelection([this](const std::unique_ptr<BaseObject>& a_item) {
-							Commands::EquipOutfit(owner, this->GetTableTargetRef(), a_item->GetTESOutfit().value());
+							Commands::EquipOutfit(owner, this->GetTableTargetRef(), a_item->GetTESOutfit());
 						});
 					}
 
@@ -1719,13 +1719,13 @@ namespace Modex
 						ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 						if (ImGui::MenuItem(Translate("SET_DEFAULT_OUTFIT"))) {
 							ExecuteCommandOnSelection([this](const std::unique_ptr<BaseObject>& a_item) {
-								Commands::SetDefaultOutfitOnActor(owner, this->GetTableTargetRef(), a_item->GetTESOutfit().value());	
+								Commands::SetDefaultOutfitOnActor(owner, this->GetTableTargetRef(), a_item->GetTESOutfit());	
 							});
 						}
 
 						if (ImGui::MenuItem(Translate("SET_SLEEP_OUTFIT"))) {
 							ExecuteCommandOnSelection([this](const std::unique_ptr<BaseObject>& a_item) {
-								Commands::SetSleepOutfitOnActor(owner, this->GetTableTargetRef(), a_item->GetTESOutfit().value());
+								Commands::SetSleepOutfitOnActor(owner, this->GetTableTargetRef(), a_item->GetTESOutfit());
 							});
 						}
 					}
@@ -1940,12 +1940,12 @@ namespace Modex
 		const std::string name_string = TRUNCATE(item_icon + raw_name, (spacing * 1.75f) - quantity_offset) + quantity_string;
 
 		bool is_enchanted = false;
-		if (const auto& weapon = a_item->GetTESWeapon(); weapon.has_value()) {
-			is_enchanted = weapon.value()->formEnchanting;
+		if (auto weapon = a_item->GetTESWeapon()) {
+			is_enchanted = weapon->formEnchanting;
 		}
 
-		if (const auto& armor = a_item->GetTESArmor(); armor.has_value()) {
-			is_enchanted = armor.value()->formEnchanting;
+		if (auto armor = a_item->GetTESArmor()) {
+			is_enchanted = armor->formEnchanting;
 		}
 
 		const ImU32 item_color = is_enchanted ? colors.textEnchanted : colors.text;
@@ -2077,9 +2077,8 @@ namespace Modex
 		}
 
 		if (a_item->GetFormType() == RE::FormType::NPC) {
-			if (const auto& npc = a_item->GetTESNPC(); npc.has_value()) {
-				const auto& npcData = npc.value();
-				if (npcData != nullptr) {
+			if (auto npc = a_item->GetTESNPC()) {
+				{
 					if (a_item->GetRefID() != 0) {
 						const ImVec2 icon_pos = is_favorited ? favorite_pos - ImVec2(ImGui::GetFontSize() * 2.0f, 0.0f) : favorite_pos;
 						draw_list->AddText(icon_pos, colors.text, ICON_LC_ASTERISK);
@@ -2108,14 +2107,12 @@ namespace Modex
 		const float sort_text_cutoff = spacing * 1.5f;
 
 		if (const auto& item = a_item; item->IsItem()) {
-			if (const auto& armor = item->GetTESArmor(); armor.has_value()) {
-				const auto& armorData = armor.value();
-
-				if (armorData != nullptr) {
+			if (auto armor = item->GetTESArmor()) {
+				{
 					const std::string rating_string = item->GetPropertyValueWithIcon(PropertyType::kArmorRating);
 					const std::string type_string = TRUNCATE(item->GetPropertyValueWithIcon(PropertyType::kArmorType), sort_text_cutoff);
 
-					if (armorData->formEnchanting != nullptr) {
+					if (armor->formEnchanting != nullptr) {
 						text_color = colors.textEnchanted;
 					}
 
@@ -2156,15 +2153,13 @@ namespace Modex
 				}
 			}
 
-			if (const auto& weapon = item->GetTESWeapon(); weapon.has_value()) {
-				const auto& weaponData = weapon.value();
-
-				if (weaponData != nullptr) {
+			if (auto weapon = item->GetTESWeapon()) {
+				{
 					const std::string damage_string = item->GetPropertyValueWithIcon(PropertyType::kWeaponDamage);
 					const std::string skill_string = TRUNCATE(item->GetPropertyValueWithIcon(PropertyType::kWeaponSkill), sort_text_cutoff);
 					// const std::string type_string = item.GetPropertyValueWithIcon(PropertyType::kWeaponType);
 
-					if (weaponData->formEnchanting != nullptr) {
+					if (weapon->formEnchanting != nullptr) {
 						text_color = colors.textEnchanted;
 					}
 					
