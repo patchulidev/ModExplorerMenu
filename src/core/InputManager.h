@@ -65,7 +65,7 @@ namespace Modex
 
 		void						Flush();
 		void						UpdateSettings();
-		void						AddEventToQueue(RE::InputEvent** a_event);
+		void						AddEventToQueue(RE::InputEvent* const* a_event);
 		void						AddKeyEvent(KeyEvent& a_keyEvent);
 		void						ProcessInputEvents();
 		bool						IsBoundModifierDown();

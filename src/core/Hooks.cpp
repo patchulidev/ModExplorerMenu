@@ -52,7 +52,7 @@ namespace Hooks
 
 	struct PollInputDevices_Hook
 	{
-		static void thunk(RE::BSTEventSource<RE::InputEvent*>* a_dispatcher, RE::InputEvent** a_events)
+		static void thunk(RE::BSTEventSource<RE::InputEvent*>* a_dispatcher, RE::InputEvent* const* a_events)
 		{
 			if (const auto& inputManager = Modex::InputManager::GetSingleton(); inputManager != nullptr) {
 				inputManager->AddEventToQueue(a_events);

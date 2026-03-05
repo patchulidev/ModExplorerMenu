@@ -1,4 +1,5 @@
 #include "SettingsModule.h"
+#include "RE/U/UserEvents.h"
 #include "data/Data.h"
 #include "config/UserConfig.h"
 #include "config/ThemeConfig.h"
@@ -165,9 +166,20 @@ namespace Modex
 
 			if (config.developerMode) {
 				bool _throwaway = false;
-				if (UICustom::Settings_ToggleButton("Reset Input Lock", _throwaway)) {
-					RE::PlayerControls::GetSingleton()->readyWeaponHandler->SetInputEventHandlingEnabled(true);
-					RE::PlayerControls::GetSingleton()->attackBlockHandler->SetInputEventHandlingEnabled(true);
+				if (UICustom::Settings_ToggleButton("Restore Control Map", _throwaway)) {
+					using UEFlag = RE::UserEvents::USER_EVENT_FLAG;
+					RE::ControlMap::GetSingleton()->ToggleControls(UEFlag::kMovement, true);
+					RE::ControlMap::GetSingleton()->ToggleControls(UEFlag::kLooking, true);
+					RE::ControlMap::GetSingleton()->ToggleControls(UEFlag::kActivate, true);
+					RE::ControlMap::GetSingleton()->ToggleControls(UEFlag::kMenu, true);
+					RE::ControlMap::GetSingleton()->ToggleControls(UEFlag::kConsole, true);
+					RE::ControlMap::GetSingleton()->ToggleControls(UEFlag::kPOVSwitch, true);
+					RE::ControlMap::GetSingleton()->ToggleControls(UEFlag::kFighting, true);
+					RE::ControlMap::GetSingleton()->ToggleControls(UEFlag::kSneaking, true);
+					RE::ControlMap::GetSingleton()->ToggleControls(UEFlag::kMainFour, true);
+					RE::ControlMap::GetSingleton()->ToggleControls(UEFlag::kWheelZoom, true);
+					RE::ControlMap::GetSingleton()->ToggleControls(UEFlag::kJumping, true);
+					RE::ControlMap::GetSingleton()->ToggleControls(UEFlag::kVATS, true);
 				}
 			}
 
