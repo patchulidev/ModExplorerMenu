@@ -15,7 +15,14 @@ namespace Modex
 		}
 
 		auto player = RE::PlayerCharacter::GetSingleton();
+
+		if (!player)
+			return;
+
 		auto playerRef = player->AsReference();
+
+		if (!playerRef)
+			return;
 
 		UIManager::GetSingleton()->Close();
 		container->ActivateRef(playerRef, 0, nullptr, 0, false);
@@ -39,12 +46,19 @@ namespace Modex
 		auto reference = RE::IFormFactory::GetConcreteFormFactoryByType<RE::TESObjectREFR>();
 		auto containerRef = reference ? reference->Create() : nullptr;
 
+		if (!containerRef) {
+			Error("Unable to create chest reference via IFormFactory");
+			return;
+		}
+
 		auto player = RE::PlayerCharacter::GetSingleton();
-		auto playerRef = player->GetObjectReference();
+
+		if (!player)
+			return;
 
 		containerRef->formFlags |= RE::TESForm::RecordFlags::kTemporary;
 		containerRef->data.objectReference = m_chestContainer;
-		containerRef->extraList.SetOwner(playerRef);
+		containerRef->extraList.SetOwner(player);
 		containerRef->SetStartingPosition({ 0, 0, 0 });
 
 		m_chestHandle = containerRef->CreateRefHandle();
@@ -94,86 +108,108 @@ namespace Modex
 	{
 		if (!a_outfit) return;
 
-		Reset();
+		SKSE::GetTaskInterface()->AddTask([this, a_outfit, a_level]() {
+			Reset();
 
-		auto container = m_chestHandle.get();
+			auto container = m_chestHandle.get();
 
-		if (!container)
-			return;
+			if (!container)
+				return;
 
-		auto displayName = po3_GetEditorID(a_outfit->GetFormID());
+			auto displayName = po3_GetEditorID(a_outfit->GetFormID());
 
-		container->SetDisplayName(displayName.c_str(), true);
+			container->SetDisplayName(displayName.c_str(), true);
 
+			auto resolved = Commands::ResolveOutfitItems(a_outfit, Commands::GetPlayerReference(), a_level);
 
-		auto resolved = Commands::ResolveOutfitItems(a_outfit, Commands::GetPlayerReference(), a_level);
+			for (auto& entry : resolved) {
+				container->AddObjectToContainer(entry.object, nullptr, entry.count, nullptr);
+			}
 
-		for (auto& entry : resolved) {
-			container->AddObjectToContainer(entry.object, nullptr, entry.count, nullptr);
-		}
-
-		OpenChest();
+			OpenChest();
+		});
 	}
 
 	void PlayerChestSpawn::PopulateChestWithKit(const Modex::Kit& a_kit)
 	{
-		Reset();
+		// Copy kit data for safe capture across threads.
+		auto kitName = a_kit.GetName();
+		auto kitKey = a_kit.m_key;
+		auto kitItems = a_kit.m_items;
+		auto kitSize = a_kit.m_items.size();
 
-		auto container = m_chestHandle.get();
+		SKSE::GetTaskInterface()->AddTask([this, kitName, kitKey, kitItems, kitSize]() {
+			Reset();
 
-		if (!container)
-			return;
+			auto container = m_chestHandle.get();
 
-		container->SetDisplayName(a_kit.GetName().c_str(), true);
+			if (!container)
+				return;
 
-		int _count = 0;
-		for (auto& kitItem : a_kit.m_items) {
-			auto boundObject = RE::TESForm::LookupByEditorID(kitItem->m_editorid);
-			Trace("Adding Item '{}' from '{}' to PlayerChest container.", kitItem->m_editorid, a_kit.m_key);
+			container->SetDisplayName(kitName.c_str(), true);
 
-			if (boundObject) {
-				container->AddObjectToContainer(
-					boundObject->As<RE::TESBoundObject>(),      // RE::TESBoundObject* a_item,
-					nullptr,                                    // RE::ExtraDataList* a_extraData,
-					static_cast<std::uint32_t>(kitItem->m_amount),// std::uint32_t a_count,
-					nullptr                                     // RE::TESObjectREFR* a_fromRefr,
-				);
+			int _count = 0;
+			for (auto& kitItem : kitItems) {
+				auto boundObject = RE::TESForm::LookupByEditorID(kitItem->m_editorid);
+				Trace("Adding Item '{}' from '{}' to PlayerChest container.", kitItem->m_editorid, kitKey);
 
-				_count++;
+				if (boundObject) {
+					container->AddObjectToContainer(
+						boundObject->As<RE::TESBoundObject>(),
+						nullptr,
+						static_cast<std::uint32_t>(kitItem->m_amount),
+						nullptr
+					);
+
+					_count++;
+				}
 			}
-		}
 
-		Debug("Populated PlayerChest with '{}/{}' items from kit: '{}'", _count, a_kit.m_items.size(), a_kit.m_key);
-		OpenChest();
+			Debug("Populated PlayerChest with '{}/{}' items from kit: '{}'", _count, kitSize, kitKey);
+			OpenChest();
+		});
 	}
 
 	void PlayerChestSpawn::PopulateChestWithItems(const std::vector<std::unique_ptr<BaseObject>>& a_items)
 	{
 		if (a_items.empty()) { return; }
 
-		Reset();
-
-		auto container = m_chestHandle.get();
-		container->SetDisplayName("Modex", true);
-
-		int _count = 0;
+		// Copy editor IDs for safe capture across threads.
+		std::vector<std::string> editorIDs;
+		editorIDs.reserve(a_items.size());
 		for (auto& item : a_items) {
-			auto boundObject = RE::TESForm::LookupByEditorID(item->GetEditorID());
-			Trace("Adding Item '{}' from Table to PlayerChest container", item->GetEditorID());
-
-			if (boundObject) {
-				container->AddObjectToContainer(
-					boundObject->As<RE::TESBoundObject>(),      // RE::TESBoundObject* a_item,
-					nullptr,                                    // RE::ExtraDataList* a_extraData,
-					1,                                          // std::uint32_t a_count,
-					nullptr                                     // RE::TESObjectREFR* a_fromRefr,
-				);
-
-				_count ++;
-			}
+			editorIDs.push_back(item->GetEditorID());
 		}
 
-		Debug("Populated PlayerChest with '{}/{}' items from Table.", _count, a_items.size());
-		OpenChest();
+		SKSE::GetTaskInterface()->AddTask([this, editorIDs = std::move(editorIDs)]() {
+			Reset();
+
+			auto container = m_chestHandle.get();
+
+			if (!container)
+				return;
+
+			container->SetDisplayName("Modex", true);
+
+			int _count = 0;
+			for (auto& editorID : editorIDs) {
+				auto boundObject = RE::TESForm::LookupByEditorID(editorID);
+				Trace("Adding Item '{}' from Table to PlayerChest container", editorID);
+
+				if (boundObject) {
+					container->AddObjectToContainer(
+						boundObject->As<RE::TESBoundObject>(),
+						nullptr,
+						1,
+						nullptr
+					);
+
+					_count++;
+				}
+			}
+
+			Debug("Populated PlayerChest with '{}/{}' items from Table.", _count, editorIDs.size());
+			OpenChest();
+		});
 	}
 }
