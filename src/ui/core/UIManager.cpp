@@ -89,6 +89,8 @@ namespace Modex
 
 	void UIManager::PopWindow()
 	{
+		if (ImGui::GetIO().WantCaptureKeyboard) return;
+
 		if (!m_windowStack.empty()) {
 			m_windowStack.back()->CloseWindow();
 		} else {
@@ -386,9 +388,9 @@ namespace Modex
 		func(controlMap, allow);
 	}
 
-	bool UIManager::CloseAllGameMenus()
+	bool UIManager::CloseAllGameMenus(bool a_modex)
 	{
-		if (UIManager::GetSingleton()->IsMenuOpen()) {
+		if (a_modex && UIManager::GetSingleton()->IsMenuOpen()) {
 			UIManager::GetSingleton()->Close();
 		}
 
