@@ -70,12 +70,14 @@ namespace Modex
 				_shiftDown = (event.keyCode == 0x2A || event.keyCode == 0x36) ? event.IsPressed() : _shiftDown;
 
 				if (event.IsPressed()) {
-					if (!manager->IsMenuOpen()) {
-						if (event.keyCode == config.showMenuKey && IsBoundModifierDown() && event.IsDown()) {
-							if (!manager->IsMenuOpen()) {
-								manager->Open();
-							}
-
+					if (event.keyCode == config.showMenuKey && IsBoundModifierDown() && event.IsDown()) {
+						if (!manager->IsMenuOpen()) {
+							manager->Open();
+							inputQueue.clear();
+							return;
+						} else {
+							manager->PopWindow();
+							inputQueue.clear();
 							return;
 						}
 					}
