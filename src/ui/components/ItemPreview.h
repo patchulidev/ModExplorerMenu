@@ -168,6 +168,7 @@ namespace
 	{
 		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 		ImGui::Spacing();
+		inlineText(a_object, PropertyType::kFormID);
 		inlineText(a_object, PropertyType::kPlugin);
 		inlineText(a_object, PropertyType::kEditorID);
 	}
