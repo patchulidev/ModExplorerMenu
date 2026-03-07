@@ -44,7 +44,8 @@ namespace Modex::Commands
 
 	static inline void OpenActorInventory(RE::TESObjectREFR* a_actorRef)
 	{
-		if (a_actorRef && UIManager::CloseAllGameMenus()) {
+		if (a_actorRef) {
+			UIManager::GetSingleton()->Close();
 			TESObjectREFR_OpenContainer(a_actorRef, RE::ContainerMenu::ContainerMode::kLoot);
 			UIManager::GetSingleton()->SetMenuListener(true);
 		}
@@ -482,7 +483,7 @@ namespace Modex::Commands
 					if (auto ref = RE::TESForm::LookupByID<RE::TESObjectREFR>(a_refID)) {
 						ref->MoveTo(playerRefr);
 						UserData::SendEvent(ModexActionType::BringReference, ref->GetFormID(), a_owner); 
-						UIManager::CloseAllGameMenus();
+						UIManager::GetSingleton()->Close();
 					}
 				}
 			}
@@ -496,7 +497,7 @@ namespace Modex::Commands
 				if (auto playerRefr = player->AsReference()) {
 					a_ref->MoveTo(playerRefr);
 					UserData::SendEvent(ModexActionType::BringReference, a_ref->GetFormID(), a_owner); 
-					UIManager::CloseAllGameMenus();
+					UIManager::GetSingleton()->Close();
 				}
 			}
 		}
@@ -509,7 +510,7 @@ namespace Modex::Commands
 				if (auto playerRefr = player->AsReference()) {
 					playerRefr->MoveTo(a_ref);
 					UserData::SendEvent(ModexActionType::GotoReference, a_ref->GetFormID(), a_owner); 
-					UIManager::CloseAllGameMenus();
+					UIManager::GetSingleton()->Close();
 				}
 			}
 		}
@@ -523,7 +524,7 @@ namespace Modex::Commands
 					if (auto ref = RE::TESForm::LookupByID<RE::TESObjectREFR>(a_refID)) {
 						playerRefr->MoveTo(ref);
 						UserData::SendEvent(ModexActionType::GotoReference, ref->GetFormID(), a_owner);
-						UIManager::CloseAllGameMenus();
+						UIManager::GetSingleton()->Close();
 					}
 				}
 			}

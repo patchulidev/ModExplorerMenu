@@ -83,7 +83,7 @@ namespace Modex
 		UIWindow* GetPopupWindowRef() const;
 
 		int GetWindowCount() const { return static_cast<int>(m_windowStack.size()); }
-		static bool CloseAllGameMenus();
+		static bool CloseAllGameMenus(bool a_model = false);
 
 	private:
 		UIManager();
