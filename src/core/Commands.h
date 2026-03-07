@@ -46,7 +46,9 @@ namespace Modex::Commands
 	{
 		if (a_actorRef) {
 			UIManager::GetSingleton()->Close();
-			TESObjectREFR_OpenContainer(a_actorRef, RE::ContainerMenu::ContainerMode::kLoot);
+			SKSE::GetTaskInterface()->AddTask([a_actorRef]() {
+				TESObjectREFR_OpenContainer(a_actorRef, RE::ContainerMenu::ContainerMode::kLoot);
+			});
 			UIManager::GetSingleton()->SetMenuListener(true);
 		}
 	}
@@ -225,18 +227,20 @@ namespace Modex::Commands
 		if (!a_targetRef)
 			return;
 
-		auto form = RE::TESForm::LookupByEditorID(a_editorID);
+		SKSE::GetTaskInterface()->AddTask([a_owner, a_targetRef, a_editorID, a_amount]() {
+			auto form = RE::TESForm::LookupByEditorID(a_editorID);
 
-		if (!form)
-			return;
+			if (!form)
+				return;
 
-		auto boundObject = form->As<RE::TESBoundObject>();
+			auto boundObject = form->As<RE::TESBoundObject>();
 
-		if (!boundObject)
-			return;
-		
-		a_targetRef->AddObjectToContainer(boundObject, nullptr, a_amount, nullptr);
-		UserData::SendEvent(ModexActionType::AddItem, a_editorID, a_owner);
+			if (!boundObject)
+				return;
+
+			a_targetRef->AddObjectToContainer(boundObject, nullptr, a_amount, nullptr);
+			UserData::SendEvent(ModexActionType::AddItem, a_editorID, a_owner);
+		});
 	}
 
 	static inline void AddItemToRefInventory(Ownership a_owner, RE::TESObjectREFR* a_targetRef, const std::string& a_editorID, uint32_t a_amount = 1)
@@ -252,16 +256,18 @@ namespace Modex::Commands
 		if (!a_targetRef || a_editorID.empty())
 			return;
 
-		if (auto leveled = RE::TESForm::LookupByEditorID<RE::TESLeveledList>(a_editorID)) {
-			auto resolved = ResolveLeveledList(leveled, a_targetRef, a_amount);
+		SKSE::GetTaskInterface()->AddTask([a_owner, a_targetRef, a_editorID, a_amount]() {
+			if (auto leveled = RE::TESForm::LookupByEditorID<RE::TESLeveledList>(a_editorID)) {
+				auto resolved = ResolveLeveledList(leveled, a_targetRef, a_amount);
 
-			for (auto& entry : resolved) {
-				a_targetRef->AddObjectToContainer(entry.object, nullptr, entry.count, nullptr);
+				for (auto& entry : resolved) {
+					a_targetRef->AddObjectToContainer(entry.object, nullptr, entry.count, nullptr);
 
-				auto editorid = po3_GetEditorID(entry.object->GetFormID());
-				UserData::SendEvent(ModexActionType::AddItem, editorid, a_owner);
+					auto editorid = po3_GetEditorID(entry.object->GetFormID());
+					UserData::SendEvent(ModexActionType::AddItem, editorid, a_owner);
+				}
 			}
-		}
+		});
 	}
 
 	static inline void RemoveAllItemsFromInventory(Ownership a_owner, RE::TESObjectREFR* a_targetRef)
@@ -269,17 +275,16 @@ namespace Modex::Commands
 		if (!a_targetRef)
 			return;
 
-		// TEST: Compare results across save files.
-		// a_targetRef->ResetInventory(false);
-
-		auto inventory = a_targetRef->GetInventory();
-		for (auto& [obj, data] : inventory) {
-		    auto& [count, entry] = data;
-		    if (count > 0 && entry) {
-		        a_targetRef->RemoveItem(obj, count, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
-				UserData::SendEvent(ModexActionType::RemoveItem, po3_GetEditorID(obj->GetFormID()), a_owner);
-		    }
-		}
+		SKSE::GetTaskInterface()->AddTask([a_owner, a_targetRef]() {
+			auto inventory = a_targetRef->GetInventory();
+			for (auto& [obj, data] : inventory) {
+				auto& [count, entry] = data;
+				if (count > 0 && entry) {
+					a_targetRef->RemoveItem(obj, count, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
+					UserData::SendEvent(ModexActionType::RemoveItem, po3_GetEditorID(obj->GetFormID()), a_owner);
+				}
+			}
+		});
 	}
 
 	static inline void RemoveItemFromInventory(Ownership a_owner, RE::TESObjectREFR* a_targetRef, const std::string& a_editorID, uint32_t a_amount = 1)
@@ -287,18 +292,20 @@ namespace Modex::Commands
 		if (!a_targetRef)
 			return;
 
-		auto form = RE::TESForm::LookupByEditorID(a_editorID);
+		SKSE::GetTaskInterface()->AddTask([a_owner, a_targetRef, a_editorID, a_amount]() {
+			auto form = RE::TESForm::LookupByEditorID(a_editorID);
 
-		if (!form)
-			return;
+			if (!form)
+				return;
 
-		auto boundObject = form->As<RE::TESBoundObject>();
+			auto boundObject = form->As<RE::TESBoundObject>();
 
-		if (!boundObject)
-			return;
-		
-		a_targetRef->RemoveItem(boundObject, a_amount, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
-		UserData::SendEvent(ModexActionType::RemoveItem, a_editorID, a_owner);
+			if (!boundObject)
+				return;
+
+			a_targetRef->RemoveItem(boundObject, a_amount, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
+			UserData::SendEvent(ModexActionType::RemoveItem, a_editorID, a_owner);
+		});
 	}
 
 	static inline void RemoveItemFromPlayerInventory(Ownership a_owner, const std::string& a_editorID, uint32_t a_amount = 1)
@@ -321,8 +328,10 @@ namespace Modex::Commands
 		if (!a_targetRef)
 			return;
 
-		a_targetRef->ResetInventory(false);
-		UserData::SendEvent(ModexActionType::ResetInventory, po3_GetEditorID(a_targetRef->GetFormID()), a_owner);
+		SKSE::GetTaskInterface()->AddTask([a_owner, a_targetRef]() {
+			a_targetRef->ResetInventory(false);
+			UserData::SendEvent(ModexActionType::ResetInventory, po3_GetEditorID(a_targetRef->GetFormID()), a_owner);
+		});
 	}
 
 	static inline void UnequipAllItemsFromInventory(Ownership a_owner, RE::TESObjectREFR* a_targetRef)
@@ -332,18 +341,20 @@ namespace Modex::Commands
 		if (!a_targetRef)
 			return;
 
-		auto actor = a_targetRef->As<RE::Actor>();
+		SKSE::GetTaskInterface()->AddTask([a_targetRef]() {
+			auto actor = a_targetRef->As<RE::Actor>();
 
-		if (!actor)
-			return;
+			if (!actor)
+				return;
 
-		auto inventory = a_targetRef->GetInventory();
-		for (auto& [obj, data] : inventory) {
-			auto& [count, entry] = data;
-			if (count > 0 && entry) {
-				RE::ActorEquipManager::GetSingleton()->UnequipObject(actor, obj, entry->extraLists ? entry->extraLists->front() : nullptr, count, nullptr);
+			auto inventory = a_targetRef->GetInventory();
+			for (auto& [obj, data] : inventory) {
+				auto& [count, entry] = data;
+				if (count > 0 && entry) {
+					RE::ActorEquipManager::GetSingleton()->UnequipObject(actor, obj, entry->extraLists ? entry->extraLists->front() : nullptr, count, nullptr);
+				}
 			}
-		}
+		});
 	}
 
     // Helper function for inventory item binding
@@ -391,34 +402,35 @@ namespace Modex::Commands
 		if (!a_targetRef)
 			return;
 
-		AddItemToInventory(a_owner, a_targetRef, a_editorID, a_amount);
-		
-		SKSE::GetTaskInterface()->AddTask([a_owner, a_targetRef, a_editorID]() {
-			auto actor = a_targetRef->As<RE::Actor>();
+		SKSE::GetTaskInterface()->AddTask([a_owner, a_targetRef, a_editorID, a_amount]() {
 			RE::TESForm* form = RE::TESForm::LookupByEditorID(a_editorID);
 
 			if (!form)
 				return;
 
-			RE::BGSEquipSlot* equipSlot = nullptr;
+			auto boundObject = form->As<RE::TESBoundObject>();
+
+			if (!boundObject)
+				return;
+
+			a_targetRef->AddObjectToContainer(boundObject, nullptr, a_amount, nullptr);
+			UserData::SendEvent(ModexActionType::AddItem, a_editorID, a_owner);
+
+			auto actor = a_targetRef->As<RE::Actor>();
+
+			if (!actor)
+				return;
+
 			RE::TESBoundObject* equipObject = nullptr;
 			RE::ExtraDataList* extraData = nullptr;
 
 			InventoryBoundObjects(a_targetRef, form, equipObject, extraData);
 
-			if (RE::TESObjectWEAP* weapon = form->As<RE::TESObjectWEAP>()) {
-				equipSlot = weapon->GetEquipSlot();
-			} else if (RE::TESObjectARMO* armor = form->As<RE::TESObjectARMO>()) {
-				equipSlot = armor->GetEquipSlot();
+			if (equipObject) {
+				actor->AddWornItem(equipObject, 1, false, 0, 0);
+				UserData::SendEvent(ModexActionType::EquipItem, a_editorID, a_owner);
 			}
-
-			// TEST: Compare against commented out method.
-			// RE::ActorEquipManager::GetSingleton()->EquipObject(actor, equipObject, extraData, 1, equipSlot);
-
-			actor->AddWornItem(equipObject, 1, false, 0, 0);
-			UserData::SendEvent(ModexActionType::EquipItem, a_editorID, a_owner);
 		});
-		
 	}
 
 	static inline void AddAndEquipItemToPlayerInventory(Ownership a_owner, const std::string& a_editorID)
@@ -436,6 +448,9 @@ namespace Modex::Commands
 		SKSE::GetTaskInterface()->AddTask([a_owner, a_editorID]() {
 			RE::TESForm* form = RE::TESForm::LookupByEditorID(a_editorID);
 
+			if (!form)
+				return;
+
 			const auto player = RE::PlayerCharacter::GetSingleton();
 
 			if (!player)
@@ -446,14 +461,18 @@ namespace Modex::Commands
 			if (!playerRef)
 				return;
 
-			Commands::AddItemToRefInventory(a_owner, playerRef, a_editorID);
+			// Add item directly (already on main thread).
+			auto boundObject = form->As<RE::TESBoundObject>();
 
-			if (!form) 
+			if (!boundObject)
 				return;
+
+			playerRef->AddObjectToContainer(boundObject, nullptr, 1, nullptr);
+			UserData::SendEvent(ModexActionType::AddItem, a_editorID, a_owner);
 
 			RE::TESObjectBOOK* book = form->As<RE::TESObjectBOOK>();
 
-			if (!book) 
+			if (!book)
 				return;
 
 			RE::NiPoint3 defaultPos{};
@@ -462,7 +481,7 @@ namespace Modex::Commands
 
 			RE::TESBoundObject* equipObject = nullptr;
 			RE::ExtraDataList* extraData = nullptr;
-			int found = InventoryBoundObjects(player->AsReference(), form, equipObject, extraData);
+			int found = InventoryBoundObjects(playerRef, form, equipObject, extraData);
 
 			if (found == 0)
 				return;
@@ -477,58 +496,70 @@ namespace Modex::Commands
 
 	static inline void TeleportNPCToPlayer(Ownership a_owner, uint32_t a_refID)
 	{
-		if (a_refID != 0) {
+		if (a_refID == 0)
+			return;
+
+		UIManager::GetSingleton()->Close();
+		SKSE::GetTaskInterface()->AddTask([a_owner, a_refID]() {
 			if (auto player = RE::PlayerCharacter::GetSingleton(); player) {
 				if (auto playerRefr = player->AsReference()) {
 					if (auto ref = RE::TESForm::LookupByID<RE::TESObjectREFR>(a_refID)) {
 						ref->MoveTo(playerRefr);
-						UserData::SendEvent(ModexActionType::BringReference, ref->GetFormID(), a_owner); 
-						UIManager::GetSingleton()->Close();
+						UserData::SendEvent(ModexActionType::BringReference, ref->GetFormID(), a_owner);
 					}
 				}
 			}
-		}
+		});
 	}
 
 	static inline void TeleportREFRToPlayer(Ownership a_owner, RE::TESObjectREFR* a_ref)
 	{
-		if (a_ref) {
+		if (!a_ref)
+			return;
+
+		UIManager::GetSingleton()->Close();
+		SKSE::GetTaskInterface()->AddTask([a_owner, a_ref]() {
 			if (auto player = RE::PlayerCharacter::GetSingleton(); player) {
 				if (auto playerRefr = player->AsReference()) {
 					a_ref->MoveTo(playerRefr);
-					UserData::SendEvent(ModexActionType::BringReference, a_ref->GetFormID(), a_owner); 
-					UIManager::GetSingleton()->Close();
+					UserData::SendEvent(ModexActionType::BringReference, a_ref->GetFormID(), a_owner);
 				}
 			}
-		}
+		});
 	}
 
 	static inline void TeleportPlayerToREFR(Ownership a_owner, RE::TESObjectREFR* a_ref)
 	{
-		if (a_ref) {
+		if (!a_ref)
+			return;
+
+		UIManager::GetSingleton()->Close();
+		SKSE::GetTaskInterface()->AddTask([a_owner, a_ref]() {
 			if (auto player = RE::PlayerCharacter::GetSingleton(); player) {
 				if (auto playerRefr = player->AsReference()) {
 					playerRefr->MoveTo(a_ref);
-					UserData::SendEvent(ModexActionType::GotoReference, a_ref->GetFormID(), a_owner); 
-					UIManager::GetSingleton()->Close();
+					UserData::SendEvent(ModexActionType::GotoReference, a_ref->GetFormID(), a_owner);
 				}
 			}
-		}
+		});
 	}
 
 	static inline void TeleportPlayerToNPC(Ownership a_owner, uint32_t a_refID)
 	{
-		if (a_refID != 0) {
+		if (a_refID == 0)
+			return;
+
+		UIManager::GetSingleton()->Close();
+		SKSE::GetTaskInterface()->AddTask([a_owner, a_refID]() {
 			if (auto player = RE::PlayerCharacter::GetSingleton(); player) {
 				if (auto playerRefr = player->AsReference()) {
 					if (auto ref = RE::TESForm::LookupByID<RE::TESObjectREFR>(a_refID)) {
 						playerRefr->MoveTo(ref);
 						UserData::SendEvent(ModexActionType::GotoReference, ref->GetFormID(), a_owner);
-						UIManager::GetSingleton()->Close();
 					}
 				}
 			}
-		}
+		});
 	}
 
 	static inline void AddOutfitItemsToInventory(Ownership a_owner, RE::TESObjectREFR* a_targetRef, RE::BGSOutfit* a_outfit, uint16_t a_level = 0)
@@ -536,13 +567,15 @@ namespace Modex::Commands
 		if (!a_targetRef || !a_outfit)
 			return;
 
-		auto resolved = ResolveOutfitItems(a_outfit, a_targetRef, a_level);
+		SKSE::GetTaskInterface()->AddTask([a_owner, a_targetRef, a_outfit, a_level]() {
+			auto resolved = ResolveOutfitItems(a_outfit, a_targetRef, a_level);
 
-		for (auto& entry : resolved) {
-			a_targetRef->AddObjectToContainer(entry.object, nullptr, entry.count, nullptr);
-		}
+			for (auto& entry : resolved) {
+				a_targetRef->AddObjectToContainer(entry.object, nullptr, entry.count, nullptr);
+			}
 
-		UserData::SendEvent(ModexActionType::AddItem, po3_GetEditorID(a_outfit->GetFormID()), a_owner);
+			UserData::SendEvent(ModexActionType::AddItem, po3_GetEditorID(a_outfit->GetFormID()), a_owner);
+		});
 	}
 
 	// RE::Actor::AddWornOutfit doesn't behave as expected. Using alternative implementation with
@@ -552,15 +585,13 @@ namespace Modex::Commands
 		if (!a_targetRef || !a_outfit)
 			return;
 
-		// Resolve once, add to inventory, then equip from the resolved list.
-		auto resolved = ResolveOutfitItems(a_outfit, a_targetRef, a_level);
+		SKSE::GetTaskInterface()->AddTask([a_owner, a_targetRef, a_outfit, a_level]() {
+			auto resolved = ResolveOutfitItems(a_outfit, a_targetRef, a_level);
 
-		for (auto& entry : resolved) {
-			a_targetRef->AddObjectToContainer(entry.object, nullptr, entry.count, nullptr);
-		}
+			for (auto& entry : resolved) {
+				a_targetRef->AddObjectToContainer(entry.object, nullptr, entry.count, nullptr);
+			}
 
-		// Queued task to allow game to catch up with inventory events (unsure).
-		SKSE::GetTaskInterface()->AddTask([a_targetRef, resolved]() {
 			auto actor = a_targetRef->As<RE::Actor>();
 			if (!actor)
 				return;
@@ -574,67 +605,67 @@ namespace Modex::Commands
 					actor->AddWornItem(equipObject, 1, false, 0, 0);
 				}
 			}
+
+			UserData::SendEvent(ModexActionType::EquipOutfit, po3_GetEditorID(a_outfit->GetFormID()), a_owner);
 		});
-
-		UserData::SendEvent(ModexActionType::EquipOutfit, po3_GetEditorID(a_outfit->GetFormID()), a_owner);
-
 	}
 
 	// TEST: What happens when we call this on Player?
 	static inline void SetSleepOutfitOnActor(Ownership a_owner, RE::TESObjectREFR* a_targetRef, RE::BGSOutfit* a_outfit)
 	{
-		(void) a_owner;
-
 		if (!a_targetRef || !a_outfit)
 			return;
 
-		if (auto npc = a_targetRef->As<RE::Actor>()) {
-			if (auto base = npc->GetActorBase()) {
-				base->sleepOutfit = a_outfit;
+		SKSE::GetTaskInterface()->AddTask([a_owner, a_targetRef, a_outfit]() {
+			if (auto npc = a_targetRef->As<RE::Actor>()) {
+				if (auto base = npc->GetActorBase()) {
+					base->sleepOutfit = a_outfit;
+				}
 			}
-		}
 
-		UserData::SendEvent(ModexActionType::SetSleepOutfit, po3_GetEditorID(a_outfit->GetFormID()), a_owner);
+			UserData::SendEvent(ModexActionType::SetSleepOutfit, po3_GetEditorID(a_outfit->GetFormID()), a_owner);
+		});
 	}
 
-	// TEST: Is this okay being applied to the actor base?
 	static inline void SetDefaultOutfitOnActor(Ownership a_owner, RE::TESObjectREFR* a_targetRef, RE::BGSOutfit* a_outfit)
 	{
-		(void)a_owner;
-
 		if (!a_targetRef || !a_outfit)
 			return;
 
-		if (auto npc = a_targetRef->As<RE::Actor>()) {
-			if (auto base = npc->GetActorBase()) {
-				base->defaultOutfit = a_outfit;
+		SKSE::GetTaskInterface()->AddTask([a_owner, a_targetRef, a_outfit]() {
+			if (auto npc = a_targetRef->As<RE::Actor>()) {
+				if (auto base = npc->GetActorBase()) {
+					base->defaultOutfit = a_outfit;
+				}
 			}
-		}
 
-		UserData::SendEvent(ModexActionType::SetDefaultOutfit, po3_GetEditorID(a_outfit->GetFormID()), a_owner);
+			UserData::SendEvent(ModexActionType::SetDefaultOutfit, po3_GetEditorID(a_outfit->GetFormID()), a_owner);
+		});
 	}
 
-	static inline void PlaceAtMe(Ownership a_owner, const std::string& a_editorID, uint32_t a_count = 1, bool persistent = true, bool disabled = false) 
+	static inline void PlaceAtMe(Ownership a_owner, const std::string& a_editorID, uint32_t a_count = 1, bool persistent = true, bool disabled = false)
 	{
-		auto player = RE::PlayerCharacter::GetSingleton();
-		if (!player) 
-			return;
-
-		auto target = player->AsReference();
-		if (!target) 
-			return;
-
 		if (a_editorID.empty())
 			return;
-		
-		if (RE::TESForm* object = RE::TESForm::LookupByEditorID(a_editorID); object) {
-			auto newObject = Papyrus_PlaceAtMe(target, object, a_count, persistent, disabled);
-			if (newObject) {
-				UserData::SendEvent(ModexActionType::PlaceAtMe, newObject->GetFormID(), a_owner);
-			} else {
-				Error("Failed to resolve new object from Papyrus_PlaceAtMe func: {}", a_editorID);
+
+		SKSE::GetTaskInterface()->AddTask([a_owner, a_editorID, a_count, persistent, disabled]() {
+			auto player = RE::PlayerCharacter::GetSingleton();
+			if (!player)
+				return;
+
+			auto target = player->AsReference();
+			if (!target)
+				return;
+
+			if (RE::TESForm* object = RE::TESForm::LookupByEditorID(a_editorID); object) {
+				auto newObject = Papyrus_PlaceAtMe(target, object, a_count, persistent, disabled);
+				if (newObject) {
+					UserData::SendEvent(ModexActionType::PlaceAtMe, newObject->GetFormID(), a_owner);
+				} else {
+					Error("Failed to resolve new object from Papyrus_PlaceAtMe func: {}", a_editorID);
+				}
 			}
-		}
+		});
 	}
 
 	static inline void KillRefr(Ownership a_owner, RE::TESObjectREFR* a_targetRef)
@@ -642,13 +673,15 @@ namespace Modex::Commands
 		if (!a_targetRef)
 			return;
 
-		auto actor = a_targetRef->As<RE::Actor>();
+		SKSE::GetTaskInterface()->AddTask([a_owner, a_targetRef]() {
+			auto actor = a_targetRef->As<RE::Actor>();
 
-		if (!actor)
-			return;
+			if (!actor)
+				return;
 
-		actor->KillImpl(nullptr, actor->GetActorValueMax(RE::ActorValue::kHealth), true, true);
-		UserData::SendEvent(ModexActionType::KillActor, a_targetRef->GetFormID(), a_owner); 
+			actor->KillImpl(nullptr, actor->GetActorValueMax(RE::ActorValue::kHealth), true, true);
+			UserData::SendEvent(ModexActionType::KillActor, a_targetRef->GetFormID(), a_owner);
+		});
 	}
 
 	static inline void ResurrectRefr(Ownership a_owner, RE::TESObjectREFR* a_targetRef)
@@ -656,13 +689,15 @@ namespace Modex::Commands
 		if (!a_targetRef)
 			return;
 
-		auto actor = a_targetRef->As<RE::Actor>();
+		SKSE::GetTaskInterface()->AddTask([a_owner, a_targetRef]() {
+			auto actor = a_targetRef->As<RE::Actor>();
 
-		if (!actor)
-			return;
+			if (!actor)
+				return;
 
-		actor->Resurrect(false, true);
-		UserData::SendEvent(ModexActionType::ReviveActor, a_targetRef->GetFormID(), a_owner); 
+			actor->Resurrect(false, true);
+			UserData::SendEvent(ModexActionType::ReviveActor, a_targetRef->GetFormID(), a_owner);
+		});
 	}
 
 	static inline void DisableRefr(Ownership a_owner, RE::TESObjectREFR* a_targetRef)
@@ -670,8 +705,10 @@ namespace Modex::Commands
 		if (!a_targetRef)
 			return;
 
-		a_targetRef->Disable();
-		UserData::SendEvent(ModexActionType::DisableReference, a_targetRef->GetFormID(), a_owner); 
+		SKSE::GetTaskInterface()->AddTask([a_owner, a_targetRef]() {
+			a_targetRef->Disable();
+			UserData::SendEvent(ModexActionType::DisableReference, a_targetRef->GetFormID(), a_owner);
+		});
 	}
 
 	static inline void EnableRefr(Ownership a_owner, RE::TESObjectREFR* a_targetRef, bool a_resetInventory = false)
@@ -679,8 +716,10 @@ namespace Modex::Commands
 		if (!a_targetRef)
 			return;
 
-		a_targetRef->Enable(a_resetInventory);
-		UserData::SendEvent(ModexActionType::EnableReference, a_targetRef->GetFormID(), a_owner);
+		SKSE::GetTaskInterface()->AddTask([a_owner, a_targetRef, a_resetInventory]() {
+			a_targetRef->Enable(a_resetInventory);
+			UserData::SendEvent(ModexActionType::EnableReference, a_targetRef->GetFormID(), a_owner);
+		});
 	}
 
 	static inline void CenterOnCell(Ownership a_owner, const std::string& a_cellEditorID)
