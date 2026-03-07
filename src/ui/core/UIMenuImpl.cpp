@@ -311,14 +311,6 @@ namespace Modex
 			UIManager::GetSingleton()->AddScrollEvent(0, -1.0f);
 			return;
 		}
-		else if (scanCode == showMenu[0] && down) {
-			if ((showMenu[1] == 0) || (showMenu[1] != 0 && modifier)) {
-				if (!ImGui::GetIO().WantCaptureKeyboard) {
-					UIManager::GetSingleton()->PopWindow();
-					return;
-				}
-			}
-		}
 
 		ImGui::GetIO().AddKeyEvent(imguiKey, down);
 	}
