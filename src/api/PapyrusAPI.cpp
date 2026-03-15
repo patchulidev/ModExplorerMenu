@@ -65,13 +65,7 @@ namespace Modex::PapyrusAPI
 			a_count = 1;
 		}
 
-		auto editorID = po3_GetEditorID(a_form->GetFormID());
-		if (editorID.empty()) {
-			Warn("Modex.RemoveItemFromPlayer: could not resolve editor ID for form {:08X}", a_form->GetFormID());
-			return;
-		}
-
-		Commands::RemoveItemFromPlayerInventory(Ownership::None, editorID, static_cast<uint32_t>(a_count));
+		Commands::RemoveItemFromPlayerInventory(Ownership::None, a_form->GetFormID(), static_cast<uint32_t>(a_count));
 	}
 
 	/// NPC / Reference Actions
@@ -226,15 +220,15 @@ namespace Modex::PapyrusAPI
 
 	// Selection buffer. Populated by the callback, consumed once by GetSelectedForms().
 	// Both writes (via AddTask) and reads (via Papyrus VM) run on the game thread.
-	static std::vector<RE::FormID> s_selectedForms;
+	static std::vector<uint32_t> s_selectedForms;
 
 	// Static callback for the form selector. Fires an SKSE ModEvent so
 	// Papyrus scripts can react to the selection via RegisterForModEvent.
 	// Runs on the render thread, so we defer to the game thread via AddTask.
-	static void FormSelectorModEventCallback(const RE::FormID* a_formIDs, uint32_t a_count)
+	static void FormSelectorModEventCallback(const uint32_t* a_formIDs, uint32_t a_count)
 	{
 		// Copy form IDs for deferred dispatch (pointer may not survive past this frame).
-		std::vector<RE::FormID> ids;
+		std::vector<uint32_t> ids;
 		if (a_formIDs && a_count > 0) {
 			ids.assign(a_formIDs, a_formIDs + a_count);
 		}

@@ -101,8 +101,8 @@ namespace ModexAPI
 	// String pointers are valid for the lifetime of the Modex cache (until game exit).
 	struct FormEntry
 	{
-		RE::FormID  formID;
-		RE::FormID  refID;
+		uint32_t  formID;
+		uint32_t  refID;
 		RE::FormType formType;
 		const char* name;
 		const char* editorID;
@@ -134,58 +134,55 @@ namespace ModexAPI
 		virtual void UpdateSettings() = 0;
 
 		/// Add the specified FormID/EditorID to the player's inventory directly.
-		virtual void AddItemToPlayer(RE::FormID a_formID, uint32_t a_amount = 1) = 0;
-		virtual void AddItemToPlayer(const char* a_editorID, uint32_t a_amount = 1) = 0;
+		virtual void AddItemToPlayer(uint32_t a_formID, uint32_t a_amount = 1) = 0;
 
 		/// Add the specified FormID/EditorID to the reference FormID inventory.
-		virtual void AddItemToInventory(RE::FormID a_formID, RE::FormID a_targetReference, uint32_t a_amount = 1) = 0;
-		virtual void AddItemToInventory(const char* a_editorID, RE::FormID a_targetReference, uint32_t a_amount = 1) = 0;
+		virtual void AddItemToInventory(uint32_t a_formID, uint32_t a_targetReference, uint32_t a_amount = 1) = 0;
 
 		/// Add & Resolve a LeveledList FormID/EditorID to the target reference.
-		virtual void AddLeveledListToInventory(RE::FormID a_formID, RE::FormID a_targetReference, uint16_t a_amount = 1) = 0;
-		virtual void AddLeveledListToInventory(const char* a_editorID, RE::FormID a_targetReference, uint16_t a_amount = 1) = 0;
+		virtual void AddLeveledListToInventory(uint32_t a_formID, uint32_t a_targetReference, uint16_t a_amount = 1) = 0;
 
 		/// Incrementally remove all items from the specified reference inventory.
-		virtual void RemoveAllItems(RE::FormID a_targetReference) = 0;
+		virtual void RemoveAllItems(uint32_t a_targetReference) = 0;
 
 		/// Opens the virtual Modex container used when showing results in-game.
 		virtual void OpenModexContainer() = 0;
 
 		/// Opens the reference FormID's inventory. Internally handled invalid arguments passed.
-		virtual void OpenInventory(RE::FormID a_targetReference) = 0;
+		virtual void OpenInventory(uint32_t a_targetReference) = 0;
 
 		/// Returns the number of cached forms in the given category.
 		virtual unsigned int GetCachedFormCount(CacheType a_type) = 0;
 
 		/// Returns true if the given form ID exists in the specified cache.
-		virtual bool IsFormCached(RE::FormID a_formID, CacheType a_type) = 0;
+		virtual bool IsFormCached(uint32_t a_formID, CacheType a_type) = 0;
 
 		/// Remove the specified EditorID from the target reference's inventory.
-		virtual void RemoveItem(const char* a_editorID, RE::FormID a_targetReference, uint32_t a_amount = 1) = 0;
+		virtual void RemoveItem(uint32_t a_formID, uint32_t a_targetReference, uint32_t a_amount = 1) = 0;
 
 		/// Spawn the specified EditorID at the player's location.
-		virtual void PlaceAtMe(const char* a_editorID, uint32_t a_count = 1, bool a_persistent = true, bool a_disabled = false) = 0;
+		virtual void PlaceAtMe(uint32_t a_formID, uint32_t a_count = 1, bool a_persistent = true, bool a_disabled = false) = 0;
 
 		/// Teleport the player to the specified NPC reference.
-		virtual void TeleportPlayerToNPC(RE::FormID a_refID) = 0;
+		virtual void TeleportPlayerToNPC(uint32_t a_refID) = 0;
 
 		/// Teleport the specified NPC reference to the player.
-		virtual void TeleportNPCToPlayer(RE::FormID a_refID) = 0;
+		virtual void TeleportNPCToPlayer(uint32_t a_refID) = 0;
 
 		/// Teleport the player to the specified cell by editor ID.
 		virtual void CenterOnCell(const char* a_cellEditorID) = 0;
 
 		/// Kill the actor at the specified reference.
-		virtual void KillActor(RE::FormID a_refID) = 0;
+		virtual void KillActor(uint32_t a_refID) = 0;
 
 		/// Resurrect the actor at the specified reference.
-		virtual void ResurrectActor(RE::FormID a_refID) = 0;
+		virtual void ResurrectActor(uint32_t a_refID) = 0;
 
 		/// Disable the specified reference.
-		virtual void DisableReference(RE::FormID a_refID) = 0;
+		virtual void DisableReference(uint32_t a_refID) = 0;
 
 		/// Enable the specified reference.
-		virtual void EnableReference(RE::FormID a_refID, bool a_resetInventory = false) = 0;
+		virtual void EnableReference(uint32_t a_refID, bool a_resetInventory = false) = 0;
 
 		/// Opens the Modex menu. No-op if already open.
 		virtual void OpenMenu() = 0;
@@ -201,7 +198,7 @@ namespace ModexAPI
 		/// @param a_type     The category of forms to display (Item, NPC, Cell, etc).
 		/// @param a_callback Called with an array of selected FormIDs and the count.
 		///                   The pointer is valid only for the duration of the callback.
-		virtual void OpenFormSelector(CacheType a_type, void (*a_callback)(const RE::FormID* a_formIDs, uint32_t a_count)) = 0;
+		virtual void OpenFormSelector(CacheType a_type, void (*a_callback)(const uint32_t* a_formIDs, uint32_t a_count)) = 0;
 
 		/// Copies cached form entries into a user-provided buffer.
 		/// @param a_type      The cache category to read from.
@@ -217,35 +214,35 @@ namespace ModexAPI
 		/// @param a_outBuffer Buffer to write the result string into.
 		/// @param a_bufferSize Size of the output buffer in bytes.
 		/// @return           True if the form was found and the property was written.
-		virtual bool GetFormProperty(RE::FormID a_formID, CacheType a_type, PropertyType a_property, char* a_outBuffer, uint32_t a_bufferSize) = 0;
+		virtual bool GetFormProperty(uint32_t a_formID, CacheType a_type, PropertyType a_property, char* a_outBuffer, uint32_t a_bufferSize) = 0;
 
 		/// Opens the Form Selector UI with custom options.
 		/// @param a_type     The category of forms to display.
 		/// @param a_options  Configuration options for the selector behavior.
 		/// @param a_callback Called with an array of selected FormIDs and the count.
-		virtual void OpenFormSelector(CacheType a_type, const FormSelectorOptions& a_options, void (*a_callback)(const RE::FormID* a_formIDs, uint32_t a_count)) = 0;
+		virtual void OpenFormSelector(CacheType a_type, const FormSelectorOptions& a_options, void (*a_callback)(const uint32_t* a_formIDs, uint32_t a_count)) = 0;
 
 		/// Resolve an outfit's items and add them to the target reference's inventory.
 		/// @param a_outfitFormID The FormID of the BGSOutfit to resolve.
 		/// @param a_targetReference The reference to receive the items.
 		/// @param a_level Level override for leveled list resolution (0 = use target's level).
-		virtual void AddOutfitToInventory(RE::FormID a_outfitFormID, RE::FormID a_targetReference, uint16_t a_level = 0) = 0;
+		virtual void AddOutfitToInventory(uint32_t a_outfitFormID, uint32_t a_targetReference, uint16_t a_level = 0) = 0;
 
 		/// Resolve an outfit's items, add them to the target, and equip them.
 		/// @param a_outfitFormID The FormID of the BGSOutfit to resolve and equip.
 		/// @param a_targetReference The actor reference to equip on.
 		/// @param a_level Level override for leveled list resolution (0 = use target's level).
-		virtual void EquipOutfit(RE::FormID a_outfitFormID, RE::FormID a_targetReference, uint16_t a_level = 0) = 0;
+		virtual void EquipOutfit(uint32_t a_outfitFormID, uint32_t a_targetReference, uint16_t a_level = 0) = 0;
 
 		/// Set the default outfit on the target actor's base record.
 		/// @param a_outfitFormID The FormID of the BGSOutfit to assign.
 		/// @param a_targetReference The actor reference whose base record to modify.
-		virtual void SetDefaultOutfit(RE::FormID a_outfitFormID, RE::FormID a_targetReference) = 0;
+		virtual void SetDefaultOutfit(uint32_t a_outfitFormID, uint32_t a_targetReference) = 0;
 
 		/// Set the sleep outfit on the target actor's base record.
 		/// @param a_outfitFormID The FormID of the BGSOutfit to assign.
 		/// @param a_targetReference The actor reference whose base record to modify.
-		virtual void SetSleepOutfit(RE::FormID a_outfitFormID, RE::FormID a_targetReference) = 0;
+		virtual void SetSleepOutfit(uint32_t a_outfitFormID, uint32_t a_targetReference) = 0;
 	};
 
 }  // namespace ModexAPI
