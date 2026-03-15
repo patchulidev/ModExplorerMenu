@@ -11,6 +11,7 @@
         "kNone",
         "kFormType",
         "kCarryWeight",
+		"kGoldValue",
         "<separator>",
         "kWeaponDamage",
         "kWeaponType",
