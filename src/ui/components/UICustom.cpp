@@ -199,10 +199,12 @@ namespace Modex::UICustom
 		}
 
 		std::string current_item;
-		if (!a_items.empty() && Locale::GetSingleton()->HasEntry(a_items[a_currentItem].c_str())) {
-			current_item = Translate(a_items[a_currentItem].c_str());
-		} else { // BUG: We should probably re-do this instead of relying on it as an assertion.
-			current_item = a_items[a_currentItem];
+		if (!a_items.empty()) {
+			if (Locale::GetSingleton()->HasEntry(a_items[a_currentItem].c_str())) {
+				current_item = Translate(a_items[a_currentItem].c_str());
+			} else {
+				current_item = a_items[a_currentItem];
+			}
 		}
 
 		current_item = TRUNCATE(current_item, a_width * 0.8f);

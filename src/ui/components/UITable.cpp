@@ -1014,7 +1014,6 @@ namespace Modex
 		UpdateImGuiTableIDs();
 	}
 
-
 	void UITable::BuildPluginList()
 	{
 		const auto& config = UserConfig::Get();
@@ -1054,12 +1053,14 @@ namespace Modex
 		ImGui::Text(" " ICON_LC_ARROW_LEFT_RIGHT " ");
 		ImGui::SameLine();
 		
-		const auto input_flags = useQuickSearch ? ImGuiInputTextFlags_AutoSelectAll :
+		const bool force_quick = HasFlag(ModexTableFlag_APIMode) ? true : useQuickSearch;
+		const auto input_flags = force_quick ? ImGuiInputTextFlags_AutoSelectAll :
 		ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue;
+		const std::string& search_hint = TRUNCATE(Translate("TABLE_SEARCH_HINT"), input_width * 0.80f).c_str();
 
 		static bool key_hovered;
 		ImGui::PushStyleColor(ImGuiCol_FrameBg, key_hovered ? ThemeConfig::GetHover("BG_LIGHT") : ThemeConfig::GetColor("BG_LIGHT"));
-		if (UICustom::FancyInputText("##Search::Input::Compare", "TABLE_SEARCH_HINT", "TABLE_SEARCH_TOOLTIP", searchSystem->GetSearchBuffer(), input_width, input_flags)) {
+		if (UICustom::FancyInputText("##Search::Input::Compare", search_hint.c_str(), "TABLE_SEARCH_TOOLTIP", searchSystem->GetSearchBuffer(), input_width, input_flags)) {
 			this->Refresh();
 		}
 		ImGui::PopStyleColor();
@@ -1515,8 +1516,26 @@ namespace Modex
 		}
 	}
 
+	// NOTE:: APIMode Input Amount adds duplicates for consistent papyrus API usage. Avoids adding
+	// another parameter we have to manage across instances (count).
+
 	void UITable::HandleLeftClickBehavior(const std::unique_ptr<BaseObject>& a_item)
-	{		
+	{
+		if (HasFlag(ModexTableFlag_APIMode)) {
+			if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && m_selectionChangedCallback) {
+				UICustom::InputAmountHandler(ImGui::GetIO().KeyShift, [&a_item, this](uint32_t amount = 1) {
+					for (uint32_t i = 0; i < amount; i++) {
+						m_selectionChangedCallback({ a_item->GetBaseFormID() });
+					}
+				});
+
+				ImGuiIO& io = ImGui::GetIO();
+				io.MouseClickedTime[ImGuiMouseButton_Left] = -FLT_MAX;
+				io.MouseClickedCount[ImGuiMouseButton_Left] = 0;
+			}
+			return;
+		}
+
 		if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
 			if (a_item->IsItem() && !Commands::IsGameMenuOpen()) {
 				UICustom::InputAmountHandler(ImGui::GetIO().KeyShift, [&a_item, this](uint32_t amount = 1) {
@@ -1547,6 +1566,44 @@ namespace Modex
 
 	void UITable::HandleRightClickBehavior(const std::unique_ptr<BaseObject>& a_item)
 	{
+		if (HasFlag(ModexTableFlag_APIMode)) {
+			if (ImGui::IsItemClicked(ImGuiMouseButton_Right)) {
+				if (!selectionStorage.Contains(a_item->m_tableID)) {
+					selectionStorage.Clear();
+				}
+
+				if (!a_item->IsDummy()) {
+					ImGui::OpenPopup("APIModeContextMenu");
+				}
+			}
+
+			if (ImGui::BeginPopup("APIModeContextMenu")) {
+				if (ImGui::MenuItem(Translate("ADD_SELECTION"))) {
+					if (m_selectionChangedCallback) {
+						UICustom::InputAmountHandler(ImGui::GetIO().KeyShift, [&](uint32_t amount = 1) {
+							std::vector<RE::FormID> selectedIDs;
+							void* it = NULL;
+							ImGuiID id = 0;
+							while (selectionStorage.GetNextSelectedItem(&it, &id)) {
+								if (id < tableList.size()) {
+									selectedIDs.push_back(tableList[id]->GetBaseFormID());
+								}
+							}
+							if (selectedIDs.empty()) {
+								selectedIDs.push_back(a_item->GetBaseFormID());
+							}
+
+							for (uint32_t i = 0; i < amount; i++) {
+								m_selectionChangedCallback(selectedIDs);
+							}
+						});
+					}
+				}
+				ImGui::EndPopup();
+			}
+
+			return;
+		}
 
 		static const int click_amount = 1; // TODO revisit this
 
@@ -1772,6 +1829,22 @@ namespace Modex
 			selectionStorage.Clear();
 			itemPreview = nullptr;
 			return;
+		}
+
+		if (HasFlag(ModexTableFlag_APIMode)) {
+			if (ImGui::Shortcut(ImGuiKey_Enter, ImGuiInputFlags_RouteFromRootWindow) && m_selectionChangedCallback) {
+				std::vector<RE::FormID> selectedIDs;
+				void* it = NULL;
+				ImGuiID id = 0;
+				while (selectionStorage.GetNextSelectedItem(&it, &id)) {
+					if (id < a_tableList.size()) {
+						selectedIDs.push_back(a_tableList[id]->GetBaseFormID());
+					}
+				}
+				if (!selectedIDs.empty()) {
+					m_selectionChangedCallback(selectedIDs);
+				}
+			}
 		}
 
 		// HACK: This is a result of IMenu impl key behavior. Could do ControlMap fixes, but nty.
@@ -2755,7 +2828,10 @@ namespace Modex
 	void UITable::Draw(const TableList& _tableList)
 	{
 		UpdateLayout();
-		DrawStatusBar();
+
+		if (!HasFlag(ModexTableFlag_APIMode)) {
+			DrawStatusBar();
+		}
 
 		if (HasFlag(ModexTableFlag_EnableSearch)) {
 			DrawSearchBar();
@@ -2942,7 +3018,7 @@ namespace Modex
 			ms_io = ImGui::EndMultiSelect();
 			selectionStorage.ApplyRequests(ms_io);
 		}
-		
+
 		ImGui::EndChild();
 
 		HandleDragDropBehavior();

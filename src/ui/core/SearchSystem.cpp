@@ -31,6 +31,14 @@ namespace Modex
 			return m_initialized = true;
 		}
 
+		if (m_availableSearchKeys.empty()) {
+			m_availableSearchKeys.emplace_back(PropertyType::kName);
+			m_availableSearchKeys.emplace_back(PropertyType::kEditorID);
+			m_availableSearchKeys.emplace_back(PropertyType::kFormID);
+
+			SetupDefaultKey();
+		}
+
 		// If we ensure JSON creation (a_create == true), we assume that the absence of SearchProperty is an error!
 		ASSERT_MSG(a_create, "No SearchProperty found in JSON.\nFile: {}", m_file_path.string());
 

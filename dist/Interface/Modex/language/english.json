@@ -38,6 +38,9 @@
 "OFF": "OFF",
 "NONE": "None",
 "COPY": "Copy",
+"COST": "Total Cost",
+"MAX_COST": "Max Cost:",
+"RESULTS": "Results",
 
 "_MODULES": "======== Module / Sidebar Labels ========",
 "MODULE_HOME": "Home",
@@ -71,6 +74,7 @@
 "TABLE_ACTOR": "Actor Table",
 "TABLE_CELL": "Cell Table",
 "TABLE_OUTFIT": "Outfit Table",
+"TABLE_FORMSELECTOR": "Form Selection Menu",
 
 "_FILTER_MODES": "======== Filter / View Modes ========",
 "SHOWALL": "All",
@@ -190,6 +194,12 @@
 "CONTAINER_VIEW_TARGET_TOOLTIP": "Target Container\n\nRemotely open and access the Inventory of the currently targeted Actor or Container in-game.",
 "CONTAINER_VIEW_SELECTION": "Open Selected Inventory",
 "CONTAINER_VIEW_SELECTION_TOOLTIP": "Selected Inventory\n\nRemotely open and access the Inventory of the currently selected Actor from the visible table.\n\nMay provide inconsistent results for Non-unique actors that may have multiple references such as Bandits. (WIP)",
+
+"_FORMSELECTOR": "======== Form Selector ========",
+"SELECTION": "Selection",
+"CLEAR": "Clear",
+"API_SELECTION_HINT_1": "Double Click to Add",
+"API_SELECTION_HINT_2": "Select Multiple -> Right Click",
 
 "_BULK_ACTIONS": "======== Bulk Actions ========",
 "ADD_ALL": "Add All",
@@ -360,6 +370,8 @@
 "ERROR_MAX_QUERY": "The task you're performing exceeds your specified limit in Modex settings. This may result in undesirable behavior such as high performance impacts and stability concerns\n\nThis warning is to prevent accidentally servicing large tasks due to your selection or current search results.",
 "ERROR_PLUGIN_NAME": "ERROR: Invalid Plugin Name",
 "ERROR_FORM_NAME": "ERROR: Invalid Form Name",
+"ERROR_MODEX_API": "Failed to load Modex API",
+"INVALID_MODEX_DATA": "Waiting for Modex to finish caching...",
 "DUMMY_OBJECT_INFO": "Dummy Object: This form was previously valid, but could not be resolved. This could be due to a missing plugin, update, or once valid reference being nonexistent.",
 "INVALID_REFERENCE_POPUP_TITLE": "Could not locate FormID: ",
 "INVALID_REFERENCE_POPUP_DESC": "Modex could not resolve a valid Target Reference from your input. Try again, and ensure proper formatting is used.\n\nIf this is unexpected, you can use the in-game Console to select your target. Then press <C> while hovering the status bar to assign a Target Reference from your Console selection.\n\nIf all else fails, you can press <T> while hovering the status bar to quickly assign the Player reference.",

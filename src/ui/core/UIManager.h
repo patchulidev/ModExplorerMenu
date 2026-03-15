@@ -4,6 +4,7 @@
 #include "config/Keycodes.h"
 #include "ui/core/UIMenuImpl.h"
 #include "ui/components/UIWindow.h"
+#include "ui/modules/formselector/FormSelectorOptions.h"
 
 namespace Modex
 {
@@ -21,6 +22,13 @@ namespace Modex
 		bool                          m_menuListener = false;
 		bool                          m_wantTextInput = true;
 		bool                          m_queueOpen = false;
+		bool                          m_APIWindow = false;
+
+		using FormSelectorCallback = void (*)(const RE::FormID* a_formIDs, uint32_t a_count);
+		FormSelectorCallback          m_formSelectorCallback = nullptr;
+		Ownership                     m_formSelectorOwnership = Ownership::Item;
+		FormSelectorOptions           m_formSelectorOptions;
+		bool                          m_formSelectorFired = false;
 
 		HWND                          m_hWnd = nullptr;
 		std::atomic<bool>             m_initialized = false;
@@ -78,6 +86,9 @@ namespace Modex
 		void ShowBrowser(const std::string& a_title, const std::vector<std::string>& a_items, std::function<void(const std::string&)> onSelectCallback = nullptr);
 		void ShowInfoBox(const std::string& a_title, const std::string& a_message);
 		void NavigateToModule(uint8_t a_moduleIndex);
+		void OpenFormSelector(Ownership a_ownership, FormSelectorCallback a_callback, const FormSelectorOptions& a_options = {});
+		FormSelectorOptions& GetFormSelectorOptions() { return m_formSelectorOptions; }
+		FormSelectorCallback GetFormSelectorCallback() const { return m_formSelectorCallback; }
 
 		template<typename T>
 		UIWindow* GetPopupWindowRef() const;

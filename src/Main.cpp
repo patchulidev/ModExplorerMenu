@@ -13,6 +13,8 @@
 #include "config/ThemeConfig.h"
 #include "config/EquipmentConfig.h"
 #include "config/BlacklistConfig.h"
+#include "api/ModexInterface.h"
+#include "api/PapyrusAPI.h"
 
 namespace
 {
@@ -46,11 +48,17 @@ namespace
 
 			Modex::Data::GetSingleton()->Run();
 			Modex::PrettyLog::Info("Data Manager Initialized.");
-			
+
+			Modex::ModexInterface::SetDataReady(true);
+			Modex::PrettyLog::Info("Modex API Ready.");
+
 			Modex::PrettyLog::Info("Done!");
 			Modex::PrettyLog::ReportSummary();
 			break;
 		case SKSE::MessagingInterface::kPostLoad:
+			SKSE::GetMessagingInterface()->RegisterListener(nullptr, [](SKSE::MessagingInterface::Message* msg) {
+				Modex::ModexInterface::HandleInterfaceRequest(msg);
+			});
 			break;
 		case SKSE::MessagingInterface::kPostPostLoad:
 			Hooks::Install();
@@ -86,6 +94,7 @@ SKSEPluginLoad(const SKSE::LoadInterface* a_skse)
 	SetupLog();
 
 	SKSE::GetMessagingInterface()->RegisterListener(MessageHandler);
+	SKSE::GetPapyrusInterface()->Register(Modex::PapyrusAPI::Register);
 
 	return true;
 }
