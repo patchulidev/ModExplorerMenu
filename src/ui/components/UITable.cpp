@@ -630,6 +630,8 @@ namespace Modex
 		if (!has_item) {
 			tableList.emplace_back(std::make_unique<BaseObject>(*a_item));
 		}
+
+		SyncChangesToKit();
 	}
 
 	void UITable::AddSelectionToActiveKit()
@@ -704,13 +706,12 @@ namespace Modex
 		if (this->tableList.empty()) {
 			return;
 		}
-		
-		auto it = std::remove_if(this->tableList.begin(), this->tableList.end(),
-			[&a_item](const std::unique_ptr<BaseObject>& item) {
-				return item->GetEditorID() == a_item->GetEditorID();
-			});
 
-		this->tableList.erase(it, this->tableList.end());
+		m_markedForDelete.emplace_back(a_item->GetEditorID());
+
+		if (selectedKitPtr) {
+			selectedKitPtr->m_dirty = true;
+		}
 	}
 
 	void UITable::AddSelectionToFavorites()
@@ -779,6 +780,34 @@ namespace Modex
 
 				equipmentConfig->SaveKit(*selectedKitPtr);
 			}
+		}
+	}
+
+	void UITable::FlushPendingKitChanges()
+	{
+		if (!selectedKitPtr || selectedKitPtr->empty()) {
+			return;
+		}
+
+		// Process pending removals.
+		if (!m_markedForDelete.empty()) {
+			std::unordered_set<std::string> to_remove(m_markedForDelete.begin(), m_markedForDelete.end());
+			m_markedForDelete.clear();
+
+			auto it = std::remove_if(this->tableList.begin(), this->tableList.end(),
+				[&to_remove](const std::unique_ptr<BaseObject>& item) {
+					return to_remove.contains(item->GetEditorID());
+				});
+
+			this->tableList.erase(it, this->tableList.end());
+			selectionStorage.Clear();
+			selectedKitPtr->m_dirty = true;
+		}
+
+		// Sync all changes to disk if dirty.
+		if (selectedKitPtr->m_dirty) {
+			SyncChangesToKit();
+			selectedKitPtr->m_dirty = false;
 		}
 	}
 
@@ -1310,12 +1339,10 @@ namespace Modex
 		}
 
 		if (destination->GetDragDropHandle() == DragDropHandle::Kit) {
-			destination->SyncChangesToKit();
 			destination->Refresh();
 		}
 
 		if (origin->GetDragDropHandle() == DragDropHandle::Kit) {
-			origin->SyncChangesToKit();
 			origin->Refresh();
 		}
 
@@ -1693,7 +1720,6 @@ namespace Modex
 
 					if (ImGui::MenuItem(Translate("KIT_REMOVE"))) {
 						this->RemoveSelectionFromKit();
-						this->SyncChangesToKit();
 					}
 				}
 
@@ -1704,7 +1730,6 @@ namespace Modex
 						if (const auto selected_kit = destination->selectedKitPtr; selected_kit && !selected_kit->empty()) {
 							if (ImGui::MenuItem(Translate("KIT_ADD"))) {
 								this->AddSelectionToActiveKit();
-								destination->SyncChangesToKit();
 							}
 						}
 					}
@@ -2045,7 +2070,7 @@ namespace Modex
 			const auto text = a_item->GetFormType() == RE::FormType::Armor ? a_item->GetArmorSlots()[0] : a_item->GetWeaponType();
 			if (ImGui::Button((std::string(icon) + text).c_str(), equip_size)) {
 				a_item->m_equipped = !a_item->m_equipped;
-				this->SyncChangesToKit();
+				SyncChangesToKit();
 			}
 			ImGui::PopStyleColor();
 		} else {
@@ -2064,7 +2089,7 @@ namespace Modex
 		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + LayoutOuterPadding);
 		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - LayoutOuterPadding);
 		if (ImGui::InputInt("##EquipCount", &a_item->m_quantity, 1, 10)) {
-			this->SyncChangesToKit();
+			SyncChangesToKit();
 		}
 	}
 
@@ -2827,6 +2852,10 @@ namespace Modex
 
 	void UITable::Draw(const TableList& _tableList)
 	{
+		if (HasFlag(ModexTableFlag_Kit)) {
+			FlushPendingKitChanges();
+		}
+
 		UpdateLayout();
 
 		if (!HasFlag(ModexTableFlag_APIMode)) {

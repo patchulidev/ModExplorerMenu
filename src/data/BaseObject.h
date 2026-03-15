@@ -1643,6 +1643,7 @@ namespace Modex
 
 		// runtime
 		ImGuiID m_tableID = 0;
+		bool    m_dirty = false;
 		int     m_weaponCount;
 		int     m_armorCount;
 		int     m_miscCount;

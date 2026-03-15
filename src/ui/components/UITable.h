@@ -209,6 +209,7 @@ namespace Modex
 		void                    UpdateActiveInventoryTables();
 		void                    UpdateImGuiTableIDs();
 		void                    SyncChangesToKit();
+		void                    FlushPendingKitChanges();
 		void                    BuildPluginList();
 
 		std::vector<BaseObject> GetReferenceInventory();
@@ -247,8 +248,10 @@ namespace Modex
 		void                    DrawStatusBar();
 		void                    DrawHeader();
 
+		std::vector<std::string> m_markedForDelete;
+
 		DragDropHandle                      dragDropHandle;
-		std::map<DragDropHandle, UITable*>     dragDropSourceList;
+		std::map<DragDropHandle, UITable*>  dragDropSourceList;
 		ImGuiSelectionBasicStorage          selectionStorage;
 		SelectionChangedCallback            m_selectionChangedCallback;
 	};
