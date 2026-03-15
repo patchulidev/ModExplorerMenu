@@ -142,7 +142,7 @@ namespace Modex
 				continue;
 			}
 
-			const RE::TESFile* mod = form->GetFile(0);
+			const RE::TESFile* mod = form->GetFile(UserConfig::GetCompileIndex());
 
 			if (!mod) {
 				continue;
@@ -265,7 +265,7 @@ namespace Modex
 			if (!form)
 				continue;
 
-			const RE::TESFile* mod = form->GetFile(0);
+			const RE::TESFile* mod = form->GetFile(UserConfig::GetCompileIndex());
 
 			if (!mod)
 				continue;
@@ -287,7 +287,7 @@ namespace Modex
 			if (!form)
 				continue;
 
-			const RE::TESFile* mod = form->GetFile(0);
+			const RE::TESFile* mod = form->GetFile(UserConfig::GetCompileIndex());
 
 			if (!mod)
 				continue;
@@ -404,7 +404,7 @@ namespace Modex
 				if (!form)
 					continue;
 
-				const RE::TESFile* mod = form->GetFile(0);
+				const RE::TESFile* mod = form->GetFile(UserConfig::GetCompileIndex());
 
 				if (!mod)
 					continue;

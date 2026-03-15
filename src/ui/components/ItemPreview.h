@@ -194,6 +194,11 @@ namespace
 		ImGui::Spacing();
 
 		// Populate list of plugins sorted by compileIdx
+		if (const auto item_file = a_object->GetFile(UserConfig::GetCompileIndex()); item_file.has_value()) {
+			for (auto master : item_file.value()->masters) {
+				ImGui::TextDisabled("%s %s", TranslateFormat("MASTER", ":"), master);
+			}
+		}
 		if (const auto source_files_opt = a_object->GetFileArray(); source_files_opt.has_value()) {
 			if (const auto source_files = source_files_opt.value(); source_files != nullptr) {
 				for (uint32_t i = 0; i < source_files->size(); i++) {
