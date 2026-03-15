@@ -154,7 +154,7 @@ namespace Modex
 			if (UICustom::ActionButton("PLACE_SELECTION", ImVec2(max_width, button_height), !Commands::IsGameMenuOpen() && valid_multi_target)) {
 				UICustom::InputAmountHandler(shift_down, [&a_view](uint32_t amount) {
 					a_view->ExecuteCommandOnSelection([&a_view, amount](const std::unique_ptr<BaseObject>& a_actor) {
-						Commands::PlaceAtMe(a_view->GetOwnership(), a_actor->GetEditorID(), amount);
+						Commands::PlaceAtMe(a_view->GetOwnership(), a_actor->GetBaseFormID(), amount);
 					});
 				});
 			}

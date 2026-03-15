@@ -1561,6 +1561,7 @@ namespace Modex
 		std::string  	m_plugin;
 		std::string 	m_name;
 		std::string 	m_editorid;
+		uint32_t        m_formID;
 
 		ImGuiID 		m_tableID = 0;
 	};

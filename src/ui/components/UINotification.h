@@ -130,7 +130,7 @@ namespace Modex
 		
 		// Helpers to push/set messages based on context.
 		static void ShowAction(const std::string& a_action, const std::string& a_target, const char* a_icon = ICON_LC_ITERATION_CCW, UIMessageType a_type = UIMessageType::Info, float a_duration = 3.0f);
-		static void ShowError(const std::string& a_text, float a_duration = 3.0f);
+		static bool ShowError(const std::string& a_text, float a_duration = 3.0f);
 
 		// Container & Message Rendering
 		static void DrawTooltip(const UIMessage& a_msg, float a_height, float a_width);

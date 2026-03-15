@@ -95,44 +95,48 @@ namespace Modex
 	// Secondary overload to send events which are not specifically tied to Objects.
 	// Overflows into the main SendEvent function if the event is not handled here.
 	// assuming that we passed a_text as an editor_id. If not, it will void.
-	void UserData::SendEvent(ModexActionType a_actionType, const std::string& a_text, Ownership a_owner)
+	void UserData::SendEvent(ModexActionType a_actionType, const std::string& a_editorID, Ownership a_owner)
 	{
 		switch (a_actionType) {
 			case ModexActionType::ResetInventory:
-				UINotification::ShowAction(Translate("RESET_INVENTORY"), a_text, ICON_LC_ROTATE_CCW, UIMessageType::Warning);
+				UINotification::ShowAction(Translate("RESET_INVENTORY"), a_editorID, ICON_LC_ROTATE_CCW, UIMessageType::Warning);
 				break;
 			case ModexActionType::ClearInventory:
-				UINotification::ShowAction(Translate("CLEAR_INVENTORY"), a_text, ICON_LC_ROTATE_CW, UIMessageType::Warning);
+				UINotification::ShowAction(Translate("CLEAR_INVENTORY"), a_editorID, ICON_LC_ROTATE_CW, UIMessageType::Warning);
 				break;
 			case ModexActionType::SaveKit:
-				UINotification::ShowAction(Translate("KIT_SAVE"), a_text, ICON_LC_SAVE);
+				UINotification::ShowAction(Translate("KIT_SAVE"), a_editorID, ICON_LC_SAVE);
 				break;
 			case ModexActionType::CreateKit:
-				UINotification::ShowAction(Translate("KIT_CREATE"), a_text, ICON_LC_SQUARE_PLUS);
+				UINotification::ShowAction(Translate("KIT_CREATE"), a_editorID, ICON_LC_SQUARE_PLUS);
 				break;
 			case ModexActionType::DeleteKit:
-				UINotification::ShowAction(Translate("KIT_DELETE"), a_text, ICON_LC_SQUARE_MINUS, UIMessageType::Warning);
+				UINotification::ShowAction(Translate("KIT_DELETE"), a_editorID, ICON_LC_SQUARE_MINUS, UIMessageType::Warning);
 				break;
 			case ModexActionType::RenameKit:
-				UINotification::ShowAction(Translate("KIT_RENAME"), a_text, ICON_LC_ROTATE_CW_SQUARE);
+				UINotification::ShowAction(Translate("KIT_RENAME"), a_editorID, ICON_LC_ROTATE_CW_SQUARE);
 				break;
 			case ModexActionType::CopyKit:
-				UINotification::ShowAction(Translate("KIT_COPY"), a_text, ICON_LC_SQUARE_PLUS);
+				UINotification::ShowAction(Translate("KIT_COPY"), a_editorID, ICON_LC_SQUARE_PLUS);
 				break;
 			default:
-				DispatchEDIDToFavorites(a_actionType, a_text, a_owner);
+				DispatchEDIDToFavorites(a_actionType, a_editorID, a_owner);
 				break;
 		}
 	}
 
 	// Necessary for sending events with only a object reference id. Resolves into a 
 	// BaseObject by performing a LookupByID and then forwarded to the main SendEvent function.
-	void UserData::SendEvent(ModexActionType a_actionType, RE::FormID a_refid, Ownership a_owner)
+	void UserData::SendEvent(ModexActionType a_actionType, RE::FormID a_formID, Ownership a_owner)
 	{
-		if (RE::TESForm* form = RE::TESForm::LookupByID(a_refid); form != nullptr) {
+		if (RE::TESForm* form = RE::TESForm::LookupByID(a_formID); form != nullptr) {
 			if (const auto reference = form->As<RE::TESObjectREFR>(); reference != nullptr) {
 				UserData::SendEvent(a_actionType, std::make_unique<BaseObject>(reference->GetBaseObject()->As<RE::TESForm>(), a_owner, 0, reference->GetFormID()));
+			} else {
+				UserData::SendEvent(a_actionType, std::make_unique<BaseObject>(form, a_owner));
 			}
+		} else {
+			UINotification::ShowError("Unable to dispatch event?");
 		}
 	}
 

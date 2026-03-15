@@ -478,7 +478,7 @@ namespace
 			const auto player = RE::PlayerCharacter::GetSingleton();
 			if (player) {
 				if (auto playerRef = player->AsReference(); playerRef != nullptr) {
-					Commands::AddItemToRefInventory(Ownership::Item, playerRef, displayObject->GetEditorID(), 1);
+					Commands::AddItemToRefInventory(Ownership::Item, playerRef, displayObject->GetBaseFormID(), 1);
 				}
 			}
 		}
