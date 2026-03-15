@@ -103,7 +103,8 @@ namespace Modex
 			ModexTableFlag_EnableHeader = 1 << 5,
 			ModexTableFlag_EnableDebugToolkit = 1 << 6,
 			ModexTableFlag_EnableItemPreviewOnHover = 1 << 7,
-			ModexTableFlag_APIMode = 1 << 8
+			ModexTableFlag_APIMode = 1 << 8,
+			ModexTableFlag_Dirty = 1 << 9
 		};
 
 		enum TableMode : uint32_t {

@@ -275,10 +275,17 @@ namespace Modex
 		}
 	}
 
+	// NOTE: Defer dirtying inventory tables using the game thread so that we always stay in sync.
+	// Failure to do so results in race conditions between UI and Game thread and incorrect
+	// inventory contents being displayed.
+
 	void UITable::UpdateActiveInventoryTables()
 	{
 		if (this->HasFlag(ModexTableFlag_Inventory) || this->GetDragDropHandle() == DragDropHandle::Inventory) {
-			this->Refresh();
+			SKSE::GetTaskInterface()->AddTask([this]() {
+				this->AddFlag(ModexTableFlag_Dirty);
+			});
+
 			return;
 		}
 
@@ -287,7 +294,10 @@ namespace Modex
 			const auto ptr = pair.second;
 
 			if (ptr->HasFlag(ModexTableFlag_Inventory) || handle == DragDropHandle::Inventory) {
-				ptr->Refresh();
+				SKSE::GetTaskInterface()->AddTask([target = std::make_shared<UITable*>(ptr)] {
+					auto table = *target;
+					table->AddFlag(ModexTableFlag_Dirty);
+				});
 			}
 		}
 	}
@@ -632,6 +642,7 @@ namespace Modex
 		}
 
 		SyncChangesToKit();
+		UpdateImGuiTableIDs();
 	}
 
 	void UITable::AddSelectionToActiveKit()
@@ -858,6 +869,10 @@ namespace Modex
 	{
 		selectionStorage.Clear();
 		tableList.clear();
+
+		if (HasFlag(ModexTableFlag_Dirty)) {
+			RemoveFlag(ModexTableFlag_Dirty);
+		}
 		
 		if (this->tableMode == SHOWRECENT) {
 			return FilterRecentImpl();
@@ -1333,7 +1348,10 @@ namespace Modex
 			if (destination->tableID != origin->tableID) {
 				if (destination->GetDragDropHandle() == DragDropHandle::Inventory) {
 					destination->AddPayloadToInventory(item);
-					origin->RemovePayloadFromInventory(item);
+
+					if (origin->GetDragDropHandle() == DragDropHandle::Inventory) {
+						origin->RemovePayloadFromInventory(item);
+					}
 				}
 			}
 		}
@@ -1346,7 +1364,8 @@ namespace Modex
 			origin->Refresh();
 		}
 
-		Refresh();
+		// destination->Refresh();
+		// origin->Refresh();
 	}
 
 	void UITable::HandleDragDropBehavior()
@@ -2854,6 +2873,10 @@ namespace Modex
 	{
 		if (HasFlag(ModexTableFlag_Kit)) {
 			FlushPendingKitChanges();
+		}
+
+		if (HasFlag(ModexTableFlag_Dirty)) {
+			Refresh();
 		}
 
 		UpdateLayout();
