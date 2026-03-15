@@ -44,9 +44,11 @@ namespace Modex
 		PushMessage(std::format("{} {} {}", a_action, ICON_LC_ARROW_RIGHT, a_target), a_icon, a_type, a_duration);
 	}
 
-	void UINotification::ShowError(const std::string& a_text, float a_duration)
+	bool UINotification::ShowError(const std::string& a_text, float a_duration)
 	{
+		Error(a_text);
 		PushMessage(a_text, ICON_LC_TRIANGLE_ALERT, UIMessageType::Error, a_duration);
+		return false;
 	}
 
 	void UINotification::PushMessage(const std::string& a_text, const std::string& a_icon, UIMessageType a_type, float a_duration)

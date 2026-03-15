@@ -10,6 +10,7 @@
 #include "localization/Locale.h"
 #include "ui/core/UIManager.h"
 #include "config/UserData.h"
+#include "ui/components/UINotification.h"
 
 // TODO: Implement requested Papyrus API for some handlers.
 
@@ -39,21 +40,25 @@ namespace Modex::Commands
 			return func(NULL, NULL, a_target, a_form, a_count, a_persistent, a_initiallyDisabled);
 		}
 
+		UINotification::ShowError("Unexpected/Unhandled Object passed to PlaceAtMe!");
 		return nullptr;
 	}
 
 	static inline void OpenActorInventory(RE::TESObjectREFR* a_actorRef)
 	{
-		if (a_actorRef) {
-			if (UIManager::GetSingleton()->IsMenuOpen()) {
-				UIManager::GetSingleton()->Close();
-				UIManager::GetSingleton()->SetMenuListener(true);
-			}
-
-			SKSE::GetTaskInterface()->AddTask([a_actorRef]() {
-				TESObjectREFR_OpenContainer(a_actorRef, RE::ContainerMenu::ContainerMode::kLoot);
-			});
+		if (!a_actorRef) {
+			UINotification::ShowError("Failed to obtain Target Reference");
+			return;
 		}
+
+		if (UIManager::GetSingleton()->IsMenuOpen()) {
+			UIManager::GetSingleton()->Close();
+			UIManager::GetSingleton()->SetMenuListener(true);
+		}
+
+		SKSE::GetTaskInterface()->AddTask([a_actorRef]() {
+			TESObjectREFR_OpenContainer(a_actorRef, RE::ContainerMenu::ContainerMode::kLoot);
+		});
 	}
 
 	static inline bool IsGameMenuOpen()
@@ -74,6 +79,7 @@ namespace Modex::Commands
 			return consoleRefr;
 		}
 
+		UINotification::ShowError("Failed to obtain Console Reference");
 		return nullptr;
 	}
 
@@ -290,96 +296,98 @@ namespace Modex::Commands
 
 	static inline void AddItemToInventory(Ownership a_owner, RE::TESObjectREFR* a_targetRef, RE::FormID a_item, uint32_t a_amount = 1)
 	{
-		if (!a_targetRef)
+		if (!a_targetRef) {
+			UINotification::ShowError("Failed to obtain Target Reference");
 			return;
+		}
 
 		SKSE::GetTaskInterface()->AddTask([a_owner, a_targetRef, a_item, a_amount]() {
 			auto form = RE::TESForm::LookupByID(a_item);
 
 			if (!form)
-				return;
+				return UINotification::ShowError("Failed to lookup FormID");
+
+			Info("Pre BoundObject FormType {}", RE::FormTypeToString(form->GetFormType()));
 
 			auto boundObject = form->As<RE::TESBoundObject>();
 
 			if (!boundObject)
-				return;
+				return UINotification::ShowError("Failed to cast to BoundObject");
 
 			a_targetRef->AddObjectToContainer(boundObject, nullptr, a_amount, nullptr);
 			UserData::SendEvent(ModexActionType::AddItem, a_item, a_owner);
+			return true;
 		});
 	}
 
-	static inline void AddItemToInventory(Ownership a_owner, RE::TESObjectREFR* a_targetRef, const std::string& a_editorID, uint32_t a_amount = 1)
+	static inline void AddItemToRefInventory(Ownership a_owner, RE::TESObjectREFR* a_targetRef, RE::FormID a_formID, uint32_t a_amount = 1)
 	{
-		if (!a_targetRef)
+		if (!a_targetRef) {
+			UINotification::ShowError("Failed to obtain Target Reference");
 			return;
+		}
 
-		SKSE::GetTaskInterface()->AddTask([a_owner, a_targetRef, a_editorID, a_amount]() {
-			auto form = RE::TESForm::LookupByEditorID(a_editorID);
-
-			if (!form)
-				return;
-
-			auto boundObject = form->As<RE::TESBoundObject>();
-
-			if (!boundObject)
-				return;
-
-			a_targetRef->AddObjectToContainer(boundObject, nullptr, a_amount, nullptr);
-			UserData::SendEvent(ModexActionType::AddItem, a_editorID, a_owner);
-		});
+		Commands::AddItemToInventory(a_owner, a_targetRef, a_formID, a_amount);
 	}
 
-	static inline void AddItemToRefInventory(Ownership a_owner, RE::TESObjectREFR* a_targetRef, const std::string& a_editorID, uint32_t a_amount = 1)
+	static inline void AddLeveledListToRefInventory(Ownership a_owner, RE::TESObjectREFR* a_targetRef, RE::FormID a_formID, int16_t a_amount = 1)
 	{
-		if (!a_targetRef)
+		if (!a_targetRef) {
+			UINotification::ShowError("Failed to obtain Target Reference");
 			return;
+		}
 
-		Commands::AddItemToInventory(a_owner, a_targetRef, a_editorID, a_amount);
-	}
+		SKSE::GetTaskInterface()->AddTask([a_owner, a_targetRef, a_formID, a_amount]() {
+			auto leveled = RE::TESForm::LookupByID<RE::TESLeveledList>(a_formID);
 
-	static inline void AddLeveledListToRefInventory(Ownership a_owner, RE::TESObjectREFR* a_targetRef, const std::string& a_editorID, int16_t a_amount = 1)
-	{
-		if (!a_targetRef || a_editorID.empty())
-			return;
+			if (!leveled)
+				return UINotification::ShowError("Failed to lookup LeveledList EditorID");
 
-		SKSE::GetTaskInterface()->AddTask([a_owner, a_targetRef, a_editorID, a_amount]() {
-			if (auto leveled = RE::TESForm::LookupByEditorID<RE::TESLeveledList>(a_editorID)) {
-				auto resolved = ResolveLeveledList(leveled, a_targetRef, a_amount);
+			auto resolved = ResolveLeveledList(leveled, a_targetRef, a_amount);
 
-				for (auto& entry : resolved) {
-					a_targetRef->AddObjectToContainer(entry.object, nullptr, entry.count, nullptr);
+			for (auto& entry : resolved) {
+				a_targetRef->AddObjectToContainer(entry.object, nullptr, entry.count, nullptr);
 
-					auto editorid = po3_GetEditorID(entry.object->GetFormID());
-					UserData::SendEvent(ModexActionType::AddItem, editorid, a_owner);
-				}
+				auto editorid = po3_GetEditorID(entry.object->GetFormID());
+				UserData::SendEvent(ModexActionType::AddItem, editorid, a_owner);
 			}
+
+			return true;
 		});
 	}
 
 	static inline void AddLeveledListToRefInventory(Ownership a_owner, RE::TESObjectREFR* a_targetRef, RE::FormID a_formID, uint16_t a_amount = 1)
 	{
-		if (!a_targetRef)
+		if (!a_targetRef) {
+			UINotification::ShowError("Failed to obtain Target Reference");
 			return;
+		}
 
 		SKSE::GetTaskInterface()->AddTask([a_owner, a_targetRef, a_formID, a_amount]() {
-			if (auto leveled = RE::TESForm::LookupByID<RE::TESLeveledList>(a_formID)) {
-				auto resolved = ResolveLeveledList(leveled, a_targetRef, a_amount);
+			auto leveled = RE::TESForm::LookupByID<RE::TESLeveledList>(a_formID);
 
-				for (auto& entry : resolved) {
-					a_targetRef->AddObjectToContainer(entry.object, nullptr, entry.count, nullptr);
+			if (!leveled)
+				return UINotification::ShowError("Failed to lookup LeveledList FormID");
 
-					auto editorid = po3_GetEditorID(entry.object->GetFormID());
-					UserData::SendEvent(ModexActionType::AddItem, editorid, a_owner);
-				}
+			auto resolved = ResolveLeveledList(leveled, a_targetRef, a_amount);
+
+			for (auto& entry : resolved) {
+				a_targetRef->AddObjectToContainer(entry.object, nullptr, entry.count, nullptr);
+
+				auto editorid = po3_GetEditorID(entry.object->GetFormID());
+				UserData::SendEvent(ModexActionType::AddItem, editorid, a_owner);
 			}
+			
+			return true;
 		});
 	}
 
 	static inline void RemoveAllItemsFromInventory(Ownership a_owner, RE::TESObjectREFR* a_targetRef)
 	{
-		if (!a_targetRef)
+		if (!a_targetRef) {
+			UINotification::ShowError("Failed to obtain Target Reference");
 			return;
+		}
 
 		SKSE::GetTaskInterface()->AddTask([a_owner, a_targetRef]() {
 			auto inventory = a_targetRef->GetInventory();
@@ -393,46 +401,55 @@ namespace Modex::Commands
 		});
 	}
 
-	static inline void RemoveItemFromInventory(Ownership a_owner, RE::TESObjectREFR* a_targetRef, const std::string& a_editorID, uint32_t a_amount = 1)
+	static inline void RemoveItemFromInventory(Ownership a_owner, RE::TESObjectREFR* a_targetRef, RE::FormID a_formID, uint32_t a_amount = 1)
 	{
-		if (!a_targetRef)
+		if (!a_targetRef) {
+			UINotification::ShowError("Failed to obtain Target Reference");
 			return;
+		}
 
-		SKSE::GetTaskInterface()->AddTask([a_owner, a_targetRef, a_editorID, a_amount]() {
-			auto form = RE::TESForm::LookupByEditorID(a_editorID);
+		SKSE::GetTaskInterface()->AddTask([a_owner, a_targetRef, a_formID, a_amount]() {
+			auto form = RE::TESForm::LookupByID(a_formID);
 
 			if (!form)
-				return;
+				return UINotification::ShowError("Failed to lookup EditorID");
 
 			auto boundObject = form->As<RE::TESBoundObject>();
 
 			if (!boundObject)
-				return;
+				return UINotification::ShowError("Failed to cast to BoundObject");
 
 			a_targetRef->RemoveItem(boundObject, a_amount, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
-			UserData::SendEvent(ModexActionType::RemoveItem, a_editorID, a_owner);
+			UserData::SendEvent(ModexActionType::RemoveItem, a_formID, a_owner);
+			return true;
 		});
 	}
 
-	static inline void RemoveItemFromPlayerInventory(Ownership a_owner, const std::string& a_editorID, uint32_t a_amount = 1)
+	static inline void RemoveItemFromPlayerInventory(Ownership a_owner, RE::FormID a_formID, uint32_t a_amount = 1)
 	{
 		auto player = RE::PlayerCharacter::GetSingleton();
 
-		if (!player)
+		if (!player) {
+			UINotification::ShowError("Unable to obtain PlayerCharacter singleton");
 			return;
+		}
 
 		auto playerRef = player->AsReference();
 
-		if (!playerRef)
+		if (!playerRef) {
+			UINotification::ShowError("Unable to obtain PlayerCharacter reference");
 			return;
+		}
 
-		RemoveItemFromInventory(a_owner, playerRef, a_editorID, a_amount);
+		RemoveItemFromInventory(a_owner, playerRef, a_formID, a_amount);
 	}
 
 	static inline void ResetTargetInventory(Ownership a_owner, RE::TESObjectREFR* a_targetRef)
 	{
-		if (!a_targetRef)
+		if (!a_targetRef) {
+			UINotification::ShowError("Failed to obtain Target Reference");
 			return;
+		}
 
 		SKSE::GetTaskInterface()->AddTask([a_owner, a_targetRef]() {
 			a_targetRef->ResetInventory(false);
@@ -444,14 +461,17 @@ namespace Modex::Commands
 	{
 		(void)a_owner;
 
-		if (!a_targetRef)
+		if (!a_targetRef) {
+			UINotification::ShowError("Failed to obtain Target Reference");
 			return;
+		}
 
 		SKSE::GetTaskInterface()->AddTask([a_targetRef]() {
 			auto actor = a_targetRef->As<RE::Actor>();
 
-			if (!actor)
-				return;
+			if (!actor) {
+				return UINotification::ShowError("Unable to cast to Actor");
+			}
 
 			auto inventory = a_targetRef->GetInventory();
 			for (auto& [obj, data] : inventory) {
@@ -460,13 +480,14 @@ namespace Modex::Commands
 					RE::ActorEquipManager::GetSingleton()->UnequipObject(actor, obj, entry->extraLists ? entry->extraLists->front() : nullptr, count, nullptr);
 				}
 			}
+
+			return true;
 		});
 	}
 
     // Helper function for inventory item binding
     inline int InventoryBoundObjects(RE::TESObjectREFR* a_targetRef, const RE::TESForm* a_form, RE::TESBoundObject*& out_object, RE::ExtraDataList*& out_extra)
 	{
-		// auto player = RE::PlayerCharacter::GetSingleton();
 		RE::TESBoundObject* foundObject = nullptr;
 		std::vector<RE::ExtraDataList*> extraDataCopy;
 		RE::FormType a_type = a_form->GetFormType();
@@ -503,29 +524,31 @@ namespace Modex::Commands
 		return count;
 	}
 
-	static inline void AddAndEquipItemToInventory(Ownership a_owner, RE::TESObjectREFR* a_targetRef, const std::string& a_editorID, uint32_t a_amount = 1)
+	static inline void AddAndEquipItemToInventory(Ownership a_owner, RE::TESObjectREFR* a_targetRef, RE::FormID a_formID, uint32_t a_amount = 1)
 	{
-		if (!a_targetRef)
+		if (!a_targetRef) {
+			UINotification::ShowError("Failed to obtain Target Reference");
 			return;
+		}
 
-		SKSE::GetTaskInterface()->AddTask([a_owner, a_targetRef, a_editorID, a_amount]() {
-			RE::TESForm* form = RE::TESForm::LookupByEditorID(a_editorID);
+		SKSE::GetTaskInterface()->AddTask([a_owner, a_targetRef, a_formID, a_amount]() {
+			RE::TESForm* form = RE::TESForm::LookupByID(a_formID);
 
 			if (!form)
-				return;
+				return UINotification::ShowError("Failed to lookup FormID");
 
 			auto boundObject = form->As<RE::TESBoundObject>();
 
 			if (!boundObject)
-				return;
+				return UINotification::ShowError("Failed to cast to BoundObject");
 
 			a_targetRef->AddObjectToContainer(boundObject, nullptr, a_amount, nullptr);
-			UserData::SendEvent(ModexActionType::AddItem, a_editorID, a_owner);
+			UserData::SendEvent(ModexActionType::AddItem, a_formID, a_owner);
 
 			auto actor = a_targetRef->As<RE::Actor>();
 
 			if (!actor)
-				return;
+				return UINotification::ShowError("Failed to cast to Actor");
 
 			RE::TESBoundObject* equipObject = nullptr;
 			RE::ExtraDataList* extraData = nullptr;
@@ -534,52 +557,58 @@ namespace Modex::Commands
 
 			if (equipObject) {
 				actor->AddWornItem(equipObject, 1, false, 0, 0);
-				UserData::SendEvent(ModexActionType::EquipItem, a_editorID, a_owner);
+				UserData::SendEvent(ModexActionType::EquipItem, a_formID, a_owner);
+			} else {
+				UINotification::ShowError("Failed to resolve equipObject for InvenotryItem");
 			}
+
+			return true;
 		});
 	}
 
-	static inline void AddAndEquipItemToPlayerInventory(Ownership a_owner, const std::string& a_editorID)
+	static inline void AddAndEquipItemToPlayerInventory(Ownership a_owner, RE::FormID a_formID)
 	{
 		auto player = RE::PlayerCharacter::GetSingleton();
 
-		if (!player)
+		if (!player) {
+			UINotification::ShowError("Unable to obtain PlayerCharacter singleton");
 			return;
+		}
 
-		AddAndEquipItemToInventory(a_owner, player->AsReference(), a_editorID, 1);
+		AddAndEquipItemToInventory(a_owner, player->AsReference(), a_formID, 1);
 	}
 
-	static inline void ReadBook(Ownership a_owner, const std::string& a_editorID)
+	static inline void ReadBook(Ownership a_owner, RE::FormID a_formID)
 	{
-		SKSE::GetTaskInterface()->AddTask([a_owner, a_editorID]() {
-			RE::TESForm* form = RE::TESForm::LookupByEditorID(a_editorID);
+		SKSE::GetTaskInterface()->AddTask([a_owner, a_formID]() {
+			RE::TESForm* form = RE::TESForm::LookupByID(a_formID);
 
 			if (!form)
-				return;
+				return UINotification::ShowError("Failed to lookup FormID");
 
 			const auto player = RE::PlayerCharacter::GetSingleton();
 
 			if (!player)
-				return;
+				return UINotification::ShowError("Failed to obtain PlayerCharacter singleton");
 
 			auto playerRef = player->AsReference();
 
 			if (!playerRef)
-				return;
+				return UINotification::ShowError("Failed to obtain PlayerCharacter reference");
 
 			// Add item directly (already on main thread).
 			auto boundObject = form->As<RE::TESBoundObject>();
 
 			if (!boundObject)
-				return;
+				return UINotification::ShowError("Failed to cast to BoundObject");
 
 			playerRef->AddObjectToContainer(boundObject, nullptr, 1, nullptr);
-			UserData::SendEvent(ModexActionType::AddItem, a_editorID, a_owner);
+			UserData::SendEvent(ModexActionType::AddItem, a_formID, a_owner);
 
 			RE::TESObjectBOOK* book = form->As<RE::TESObjectBOOK>();
 
 			if (!book)
-				return;
+				return UINotification::ShowError("Failed to cast to Book Object");
 
 			RE::NiPoint3 defaultPos{};
 			RE::BSString buf;
@@ -590,20 +619,26 @@ namespace Modex::Commands
 			int found = InventoryBoundObjects(playerRef, form, equipObject, extraData);
 
 			if (found == 0)
-				return;
+				return UINotification::ShowError("Unable to locate distributed Book in Invenotry");
 
 			RE::TESObjectREFR* bookRef = equipObject->As<RE::TESObjectREFR>();
 
 			if (equipObject) {
 				RE::BookMenu::OpenBookMenu(buf, extraData, bookRef, book, defaultPos, defaultPos, 1.0f, true);
+			} else {
+				return UINotification::ShowError("Unable to resolve equipObject in Inventory");
 			}
+
+			return true;
 		});
 	}
 
 	static inline void TeleportNPCToPlayer(Ownership a_owner, uint32_t a_refID)
 	{
-		if (a_refID == 0)
+		if (a_refID == 0) {
+			UINotification::ShowError("Invalid Reference ID");
 			return;
+		}
 
 		UIManager::GetSingleton()->Close();
 		SKSE::GetTaskInterface()->AddTask([a_owner, a_refID]() {
@@ -612,16 +647,21 @@ namespace Modex::Commands
 					if (auto ref = RE::TESForm::LookupByID<RE::TESObjectREFR>(a_refID)) {
 						ref->MoveTo(playerRefr);
 						UserData::SendEvent(ModexActionType::BringReference, ref->GetFormID(), a_owner);
+						return true;
 					}
 				}
 			}
+
+			return UINotification::ShowError("Failed to move Actor to Player");
 		});
 	}
 
 	static inline void TeleportREFRToPlayer(Ownership a_owner, RE::TESObjectREFR* a_ref)
 	{
-		if (!a_ref)
+		if (!a_ref) {
+			UINotification::ShowError("Failed to obtain Target Reference");
 			return;
+		}
 
 		UIManager::GetSingleton()->Close();
 		SKSE::GetTaskInterface()->AddTask([a_owner, a_ref]() {
@@ -629,15 +669,20 @@ namespace Modex::Commands
 				if (auto playerRefr = player->AsReference()) {
 					a_ref->MoveTo(playerRefr);
 					UserData::SendEvent(ModexActionType::BringReference, a_ref->GetFormID(), a_owner);
+					return true;
 				}
 			}
+
+			return UINotification::ShowError("Failed to move Reference to Player");
 		});
 	}
 
 	static inline void TeleportPlayerToREFR(Ownership a_owner, RE::TESObjectREFR* a_ref)
 	{
-		if (!a_ref)
+		if (!a_ref) {
+			UINotification::ShowError("Failed to obtain Target Reference");
 			return;
+		}
 
 		UIManager::GetSingleton()->Close();
 		SKSE::GetTaskInterface()->AddTask([a_owner, a_ref]() {
@@ -645,15 +690,20 @@ namespace Modex::Commands
 				if (auto playerRefr = player->AsReference()) {
 					playerRefr->MoveTo(a_ref);
 					UserData::SendEvent(ModexActionType::GotoReference, a_ref->GetFormID(), a_owner);
+					return true;
 				}
 			}
+
+			return UINotification::ShowError("Failed to move Player to Reference");
 		});
 	}
 
 	static inline void TeleportPlayerToNPC(Ownership a_owner, uint32_t a_refID)
 	{
-		if (a_refID == 0)
+		if (a_refID == 0) {
+			UINotification::ShowError("Invalid Reference ID");
 			return;
+		}
 
 		UIManager::GetSingleton()->Close();
 		SKSE::GetTaskInterface()->AddTask([a_owner, a_refID]() {
@@ -662,16 +712,21 @@ namespace Modex::Commands
 					if (auto ref = RE::TESForm::LookupByID<RE::TESObjectREFR>(a_refID)) {
 						playerRefr->MoveTo(ref);
 						UserData::SendEvent(ModexActionType::GotoReference, ref->GetFormID(), a_owner);
+						return true;
 					}
 				}
 			}
+
+			return UINotification::ShowError("Failed to move Player to Actor");
 		});
 	}
 
 	static inline void AddOutfitItemsToInventory(Ownership a_owner, RE::TESObjectREFR* a_targetRef, RE::BGSOutfit* a_outfit, uint16_t a_level = 0)
 	{
-		if (!a_targetRef || !a_outfit)
+		if (!a_targetRef || !a_outfit) {
+			UINotification::ShowError(!a_targetRef ? "Failed to obtain Target Reference" : "Failed to obtain Outfit");
 			return;
+		}
 
 		SKSE::GetTaskInterface()->AddTask([a_owner, a_targetRef, a_outfit, a_level]() {
 			auto resolved = ResolveOutfitItems(a_outfit, a_targetRef, a_level);
@@ -680,7 +735,7 @@ namespace Modex::Commands
 				a_targetRef->AddObjectToContainer(entry.object, nullptr, entry.count, nullptr);
 			}
 
-			UserData::SendEvent(ModexActionType::AddItem, po3_GetEditorID(a_outfit->GetFormID()), a_owner);
+			return UserData::SendEvent(ModexActionType::AddItem, po3_GetEditorID(a_outfit->GetFormID()), a_owner);
 		});
 	}
 
@@ -688,8 +743,10 @@ namespace Modex::Commands
 	// existing methods provided in this header file.
 	static inline void EquipOutfit(Ownership a_owner, RE::TESObjectREFR* a_targetRef, RE::BGSOutfit* a_outfit, uint16_t a_level = 0)
 	{
-		if (!a_targetRef || !a_outfit)
+		if (!a_targetRef || !a_outfit) {
+			UINotification::ShowError(!a_targetRef ? "Failed to obtain Target Reference" : "Failed to obtain Outfit");
 			return;
+		}
 
 		SKSE::GetTaskInterface()->AddTask([a_owner, a_targetRef, a_outfit, a_level]() {
 			auto resolved = ResolveOutfitItems(a_outfit, a_targetRef, a_level);
@@ -699,8 +756,9 @@ namespace Modex::Commands
 			}
 
 			auto actor = a_targetRef->As<RE::Actor>();
+
 			if (!actor)
-				return;
+				return UINotification::ShowError("Failed to cast to Actor");
 
 			for (auto& entry : resolved) {
 				RE::TESBoundObject* equipObject = nullptr;
@@ -713,103 +771,134 @@ namespace Modex::Commands
 			}
 
 			UserData::SendEvent(ModexActionType::EquipOutfit, po3_GetEditorID(a_outfit->GetFormID()), a_owner);
+			return true;
 		});
 	}
 
 	// TEST: What happens when we call this on Player?
 	static inline void SetSleepOutfitOnActor(Ownership a_owner, RE::TESObjectREFR* a_targetRef, RE::BGSOutfit* a_outfit)
 	{
-		if (!a_targetRef || !a_outfit)
+		if (!a_targetRef || !a_outfit) {
+			UINotification::ShowError(!a_targetRef ? "Failed to obtain Target Reference" : "Failed to obtain Outfit");
 			return;
+		}
 
 		SKSE::GetTaskInterface()->AddTask([a_owner, a_targetRef, a_outfit]() {
-			if (auto npc = a_targetRef->As<RE::Actor>()) {
-				if (auto base = npc->GetActorBase()) {
-					base->sleepOutfit = a_outfit;
-				}
-			}
+			auto npc = a_targetRef->As<RE::Actor>();
+
+			if (!npc)
+				return UINotification::ShowError("Failed to cast to Actor");
+
+			auto base = npc->GetActorBase();
+
+			if (!base)
+				return UINotification::ShowError("Failed to obtain ActorBase");
+
+			base->sleepOutfit = a_outfit;
 
 			UserData::SendEvent(ModexActionType::SetSleepOutfit, po3_GetEditorID(a_outfit->GetFormID()), a_owner);
+			return true;
 		});
 	}
 
 	static inline void SetDefaultOutfitOnActor(Ownership a_owner, RE::TESObjectREFR* a_targetRef, RE::BGSOutfit* a_outfit)
 	{
-		if (!a_targetRef || !a_outfit)
+		if (!a_targetRef || !a_outfit) {
+			UINotification::ShowError(!a_targetRef ? "Failed to obtain Target Reference" : "Failed to obtain Outfit");
 			return;
+		}
 
 		SKSE::GetTaskInterface()->AddTask([a_owner, a_targetRef, a_outfit]() {
-			if (auto npc = a_targetRef->As<RE::Actor>()) {
-				if (auto base = npc->GetActorBase()) {
-					base->defaultOutfit = a_outfit;
-				}
-			}
+			auto npc = a_targetRef->As<RE::Actor>();
+
+			if (!npc)
+				return UINotification::ShowError("Failed to cast to Actor");
+
+			auto base = npc->GetActorBase();
+
+			if (!base)
+				return UINotification::ShowError("Failed to obtain ActorBase");
+
+			base->defaultOutfit = a_outfit;
 
 			UserData::SendEvent(ModexActionType::SetDefaultOutfit, po3_GetEditorID(a_outfit->GetFormID()), a_owner);
+			return true;
 		});
 	}
 
-	static inline void PlaceAtMe(Ownership a_owner, const std::string& a_editorID, uint32_t a_count = 1, bool persistent = true, bool disabled = false)
+	static inline void PlaceAtMe(Ownership a_owner, RE::FormID a_formID, uint32_t a_count = 1, bool persistent = true, bool disabled = false)
 	{
-		if (a_editorID.empty())
-			return;
-
-		SKSE::GetTaskInterface()->AddTask([a_owner, a_editorID, a_count, persistent, disabled]() {
+		SKSE::GetTaskInterface()->AddTask([a_owner, a_formID, a_count, persistent, disabled]() {
 			auto player = RE::PlayerCharacter::GetSingleton();
 			if (!player)
-				return;
+				return UINotification::ShowError("Failed to obtain PlayerCharacter singleton");
 
 			auto target = player->AsReference();
 			if (!target)
-				return;
+				return UINotification::ShowError("Failed to obtain PlayerCharacter reference");
 
-			if (RE::TESForm* object = RE::TESForm::LookupByEditorID(a_editorID); object) {
-				auto newObject = Papyrus_PlaceAtMe(target, object, a_count, persistent, disabled);
-				if (newObject) {
-					UserData::SendEvent(ModexActionType::PlaceAtMe, newObject->GetFormID(), a_owner);
-				} else {
-					Error("Failed to resolve new object from Papyrus_PlaceAtMe func: {}", a_editorID);
-				}
+			RE::TESForm* object = RE::TESForm::LookupByID(a_formID);
+
+			if (!object)
+				return UINotification::ShowError("Failed to lookup EditorID");
+
+			auto newObject = Papyrus_PlaceAtMe(target, object, a_count, persistent, disabled);
+			if (newObject) {
+				UserData::SendEvent(ModexActionType::PlaceAtMe, newObject->GetFormID(), a_owner);
+			} else {
+				return UINotification::ShowError("Failed to resolve Object from PlaceAtMe func");
 			}
+
+			return true;
 		});
 	}
 
 	static inline void KillRefr(Ownership a_owner, RE::TESObjectREFR* a_targetRef)
 	{
-		if (!a_targetRef)
+		if (!a_targetRef) {
+			UINotification::ShowError("Failed to obtain Target Reference");
 			return;
+		}
 
 		SKSE::GetTaskInterface()->AddTask([a_owner, a_targetRef]() {
 			auto actor = a_targetRef->As<RE::Actor>();
 
-			if (!actor)
-				return;
+			if (!actor) {
+				return UINotification::ShowError("Failed to cast to Actor");
+			}
 
 			actor->KillImpl(nullptr, actor->GetActorValueMax(RE::ActorValue::kHealth), true, true);
 			UserData::SendEvent(ModexActionType::KillActor, a_targetRef->GetFormID(), a_owner);
+			return true;
 		});
 	}
 
 	static inline void ResurrectRefr(Ownership a_owner, RE::TESObjectREFR* a_targetRef)
 	{
-		if (!a_targetRef)
+		if (!a_targetRef) {
+			UINotification::ShowError("Failed to obtain Target Reference");
 			return;
+		}
 
 		SKSE::GetTaskInterface()->AddTask([a_owner, a_targetRef]() {
 			auto actor = a_targetRef->As<RE::Actor>();
 
-			if (!actor)
-				return;
+			if (!actor) {
+				return UINotification::ShowError("Failed to cast to Actor");
+			}
 
 			actor->Resurrect(false, true);
 			UserData::SendEvent(ModexActionType::ReviveActor, a_targetRef->GetFormID(), a_owner);
+			return true;
 		});
 	}
 
 	static inline void DisableRefr(Ownership a_owner, RE::TESObjectREFR* a_targetRef)
 	{
-		if (!a_targetRef)
+		if (!a_targetRef) {
+			UINotification::ShowError("Failed to obtain Target Reference");
 			return;
+		}
 
 		SKSE::GetTaskInterface()->AddTask([a_owner, a_targetRef]() {
 			a_targetRef->Disable();
@@ -819,8 +908,10 @@ namespace Modex::Commands
 
 	static inline void EnableRefr(Ownership a_owner, RE::TESObjectREFR* a_targetRef, bool a_resetInventory = false)
 	{
-		if (!a_targetRef)
+		if (!a_targetRef) {
+			UINotification::ShowError("Failed to obtain Target Reference");
 			return;
+		}
 
 		SKSE::GetTaskInterface()->AddTask([a_owner, a_targetRef, a_resetInventory]() {
 			a_targetRef->Enable(a_resetInventory);
@@ -831,18 +922,19 @@ namespace Modex::Commands
 	static inline void CenterOnCell(Ownership a_owner, const std::string& a_cellEditorID)
 	{
 		(void)a_owner;
-		if (a_cellEditorID.empty())
+		if (a_cellEditorID.empty()) {
+			UINotification::ShowError("Invalid Cell EditorID");
 			return;
-
-
+		}
 
 		SKSE::GetTaskInterface()->AddTask([a_cellEditorID]() {
 			auto player = RE::PlayerCharacter::GetSingleton();
 
 			if (!player)
-				return;
+				return UINotification::ShowError("Failed to obtain PlayerCharacter singleton");
 
 			player->CenterOnCell(a_cellEditorID.c_str());
+			return true;
 		});
 	}
 }

@@ -192,6 +192,12 @@ namespace Modex
 				item->m_name = item_data.value("Name", "");
 				item->m_amount = item_data.value("Amount", 1);
 				item->m_equipped = item_data.value("Equipped", false);
+				
+				// Symptom from swapping from EditorID to FormID framework.
+				// Don't really want to store form ids either though.
+				if (auto form = RE::TESForm::LookupByEditorID(editorid); form != nullptr) {
+					item->m_formID = form->GetFormID();
+				}
 
 				new_kit.m_items.emplace_back(item);
 			}
@@ -470,6 +476,7 @@ namespace Modex
 		new_item->m_editorid 	= a_item.GetEditorID();
 		new_item->m_amount 	= a_item.GetQuantity();
 		new_item->m_equipped 	= a_item.GetEquipped();
+		new_item->m_formID 	    = a_item.GetBaseFormID();
 		
 		return new_item;
 	}

@@ -315,9 +315,9 @@ namespace Modex
 
 		for (auto& kitItem : a_kit.m_items) {
 			if (kitItem->m_equipped) {
-				Commands::AddAndEquipItemToInventory(owner, tableTargetRef, kitItem->m_editorid);
+				Commands::AddAndEquipItemToInventory(owner, tableTargetRef, kitItem->m_formID);
 			} else {
-				Commands::AddItemToRefInventory(owner, tableTargetRef, kitItem->m_editorid, static_cast<std::uint32_t>(kitItem->m_amount));
+				Commands::AddItemToRefInventory(owner, tableTargetRef, kitItem->m_formID, static_cast<std::uint32_t>(kitItem->m_amount));
 			}
 		}
 
@@ -336,7 +336,7 @@ namespace Modex
 		if (GetSelectionCount() == 0)
 		{
 			if (itemPreview && !itemPreview->IsDummy() && itemPreview->GetTESForm()->IsInventoryObject()) {
-				Commands::RemoveItemFromInventory(owner, tableTargetRef, itemPreview->GetEditorID(), 1);
+				Commands::RemoveItemFromInventory(owner, tableTargetRef, itemPreview->GetBaseFormID(), 1);
 			}
 		} 
 		else {
@@ -347,7 +347,7 @@ namespace Modex
 				if (id < std::ssize(tableList) && id >= 0) {
 					const auto& item = tableList[id];
 					if (!item->IsDummy()) {
-						Commands::RemoveItemFromInventory(owner, tableTargetRef, item->GetEditorID(), 1);
+						Commands::RemoveItemFromInventory(owner, tableTargetRef, item->GetBaseFormID(), 1);
 					}
 				}
 			}
@@ -367,7 +367,7 @@ namespace Modex
 
 		if (GetSelectionCount() == 0) {
 			if (itemPreview && !itemPreview->IsDummy() && itemPreview->GetTESForm()->IsInventoryObject()) {
-				Commands::AddItemToRefInventory(owner, tableTargetRef, itemPreview->GetEditorID(), a_count);
+				Commands::AddItemToRefInventory(owner, tableTargetRef, itemPreview->GetBaseFormID(), a_count);
 			}
 		} 
 		else {
@@ -378,7 +378,7 @@ namespace Modex
 				if (id < std::ssize(tableList) && id >= 0) {
 					const auto& item = tableList[id];
 					if (item && !item->IsDummy() && item->GetTESForm()->IsInventoryObject()) {
-						Commands::AddItemToRefInventory(owner, tableTargetRef, item->GetEditorID(), a_count);
+						Commands::AddItemToRefInventory(owner, tableTargetRef, item->GetBaseFormID(), a_count);
 					}
 				}
 			}
@@ -397,7 +397,7 @@ namespace Modex
 
 		if (GetSelectionCount() == 0) {
 			if (itemPreview && !itemPreview->IsDummy() && (itemPreview->IsArmor() || itemPreview->IsWeapon())) {
-				Commands::AddAndEquipItemToInventory(owner, tableTargetRef, itemPreview->GetEditorID());
+				Commands::AddAndEquipItemToInventory(owner, tableTargetRef, itemPreview->GetBaseFormID());
 			}
 		}
 		else {
@@ -408,7 +408,7 @@ namespace Modex
 				if (id < std::ssize(tableList) && id >= 0) {
 					const auto& item = tableList[id];
 					if (item && !itemPreview->IsDummy() && (item->IsArmor() || item->IsWeapon())) {
-						Commands::AddAndEquipItemToInventory(owner, tableTargetRef, item->GetEditorID());
+						Commands::AddAndEquipItemToInventory(owner, tableTargetRef, item->GetBaseFormID());
 					}
 				}
 			}
@@ -426,7 +426,7 @@ namespace Modex
 
 		if (GetSelectionCount() == 0) {
 			if (itemPreview && !itemPreview->IsDummy()) {
-				Commands::PlaceAtMe(owner, itemPreview->GetEditorID(), a_count);
+				Commands::PlaceAtMe(owner, itemPreview->GetBaseFormID(), a_count);
 			}
 		}
 		else {
@@ -437,7 +437,7 @@ namespace Modex
 				if (id < std::ssize(tableList) && id >= 0) {
 					const auto& item = tableList[id];
 					if (item && !item->IsDummy()) {
-						Commands::PlaceAtMe(owner, item->GetEditorID(), a_count);
+						Commands::PlaceAtMe(owner, item->GetBaseFormID(), a_count);
 					}
 				}
 			}
@@ -528,7 +528,7 @@ namespace Modex
 		
 		for (auto& item : tableList) {
 			if (item && !item->IsDummy() && item->GetTESForm()->IsInventoryObject()) {
-				Commands::AddItemToRefInventory(owner, tableTargetRef, item->GetEditorID(), 1);
+				Commands::AddItemToRefInventory(owner, tableTargetRef, item->GetBaseFormID(), 1);
 			}
 		}
 
@@ -546,7 +546,7 @@ namespace Modex
 
 		for (auto& item : tableList) {
 			if (item && !item->IsDummy() && item->GetTESForm()->HasWorldModel()) {
-				Commands::PlaceAtMe(owner, item->GetEditorID(), 1);
+				Commands::PlaceAtMe(owner, item->GetBaseFormID(), 1);
 			}
 		}
 
@@ -604,7 +604,7 @@ namespace Modex
 			return;
 
 		if (a_item && !a_item->IsDummy() && a_item->GetTESForm()->IsInventoryObject()) {
-			Commands::AddItemToRefInventory(owner, this->tableTargetRef, a_item->GetEditorID(), a_item->GetQuantity());
+			Commands::AddItemToRefInventory(owner, this->tableTargetRef, a_item->GetBaseFormID(), a_item->GetQuantity());
 		}
 
 		UpdateActiveInventoryTables();
@@ -616,7 +616,7 @@ namespace Modex
 			return;
 
 		if (a_item && !a_item->IsDummy() && a_item->GetTESForm()->IsInventoryObject()) {
-			Commands::RemoveItemFromInventory(owner, this->tableTargetRef, a_item->GetEditorID(), a_item->GetQuantity());
+			Commands::RemoveItemFromInventory(owner, this->tableTargetRef, a_item->GetBaseFormID(), a_item->GetQuantity());
 		}
 
 		UpdateActiveInventoryTables();
@@ -1586,14 +1586,14 @@ namespace Modex
 			if (a_item->IsItem() && !Commands::IsGameMenuOpen()) {
 				UICustom::InputAmountHandler(ImGui::GetIO().KeyShift, [&a_item, this](uint32_t amount = 1) {
 					if (auto targetRef = this->GetTableTargetRef(); targetRef) {
-						Commands::AddItemToRefInventory(owner, targetRef, a_item->GetEditorID(), amount);
+						Commands::AddItemToRefInventory(owner, targetRef, a_item->GetBaseFormID(), amount);
 					}
 				});
 			}
 
 			if (tableTargetRef && a_item->IsNPC() && !Commands::IsGameMenuOpen()) {
 				UICustom::InputAmountHandler(ImGui::GetIO().KeyShift, [&a_item, this](uint32_t amount = 1) {
-					Commands::PlaceAtMe(owner, a_item->GetEditorID(), amount);
+					Commands::PlaceAtMe(owner, a_item->GetBaseFormID(), amount);
 				});
 			}
 
@@ -1727,7 +1727,7 @@ namespace Modex
 							ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 
 							if (ImGui::MenuItem(Translate("READ"))) {
-								Commands::ReadBook(owner, a_item->GetEditorID());
+								Commands::ReadBook(owner, a_item->GetBaseFormID());
 								UIManager::GetSingleton()->Close();
 							}
 						}
