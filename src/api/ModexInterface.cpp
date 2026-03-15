@@ -61,31 +61,17 @@ namespace Modex
 		return list ? static_cast<unsigned int>(list->size()) : 0;
 	}
 
-	void ModexInterface::AddItemToPlayer(RE::FormID a_formID, uint32_t a_amount)
+	void ModexInterface::AddItemToPlayer(uint32_t a_formID, uint32_t a_amount)
 	{
 		if (auto* target = RE::PlayerCharacter::GetSingleton(); target->AsReference()) {
 			Commands::AddItemToInventory(Ownership::None, target->AsReference(), a_formID, a_amount);
 		}
 	}
 
-	void ModexInterface::AddItemToPlayer(const char* a_editorID, uint32_t a_amount)
-	{
-		if (auto* target = RE::PlayerCharacter::GetSingleton(); target->AsReference()) {
-			Commands::AddItemToInventory(Ownership::None, target->AsReference(), a_editorID, a_amount);
-		}
-	}
-
-	void ModexInterface::AddItemToInventory(RE::FormID a_formID, RE::FormID a_targetReference, uint32_t a_amount)
+	void ModexInterface::AddItemToInventory(uint32_t a_formID, uint32_t a_targetReference, uint32_t a_amount)
 	{
 		if (auto* target = RE::TESForm::LookupByID<RE::TESObjectREFR>(a_targetReference); target) {
 			Commands::AddItemToInventory(Ownership::None, target, a_formID, a_amount);
-		}
-	}
-
-	void ModexInterface::AddItemToInventory(const char* a_editorID, RE::FormID a_targetReference, uint32_t a_amount)
-	{
-		if (auto* target = RE::TESForm::LookupByID<RE::TESObjectREFR>(a_targetReference); target) {
-			Commands::AddItemToInventory(Ownership::None, target, a_editorID, a_amount);
 		}
 	}
 
@@ -94,7 +80,7 @@ namespace Modex
 		PlayerChestSpawn::GetSingleton()->OpenChest();
 	}
 
-	void ModexInterface::OpenInventory(RE::FormID a_targetReference)
+	void ModexInterface::OpenInventory(uint32_t a_targetReference)
 	{
 		if (auto* target = RE::TESForm::LookupByID<RE::TESObjectREFR>(a_targetReference); target) {
 			if (target->GetBaseObject()->IsActor() || target->GetBaseObject()->GetFormType() == RE::FormType::Container) {
@@ -103,7 +89,7 @@ namespace Modex
 		}
 	}
 
-	void ModexInterface::AddLeveledListToInventory(RE::FormID a_formID, RE::FormID a_targetReference, uint16_t a_amount)
+	void ModexInterface::AddLeveledListToInventory(uint32_t a_formID, uint32_t a_targetReference, uint16_t a_amount)
 	{
 		if (auto* target = RE::TESForm::LookupByID<RE::TESObjectREFR>(a_targetReference); target) {
 			if (target->GetBaseObject()->IsActor()) {
@@ -112,16 +98,7 @@ namespace Modex
 		}
 	}
 
-	void ModexInterface::AddLeveledListToInventory(const char* a_editorID, RE::FormID a_targetReference, uint16_t a_amount)
-	{
-		if (auto* target = RE::TESForm::LookupByID<RE::TESObjectREFR>(a_targetReference); target) {
-			if (target->GetBaseObject()->IsActor()) {
-				Commands::AddLeveledListToRefInventory(Ownership::None, target, a_editorID, a_amount);
-			}
-		}
-	}
-
-	void ModexInterface::RemoveAllItems(RE::FormID a_targetReference)
+	void ModexInterface::RemoveAllItems(uint32_t a_targetReference)
 	{
 		if (auto* target = RE::TESForm::LookupByID<RE::TESObjectREFR>(a_targetReference); target) {
 			if (target->GetBaseObject()->IsActor() || target->GetBaseObject()->GetFormType() == RE::FormType::Container) {
@@ -130,24 +107,24 @@ namespace Modex
 		}
 	}
 
-	void ModexInterface::RemoveItem(const char* a_editorID, RE::FormID a_targetReference, uint32_t a_amount)
+	void ModexInterface::RemoveItem(uint32_t a_formID, uint32_t a_targetReference, uint32_t a_amount)
 	{
 		if (auto* target = RE::TESForm::LookupByID<RE::TESObjectREFR>(a_targetReference); target) {
-			Commands::RemoveItemFromInventory(Ownership::None, target, a_editorID, a_amount);
+			Commands::RemoveItemFromInventory(Ownership::None, target, a_formID, a_amount);
 		}
 	}
 
-	void ModexInterface::PlaceAtMe(const char* a_editorID, uint32_t a_count, bool a_persistent, bool a_disabled)
+	void ModexInterface::PlaceAtMe(uint32_t a_formID, uint32_t a_count, bool a_persistent, bool a_disabled)
 	{
-		Commands::PlaceAtMe(Ownership::None, a_editorID, a_count, a_persistent, a_disabled);
+		Commands::PlaceAtMe(Ownership::None, a_formID, a_count, a_persistent, a_disabled);
 	}
 
-	void ModexInterface::TeleportPlayerToNPC(RE::FormID a_targetReference)
+	void ModexInterface::TeleportPlayerToNPC(uint32_t a_targetReference)
 	{
 		Commands::TeleportPlayerToNPC(Ownership::None, a_targetReference);
 	}
 
-	void ModexInterface::TeleportNPCToPlayer(RE::FormID a_targetReference)
+	void ModexInterface::TeleportNPCToPlayer(uint32_t a_targetReference)
 	{
 		Commands::TeleportNPCToPlayer(Ownership::None, a_targetReference);
 	}
@@ -157,35 +134,35 @@ namespace Modex
 		Commands::CenterOnCell(Ownership::None, a_cellEditorID);
 	}
 
-	void ModexInterface::KillActor(RE::FormID a_targetReference)
+	void ModexInterface::KillActor(uint32_t a_targetReference)
 	{
 		if (auto* target = RE::TESForm::LookupByID<RE::TESObjectREFR>(a_targetReference); target) {
 			Commands::KillRefr(Ownership::None, target);
 		}
 	}
 
-	void ModexInterface::ResurrectActor(RE::FormID a_targetReference)
+	void ModexInterface::ResurrectActor(uint32_t a_targetReference)
 	{
 		if (auto* target = RE::TESForm::LookupByID<RE::TESObjectREFR>(a_targetReference); target) {
 			Commands::ResurrectRefr(Ownership::None, target);
 		}
 	}
 
-	void ModexInterface::DisableReference(RE::FormID a_targetReference)
+	void ModexInterface::DisableReference(uint32_t a_targetReference)
 	{
 		if (auto* target = RE::TESForm::LookupByID<RE::TESObjectREFR>(a_targetReference); target) {
 			Commands::DisableRefr(Ownership::None, target);
 		}
 	}
 
-	void ModexInterface::EnableReference(RE::FormID a_targetReference, bool a_resetInventory)
+	void ModexInterface::EnableReference(uint32_t a_targetReference, bool a_resetInventory)
 	{
 		if (auto* target = RE::TESForm::LookupByID<RE::TESObjectREFR>(a_targetReference); target) {
 			Commands::EnableRefr(Ownership::None, target, a_resetInventory);
 		}
 	}
 
-	void ModexInterface::AddOutfitToInventory(RE::FormID a_outfitFormID, RE::FormID a_targetReference, uint16_t a_level)
+	void ModexInterface::AddOutfitToInventory(uint32_t a_outfitFormID, uint32_t a_targetReference, uint16_t a_level)
 	{
 		auto* outfit = RE::TESForm::LookupByID<RE::BGSOutfit>(a_outfitFormID);
 		auto* target = RE::TESForm::LookupByID<RE::TESObjectREFR>(a_targetReference);
@@ -195,7 +172,7 @@ namespace Modex
 		}
 	}
 
-	void ModexInterface::EquipOutfit(RE::FormID a_outfitFormID, RE::FormID a_targetReference, uint16_t a_level)
+	void ModexInterface::EquipOutfit(uint32_t a_outfitFormID, uint32_t a_targetReference, uint16_t a_level)
 	{
 		auto* outfit = RE::TESForm::LookupByID<RE::BGSOutfit>(a_outfitFormID);
 		auto* target = RE::TESForm::LookupByID<RE::TESObjectREFR>(a_targetReference);
@@ -205,7 +182,7 @@ namespace Modex
 		}
 	}
 
-	void ModexInterface::SetDefaultOutfit(RE::FormID a_outfitFormID, RE::FormID a_targetReference)
+	void ModexInterface::SetDefaultOutfit(uint32_t a_outfitFormID, uint32_t a_targetReference)
 	{
 		auto* outfit = RE::TESForm::LookupByID<RE::BGSOutfit>(a_outfitFormID);
 		auto* target = RE::TESForm::LookupByID<RE::TESObjectREFR>(a_targetReference);
@@ -215,7 +192,7 @@ namespace Modex
 		}
 	}
 
-	void ModexInterface::SetSleepOutfit(RE::FormID a_outfitFormID, RE::FormID a_targetReference)
+	void ModexInterface::SetSleepOutfit(uint32_t a_outfitFormID, uint32_t a_targetReference)
 	{
 		auto* outfit = RE::TESForm::LookupByID<RE::BGSOutfit>(a_outfitFormID);
 		auto* target = RE::TESForm::LookupByID<RE::TESObjectREFR>(a_targetReference);
@@ -225,7 +202,7 @@ namespace Modex
 		}
 	}
 
-	bool ModexInterface::IsFormCached(RE::FormID a_formID, ModexAPI::CacheType a_type)
+	bool ModexInterface::IsFormCached(uint32_t a_formID, ModexAPI::CacheType a_type)
 	{
 		if (!IsDataReady()) {
 			return false;
@@ -293,7 +270,7 @@ namespace Modex
 		return opts;
 	}
 
-	void ModexInterface::OpenFormSelector(ModexAPI::CacheType a_type, void (*a_callback)(const RE::FormID* a_formIDs, uint32_t a_count))
+	void ModexInterface::OpenFormSelector(ModexAPI::CacheType a_type, void (*a_callback)(const uint32_t* a_formIDs, uint32_t a_count))
 	{
 		if (!IsDataReady() || !a_callback) {
 			return;
@@ -302,7 +279,7 @@ namespace Modex
 		UIManager::GetSingleton()->OpenFormSelector(CacheTypeToOwnership(a_type), a_callback);
 	}
 
-	void ModexInterface::OpenFormSelector(ModexAPI::CacheType a_type, const ModexAPI::FormSelectorOptions& a_options, void (*a_callback)(const RE::FormID* a_formIDs, uint32_t a_count))
+	void ModexInterface::OpenFormSelector(ModexAPI::CacheType a_type, const ModexAPI::FormSelectorOptions& a_options, void (*a_callback)(const uint32_t* a_formIDs, uint32_t a_count))
 	{
 		if (!IsDataReady() || !a_callback) {
 			return;
@@ -340,7 +317,7 @@ namespace Modex
 		return total;
 	}
 
-	bool ModexInterface::GetFormProperty(RE::FormID a_formID, ModexAPI::CacheType a_type, ModexAPI::PropertyType a_property, char* a_outBuffer, uint32_t a_bufferSize)
+	bool ModexInterface::GetFormProperty(uint32_t a_formID, ModexAPI::CacheType a_type, ModexAPI::PropertyType a_property, char* a_outBuffer, uint32_t a_bufferSize)
 	{
 		if (!IsDataReady() || !a_outBuffer || a_bufferSize == 0) {
 			return false;
