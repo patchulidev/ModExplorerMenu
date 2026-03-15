@@ -2,6 +2,7 @@
 
 #include "ui/components/UIWindow.h"
 #include "ui/components/UIModule.h"
+#include "ui/modules/formselector/FormSelectorOptions.h"
 
 namespace Modex
 {
@@ -9,7 +10,7 @@ namespace Modex
 	{
 	public:
 
-		Menu();
+		Menu(bool a_apiMode);
 		~Menu();
 
 		Menu(const Menu&) = delete;
@@ -46,11 +47,18 @@ namespace Modex
 			ImGuiWindowFlags_NoNav              |
 			ImGuiWindowFlags_NoBringToFrontOnFocus;
 
+		using FormSelectorCallback = std::function<void(const std::vector<RE::FormID>&)>;
+		void SetFormSelectorParams(Ownership a_ownership, const FormSelectorOptions& a_options, FormSelectorCallback a_callback);
+
 	private:
 		void DrawSidebar();
 		void DrawModule();
 		void DrawBackground(const ImVec2& a_displaySize);
 
+		bool m_apiMode;
+		Ownership m_formSelectorOwnership = Ownership::Item;
+		FormSelectorOptions m_formSelectorOptions;
+		FormSelectorCallback m_formSelectorCallback;
 		bool expand_sidebar;
 		bool sidebar_initialized = false;
 
@@ -72,6 +80,7 @@ namespace Modex
 			Teleport,
 			Outfit,
 			Settings,
+			FormSelector,
 			Count
 		};
 
@@ -88,7 +97,8 @@ namespace Modex
 		uint8_t                   m_activeModuleIndex; 
 
 		// Helpers
-		std::unique_ptr<UIModule> CreateModule(ModuleType a_type);
+		std::unique_ptr<UIModule> CreateModule(ModuleType a_type, Ownership a_owner = Ownership::None);
 		std::unique_ptr<UIModule> CreateModule(uint8_t a_index);
+		std::unique_ptr<UIModule> CreateFormSelectorModule(Ownership a_owner, const FormSelectorOptions& a_options);
 	};
 }

@@ -23,10 +23,20 @@ namespace Modex
 		UIModule::LoadSharedReference();
 
 		m_windowStack.clear();
-		m_windowStack.push_back(std::make_unique<Menu>());
+		m_windowStack.push_back(std::make_unique<Menu>(m_APIWindow));
 		m_gui = std::make_unique<ModexGUIMenu>();
 
 		m_menu = static_cast<Menu*>(m_windowStack.back().get());
+
+		if (m_APIWindow && m_formSelectorCallback) {
+			m_menu->SetFormSelectorParams(m_formSelectorOwnership, m_formSelectorOptions, [this](const std::vector<RE::FormID>& ids) {
+				m_formSelectorFired = true;
+				if (m_formSelectorCallback) {
+					m_formSelectorCallback(ids.empty() ? nullptr : ids.data(), static_cast<uint32_t>(ids.size()));
+				}
+			});
+		}
+
 		m_menu->OpenWindow(this);
 	}
 
@@ -38,10 +48,36 @@ namespace Modex
 			window->CloseWindow();
 		}
 
+		// If the form selector was closed without confirming (e.g. user pressed Escape),
+		// fire the callback with 0 items so the Papyrus script can reset its state.
+		if (m_APIWindow && m_formSelectorCallback && !m_formSelectorFired) {
+			m_formSelectorCallback(nullptr, 0);
+		}
+
+		m_formSelectorCallback = nullptr;
+		m_formSelectorOptions.Reset();
+		m_formSelectorFired = false;
+		m_APIWindow = false;
+
 		UIModule::SaveSharedReference();
 		UserData::Save();
 
 		ImGui::GetIO().ClearInputKeys();
+	}
+
+	void UIManager::OpenFormSelector(Ownership a_ownership, FormSelectorCallback a_callback, const FormSelectorOptions& a_options)
+	{
+		if (IsMenuOpen()) {
+			return;
+		}
+
+		m_formSelectorCallback = a_callback;
+		m_formSelectorOwnership = a_ownership;
+		m_formSelectorOptions = a_options;
+		m_formSelectorFired = false;
+		m_APIWindow = true;
+
+		Open();
 	}
 
 	void UIManager::Open()
@@ -150,7 +186,7 @@ namespace Modex
 		const auto& config = UserConfig::Get();
 		const auto& io = ImGui::GetIO();
 
-		if (!config.disableAlt && !io.WantCaptureKeyboard) {
+		if (!config.disableAlt && !io.WantCaptureKeyboard && UIManager::GetSingleton()->m_APIWindow) {
 			if (ImGui::IsKeyReleased(ImGuiMod_Alt)) {
 				if (const auto& menu = UIManager::GetSingleton()->m_menu; menu) {
 					menu->NextWindow();
@@ -159,7 +195,6 @@ namespace Modex
 		}
 	}
 
-	static inline bool build_atlas = true;
 	void UIManager::Render()
 	{
 		ImGui_ImplDX11_NewFrame();

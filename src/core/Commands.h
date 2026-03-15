@@ -45,11 +45,14 @@ namespace Modex::Commands
 	static inline void OpenActorInventory(RE::TESObjectREFR* a_actorRef)
 	{
 		if (a_actorRef) {
-			UIManager::GetSingleton()->Close();
+			if (UIManager::GetSingleton()->IsMenuOpen()) {
+				UIManager::GetSingleton()->Close();
+				UIManager::GetSingleton()->SetMenuListener(true);
+			}
+
 			SKSE::GetTaskInterface()->AddTask([a_actorRef]() {
 				TESObjectREFR_OpenContainer(a_actorRef, RE::ContainerMenu::ContainerMode::kLoot);
 			});
-			UIManager::GetSingleton()->SetMenuListener(true);
 		}
 	}
 
@@ -187,6 +190,70 @@ namespace Modex::Commands
 		return result;
 	}
 
+	// Returns a deterministic estimate of a leveled list's value by walking
+	// entries statically rather than using engine RNG resolution. Takes the max
+	// value of any single entry (or sums all if UseAll flag is set) so the
+	// result is stable across frames and can't be cheesed by re-rolling.
+	static inline int GetProjectedLeveledListValue(const RE::TESLeveledList* a_list)
+	{
+		if (!a_list || a_list->entries.empty()) return 0;
+
+		const bool useAll = (a_list->llFlags & RE::TESLeveledList::Flag::kUseAll) != 0;
+
+		int maxValue = 0;
+		int sumValue = 0;
+
+		for (auto& entry : a_list->entries) {
+			if (!entry.form) continue;
+
+			int entryValue = 0;
+
+			if (entry.form->GetFormType() == RE::FormType::LeveledItem) {
+				if (auto nested = entry.form->As<RE::TESLeveledList>()) {
+					entryValue = GetProjectedLeveledListValue(nested) * entry.count;
+				}
+			} else {
+				if (auto bound = entry.form->As<RE::TESBoundObject>()) {
+					entryValue = bound->GetGoldValue() * entry.count;
+				}
+			}
+
+			sumValue += entryValue;
+			if (entryValue > maxValue) {
+				maxValue = entryValue;
+			}
+		}
+
+		return useAll ? sumValue : maxValue;
+	}
+
+	static inline int GetOutfitValue(const RE::BGSOutfit* a_outfit, uint16_t a_level = 0)
+	{
+		(void)a_level;
+		if (!a_outfit || a_outfit->outfitItems.size() == 0) return 0;
+
+		int value = 0;
+
+		a_outfit->ForEachItem([&](RE::TESForm* a_form) {
+			if (!a_form)
+				return RE::BSContainer::ForEachResult::kContinue;
+
+			if (a_form->GetFormType() == RE::FormType::LeveledItem) {
+				if (auto leveledList = a_form->As<RE::TESLeveledList>()) {
+					value += GetProjectedLeveledListValue(leveledList);
+				}
+			} else {
+				if (auto bound = a_form->As<RE::TESBoundObject>()) {
+					value += bound->GetGoldValue();
+				}
+			}
+
+			return RE::BSContainer::ForEachResult::kContinue;
+		});
+
+		return value;
+	}
+
 	static inline const std::vector<BaseObject> GetOutfitItems(const RE::BGSOutfit* a_outfit, uint16_t a_level = 0)
 	{
 		if (!a_outfit || a_outfit->outfitItems.size() == 0) return {};
@@ -221,7 +288,27 @@ namespace Modex::Commands
 		return m_inventory;
 	}
 
-	// Called repeatedly in a loop
+	static inline void AddItemToInventory(Ownership a_owner, RE::TESObjectREFR* a_targetRef, RE::FormID a_item, uint32_t a_amount = 1)
+	{
+		if (!a_targetRef)
+			return;
+
+		SKSE::GetTaskInterface()->AddTask([a_owner, a_targetRef, a_item, a_amount]() {
+			auto form = RE::TESForm::LookupByID(a_item);
+
+			if (!form)
+				return;
+
+			auto boundObject = form->As<RE::TESBoundObject>();
+
+			if (!boundObject)
+				return;
+
+			a_targetRef->AddObjectToContainer(boundObject, nullptr, a_amount, nullptr);
+			UserData::SendEvent(ModexActionType::AddItem, a_item, a_owner);
+		});
+	}
+
 	static inline void AddItemToInventory(Ownership a_owner, RE::TESObjectREFR* a_targetRef, const std::string& a_editorID, uint32_t a_amount = 1)
 	{
 		if (!a_targetRef)
@@ -258,6 +345,25 @@ namespace Modex::Commands
 
 		SKSE::GetTaskInterface()->AddTask([a_owner, a_targetRef, a_editorID, a_amount]() {
 			if (auto leveled = RE::TESForm::LookupByEditorID<RE::TESLeveledList>(a_editorID)) {
+				auto resolved = ResolveLeveledList(leveled, a_targetRef, a_amount);
+
+				for (auto& entry : resolved) {
+					a_targetRef->AddObjectToContainer(entry.object, nullptr, entry.count, nullptr);
+
+					auto editorid = po3_GetEditorID(entry.object->GetFormID());
+					UserData::SendEvent(ModexActionType::AddItem, editorid, a_owner);
+				}
+			}
+		});
+	}
+
+	static inline void AddLeveledListToRefInventory(Ownership a_owner, RE::TESObjectREFR* a_targetRef, RE::FormID a_formID, uint16_t a_amount = 1)
+	{
+		if (!a_targetRef)
+			return;
+
+		SKSE::GetTaskInterface()->AddTask([a_owner, a_targetRef, a_formID, a_amount]() {
+			if (auto leveled = RE::TESForm::LookupByID<RE::TESLeveledList>(a_formID)) {
 				auto resolved = ResolveLeveledList(leveled, a_targetRef, a_amount);
 
 				for (auto& entry : resolved) {

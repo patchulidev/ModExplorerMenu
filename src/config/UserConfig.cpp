@@ -36,6 +36,7 @@ namespace Modex
 	{
 		ASSERT_MSG(!Load(true), "Failed to load user config!");
 	
+		Info("SETTINGS LOADED");
 		user.showMenuKey 	= ConfigManager::Get<uint32_t>("Open Menu Keybind", _default.showMenuKey);
 		user.showMenuModifier 	= ConfigManager::Get<uint32_t>("Open Menu Modifier", _default.showMenuModifier);
 		user.modListSort 	= ConfigManager::Get<uint32_t>("Plugin List Sorting", _default.modListSort);

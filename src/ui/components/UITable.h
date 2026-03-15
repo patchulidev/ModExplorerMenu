@@ -102,7 +102,8 @@ namespace Modex
 			ModexTableFlag_EnableFilterTree = 1 << 4,
 			ModexTableFlag_EnableHeader = 1 << 5,
 			ModexTableFlag_EnableDebugToolkit = 1 << 6,
-			ModexTableFlag_EnableItemPreviewOnHover = 1 << 7
+			ModexTableFlag_EnableItemPreviewOnHover = 1 << 7,
+			ModexTableFlag_APIMode = 1 << 8
 		};
 
 		enum TableMode : uint32_t {
@@ -148,8 +149,10 @@ namespace Modex
 		const TableItem&        GetItemPreview() { return itemPreview; }
 
 		//                      class builder methods
+		using SelectionChangedCallback = std::function<void(const std::vector<RE::FormID>&)>;
 		void                    SetKitPointer(Kit* a_kit) { selectedKitPtr = a_kit; }
 		void                    SetDragDropHandle(DragDropHandle a_handle);
+		void                    SetSelectionChangedCallback(SelectionChangedCallback a_callback) { m_selectionChangedCallback = std::move(a_callback); }
 
 		//                      target reference accessors
 		RE::TESObjectREFR*      GetTableTargetRef() const { return tableTargetRef; }
@@ -247,5 +250,6 @@ namespace Modex
 		DragDropHandle                      dragDropHandle;
 		std::map<DragDropHandle, UITable*>     dragDropSourceList;
 		ImGuiSelectionBasicStorage          selectionStorage;
+		SelectionChangedCallback            m_selectionChangedCallback;
 	};
 }

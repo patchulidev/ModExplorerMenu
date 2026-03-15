@@ -12,6 +12,7 @@
 #include "ui/modules/settings/SettingsModule.h"
 #include "ui/modules/inventory/InventoryModule.h"
 #include "ui/modules/outfit/OutfitModule.h"
+#include "ui/modules/formselector/FormSelectorModule.h"
 
 #include "config/UserData.h"
 #include "config/UserConfig.h"
@@ -24,13 +25,30 @@ namespace Modex
 {
 	void Menu::OnOpening()
 	{
-		uint8_t last_module = UserData::Get<uint8_t>("lastModule", 0);
-		uint8_t last_layout = UserData::Get<uint8_t>("lastLayout", 0);
+		if (!m_apiMode) {
+			uint8_t last_module = UserData::Get<uint8_t>("lastModule", 0);
+			uint8_t last_layout = UserData::Get<uint8_t>("lastLayout", 0);
 
-		this->expand_sidebar = UserData::Get<bool>("Menu::Sidebar", true);
-		this->sidebar_initialized = false;
+			this->expand_sidebar = UserData::Get<bool>("Menu::Sidebar", true);
+			this->sidebar_initialized = false;
 
-		LoadModule(last_module, last_layout);
+			LoadModule(last_module, last_layout);
+		} else {
+			m_activeModule = CreateFormSelectorModule(m_formSelectorOwnership, m_formSelectorOptions);
+			m_activeModuleIndex = 0;
+
+			if (m_formSelectorCallback) {
+				auto* selector = static_cast<FormSelectorModule*>(m_activeModule.get());
+				selector->SetCallback(m_formSelectorCallback);
+			}
+		}
+	}
+
+	void Menu::SetFormSelectorParams(Ownership a_ownership, const FormSelectorOptions& a_options, FormSelectorCallback a_callback)
+	{
+		m_formSelectorOwnership = a_ownership;
+		m_formSelectorOptions = a_options;
+		m_formSelectorCallback = std::move(a_callback);
 	}
 
 	void Menu::OnOpened()
@@ -42,7 +60,7 @@ namespace Modex
 	{
 		Trace("Menu::OnClosing() - Saving Module and Layout state");
 
-		if (m_activeModule) {
+		if (m_activeModule && !m_apiMode) {
 			UserData::Set("lastModule", m_activeModuleIndex);
 			UserData::Set("lastLayout", m_activeModule->GetActiveLayoutIndex());
 		}
@@ -83,8 +101,8 @@ namespace Modex
 		const auto& displaySize = ImGui::GetIO().DisplaySize;
 		
 		// Predefined window size.
-		const float size_x = displaySize.x * 0.90f;
-		const float size_y = displaySize.y * 0.775f;
+		const float size_x = m_apiMode ? displaySize.x * 0.50f : displaySize.x * 0.90f;
+		const float size_y = m_apiMode ? displaySize.y : displaySize.y * 0.775f;
 
 		// User defined window scale.
 		const float scale_x = (config.uiScaleHorizontal / 100.0f);
@@ -95,8 +113,8 @@ namespace Modex
 		const float size_h = std::clamp(size_y * scale_y, displaySize.y / 4.0f, displaySize.y);
 
 		// Resolve final window resolution conditionally.
-		const float window_w = config.fullscreen ? displaySize.x : size_w;
-		const float window_h = config.fullscreen ? displaySize.y : size_h;
+		const float window_w = (!m_apiMode && config.fullscreen) ? displaySize.x : size_w;
+		const float window_h = (!m_apiMode && config.fullscreen) ? displaySize.y : size_h;
 
 		min_sidebar_w = 64.0f + (ImGui::GetStyle().WindowPadding.x * 2);
 		max_sidebar_w = size_w * 0.12f;
@@ -112,22 +130,26 @@ namespace Modex
 		// Push style for Modex Menu window
 		ImGui::PushStyleColor(ImGuiCol_WindowBg, ThemeConfig::GetColor("WINDOW_BACKGROUND", m_alpha));
 
-		if (config.fullscreen) {
+		if (!m_apiMode && config.fullscreen) {
 			ImGui::SetNextWindowPos(ImVec2(0.f, 0.f));
 			ImGui::SetNextWindowSize(ImVec2(displaySize.x, displaySize.y));
 		} else {
+			ImGui::SetNextWindowPos(ImVec2(0.f, 0.f));
 			ImGui::SetNextWindowSize(ImVec2(window_w, window_h));
 		}
 
-		if (config.lockPosition && !config.fullscreen) {
+		if (config.lockPosition && !config.fullscreen && !m_apiMode) {
 			ImGui::SetNextWindowPos(ImVec2(center_x, center_y));
 		}
 
 		if (ImGui::Begin("##Modex::Menu", nullptr, WINDOW_FLAGS)) {
 			ImGui::SetCursorPos(ImVec2(0, 0));
 
-			UINotification::DrawMessageContainer(ImGui::GetWindowPos(), ImVec2(size_x / 2.0f, size_h));
-			UINotification::DrawTooltipContainer(ImVec2(ImGui::GetWindowPos().x + sidebar_w, ImGui::GetWindowPos().y), ImVec2(window_w - sidebar_w, window_h));
+			if (!m_apiMode) {
+				UINotification::DrawMessageContainer(ImGui::GetWindowPos(), ImVec2(size_x / 2.0f, size_h));
+				UINotification::DrawTooltipContainer(ImVec2(ImGui::GetWindowPos().x + sidebar_w, ImGui::GetWindowPos().y), ImVec2(window_w - sidebar_w, window_h));
+
+			}
 
 			DrawSidebar();
 			DrawModule();
@@ -143,6 +165,8 @@ namespace Modex
 
 	void Menu::DrawBackground(const ImVec2& a_displaySize)
 	{
+		if (m_apiMode) return;
+
 		ImGui::SetNextWindowPos(ImVec2(0, 0));
 		ImGui::SetNextWindowSize(a_displaySize);
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
@@ -173,13 +197,15 @@ namespace Modex
 	void Menu::DrawModule()
 	{
 		if (m_activeModule) {
-			m_activeModule->SetOffset(sidebar_w);
+			m_activeModule->SetOffset(m_apiMode ? 0.0f : sidebar_w);
 			m_activeModule->Draw();
 		}
 	}
 
 	void Menu::DrawSidebar()
 	{
+		if (m_apiMode) return;
+
 		sidebar_h = ImGui::GetContentRegionAvail().y + ImGui::GetStyle().WindowPadding.y;
 
 		ImGui::SetNextItemAllowOverlap();
@@ -264,7 +290,7 @@ namespace Modex
 		ImGui::SameLine();
 	}
 
-	std::unique_ptr<UIModule> Menu::CreateModule(ModuleType a_type)
+	std::unique_ptr<UIModule> Menu::CreateModule(ModuleType a_type, Ownership a_owner)
 	{
 		switch (a_type) {
 		case ModuleType::Home:
@@ -285,6 +311,8 @@ namespace Modex
 			return std::make_unique<OutfitModule>();
 		case ModuleType::Settings:
 			return std::make_unique<SettingsModule>();
+		case ModuleType::FormSelector:
+			return std::make_unique<FormSelectorModule>(a_owner);
 		case ModuleType::Count:
 			break;
 		}
@@ -302,30 +330,42 @@ namespace Modex
 		return CreateModule(static_cast<ModuleType>(a_index));
 	}
 
+	std::unique_ptr<UIModule> Menu::CreateFormSelectorModule(Ownership a_owner, const FormSelectorOptions& a_options)
+	{
+		return std::make_unique<FormSelectorModule>(a_owner, a_options);
+	}
+
 	Menu::~Menu()
 	{
 		Trace("Menu::~Menu() - Destructed");
 	}
 	
-	Menu::Menu()
-		: expand_sidebar(false)
+	Menu::Menu(bool a_apiMode)
+		: m_apiMode(a_apiMode)
+		, expand_sidebar(false)
 		, sidebar_initialized(false)
 		, m_activeModule(nullptr)
 		, m_activeModuleIndex(0)
 	{
 		Trace("Menu::Menu() - Constructing");
 
-		m_moduleInfo = {
-			{Translate("MODULE_HOME"), ICON_LC_HOUSE, .0f, ModuleType::Home},
-			{Translate("MODULE_ADDITEM"), ICON_LC_PLUS, .0f, ModuleType::AddItem},
-			{Translate("MODULE_EQUIPMENT"), ICON_LC_PACKAGE, .0f, ModuleType::Equipment},
-			{Translate("MODULE_INVENTORY"), ICON_LC_PACKAGE, .0f, ModuleType::Inventory},
-			{Translate("MODULE_ACTOR"), ICON_LC_USER, .0f, ModuleType::Actor},
-			// {Translate("MODULE_OBJECT"), ICON_LC_BLOCKS, .0f, ModuleType::Object},
-			{Translate("MODULE_TELEPORT"), ICON_LC_MAP_PIN, .0f, ModuleType::Teleport},
-			{Translate("MODULE_OUTFIT"), ICON_LC_SHIRT, .0f, ModuleType::Outfit},
-			{Translate("MODULE_SETTINGS"), ICON_LC_SETTINGS, .0f, ModuleType::Settings}
-		};
+		if (!a_apiMode) {
+			m_moduleInfo = {
+				{Translate("MODULE_HOME"), ICON_LC_HOUSE, .0f, ModuleType::Home},
+				{Translate("MODULE_ADDITEM"), ICON_LC_PLUS, .0f, ModuleType::AddItem},
+				{Translate("MODULE_EQUIPMENT"), ICON_LC_PACKAGE, .0f, ModuleType::Equipment},
+				{Translate("MODULE_INVENTORY"), ICON_LC_PACKAGE, .0f, ModuleType::Inventory},
+				{Translate("MODULE_ACTOR"), ICON_LC_USER, .0f, ModuleType::Actor},
+				// {Translate("MODULE_OBJECT"), ICON_LC_BLOCKS, .0f, ModuleType::Object},
+				{Translate("MODULE_TELEPORT"), ICON_LC_MAP_PIN, .0f, ModuleType::Teleport},
+				{Translate("MODULE_OUTFIT"), ICON_LC_SHIRT, .0f, ModuleType::Outfit},
+				{Translate("MODULE_SETTINGS"), ICON_LC_SETTINGS, .0f, ModuleType::Settings}
+			};
+		} else {
+			m_moduleInfo = {
+				{Translate("MODULE_FORMSELECTOR"), ICON_LC_HOUSE, .0f, ModuleType::FormSelector}
+			};
+		}
 
 		Trace("Menu::Menu() - Constructed");
 	}
