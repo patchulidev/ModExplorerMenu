@@ -1178,6 +1178,7 @@ namespace Modex
 		colors.outline = ThemeConfig::GetColorU32("TABLE_BORDER", colors.alpha);
 		colors.hover = ThemeConfig::GetColorU32("TABLE_HOVER", colors.alpha);
 		colors.text = ThemeConfig::GetColorU32("TEXT", colors.alpha);
+		colors.textDisabled = ThemeConfig::GetColorU32("TEXT_DISABLED", colors.alpha);
 		colors.textEnchanted = ThemeConfig::GetColorU32("TEXT_ENCHANTED", colors.alpha);
 		colors.textUnique = ThemeConfig::GetColorU32("TEXT_UNIQUE", colors.alpha);
 		colors.textEssential = ThemeConfig::GetColorU32("TEXT_ESSENTIAL", colors.alpha);
@@ -2341,11 +2342,29 @@ namespace Modex
 		ImGui::PopStyleVar();
 	}
 
+	// yuck
+	const char* GetTableLocale(Ownership a_owner)
+	{
+		switch (a_owner) {
+			case Ownership::Actor: return "TABLE_ACTOR";
+			case Ownership::All: return "TABLE_ALL";
+			case Ownership::Cell: return "TABLE_TELEPORT";
+			case Ownership::Item: return "TABLE_ITEM";
+			case Ownership::Kit: return "TABLE_KIT";
+			case Ownership::Object: return "TABLE_OBJECT";
+			case Ownership::Outfit: return "TABLE_OUTFIT";
+			case Ownership::None: return "TABLE_NONE";
+		}
+
+		return "MISSING_KEY";
+	}
+
 	void UITable::DrawStatusBar()
 	{
 		static constexpr const char* valid_icon = ICON_LC_ASTERISK;
 		static constexpr const char* invalid_icon = ICON_LC_X;
 		static constexpr const char* warning_icon = ICON_LC_TRIANGLE_ALERT;
+		std::string table;
 		std::string status;
 
 		bool valid_target = tableTargetRef != nullptr;
@@ -2425,26 +2444,36 @@ namespace Modex
 		if (valid_target && valid_type && !warning) {
 			ImGui::PopFont();
 		}
-		
-		if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort | ImGuiHoveredFlags_NoSharedDelay)) {
-			UICustom::FancyTooltip("STATUS_BAR_TOOLTIP");
-		}
 
 		ImGui::SameLine();
 
 		const ImVec2 icon_position = ImVec2(
-				(ImGui::GetCursorScreenPos().x - user_width),
-				(ImGui::GetCursorScreenPos().y + 5.0f));
+			(ImGui::GetCursorScreenPos().x - user_width),
+			(ImGui::GetCursorScreenPos().y + 5.0f));
 
 		const ImVec2 link_position = ImVec2(
-				(ImGui::GetCursorScreenPos().x - ImGui::GetFrameHeight() * 1.50f),
-				(ImGui::GetCursorScreenPos().y + 5.0f));
+			(ImGui::GetCursorScreenPos().x - ImGui::GetFrameHeight() * 1.50f),
+			(ImGui::GetCursorScreenPos().y + 5.0f));
+		
+		const std::string item_count = std::format("[{}]", std::ssize(tableList));
+		const ImVec2 count_position = ImVec2(
+			(link_position.x - ImGui::CalcTextSize(item_count.c_str()).x - (ImGui::GetFrameHeight() / 2.0f)),
+			(link_position.y));
 
 		ImGui::PushFont(NULL, ImGui::GetFontSize() + 2.0f);
 		const auto& DrawList = ImGui::GetWindowDrawList();
 		DrawList->AddText(icon_position, colors.text, status_icon);
 		DrawList->AddText(link_position, colors.text, useSharedTarget ? ICON_LC_LINK : ICON_LC_UNLINK);
+		DrawList->AddText(count_position, colors.textDisabled, item_count.c_str());
 		ImGui::PopFont();
+
+		if (ImGui::IsMouseHoveringRect(link_position, link_position + ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight()))) {
+			UICustom::FancyTooltip("STATUS_BAR_LINK");
+		} else if (ImGui::IsMouseHoveringRect(count_position, count_position + ImGui::CalcTextSize(item_count.c_str()))) {
+			UICustom::FancyTooltip("STATUS_BAR_COUNT");
+		} else if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort | ImGuiHoveredFlags_NoSharedDelay)) {
+			UICustom::FancyTooltip("STATUS_BAR_TOOLTIP");
+		}
 
 		if (user_shift_clicked) {
 			auto* reference = UIModule::GetTargetReference();
@@ -2485,6 +2514,8 @@ namespace Modex
 			);
 		}
 
+		ImGui::NewLine();
+		ImGui::SetCursorPosY(ImGui::GetCursorPosY() - ImGui::GetStyle().ItemSpacing.y);
 		ImGui::PushStyleColor(ImGuiCol_Separator, ThemeConfig::GetColor(status_color));
 		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 		ImGui::PopStyleColor();
@@ -2555,15 +2586,6 @@ namespace Modex
 
 				if (ImGui::Selectable(key_text.c_str(), is_selected)) {
 					sortSystem->SetSortData({a_column, key});
-					// SortListBySpecs();
-					// UpdateImGuiTableIDs();
-
-					// return SortSystem::SortQuery{false, key.GetPropertyType()};
-					// sortSystem->SetSecondarySortFilter(key);
-					// this->SortListBySpecs();
-					// this->UpdateImGuiTableIDs();
-					// UserData::Set<int>(data_id + "::SortBy", static_cast<int>(key.GetPropertyType()));
-					//
 				}
 				
 				if (is_selected) {

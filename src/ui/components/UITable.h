@@ -25,6 +25,7 @@ namespace Modex
 			ImU32 hover;
 			ImU32 outline;
 			ImU32 text;
+			ImU32 textDisabled;
 			ImU32 textEnchanted;
 			ImU32 textUnique;
 			ImU32 textEssential;

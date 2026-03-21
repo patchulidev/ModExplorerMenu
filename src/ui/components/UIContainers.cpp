@@ -377,9 +377,9 @@ namespace Modex
 		ImGui::SameLine();
 		ImGui::SetCursorPos(a_pos);
 		if (ImGui::BeginChild(a_localeText, a_size, false, ImGuiWindowFlags_NoBringToFrontOnFocus)) {
-			std::string count = std::format("[{}]", a_view->GetTableList().size());
-			UICustom::SubCategoryHeader(Translate(a_localeText), count.c_str());
-			ImGui::Spacing();
+			// std::string count = std::format("[{}]", a_view->GetTableList().size());
+			// UICustom::SubCategoryHeader(Translate(a_localeText), count.c_str());
+			// ImGui::Spacing();
 			a_view->Draw(a_view->GetTableList());
 		}
 		ImGui::EndChild();
