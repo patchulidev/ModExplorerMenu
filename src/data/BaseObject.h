@@ -187,7 +187,7 @@ namespace Modex
 			case PropertyType::kFlora:
 				return ICON_LC_FLOWER;
 			case PropertyType::kPlugin:
-				return ICON_LC_BOX;
+				return ICON_LC_FILE;
 			case PropertyType::kFormID:
 				return ICON_LC_ASTERISK;
 			case PropertyType::kName:

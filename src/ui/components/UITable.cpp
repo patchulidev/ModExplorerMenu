@@ -3,10 +3,11 @@
 #include "core/Commands.h"
 #include "data/BaseObject.h"
 #include "external/icons/IconsLucide.h"
+#include "imgui.h"
 #include "imgui_internal.h"
-#include "localization/FontManager.h"
 #include "localization/Locale.h"
 #include "ui/core/UIManager.h"
+#include "localization/FontManager.h"
 #include "ui/components/UICustom.h"
 #include "ui/components/ItemPreview.h"
 #include "ui/components/UINotification.h"
@@ -155,6 +156,14 @@ namespace Modex
 
 		if (UserConfig::Get().developerMode) {
 			this->flags |= ModexTableFlag_EnableDebugToolkit;
+		}
+
+		if (HasFlag(ModexTableFlag_Kit)) {
+			sortSystem->SetupColumns({
+					{0, PropertyType::kEditorID},
+					{1, PropertyType::kArmorType},
+					{2, PropertyType::kKitItemCount}
+			});
 		}
 
 		BuildPluginList();
@@ -1994,11 +2003,11 @@ namespace Modex
 	void UITable::DrawKitItem(const std::unique_ptr<BaseObject>& a_item, const ImVec2& a_pos, bool a_selected)
 	{
 		const auto& draw_list = ImGui::GetWindowDrawList();
-		const auto& font_size = ImGui::GetFontSize();
+		const float font_size = ImGui::GetFontSize();
 
 		// Setup box and bounding box for positioning and drawing.
-		const ImVec2 box_min(a_pos.x - 1, a_pos.y - 1);
-		const ImVec2 box_max(box_min.x + LayoutItemSize.x + 2, box_min.y + LayoutItemSize.y + 2);
+		const ImVec2 box_min(a_pos.x, a_pos.y);
+		const ImVec2 box_max(box_min.x + LayoutItemSize.x, box_min.y + LayoutItemSize.y);
 		ImRect bb(box_min, box_max);
 
 		// Background
@@ -2020,95 +2029,98 @@ namespace Modex
 			draw_list->AddRectFilled(bb.Min, bb.Max, colors.error);
 		}
 
+		// Outline
 		draw_list->AddRect(bb.Min, bb.Max, colors.outline, 0.0f, 0, 1.0f);
-		
 
-		// Type Color Identifier
+		// Type Color Pillar Identifier
 		const float type_pillar_width = 5.0f;
 		draw_list->AddRectFilled(
-			ImVec2(bb.Min.x, bb.Min.y),
-			ImVec2(bb.Min.x + type_pillar_width, bb.Max.y),
-			UICustom::GetFormTypeColor(a_item->GetFormType())
-		);
+			ImVec2(bb.Min.x + LayoutOuterPadding, bb.Min.y + LayoutOuterPadding),
+			ImVec2(bb.Min.x + LayoutOuterPadding + type_pillar_width, bb.Max.y - LayoutOuterPadding),
+			UICustom::GetFormTypeColor(a_item->GetFormType()));
 
 		// Type Pillar tooltip
 		if (IsMouseHoveringRect(
 			ImVec2(bb.Min.x + LayoutOuterPadding, bb.Min.y + LayoutOuterPadding),
-			ImVec2(bb.Min.x - LayoutOuterPadding + type_pillar_width, bb.Max.y - LayoutOuterPadding))) {
+			ImVec2(bb.Min.x + LayoutOuterPadding + type_pillar_width, bb.Max.y - LayoutOuterPadding))) {
 			UINotification::ShowObjectTooltip(a_item);
 		}
 
-		// Pad bounding box pre-alignment.
+		// Adjust and Setup bounding box and layout spacing.
 		bb.Min.x += type_pillar_width * 2.0f;
-		float spacing = LayoutItemSize.x / 4.0f;
+		const float spacing = (LayoutColumnWidth / std::ssize(sortSystem->GetColumns())) - ImGui::GetFrameHeight();
 
 		// Text alignment calculations
 		const float center_align = bb.Min.y + ((LayoutOuterPadding + LayoutItemSize.y) / 2) - (font_size / 2.0f);
-		const float left_align = bb.Min.x + LayoutOuterPadding;
-		const ImVec2 center_left_align = ImVec2(left_align, center_align);
 
-		// Dynamically concenate quantity to string.
-		const std::string quantity_string = a_item->GetQuantity() > 1 ? std::format(" ({})", std::to_string(a_item->GetQuantity())) : "";
-		const float quantity_offset = ImGui::CalcTextSize(quantity_string.c_str()).x;
+		// Column 0: Name
+		if (LayoutColumnScreenX.size() > 0) {
+			const std::string quantity_string = a_item->GetQuantity() > 1 ? std::format(" ({})", std::to_string(a_item->GetQuantity())) : "";
+			const float quantity_offset = ImGui::CalcTextSize(quantity_string.c_str()).x;
 
-		// Resolve item naming string based on editorid, icon, and truncation.
-		const std::string item_icon = showItemIcon ? (a_item->GetItemIcon() + " ").c_str() : "";
-		const std::string raw_name = showEditorID ? a_item->GetEditorID() : a_item->GetName();
-		const std::string name_string = TRUNCATE(item_icon + raw_name, (spacing * 1.75f) - quantity_offset) + quantity_string;
+			const std::string item_icon = showItemIcon ? (a_item->GetItemIcon() + " ").c_str() : "";
+			const std::string raw_name = showEditorID ? a_item->GetEditorID() : a_item->GetName();
+			const std::string name_string = TRUNCATE(item_icon + raw_name, spacing - quantity_offset) + quantity_string;
 
-		bool is_enchanted = false;
-		if (auto weapon = a_item->GetTESWeapon()) {
-			is_enchanted = weapon->formEnchanting;
+			ImU32 item_color = colors.text;
+			if (a_item->IsEnchanted()) {
+				item_color = colors.textEnchanted;
+			} else if (a_item->IsUnique()) {
+				item_color = colors.textUnique;
+			} else if (a_item->IsEssential()) {
+				item_color = colors.textEssential;
+			}
+
+			const ImVec2 name_pos = ImVec2(LayoutColumnScreenX[0], center_align);
+			draw_list->AddText(name_pos, item_color, name_string.c_str());
 		}
-
-		if (auto armor = a_item->GetTESArmor()) {
-			is_enchanted = armor->formEnchanting;
-		}
-
-		const ImU32 item_color = is_enchanted ? colors.textEnchanted : colors.text;
-		draw_list->AddText(center_left_align, item_color, name_string.c_str());
 
 		// Exit early since dummy forms can't be acted upon.
 		if (a_item->IsDummy()) { return; }
-		
-		// Toggelable Equip Button
-		ImVec2 equippable_pos = ImVec2((LayoutItemSize.x / 2.0f), a_pos.y);
-		ImGui::SameLine();
-		ImGui::SetCursorPosX(LayoutItemSize.x / 2.0f);
 
-		const auto icon = a_item->GetEquipped() ? ICON_LC_CHECK : ICON_LC_X;
-		const auto equip_size = ImVec2(LayoutItemSize.x / 4.0f, LayoutItemSize.y);
+		// Column 1: Equip Button
+		if (LayoutColumnScreenX.size() > 1) {
+			const float equip_x = LayoutColumnScreenX[1] - ImGui::GetWindowPos().x + ImGui::GetScrollX();
+			ImGui::SameLine();
+			ImGui::SetCursorPosX(equip_x);
 
-		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, 0.0f));
-		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
+			const auto icon = a_item->GetEquipped() ? ICON_LC_CHECK : ICON_LC_X;
+			const auto equip_size = ImVec2(spacing, LayoutItemSize.y);
 
-		if (a_item->GetFormType() == RE::FormType::Armor || a_item->GetFormType() == RE::FormType::Weapon) {
-			const auto equip_color = a_item->GetEquipped() ? ThemeConfig::GetColor("PRIMARY") : ThemeConfig::GetColor("PRIMARY", 0.5f);
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, 0.0f));
+			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
 
-			ImGui::PushStyleColor(ImGuiCol_Button, equip_color);
-			const auto text = a_item->GetFormType() == RE::FormType::Armor ? a_item->GetArmorSlots()[0] : a_item->GetWeaponType();
-			if (ImGui::Button((std::string(icon) + text).c_str(), equip_size)) {
-				a_item->m_equipped = !a_item->m_equipped;
-				SyncChangesToKit();
+			if (a_item->GetFormType() == RE::FormType::Armor || a_item->GetFormType() == RE::FormType::Weapon) {
+				const auto equip_color = a_item->GetEquipped() ? ThemeConfig::GetColor("PRIMARY") : ThemeConfig::GetColor("PRIMARY", 0.5f);
+
+				ImGui::PushStyleColor(ImGuiCol_Button, equip_color);
+				const auto text = a_item->GetFormType() == RE::FormType::Armor ? a_item->GetArmorSlots()[0] : a_item->GetWeaponType();
+				if (ImGui::Button((std::string(icon) + text).c_str(), equip_size)) {
+					a_item->m_equipped = !a_item->m_equipped;
+					SyncChangesToKit();
+				}
+				ImGui::PopStyleColor();
+			} else {
+				const auto form_type_text = RE::FormTypeToString(a_item->GetFormType());
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ThemeConfig::GetColor("PRIMARY"));
+				ImGui::PushStyleColor(ImGuiCol_ButtonActive, ThemeConfig::GetColor("PRIMARY"));
+				ImGui::Button(form_type_text.data(), equip_size);
+				ImGui::PopStyleColor(2);
 			}
-			ImGui::PopStyleColor();
-		} else {
-			const auto form_type_text = RE::FormTypeToString(a_item->GetFormType());
-			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ThemeConfig::GetColor("PRIMARY"));
-			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ThemeConfig::GetColor("PRIMARY"));
-			ImGui::Button(form_type_text.data(), equip_size);
-			ImGui::PopStyleColor(2);
+
+			ImGui::PopStyleVar(2);
 		}
 
-		ImGui::PopStyleVar(2);
-
-		ImGui::SameLine();
-		ImGui::SetCursorPosX(LayoutItemSize.x / 1.25f);
-		// Input Amount Widget
-		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + LayoutOuterPadding);
-		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - LayoutOuterPadding);
-		if (ImGui::InputInt("##EquipCount", &a_item->m_quantity, 1, 10)) {
-			SyncChangesToKit();
+		// Column 2: Quantity Input
+		if (LayoutColumnScreenX.size() > 2) {
+			const float quantity_x = LayoutColumnScreenX[2] - ImGui::GetWindowPos().x + ImGui::GetScrollX();
+			ImGui::SameLine();
+			ImGui::SetCursorPosX(quantity_x);
+			ImGui::SetCursorPosY(ImGui::GetCursorPosY() + LayoutOuterPadding);
+			ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - LayoutOuterPadding);
+			if (ImGui::InputInt("##EquipCount", &a_item->m_quantity, 1, 10)) {
+				SyncChangesToKit();
+			}
 		}
 	}
 
@@ -2164,8 +2176,7 @@ namespace Modex
 
 		// Adjust and Setup bounding box and layout spacing.
 		bb.Min.x += type_pillar_width * 2.0f;
-		float spacing = (LayoutColumnWidth / 4.0f);
-		float padding = ImGui::GetFrameHeight();
+		float spacing = (LayoutColumnWidth / 3.0f) - (ImGui::GetFrameHeight() * 2.0f);
 
 		// Text alignment calculations
 		const float center_align = bb.Min.y + ((LayoutOuterPadding + LayoutItemSize.y) / 2) - (font_size / 2.0f);
@@ -2173,14 +2184,6 @@ namespace Modex
 		const float right_align = bb.Max.x - LayoutOuterPadding - font_size;
 		const ImVec2 center_left_align = ImVec2(left_align, center_align);
 		const ImVec2 center_right_align = ImVec2(right_align, center_align);
-
-		// Name string construction with dynamic truncation based on available space.
-		const std::string quantity_string = a_item->GetQuantity() > 1 ? std::format(" ({})", std::to_string(a_item->GetQuantity())) : "";
-		const std::string item_icon = showItemIcon ? (a_item->GetItemIcon() + " ").c_str() : "";
-		const float quantity_offset = ImGui::CalcTextSize(quantity_string.c_str()).x;
-
-		const std::string raw_name = showEditorID ? a_item->GetEditorID() : a_item->GetName();
-		const std::string name_string = TRUNCATE(item_icon + raw_name, (spacing * 1.5f) - padding - quantity_offset) + quantity_string;
 
 		const bool is_favorited = a_item->m_refID == 0 ? UserData::IsFavorited(a_item->GetEditorID()) : UserData::IsFavorited(a_item->m_refID);
 		const ImVec2 favorite_pos = ImVec2(center_right_align.x - ImGui::GetFontSize(), center_right_align.y);
@@ -2193,132 +2196,37 @@ namespace Modex
 			}
 		}
 
-		if (a_item->GetFormType() == RE::FormType::NPC) {
-			if (auto npc = a_item->GetTESNPC()) {
-				{
-					if (a_item->GetRefID() != 0) {
-						const ImVec2 icon_pos = is_favorited ? favorite_pos - ImVec2(ImGui::GetFontSize() * 2.0f, 0.0f) : favorite_pos;
-						draw_list->AddText(icon_pos, colors.text, ICON_LC_ASTERISK);
+		const auto columns = sortSystem->GetColumns();
+		for (auto entry : columns) {
+			if (entry.column < 0 || entry.column >= static_cast<int>(LayoutColumnScreenX.size()))
+				continue;
 
-						if (IsMouseHoveringRect(icon_pos, ImVec2(icon_pos.x + font_size, icon_pos.y + font_size))) {
-							UINotification::ShowPropertyTooltip(PropertyType::kReferenceID);
-						}
-					}
+			auto tooltip = entry.property.GetPropertyType();
+			const auto value = a_item->GetPropertyValueWithIcon(entry.property.GetPropertyType());
+			const auto text = TRUNCATE(value, spacing);
+			const auto pos = ImVec2(LayoutColumnScreenX[entry.column], center_align);
 
-					const bool is_essential = a_item->IsEssential();
-					const bool is_unique = a_item->IsUnique();
-
-					if (is_essential && !is_unique) {
-						text_color = colors.textEssential;
-					} else if (is_unique && !is_essential) {
-						text_color = colors.textUnique;
-					} else if (is_essential && is_unique) {
-						text_color = colors.textUniqueEssential;
-					}
-				}
-			}
-		}
-
-		const PropertyType& sort_property = this->sortSystem->GetSecondarySortFilter().GetPropertyType();
-		const ImVec2 sort_pos = ImVec2(bb.Min.x + spacing * 2.5f, center_align);
-		const float sort_text_cutoff = spacing * 1.5f;
-
-		if (const auto& item = a_item; item->IsItem()) {
-			if (auto armor = item->GetTESArmor()) {
-				{
-					const std::string rating_string = item->GetPropertyValueWithIcon(PropertyType::kArmorRating);
-					const std::string type_string = TRUNCATE(item->GetPropertyValueWithIcon(PropertyType::kArmorType), sort_text_cutoff);
-
-					if (armor->formEnchanting != nullptr) {
-						text_color = colors.textEnchanted;
-					}
-
-					if (sort_property == PropertyType::kNone) {
-						draw_list->AddText(sort_pos, colors.text, rating_string.c_str());
-						if (IsMouseHoveringRect(sort_pos, ImVec2(sort_pos.x + font_size, sort_pos.y + font_size))) {
-							UINotification::ShowPropertyTooltip(PropertyType::kArmorRating);
-						}
-					}
+			if (entry.property == PropertyType::kEditorID || entry.property == PropertyType::kName) {
+				if (a_item->IsEnchanted()) {
+					text_color = colors.textEnchanted;
+					tooltip = PropertyType::kEnchanted;
+				} else if (a_item->IsUnique()) {
+					text_color = colors.textUnique;
+					tooltip = PropertyType::kUnique;
+				} else if (a_item->IsEssential()) {
+					text_color = colors.textEssential;
+					tooltip = PropertyType::kEssential;
+				} else if (a_item->IsUnique() && a_item->IsEssential()) {
+					text_color = colors.textUniqueEssential;
+					tooltip = PropertyType::kUniqueEssential;
 				}
 			}
 
-			if (item->GetFormType() == RE::FormType::Book) {
-				if (const auto& book = item->GetTESForm()->As<RE::TESObjectBOOK>(); book != nullptr) {
-					const auto teaches_skill = book->TeachesSkill();
-					const auto teaches_spell = book->TeachesSpell();
+			draw_list->AddText(pos, text_color, text.c_str());
 
-
-					if (sort_property == PropertyType::kNone) {
-						if (teaches_skill || book->GetSkill() != RE::ActorValue::kNone) {
-							const std::string skill_string = TRUNCATE(item->GetPropertyValueWithIcon(PropertyType::kTomeSkill), sort_text_cutoff);
-							draw_list->AddText(sort_pos, colors.text, skill_string.c_str());
-						}
-						
-						if (teaches_spell || book->GetSpell() != nullptr) {
-							const std::string spell_string = TRUNCATE(item->GetPropertyValueWithIcon(PropertyType::kTomeSpell), sort_text_cutoff);
-							draw_list->AddText(sort_pos, colors.text, spell_string.c_str());
-						}
-						
-						if (IsMouseHoveringRect(sort_pos, ImVec2(sort_pos.x + font_size, sort_pos.y + font_size))) {
-							if (teaches_skill) {
-								UINotification::ShowPropertyTooltip(PropertyType::kTomeSkill);
-							} else if (teaches_spell) {
-								UINotification::ShowPropertyTooltip(PropertyType::kTomeSpell);
-							}
-						}
-					}
-				}
-			}
-
-			if (auto weapon = item->GetTESWeapon()) {
-				{
-					const std::string damage_string = item->GetPropertyValueWithIcon(PropertyType::kWeaponDamage);
-					const std::string skill_string = TRUNCATE(item->GetPropertyValueWithIcon(PropertyType::kWeaponSkill), sort_text_cutoff);
-					// const std::string type_string = item.GetPropertyValueWithIcon(PropertyType::kWeaponType);
-
-					if (weapon->formEnchanting != nullptr) {
-						text_color = colors.textEnchanted;
-					}
-					
-					if (sort_property == PropertyType::kNone) {
-						draw_list->AddText(sort_pos, colors.text, damage_string.c_str());
-						if (IsMouseHoveringRect(sort_pos, ImVec2(sort_pos.x + font_size, sort_pos.y + font_size))) {
-							UINotification::ShowPropertyTooltip(PropertyType::kWeaponDamage);
-						}
-					}
-				}
-			}
-		}
-
-		const std::string plugin_name = showFormID ? a_item->GetFormID() : TRUNCATE(a_item->GetPluginName(), spacing - padding);
-		draw_list->AddText(center_left_align, colors.text, plugin_name.c_str());
-
-		const ImVec2 name_pos = ImVec2(bb.Min.x + spacing - 5.0f, center_align);
-		draw_list->AddText(name_pos, text_color, name_string.c_str());
-
-		if (IsMouseHoveringRect(name_pos, ImVec2(name_pos.x + font_size, name_pos.y + font_size))) {
-			UINotification::ShowObjectTooltip(a_item);
-		}
-
-		// Display tooltips relevant to name colors (essential, unique, enchanted)
-		if (IsMouseHoveringRect(name_pos + ImVec2(font_size, 0.0f), ImVec2(name_pos.x + ImGui::CalcTextSize(name_string.c_str()).x, name_pos.y + font_size))) {
-			if (a_item->IsEssential() && !a_item->IsUnique()) {
-				UINotification::ShowPropertyTooltip(PropertyType::kEssential);
-			} else if (a_item->IsUnique() && !a_item->IsEssential()) {
-				UINotification::ShowPropertyTooltip(PropertyType::kUnique);
-			} else if (a_item->IsUnique() && a_item->IsEssential()) {
-				UINotification::ShowPropertyTooltip(PropertyType::kUniqueEssential);
-			} else if (a_item->IsEnchanted()) {
-				UINotification::ShowPropertyTooltip(PropertyType::kEnchanted);
-			}
-		}
-
-		if (sort_property != PropertyType::kPlugin and sort_property != PropertyType::kName and sort_property != PropertyType::kGoldValue) {
-			const std::string sort_text = TRUNCATE(a_item->GetPropertyValueWithIcon(sort_property), spacing * 0.75f);
-			draw_list->AddText(sort_pos, colors.text, sort_text.c_str());
-			
-			if (IsMouseHoveringRect(sort_pos, ImVec2(sort_pos.x + ImGui::CalcTextSize(sort_text.c_str()).x, sort_pos.y + font_size))) {
-				UINotification::ShowPropertyTooltip(sort_property);
+			const auto text_size = ImGui::CalcTextSize(text.c_str());
+			if (ImGui::IsMouseHoveringRect(pos, pos + text_size)) {
+				UINotification::ShowPropertyTooltip(tooltip);
 			}
 		}
 	}
@@ -2425,6 +2333,9 @@ namespace Modex
 			UserData::Set<bool>("Modex::Table::ShowAltRowBG", true);
 			UserData::Set<bool>("Modex::Table::ShowItemIcon", true);
 			UserData::Set<bool>("Modex::Table::UseQuickSearch", false);
+			sortSystem->Reset();
+			SortListBySpecs();
+			UpdateImGuiTableIDs();
 		}
 
 		ImGui::PopStyleVar();
@@ -2481,7 +2392,6 @@ namespace Modex
 		const auto status_color = warning ? "ERROR" : 
 			tableTargetRef->IsPlayerRef() ? "SUCCESS" : "WARN";
 
-
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(ImGui::GetFontSize(), 3.0f));
 		ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.5f, 0.5f));
@@ -2512,7 +2422,6 @@ namespace Modex
 			ImGui::OpenPopup("STATUS_BAR_CONTEXT_MENU");
 		}
 
-
 		if (valid_target && valid_type && !warning) {
 			ImGui::PopFont();
 		}
@@ -2528,7 +2437,7 @@ namespace Modex
 				(ImGui::GetCursorScreenPos().y + 5.0f));
 
 		const ImVec2 link_position = ImVec2(
-				(ImGui::GetCursorScreenPos().x - ImGui::GetFrameHeightWithSpacing() * 2.75f),
+				(ImGui::GetCursorScreenPos().x - ImGui::GetFrameHeight() * 1.50f),
 				(ImGui::GetCursorScreenPos().y + 5.0f));
 
 		ImGui::PushFont(NULL, ImGui::GetFontSize() + 2.0f);
@@ -2576,31 +2485,6 @@ namespace Modex
 			);
 		}
 
-		// Settings Button
-		ImGui::PushFont(NULL, ImGui::GetFontSize() + 2.0f);
-		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.f, 0.f));
-		ImGui::PushStyleColor(ImGuiCol_Button, ThemeConfig::GetColor(status_color));
-		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ThemeConfig::GetHover(status_color));
-		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ThemeConfig::GetActive(status_color));
-		ImGui::SameLine();
-
-		ImGui::SetCursorPosX(ImGui::GetCursorPosX() - ImGui::GetFrameHeightWithSpacing() * 1.5f);
-		// ImGui::SetNextItemAllowOverlap();
-		const ImVec2 button_size = ImVec2(ImGui::GetContentRegionAvail().x, user_height);
-		if (ImGui::Button(ICON_LC_SETTINGS, button_size)) {
-			ImGui::OpenPopup("TABLE_SETTINGS_POPUP");
-		}
-
-		ImGui::PopStyleVar();
-		ImGui::PopStyleColor(3);
-		ImGui::PopFont();
-
-		ImGui::SetNextWindowSize(ImVec2(ImGui::GetWindowSize().x / 4.0f, 0.0f));
-		if (ImGui::BeginPopup("TABLE_SETTINGS_POPUP")) {
-			DrawTableSettingsPopup();
-			ImGui::EndPopup();
-		}
-
 		ImGui::PushStyleColor(ImGuiCol_Separator, ThemeConfig::GetColor(status_color));
 		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 		ImGui::PopStyleColor();
@@ -2638,22 +2522,24 @@ namespace Modex
 	}
 
 	// a_valueWidth is to determine avaiable column space before EOL.
-	void UITable::CustomSortColumn()
+	void UITable::CustomSortColumn(const char* a_id, float a_spacing, bool a_sorted, int a_column)
 	{
-		const static ImVec4 text_col = ThemeConfig::GetColor("TEXT_HEADER");
+		ImGui::PushID(a_id);
+		const static ImVec4 text_col = ThemeConfig::GetColor("TEXT");
 
-		constexpr auto combo_flags = ImGuiComboFlags_HeightLarge;
+		const auto combo_flags = HasFlag(ModexTableFlag_Kit) ? ImGuiComboFlags_NoArrowButton : ImGuiComboFlags_HeightLargest;
 		ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0, 0, 0, 0));
-		ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0, 0, 0, 0));
+		ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImGui::GetStyle().Colors[ImGuiCol_ButtonHovered]);
 		ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(0, 0, 0, 0));
 		ImGui::PushStyleColor(ImGuiCol_Text, text_col);
 		
-		const float sortby_size = ImGui::GetContentRegionAvail().x;
-		const FilterProperty current_key = sortSystem->GetSecondarySortFilter();
-		const auto preview_text = current_key == PropertyType::kNone ? Translate("SORT_BY") : current_key.ToString();
+		// const float sortby_size = ImGui::GetContentRegionAvail().x;
+		const FilterProperty current_key = sortSystem->GetColumnPropertyType(a_column);
+		const auto preview_text = current_key == PropertyType::kNone ? Translate("SET") : current_key.ToString();
 		
-		ImGui::SetNextItemWidth(sortby_size);
-		if (ImGui::BeginCombo("##UITable::Sort::Combo", preview_text.c_str(), combo_flags)) {
+		if (a_sorted) ImGui::PushFontBold();
+		ImGui::SetNextItemWidth(a_spacing);
+		if (ImGui::BeginCombo("##UITable::Sort::Combo", a_sorted ? (std::string(preview_text) + " * ").c_str() : preview_text.c_str(), combo_flags)) {
 			const FilterPropertyList available_keys = sortSystem->GetAvailableFilters();
 
 			ImGui::PushStyleColor(ImGuiCol_Text, colors.text);
@@ -2668,12 +2554,16 @@ namespace Modex
 				}
 
 				if (ImGui::Selectable(key_text.c_str(), is_selected)) {
-					sortSystem->SetSecondarySortFilter(key);
+					sortSystem->SetSortData({a_column, key});
+					// SortListBySpecs();
+					// UpdateImGuiTableIDs();
 
-					this->SortListBySpecs();
-					this->UpdateImGuiTableIDs();
-					
-					UserData::Set<int>(data_id + "::SortBy", static_cast<int>(key.GetPropertyType()));
+					// return SortSystem::SortQuery{false, key.GetPropertyType()};
+					// sortSystem->SetSecondarySortFilter(key);
+					// this->SortListBySpecs();
+					// this->UpdateImGuiTableIDs();
+					// UserData::Set<int>(data_id + "::SortBy", static_cast<int>(key.GetPropertyType()));
+					//
 				}
 				
 				if (is_selected) {
@@ -2684,179 +2574,70 @@ namespace Modex
 			ImGui::PopStyleColor();
 			ImGui::EndCombo();
 		}
+		if (a_sorted) ImGui::PopFont();
 
 		ImGui::PopStyleColor(4);
+		ImGui::PopID();
 	}
 
 	void UITable::DrawHeader()
 	{
-		static const ImVec4 text_col = ThemeConfig::GetColor("TEXT_HEADER");
 
 		ImGui::PushID("##Modex::Table::Header");
-
 		ImGui::PushStyleColor(ImGuiCol_Separator, ThemeConfig::GetColor("PRIMARY"));
 
-		std::string header_plugin = this->showFormID ? Translate("FORMID") : Translate("PLUGIN");
-		std::string header_name = this->showEditorID ? Translate("EDITORID") : Translate("NAME");
-		std::string header_custom = this->sortSystem->GetSecondarySortFilter().ToString();
-		std::string sort_icon = sortSystem->GetSortAscending()  == true ? ICON_LC_ARROW_DOWN_A_Z : ICON_LC_ARROW_UP_A_Z;
-		
-		// primary = name, plugin, editorid, formid.
-		// secondary = any custom property type.
-		PropertyType primary_sort = sortSystem->GetUsePrimary() ? sortSystem->GetPrimarySortFilter().GetPropertyType() : PropertyType::kNone;
-		PropertyType secondary_sort = sortSystem->GetUsePrimary() ? PropertyType::kNone : sortSystem->GetSecondarySortFilter().GetPropertyType();
+		std::string sort_icon = sortSystem->GetSortAscending()  == true ? ICON_LC_CHEVRON_DOWN : ICON_LC_CHEVRON_UP;
+		constexpr float pillar_offset = 5.0f; // pillar offset.
+		const float spacing = (LayoutColumnWidth / std::ssize(sortSystem->GetColumns())) - ImGui::GetFrameHeight();
+		static const ImVec4 text_col = ThemeConfig::GetColor("TEXT_HEADER");
 
-		constexpr float name_offset = 4.0f; // pillar offset.
-		const float spacing = name_offset + (LayoutColumnWidth / 4.0f);
-		const float sort_spacing = spacing * 2.50f;
-
-		if (HasFlag(ModexTableFlag_Kit)) {
-			bool is_first_sorted = showEditorID ? primary_sort == PropertyType::kEditorID : primary_sort == PropertyType::kName;
-			auto first_icon = is_first_sorted ? sort_icon : ICON_LC_ARROW_UP_DOWN;
+		auto headerSortButton = [&](const char* a_icon, int a_column) {
 			ImGui::AlignTextToFramePadding();
-			ImGui::TextColored(text_col, "%s", first_icon.c_str());
+			ImGui::TextColored(text_col, "%s", a_icon);
 
 			if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
-				this->sortSystem->SetPrimarySortFilter(this->showEditorID ? PropertyType::kEditorID : PropertyType::kName);
-				this->sortSystem->ToggleAscending();
-				this->SortListBySpecs();
-				this->UpdateImGuiTableIDs();
+				sortSystem->SetSortedColumn(a_column);
+				sortSystem->ToggleAscending();
+				SortListBySpecs();
+				UpdateImGuiTableIDs();
 			}
 
 			ImGui::SameLine();
-			ImGui::AlignTextToFramePadding();
-			if (is_first_sorted) ImGui::PushFontBold();
-			ImGui::TextColored(text_col, "%s", header_name.c_str());
-			if (is_first_sorted) ImGui::PopFont();
+		};
 
-			if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
-				this->showEditorID = !this->showEditorID;
+		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + pillar_offset + ImGui::GetStyle().WindowPadding.x);
+		const auto columns = sortSystem->GetColumns();
 
-				if (primary_sort == PropertyType::kEditorID || primary_sort == PropertyType::kName) {
-					this->sortSystem->SetPrimarySortFilter(this->showEditorID ? PropertyType::kEditorID : PropertyType::kName);
-					this->SortListBySpecs();
-					this->UpdateImGuiTableIDs();
-				}
-			}
+		LayoutColumnScreenX.resize(columns.size());
 
-			bool is_second_sorted = primary_sort == PropertyType::kArmorType;
-			auto second_icon = is_second_sorted ? sort_icon : ICON_LC_ARROW_UP_DOWN;
+		for (auto entry : columns) {
+			bool is_sorted = sortSystem->IsColumnSorted(entry.column);
+			const char* icon = is_sorted ? sort_icon.c_str() : ICON_LC_CHEVRONS_UP_DOWN;
 
-			ImGui::SameLine(LayoutItemSize.x / 2.0f);
-			ImGui::AlignTextToFramePadding();
-			ImGui::TextColored(text_col, "%s", second_icon.c_str());
+			LayoutColumnScreenX[entry.column] = ImGui::GetCursorScreenPos().x;
 
-			if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
-				this->sortSystem->SetPrimarySortFilter(PropertyType::kArmorType);
-				this->sortSystem->ToggleAscending();
-				this->SortListBySpecs();
-				this->UpdateImGuiTableIDs();
-			}
-
+			headerSortButton(icon, entry.column);
+			const auto settings_padding = ImGui::GetContentRegionAvail().x - ImGui::GetFrameHeightWithSpacing();
+			const auto size = entry.column == std::ssize(columns) - 1 ? settings_padding : spacing;
+			if (HasFlag(ModexTableFlag_Kit)) ImGui::BeginDisabled();
+			CustomSortColumn(("Column_" + std::to_string(entry.column)).c_str(), size, is_sorted, entry.column);
+			if (HasFlag(ModexTableFlag_Kit)) ImGui::EndDisabled();
 			ImGui::SameLine();
-			ImGui::AlignTextToFramePadding();
-			if (is_second_sorted) ImGui::PushFontBold();
-			ImGui::TextColored(text_col, "%s", Translate("EQUIPPED"));
-			if (is_second_sorted) ImGui::PopFont();
-
-			bool is_third_sorted = primary_sort == PropertyType::kKitItemCount;
-			auto third_icon = is_third_sorted ? sort_icon : ICON_LC_ARROW_UP_DOWN;
-
-			ImGui::SameLine(LayoutItemSize.x / 1.25f);
-			ImGui::AlignTextToFramePadding();
-			ImGui::TextColored(text_col, "%s", third_icon.c_str());
-
-			if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
-				this->sortSystem->SetPrimarySortFilter(PropertyType::kKitItemCount);
-				this->sortSystem->ToggleAscending();
-				this->SortListBySpecs();
-				this->UpdateImGuiTableIDs();
-			}
-
-			ImGui::SameLine();
-			ImGui::AlignTextToFramePadding();
-			if (is_third_sorted) ImGui::PushFontBold();
-			ImGui::TextColored(text_col, "%s", Translate("AMOUNT"));
-			if (is_third_sorted) ImGui::PopFont();
 		}
-		
-		if (!HasFlag(ModexTableFlag_Kit)) {
-				bool is_first_sorted = showFormID ? primary_sort == PropertyType::kFormID : primary_sort == PropertyType::kPlugin;
-				auto first_icon = is_first_sorted ? sort_icon : ICON_LC_ARROW_UP_DOWN;
 
-				ImGui::AlignTextToFramePadding();
-				ImGui::TextColored(text_col, "%s", first_icon.c_str());
+		// Settings Button
+		ImGui::SameLine();
 
-				if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
-					this->sortSystem->SetPrimarySortFilter(this->showFormID ? PropertyType::kFormID : PropertyType::kPlugin);
-					this->sortSystem->ToggleAscending();
-					this->SortListBySpecs();
-					this->UpdateImGuiTableIDs();
-				}
+		ImGui::AlignTextToFramePadding();
+		ImGui::Text("%s", ICON_LC_SETTINGS);
+		if (ImGui::IsItemClicked()) {
+			ImGui::OpenPopup("TABLE_SETTINGS_POPUP");
+		}
 
-				ImGui::SameLine();
-				ImGui::AlignTextToFramePadding();
-				if (is_first_sorted) ImGui::PushFontBold();
-				ImGui::TextColored(text_col, "%s", header_plugin.c_str());
-				if (is_first_sorted) ImGui::PopFont();
-
-				if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
-					this->showFormID = !this->showFormID;
-
-					if (primary_sort == PropertyType::kFormID || primary_sort == PropertyType::kPlugin) {
-						this->sortSystem->SetPrimarySortFilter(this->showFormID ? PropertyType::kFormID : PropertyType::kPlugin);
-						this->SortListBySpecs();
-						this->UpdateImGuiTableIDs();
-					}
-				}
-
-				bool is_second_sorted = showEditorID ? primary_sort == PropertyType::kEditorID : primary_sort == PropertyType::kName;
-				auto second_icon = is_second_sorted ? sort_icon : ICON_LC_ARROW_UP_DOWN;
-
-				ImGui::SameLine(spacing);
-				ImGui::AlignTextToFramePadding();
-				ImGui::TextColored(text_col, "%s", second_icon.c_str());
-
-				if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
-					this->sortSystem->SetPrimarySortFilter(this->showEditorID ? PropertyType::kEditorID : PropertyType::kName);
-					this->sortSystem->ToggleAscending();
-					this->SortListBySpecs();
-					this->UpdateImGuiTableIDs();
-				}
-
-				ImGui::SameLine();
-				ImGui::AlignTextToFramePadding();
-				if (is_second_sorted) ImGui::PushFontBold();
-				ImGui::TextColored(text_col, "%s", header_name.c_str());
-				if (is_second_sorted) ImGui::PopFont();
-
-				if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
-					this->showEditorID = !this->showEditorID;
-					if (primary_sort == PropertyType::kEditorID || primary_sort == PropertyType::kName) {
-						this->sortSystem->SetPrimarySortFilter(this->showEditorID ? PropertyType::kEditorID : PropertyType::kName);
-						this->SortListBySpecs();
-						this->UpdateImGuiTableIDs();
-					}
-				}
-
-				bool is_custom_sorted = (!this->sortSystem->GetUsePrimary());
-				auto custom_icon = secondary_sort == PropertyType::kNone ? ICON_LC_ARROW_UP_DOWN : is_custom_sorted ? sort_icon : ICON_LC_ARROW_UP_DOWN;
-
-				ImGui::SameLine(sort_spacing - name_offset);
-				ImGui::AlignTextToFramePadding();
-				ImGui::TextColored(text_col, "%s", custom_icon.c_str());
-
-				if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
-					this->sortSystem->UsePrimary(false);
-					this->sortSystem->ToggleAscending();
-					this->SortListBySpecs();
-					this->UpdateImGuiTableIDs();
-				}
-
-				ImGui::SameLine();
-				if (is_custom_sorted) ImGui::PushFontBold();
-				CustomSortColumn();
-				if (is_custom_sorted) ImGui::PopFont();
+		ImGui::SetNextWindowSize(ImVec2(ImGui::GetWindowSize().x / 4.0f, 0.0f));
+		if (ImGui::BeginPopup("TABLE_SETTINGS_POPUP")) {
+			DrawTableSettingsPopup();
+			ImGui::EndPopup();
 		}
 		
 		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
@@ -2978,7 +2759,7 @@ namespace Modex
 						ImGui::PushStyleColor(ImGuiCol_HeaderHovered,  colors.hover);
 
 						if (this->HasFlag(ModexTableFlag_Kit)) {
-							ImGui::Selectable("", is_item_selected, ImGuiSelectableFlags_None, ImVec2(LayoutItemSize.x / 2.0f, LayoutItemSize.y));
+							ImGui::Selectable("", is_item_selected, ImGuiSelectableFlags_None, ImVec2(LayoutItemSize.x / std::ssize(sortSystem->GetColumns()) + ImGui::GetFrameHeight(), LayoutItemSize.y));
 						} else {
 							ImGui::Selectable("", is_item_selected, ImGuiSelectableFlags_None, LayoutItemSize);
 						}

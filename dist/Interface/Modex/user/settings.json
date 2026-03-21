@@ -19,5 +19,5 @@
     "Smooth Scroll": true,
     "UI Scale Horizontal": 100,
     "UI Scale Vertical": 100,
-    "Use Base Plugin": false
+    "Use Base Plugin": true 
 }

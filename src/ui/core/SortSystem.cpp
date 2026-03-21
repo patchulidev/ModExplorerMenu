@@ -32,8 +32,11 @@ namespace Modex
 	{
 		nlohmann::json j;
 
-		j["PrimarySortProperty"] = m_primarySortFilter.ToString();
-		j["SecondarySortProperty"] = m_secondarySortFilter.ToString();
+		// j["PrimarySortProperty"] = m_primarySortFilter.ToString();
+		// j["SecondarySortProperty"] = m_secondarySortFilter.ToString();
+		j["CurrentSortColumn"] = m_currentSort.column;
+		j["CurrentSortProperty"] = m_currentSort.property.ToString();
+		j["Columns"] = m_columns;
 		j["Ascending"] = m_ascending;
 		j["UsePrimary"] = m_usePrimary;
 
@@ -42,26 +45,26 @@ namespace Modex
 
 	void SortSystem::DeserializeState(const nlohmann::json& a_state)
 	{
-		if (a_state.contains("PrimarySortProperty") && a_state["PrimarySortProperty"].is_string()) {
-			std::string prop_str = a_state["PrimarySortProperty"].get<std::string>();
+		if (a_state.contains("CurrentSortProperty") && a_state["CurrentSortProperty"].is_string()) {
+			std::string prop_str = a_state["CurrentSortProperty"].get<std::string>();
 			auto filter = FilterProperty::FromString(prop_str);
 
 			if (filter.has_value()) {
-				m_primarySortFilter = filter.value();
+				m_currentSort.property = filter.value();
 			} else {
-				m_primarySortFilter = FilterProperty(PropertyType::kNone);
+				m_currentSort.property = FilterProperty(PropertyType::kNone);
 			}
 		}
 
-		if (a_state.contains("SecondarySortProperty") && a_state["SecondarySortProperty"].is_string()) {
-			std::string prop_str = a_state["SecondarySortProperty"].get<std::string>();
-			auto filter = FilterProperty::FromString(prop_str);
+		if (a_state.contains("CurrentSortColumn") && a_state["CurrentSortColumn"].is_number_integer()) {
+			int column = a_state["CurrentSortColumn"].get<int>();
+			m_currentSort.column = column;
+		} else {
+			m_currentSort.column = 0;
+		}
 
-			if (filter.has_value()) {
-				m_secondarySortFilter = filter.value();
-			} else {
-				m_secondarySortFilter = FilterProperty(PropertyType::kNone);
-			}
+		if (a_state.contains("Columns") && a_state["Columns"].is_array()) {
+			m_columns = a_state["Columns"].get<std::vector<SortQuery>>();
 		}
 
 		if (a_state.contains("Ascending") && a_state["Ascending"].is_boolean()) {
@@ -76,7 +79,7 @@ namespace Modex
 	// Need special definitions for properties of int, float, or none string types.
 	bool SortSystem::SortFn(const std::unique_ptr<BaseObject>& a_lhs, const std::unique_ptr<BaseObject>& a_rhs) const
     {
-		const auto property = m_usePrimary ? m_primarySortFilter.GetPropertyType() : m_secondarySortFilter.GetPropertyType();
+		const auto property = m_currentSort.property.GetPropertyType();
 		const auto lhs_value = a_lhs->GetPropertyByValue(property);
 		const auto rhs_value = a_rhs->GetPropertyByValue(property);
 

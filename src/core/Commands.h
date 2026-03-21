@@ -6,7 +6,6 @@
 #include "RE/B/BSTArray.h"
 #include "RE/P/PlayerCharacter.h"
 #include "RE/T/TESLeveledList.h"
-#include "data/BaseObject.h"
 #include "localization/Locale.h"
 #include "ui/core/UIManager.h"
 #include "config/UserData.h"
