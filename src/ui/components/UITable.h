@@ -25,6 +25,7 @@ namespace Modex
 			ImU32 hover;
 			ImU32 outline;
 			ImU32 text;
+			ImU32 textDisabled;
 			ImU32 textEnchanted;
 			ImU32 textUnique;
 			ImU32 textEssential;
@@ -86,6 +87,7 @@ namespace Modex
 		ImVec2                  LayoutItemStep;
 		ImVec2                  LayoutItemSize;
 		ImVec2                  ItemSize;
+		std::vector<float>      LayoutColumnScreenX;
 
 		ImGuiID                 navPositionID = 0;
 		std::unordered_set<RE::FormID> m_pendingSelection;
@@ -239,7 +241,8 @@ namespace Modex
 		void                    DrawPluginSearchBar(const ImVec2& a_size);
 		void                    DrawFormSearchBar(const ImVec2& a_size);
 		void                    DrawModeDropdown(const ImVec2& a_size);
-		void                    CustomSortColumn();
+
+		void                    CustomSortColumn(const char* a_id, float a_spacing, bool a_sorted, int a_column);
 
 		//                      widget groups
 		void                    DrawTableSettingsPopup();

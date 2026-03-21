@@ -4,7 +4,10 @@
 		"kName"
 	],
     "SortProperty": [
-		"kNone"
+		"kNone",
+		"kPlugin",
+		"kEditorID",
+		"kName"
 	],
     "FilterProperty": []
 }

@@ -5,6 +5,8 @@
 	],
     "SortProperty": [
 		"kNone",
+		"kPlugin",
+		"kEditorID",
 		"kOutfitItems"
 	],
     "FilterProperty": []

@@ -116,6 +116,21 @@ namespace Modex::UICustom
 		ImGui::Spacing();
 	}
 
+	bool HeaderButton(const char* a_label, bool a_sorted, float a_spacing)
+	{
+
+		// ImGui::SetCursorPosX(ImGui::GetCursorPosX();
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.f, 0.f, 0.f ,0.f));
+		ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.f, 0.5f));
+		if (a_sorted) ImGui::PushFontBold();
+		bool clicked = ImGui::Button(a_sorted ? (std::string(a_label) + " * ").c_str() : a_label, ImVec2(a_spacing + 1.0f - ImGui::GetFrameHeight() * 1.50f, 0.f));
+		if (a_sorted) ImGui::PopFont();
+		ImGui::PopStyleVar();
+		ImGui::PopStyleColor();
+
+		return clicked;
+	}
+
 	bool ActionButton(const char* a_translate, const ImVec2& a_size, const bool a_condition)
 	{
 		bool success = false;

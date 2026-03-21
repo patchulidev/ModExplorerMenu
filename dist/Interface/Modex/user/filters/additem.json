@@ -9,6 +9,9 @@
 
     "SortProperty": [
         "kNone",
+		"kPlugin",
+		"kName",
+		"kEditorID",
         "kFormType",
         "kCarryWeight",
 		"kGoldValue",
