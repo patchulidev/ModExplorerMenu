@@ -41,37 +41,41 @@ namespace Modex
 		if (!playerRef)
 			return nullptr;
 
-		// Destroy previous reference if it exists.
 		DestroyChestReference();
 
 		// Place a fresh container reference in the world near the player.
 		// This goes through the engine's full placement pipeline, ensuring
 		// proper cell membership, ExtraContainerChanges, and extra data init.
-		m_chestRef = Commands::Papyrus_PlaceAtMe(playerRef, m_chestContainer, 1, false, false);
+		auto* chestRef = Commands::Papyrus_PlaceAtMe(playerRef, m_chestContainer, 1, false, false);
 
-		if (!m_chestRef) {
+		if (!chestRef) {
 			Error("Failed to place PlayerChest reference in the world");
 			return nullptr;
 		}
 
-		Debug("Spawned new PlayerChest reference [{:08X}]", m_chestRef->GetFormID());
-		return m_chestRef;
+		m_chestRefHandle = chestRef->GetHandle();
+		Debug("Spawned new PlayerChest reference [{:08X}]", chestRef->GetFormID());
+		return chestRef;
 	}
 
 	void PlayerChestSpawn::DestroyChestReference()
 	{
-		if (!m_chestRef)
+		auto* chestRef = m_chestRefHandle.get().get();
+		m_chestRefHandle.reset();
+
+		if (!chestRef)
 			return;
 
-		m_chestRef->Disable();
-		m_chestRef->SetDelete(true);
-		Debug("Destroyed PlayerChest reference [{:08X}]", m_chestRef->GetFormID());
-		m_chestRef = nullptr;
+		chestRef->Disable();
+		chestRef->SetDelete(true);
+		Debug("Destroyed PlayerChest reference [{:08X}]", chestRef->GetFormID());
 	}
 
 	void PlayerChestSpawn::OpenChest()
 	{
-		if (!m_chestRef) {
+		auto* chestRef = m_chestRefHandle.get().get();
+
+		if (!chestRef) {
 			Error("Could not open chest - no active container reference");
 			return;
 		}
@@ -87,7 +91,7 @@ namespace Modex
 			return;
 
 		UIManager::GetSingleton()->Close();
-		m_chestRef->ActivateRef(playerRef, 0, nullptr, 0, false);
+		chestRef->ActivateRef(playerRef, 0, nullptr, 0, false);
 		UIManager::GetSingleton()->SetMenuListener(true);
 		Debug("Opened PlayerChest container");
 	}
