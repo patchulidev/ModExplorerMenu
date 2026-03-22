@@ -193,8 +193,9 @@ namespace Modex
 		}
 	}
 
-	// OPTIMIZE: CacheNPCRefIds is called everytime the NPC module is activated. Are we that
-	// rebuilding the entire list each time is the most efficient way to handle this?
+	// CacheNPCRefIds is called everytime the NPC module is activated.
+	// NPCs found in ProcessLists get updated refs. NPCs not in ProcessLists
+	// retain their existing refID if it still resolves to a valid TESObjectREFR.
 
 	void Data::CacheNPCRefIds()
 	{
@@ -221,7 +222,6 @@ namespace Modex
 		std::unordered_set<RE::FormID> processed;
 		processed.reserve(m_npcCache.size());
 
-		// for (size_t i = 0; i < m_npcCache.size(); ++i) {
 		for (const auto& npc : m_npcCache) {
 			RE::FormID base_id = npc.GetBaseFormID();
 			
@@ -248,7 +248,15 @@ namespace Modex
 				}
 			} else {
 				BaseObject actor = npc;
-				actor.m_refID = 0;
+
+				// Attempt to maintain references dropped by processlist but existing in memory?
+				if (actor.m_refID != 0) {
+					auto* form = RE::TESForm::LookupByID(actor.m_refID);
+					if (!form || !form->As<RE::TESObjectREFR>()) {
+						actor.m_refID = 0;
+					}
+				}
+
 				newCache.push_back(actor);
 			}
 		}

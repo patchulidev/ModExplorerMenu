@@ -2186,6 +2186,7 @@ namespace Modex
 		const ImVec2 center_left_align = ImVec2(left_align, center_align);
 		const ImVec2 center_right_align = ImVec2(right_align, center_align);
 
+		const bool has_reference = a_item->m_refID != 0;
 		const bool is_favorited = a_item->m_refID == 0 ? UserData::IsFavorited(a_item->GetEditorID()) : UserData::IsFavorited(a_item->m_refID);
 		const ImVec2 favorite_pos = ImVec2(center_right_align.x - ImGui::GetFontSize(), center_right_align.y);
 
@@ -2196,6 +2197,18 @@ namespace Modex
 				UINotification::ShowTooltip(Translate("ADD_TO_FAVORITES_TOOLTIP"), ICON_LC_HEART);
 			}
 		}
+
+		if (has_reference) {
+			const ImVec2 reference_pos = is_favorited ? favorite_pos - ImVec2(ImGui::GetFrameHeight(), 0.f) : favorite_pos;
+
+			draw_list->AddText(reference_pos, colors.text, ICON_LC_ASTERISK);
+
+			if (IsMouseHoveringRect(reference_pos, ImVec2(reference_pos.x + font_size, reference_pos.y + font_size))) {
+				UINotification::ShowPropertyTooltip(PropertyType::kReferenceID);
+			}
+		}
+
+		// TODO: Somehow the reference ids on start vary heavily from after loading in?
 
 		const auto columns = sortSystem->GetColumns();
 		for (auto entry : columns) {
