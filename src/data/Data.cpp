@@ -398,6 +398,8 @@ namespace Modex
 			CacheStaticObjects<RE::TESObjectLIGH>(dataHandler);
 			CacheStaticObjects<RE::TESFlora>(dataHandler);
 			CacheStaticObjects<RE::TESFurniture>(dataHandler);
+			CacheStaticObjects<RE::TESObjectANIO>(dataHandler);
+			CacheStaticObjects<RE::TESGrass>(dataHandler);
 		}
 	}
 

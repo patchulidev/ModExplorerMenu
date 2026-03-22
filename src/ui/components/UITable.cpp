@@ -1589,11 +1589,12 @@ namespace Modex
 				io.MouseClickedTime[ImGuiMouseButton_Left] = -FLT_MAX;
 				io.MouseClickedCount[ImGuiMouseButton_Left] = 0;
 			}
+
 			return;
 		}
 
 		if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
-			if (a_item->IsItem() && !Commands::IsGameMenuOpen()) {
+			if (tableTargetRef && a_item->IsItem() && !Commands::IsGameMenuOpen()) {
 				UICustom::InputAmountHandler(ImGui::GetIO().KeyShift, [&a_item, this](uint32_t amount = 1) {
 					if (auto targetRef = this->GetTableTargetRef(); targetRef) {
 						Commands::AddItemToRefInventory(owner, targetRef, a_item->GetBaseFormID(), amount);
@@ -1601,13 +1602,20 @@ namespace Modex
 				});
 			}
 
-			if (tableTargetRef && a_item->IsNPC() && !Commands::IsGameMenuOpen()) {
+			if (owner == Ownership::Actor && !Commands::IsGameMenuOpen()) {
+				UICustom::InputAmountHandler(ImGui::GetIO().KeyShift, [&a_item, this](uint32_t amount = 1) {
+					Commands::PlaceAtMe(owner, a_item->GetBaseFormID(), amount);
+				});
+			}
+
+			if (owner == Ownership::Object && !Commands::IsGameMenuOpen()) {
 				UICustom::InputAmountHandler(ImGui::GetIO().KeyShift, [&a_item, this](uint32_t amount = 1) {
 					Commands::PlaceAtMe(owner, a_item->GetBaseFormID(), amount);
 				});
 			}
 
 			// BUG: Returning to menu after double-click casues first left-click to not register ?
+
 			if (owner == Ownership::Cell) {
 				Commands::CenterOnCell(Ownership::Cell, a_item->GetEditorID());
 			}

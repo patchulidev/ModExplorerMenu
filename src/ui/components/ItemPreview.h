@@ -121,8 +121,9 @@ namespace
 
 		// Right align flag checkbox
 		ImGui::SameLine(width - 1.0f);
+		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(ImGui::GetStyle().ItemSpacing.x, 0.f));
 		ImGui::Checkbox("##NoLabel", &flag);
-
+		ImGui::PopStyleVar();
 	}
 
 	inline void inlineText(const std::unique_ptr<BaseObject>& a_item, PropertyType a_property)
@@ -282,6 +283,12 @@ namespace
 		drawDebugInfo(a_object);
 		drawLoadOrder(a_object);
 		drawDescription(a_object);
+	}
+
+	inline void drawObjectPreview(const std::unique_ptr<BaseObject>& a_object)
+	{
+		inlineCheckbox(a_object, PropertyType::kPersistent);
+		inlineCheckbox(a_object, PropertyType::kDeleted);
 	}
 
 	inline void drawActorPreview(const std::unique_ptr<BaseObject>& a_npc, bool a_tooltip)
@@ -734,6 +741,10 @@ namespace
 
 			if (a_item->GetTESNPC()) {
 				drawActorPreview(a_item, a_tooltip);
+			}
+
+			if (a_item->IsObject()) {
+				drawObjectPreview(a_item);
 			}
 
 			if (a_item->GetTESArmor()) {
