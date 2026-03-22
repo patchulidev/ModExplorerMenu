@@ -80,6 +80,8 @@ namespace Modex
 		kSpellList,
 		kCell,					// Location Properties
 		kLand,
+		kPersistent,			// Object Properties
+		kDeleted,
 		kSpellCost,				// Spell Properties
 		kSpellType,
 		kSpellCastType,
@@ -280,6 +282,10 @@ namespace Modex
 				return ICON_LC_MAP_PIN;
 			case PropertyType::kLand:
 				return ICON_LC_MAP_PIN;
+			case PropertyType::kPersistent:
+				return ICON_LC_FLAG;
+			case PropertyType::kDeleted:
+				return ICON_LC_FLAG;
 			case PropertyType::kTomeSpell:
 				return ICON_LC_WAND;
 			case PropertyType::kTomeSkill:
@@ -502,6 +508,18 @@ namespace Modex
 		{
 			if (!m_formWrapper.IsValid()) return "None";
 			return RE::FormTypeToString(GetFormType());
+		}
+
+		inline bool GetFormPersistent() const
+		{
+			if (!m_formWrapper.IsValid()) return "false";
+			return (GetTESForm()->GetFormFlags() & RE::TESForm::RecordFlags::kPersistent) != 0; 
+		}
+
+		inline bool GetFormDeleted() const
+		{
+			if (!m_formWrapper.IsValid()) return "false";
+			return (GetTESForm()->GetFormFlags() & RE::TESForm::RecordFlags::kDeleted) != 0;
 		}
 
 		inline int32_t GetWeight() const
@@ -984,6 +1002,24 @@ namespace Modex
 			return 0.0f;
 		}
 
+		inline bool IsObject() const
+		{
+			switch (GetFormType()) {
+				case RE::FormType::Tree:
+				case RE::FormType::Activator:
+				case RE::FormType::Door:
+				case RE::FormType::Static:
+				case RE::FormType::Container:
+				case RE::FormType::Light:
+				case RE::FormType::Flora:
+				case RE::FormType::Furniture:
+				case RE::FormType::AnimatedObject:
+				case RE::FormType::Grass:
+					return true;
+				default: return false;
+			}
+		}
+
 		inline RE::TESNPC* GetTESNPC() const
 		{
 			return m_formWrapper.As<RE::TESNPC>();
@@ -1432,6 +1468,10 @@ namespace Modex
 				case PropertyType::kCell:
 				case PropertyType::kLand:
 				case PropertyType::kOutfit:
+				case PropertyType::kPersistent:
+					return GetFormPersistent() ? "true" : "false";
+				case PropertyType::kDeleted:
+					return GetFormDeleted() ? "true" : "false";
 				case PropertyType::kImGuiSeparator:
 					return "";
 				case PropertyType::kFormType:

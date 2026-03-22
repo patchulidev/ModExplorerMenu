@@ -15,12 +15,14 @@ namespace Modex
 		const ImVec2 window_padding = ImGui::GetStyle().WindowPadding;
 		const float table_width = ImGui::GetContentRegionAvail().x * 0.75f + window_padding.x;
 		const float table_height = ImGui::GetContentRegionAvail().y - (window_padding.y * 2.0f);
+		const float full_width = ImGui::GetContentRegionAvail().x;
 
 		ImVec2 table_pos = ImGui::GetCursorPos();
 		UIContainers::DrawBasicTablePanel("TABLE_OBJECT", table_pos, ImVec2(table_width, table_height), a_tables[0]);
 
 		ImVec2 action_pos = table_pos;
 		action_pos.x += table_width + window_padding.x;
+		UIContainers::DrawObjectActionPanel(action_pos, ImVec2(full_width - table_width - window_padding.x, 0.0f), a_tables[0]);
 	}
 
 	ObjectModule::~ObjectModule()

@@ -6,7 +6,7 @@
 namespace Modex
 {
 
-	static_assert(static_cast<uint32_t>(Modex::PropertyType::kTotal) == 81,
+	static_assert(static_cast<uint32_t>(Modex::PropertyType::kTotal) == 83,
 		"Internal PropertyType changed - update ModexAPI::PropertyType to match");
 
 	static_assert(static_cast<uint32_t>(Modex::Ownership::All) == 7,

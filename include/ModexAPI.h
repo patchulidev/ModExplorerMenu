@@ -82,6 +82,8 @@ namespace ModexAPI
 		kTomeSpell = 67,
 		kTomeSkill = 68,
 		kOutfitItems = 72,
+		kPersistent = 73,
+		kDeleted = 74
 	};
 
 	// Options for configuring the Form Selector UI before opening.

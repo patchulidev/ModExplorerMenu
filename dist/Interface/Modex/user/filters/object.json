@@ -1,5 +1,108 @@
 {
-    "SearchProperty": [],
-    "SortProperty": [],
-    "FilterProperty": []
+    "SearchProperty": [
+		"kEditorID",
+		"kName",
+		"kFormID"
+	],
+    "SortProperty": [
+		"kPlugin",
+		"kEditorID",
+		"kName",
+		"<separator>",
+		"kPersistent",
+		"kDeleted",
+		"kFormType"
+	],
+    "FilterProperty": [
+        {
+            "id": "activator",
+            "displayName": "Activator",
+            "rule": {
+                "property": "kFormType",
+                "operator": "equals",
+                "value": "ACTI"
+            }
+        },
+        {
+            "id": "animated_object",
+            "displayName": "Animated Object",
+            "rule": {
+                "property": "kFormType",
+                "operator": "equals",
+                "value": "ANIO"
+            }
+        },
+        {
+            "id": "container",
+            "displayName": "Container",
+            "rule": {
+                "property": "kFormType",
+                "operator": "equals",
+                "value": "CONT"
+            }
+        },
+        {
+            "id": "door",
+            "displayName": "Door",
+            "rule": {
+                "property": "kFormType",
+                "operator": "equals",
+                "value": "DOOR"
+            }
+        },
+        {
+            "id": "flora",
+            "displayName": "Flora",
+            "rule": {
+                "property": "kFormType",
+                "operator": "equals",
+                "value": "FLOR"
+            }
+        },
+        {
+            "id": "furniture",
+            "displayName": "Furniture",
+            "rule": {
+                "property": "kFormType",
+                "operator": "equals",
+                "value": "FURN"
+            }
+        },
+        {
+            "id": "grass",
+            "displayName": "Grass",
+            "rule": {
+                "property": "kFormType",
+                "operator": "equals",
+                "value": "GRAS"
+            }
+        },
+        {
+            "id": "light",
+            "displayName": "Light",
+            "rule": {
+                "property": "kFormType",
+                "operator": "equals",
+                "value": "LIGH"
+            }
+        },
+        {
+            "id": "static",
+            "displayName": "Static",
+            "rule": {
+                "property": "kFormType",
+                "operator": "equals",
+                "value": "STAT"
+            }
+        },
+        {
+            "id": "tree",
+            "displayName": "Tree",
+            "rule": {
+                "property": "kFormType",
+                "operator": "equals",
+                "value": "TREE"
+            }
+        }
+    ]
 }

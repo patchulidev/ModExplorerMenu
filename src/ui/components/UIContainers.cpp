@@ -371,6 +371,35 @@ namespace Modex
 		ImGui::EndChild();
 	}
 
+	void UIContainers::DrawObjectActionPanel(const ImVec2 &a_pos, const ImVec2 &a_size, std::unique_ptr<UITable> &a_view)
+	{
+		const float button_height = ImGui::GetFontSize() * 1.5f;
+
+		ImGui::SameLine();
+		ImGui::SetCursorPos(a_pos);
+		if (ImGui::BeginChild("Modex::ObjectWindow::Actions", a_size)) {
+			const float max_width = ImGui::GetContentRegionAvail().x;
+			const bool shift_down = ImGui::GetIO().KeyShift;
+			const bool action_allowed = a_view->IsActionAllowed();
+
+			UICustom::SubCategoryHeader(Translate("HEADER_ACTIONS"));
+
+			if (UICustom::ActionButton("PLACE_SELECTION", ImVec2(max_width, button_height), action_allowed)) {
+				UICustom::InputAmountHandler(shift_down, [&a_view](uint32_t amount) {
+					a_view->PlaceSelectionOnGround(amount);
+				});
+			}
+
+			ImGui::Spacing();
+			ImGui::Spacing();
+
+			UICustom::SubCategoryHeader(Translate("HEADER_PREVIEW"));
+
+			ShowItemPreview(a_view->GetItemPreview());
+		}
+		ImGui::EndChild();
+	}
+
 	// Can be used globally as a general purpose BaseObject table.
 	void UIContainers::DrawBasicTablePanel(const char* a_localeText, const ImVec2 &a_pos, const ImVec2 &a_size, std::unique_ptr<UITable> &a_view)
 	{
