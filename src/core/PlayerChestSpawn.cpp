@@ -41,37 +41,41 @@ namespace Modex
 		if (!playerRef)
 			return nullptr;
 
-		// Destroy previous reference if it exists.
 		DestroyChestReference();
 
 		// Place a fresh container reference in the world near the player.
 		// This goes through the engine's full placement pipeline, ensuring
 		// proper cell membership, ExtraContainerChanges, and extra data init.
-		m_chestRef = Commands::Papyrus_PlaceAtMe(playerRef, m_chestContainer, 1, false, false);
+		auto* chestRef = Commands::Papyrus_PlaceAtMe(playerRef, m_chestContainer, 1, false, false);
 
-		if (!m_chestRef) {
+		if (!chestRef) {
 			Error("Failed to place PlayerChest reference in the world");
 			return nullptr;
 		}
 
-		Debug("Spawned new PlayerChest reference [{:08X}]", m_chestRef->GetFormID());
-		return m_chestRef;
+		m_chestRefHandle = chestRef->GetHandle();
+		Debug("Spawned new PlayerChest reference [{:08X}]", chestRef->GetFormID());
+		return chestRef;
 	}
 
 	void PlayerChestSpawn::DestroyChestReference()
 	{
-		if (!m_chestRef)
+		auto* chestRef = m_chestRefHandle.get().get();
+		m_chestRefHandle.reset();
+
+		if (!chestRef)
 			return;
 
-		m_chestRef->Disable();
-		m_chestRef->SetDelete(true);
-		Debug("Destroyed PlayerChest reference [{:08X}]", m_chestRef->GetFormID());
-		m_chestRef = nullptr;
+		chestRef->Disable();
+		chestRef->SetDelete(true);
+		Debug("Destroyed PlayerChest reference [{:08X}]", chestRef->GetFormID());
 	}
 
 	void PlayerChestSpawn::OpenChest()
 	{
-		if (!m_chestRef) {
+		auto* chestRef = m_chestRefHandle.get().get();
+
+		if (!chestRef) {
 			Error("Could not open chest - no active container reference");
 			return;
 		}
@@ -87,7 +91,7 @@ namespace Modex
 			return;
 
 		UIManager::GetSingleton()->Close();
-		m_chestRef->ActivateRef(playerRef, 0, nullptr, 0, false);
+		chestRef->ActivateRef(playerRef, 0, nullptr, 0, false);
 		UIManager::GetSingleton()->SetMenuListener(true);
 		Debug("Opened PlayerChest container");
 	}
@@ -96,7 +100,6 @@ namespace Modex
 	{
 		if (!a_outfit) return;
 
-		// Frame 1: Spawn fresh container and populate it.
 		SKSE::GetTaskInterface()->AddTask([this, a_outfit, a_level]() {
 			auto container = SpawnChestReference();
 
@@ -108,11 +111,17 @@ namespace Modex
 
 			auto resolved = Commands::ResolveOutfitItems(a_outfit, Commands::GetPlayerReference(), a_level);
 
-			for (auto& entry : resolved) {
-				container->AddObjectToContainer(entry.object, nullptr, entry.count, nullptr);
+			if (auto playerRef = RE::PlayerCharacter::GetSingleton()->AsReference()) {
+				for (auto& entry : resolved) {
+					container->AddObjectToContainer(
+						entry.object,
+						nullptr,
+						entry.count, 
+						playerRef
+					);
+				}
 			}
 
-			// Frame 2: Open after engine processes inventory.
 			SKSE::GetTaskInterface()->AddTask([this]() {
 				OpenChest();
 			});
@@ -126,7 +135,6 @@ namespace Modex
 		auto kitItems = a_kit.m_items;
 		auto kitSize = a_kit.m_items.size();
 
-		// Frame 1: Spawn fresh container and populate it.
 		SKSE::GetTaskInterface()->AddTask([this, kitName, kitKey, kitItems, kitSize]() {
 			auto container = SpawnChestReference();
 
@@ -136,25 +144,26 @@ namespace Modex
 			container->SetDisplayName(kitName.c_str(), true);
 
 			int _count = 0;
-			for (auto& kitItem : kitItems) {
-				auto boundObject = RE::TESForm::LookupByEditorID(kitItem->m_editorid);
-				Trace("Adding Item '{}' from '{}' to PlayerChest container.", kitItem->m_editorid, kitKey);
+			if (auto playerRef = RE::PlayerCharacter::GetSingleton()->AsReference()) {
+				for (auto& kitItem : kitItems) {
+					auto boundObject = RE::TESForm::LookupByEditorID(kitItem->m_editorid);
+					Trace("Adding Item '{}' from '{}' to PlayerChest container.", kitItem->m_editorid, kitKey);
 
-				if (boundObject) {
-					container->AddObjectToContainer(
-						boundObject->As<RE::TESBoundObject>(),
-						nullptr,
-						static_cast<std::uint32_t>(kitItem->m_amount),
-						nullptr
-					);
+					if (boundObject) {
+						container->AddObjectToContainer(
+							boundObject->As<RE::TESBoundObject>(),
+							nullptr,
+							static_cast<std::uint32_t>(kitItem->m_amount),
+							playerRef
+						);
 
-					_count++;
+						_count++;
+					}
 				}
 			}
 
 			Debug("Populated PlayerChest with '{}/{}' items from kit: '{}'", _count, kitSize, kitKey);
 
-			// Frame 2: Open after engine processes inventory.
 			SKSE::GetTaskInterface()->AddTask([this]() {
 				OpenChest();
 			});
@@ -181,19 +190,21 @@ namespace Modex
 			container->SetDisplayName("Modex", true);
 
 			int _count = 0;
-			for (auto& editorID : editorIDs) {
-				auto boundObject = RE::TESForm::LookupByEditorID(editorID);
-				Trace("Adding Item '{}' from Table to PlayerChest container", editorID);
+			if (auto playerRef = RE::PlayerCharacter::GetSingleton()->AsReference()) {
+				for (auto& editorID : editorIDs) {
+					auto boundObject = RE::TESForm::LookupByEditorID(editorID);
+					Trace("Adding Item '{}' from Table to PlayerChest container", editorID);
 
-				if (boundObject) {
-					container->AddObjectToContainer(
-						boundObject->As<RE::TESBoundObject>(),
-						nullptr,
-						1,
-						nullptr
-					);
+					if (boundObject) {
+						container->AddObjectToContainer(
+							boundObject->As<RE::TESBoundObject>(),
+							nullptr,
+							1,
+							playerRef
+						);
 
-					_count++;
+						_count++;
+					}
 				}
 			}
 

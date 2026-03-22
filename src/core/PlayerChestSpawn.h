@@ -25,6 +25,6 @@ namespace Modex
 
 	private:
 		RE::TESObjectCONT*      m_chestContainer = nullptr;
-		RE::TESObjectREFR*      m_chestRef = nullptr;
+		RE::ObjectRefHandle     m_chestRefHandle;
 	};
 }
