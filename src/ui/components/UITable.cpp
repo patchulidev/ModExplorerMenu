@@ -1093,6 +1093,7 @@ namespace Modex
 		ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ThemeConfig::GetActive("BG_LIGHT"));
 		ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5f, 0.5f));
 
+		ImVec2 cursor_pos = ImGui::GetCursorScreenPos();
 		const std::vector<std::string> available_keys = searchSystem->GetAvailableKeysVector();
 		if (UICustom::FancyDropdown("##Search::Input::Key", "TABLE_KEY_TOOLTIP", current_idx, available_keys, key_width)) {
 			searchSystem->SetSearchKeyByIndex(current_idx);
@@ -1102,6 +1103,15 @@ namespace Modex
 		ImGui::PopStyleVar();
 		ImGui::PopStyleColor(3);
 		
+		{ // Dropdown Descriptor
+			const auto draw_list = ImGui::GetWindowDrawList();
+			const auto text = Translate("SEARCH_KEY");
+			const auto text_pos_x = (cursor_pos.x + (key_width / 2.0f)) - (ImGui::CalcTextSize(text).x / 2.0f);
+			const auto text_pos_y = cursor_pos.y - ImGui::GetFrameHeight();
+			const auto alpha = ImGui::GetStyle().Alpha;
+			draw_list->AddText(ImVec2(text_pos_x, text_pos_y), ThemeConfig::GetColorU32("TEXT_DISABLED", alpha), text);
+		}
+
 		ImGui::AlignTextToFramePadding();
 		ImGui::Text(" " ICON_LC_ARROW_LEFT_RIGHT " ");
 		ImGui::SameLine();
@@ -1112,6 +1122,7 @@ namespace Modex
 		const std::string& search_hint = TRUNCATE(Translate("TABLE_SEARCH_HINT"), input_width * 0.80f).c_str();
 
 		static bool key_hovered;
+		cursor_pos = ImGui::GetCursorScreenPos();
 		ImGui::PushStyleColor(ImGuiCol_FrameBg, key_hovered ? ThemeConfig::GetHover("BG_LIGHT") : ThemeConfig::GetColor("BG_LIGHT"));
 		if (UICustom::FancyInputText("##Search::Input::Compare", search_hint.c_str(), "TABLE_SEARCH_TOOLTIP", searchSystem->GetSearchBuffer(), input_width, input_flags)) {
 			this->Refresh();
@@ -1124,6 +1135,15 @@ namespace Modex
 		}
 		
 		ImGui::SameLine();
+
+		{ // Dropdown Descriptor
+			const auto draw_list = ImGui::GetWindowDrawList();
+			const auto text = Translate("SEARCH_PHRASE");
+			const auto text_pos_x = (cursor_pos.x + (a_size.x / 2.0f)) - (ImGui::CalcTextSize(text).x / 2.0f);
+			const auto text_pos_y = cursor_pos.y - ImGui::GetFrameHeight();
+			const auto alpha = ImGui::GetStyle().Alpha;
+			draw_list->AddText(ImVec2(text_pos_x, text_pos_y), ThemeConfig::GetColorU32("TEXT_DISABLED", alpha), text);
+		}
 
 		ImGui::AlignTextToFramePadding();
 		ImGui::Text(" " ICON_LC_ARROW_RIGHT_TO_LINE " ");
@@ -1142,12 +1162,22 @@ namespace Modex
 		static bool hovered;
 		ImGui::PushStyleColor(ImGuiCol_FrameBg, hovered ? ThemeConfig::GetHover("BG_LIGHT") : ThemeConfig::GetColor("BG_LIGHT"));
 
+		const auto cursor_pos = ImGui::GetCursorScreenPos();
 		if (searchSystem->InputTextComboBox("##Search::Filter::PluginField", pluginSearchBuffer, selectedPlugin, IM_ARRAYSIZE(pluginSearchBuffer), pluginList, a_size.x)) {
 			this->selectedPlugin = this->pluginSearchBuffer;
 			this->pluginSearchBuffer[0] = '\0';
 			
 			this->selectionStorage.Clear();
 			this->Refresh();
+		}
+
+		{ // Dropdown Descriptor
+			const auto draw_list = ImGui::GetWindowDrawList();
+			const auto text = Translate("SEARCH_PLUGIN");
+			const auto text_pos_x = (cursor_pos.x + (a_size.x / 2.0f)) - (ImGui::CalcTextSize(text).x / 2.0f);
+			const auto text_pos_y = cursor_pos.y - ImGui::GetFrameHeight();
+			const auto alpha = ImGui::GetStyle().Alpha;
+			draw_list->AddText(ImVec2(text_pos_x, text_pos_y), ThemeConfig::GetColorU32("TEXT_DISABLED", alpha), text);
 		}
 
 		hovered = ImGui::IsItemHovered();
@@ -1236,6 +1266,7 @@ namespace Modex
 		auto modes = magic_enum::enum_names<TableMode>();
 		const std::vector<std::string> mode_strings(modes.begin(), modes.end());
 		int current_idx = static_cast<int>(tableMode);
+		const auto cursor_pos = ImGui::GetCursorScreenPos();
 		if (UICustom::FancyDropdown("##Search::Input::Mode", "TABLE_MODE_TOOLTIP", current_idx, mode_strings, a_size.x)) {
 			selectionStorage.Clear();
 			tableMode = current_idx;
@@ -1244,6 +1275,14 @@ namespace Modex
 
 		ImGui::PopStyleColor(3);
 		ImGui::PopStyleVar();
+
+		// Draw dropdown descriptor
+		const auto draw_list = ImGui::GetWindowDrawList();
+		const auto text = Translate("SEARCH_LIST");
+		const auto text_pos_x = (cursor_pos.x + (a_size.x / 2)) - (ImGui::CalcTextSize(text).x / 2.0f);
+		const auto text_pos_y = cursor_pos.y - ImGui::GetFrameHeight();
+		const auto alpha = ImGui::GetStyle().Alpha;
+		draw_list->AddText(ImVec2(text_pos_x, text_pos_y), ThemeConfig::GetColorU32("TEXT_DISABLED", alpha), text);
 
 		const auto icon = tableMode == SHOWALL ? " " ICON_LC_ARROW_RIGHT " " : " " ICON_LC_ARROW_DOWN " ";
 		ImGui::AlignTextToFramePadding();
@@ -1255,6 +1294,7 @@ namespace Modex
 	{
 		// Nullify horizontal spacing. Horizontal spacing between table widgets handled here.
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, ImGui::GetFrameHeight() / 2.0f));
+		ImGui::Spacing();
 		ImGui::Spacing();
 
 		const float dropdown_width = ImGui::GetContentRegionAvail().x / 7.5f;

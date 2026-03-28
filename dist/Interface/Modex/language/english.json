@@ -42,6 +42,10 @@
 "MAX_COST": "Max Cost:",
 "RESULTS": "Results",
 "MASTER": "Master",
+"SEARCH_LIST": "Active List",
+"SEARCH_KEY": "Search Key",
+"SEARCH_PHRASE": "Search Phrase",
+"SEARCH_PLUGIN": "Select a Plugin",
 
 "_MODULES": "======== Module / Sidebar Labels ========",
 "MODULE_HOME": "Home",
