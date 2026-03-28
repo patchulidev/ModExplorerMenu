@@ -17,11 +17,11 @@ namespace Modex
 		void PopulateChestWithKit(const Modex::Kit& a_kit);
 		void PopulateChestWithOutfit(const RE::BGSOutfit* a_outfit, uint16_t a_level = 0);
 		void OpenChest();
+		void DestroyChestReference();
 
 	private:
 		void InitializeBaseContainer();
 		RE::TESObjectREFR* SpawnChestReference();
-		void DestroyChestReference();
 
 	private:
 		RE::TESObjectCONT*      m_chestContainer = nullptr;

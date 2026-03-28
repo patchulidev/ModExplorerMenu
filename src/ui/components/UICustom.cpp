@@ -271,6 +271,7 @@ namespace Modex::UICustom
 
 	void FancyTooltip(const char* a_localeString)
 	{
+		if (!UserConfig::Get().enableTooltips) return;
 		const float width = ImGui::GetIO().DisplaySize.x * 0.20f;
 
 		float window_pos_x = ImGui::GetMousePos().x - width;

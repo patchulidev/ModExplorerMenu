@@ -98,6 +98,11 @@ namespace Modex
 				UserConfig::GetSingleton()->SaveSettings();
 			}
 
+			if (UICustom::Settings_ToggleButton("SETTINGS_ENABLE_TOOLTIPS", config.enableTooltips))
+			{
+				UserConfig::GetSingleton()->SaveSettings();
+			}
+
 			ImGui::NewLine();
 			UICustom::Settings_Header(Translate("SETTINGS_HEADER_GENERAL"));
 
