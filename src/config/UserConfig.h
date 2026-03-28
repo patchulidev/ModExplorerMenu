@@ -48,6 +48,7 @@ namespace Modex
 			bool basePlugin			= false;
 			bool showMissing		= true;
 			bool developerMode		= false;
+			bool enableTooltips 	= true;
 
 			std::string language 		= "English";
 			std::string theme 			= "default";

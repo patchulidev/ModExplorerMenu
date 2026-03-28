@@ -150,6 +150,7 @@ namespace Modex
 		}
 
 		if (!s_messages.empty()) return;
+		if (!UserConfig::Get().enableTooltips) return;
 
 		const float msg_height = ImGui::GetFrameHeight() * 1.5f;
 		const float window_width = a_parentSize.x;

@@ -57,6 +57,7 @@ namespace Modex
 		user.basePlugin 	= ConfigManager::Get<bool>("Use Base Plugin", _default.basePlugin);
 		user.showMissing	= ConfigManager::Get<bool>("Show Missing Plugins", _default.showMissing);
 		user.developerMode  = ConfigManager::Get<bool>("Developer Mode", _default.developerMode);
+		user.enableTooltips = ConfigManager::Get<bool>("Enable Tooltips", _default.enableTooltips);
 
 		user.language 		= ConfigManager::Get<std::string>("Language", _default.language);
 		user.theme 		= ConfigManager::Get<std::string>("Modex Theme", _default.theme);
@@ -90,6 +91,7 @@ namespace Modex
 		ConfigManager::Set<bool>("Use Base Plugin", user.basePlugin);
 		ConfigManager::Set<bool>("Show Missing Plugins", user.showMissing);
 		ConfigManager::Set<bool>("Developer Mode", user.developerMode);
+		ConfigManager::Set<bool>("Enable Tooltips", user.enableTooltips);
 
 		ConfigManager::Set<std::string>("Language", user.language);
 		ConfigManager::Set<std::string>("Modex Theme", user.theme);

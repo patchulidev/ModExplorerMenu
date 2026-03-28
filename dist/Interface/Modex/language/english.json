@@ -356,6 +356,8 @@
 "SETTINGS_MISSING_PLUGIN_TOOLTIP": "Missing Plugins\n\nToggle whether to Show or Hide forms which no longer exist in your Load Order within some lists such as Recent, Favorites, etc. \n\nDefault (ON).",
 "SETTINGS_MAX_QUERY": "Max Action Query",
 "SETTINGS_MAX_QUERY_TOOLTIP": "Max Query Check\n\nDetermines the threshold, on bulk actions, when a warning prompt should appear and ask for confirmation.\n\nDefault (1500)",
+"SETTINGS_ENABLE_TOOLTIPS": "Enable Tooltips",
+"SETTINGS_ENABLE_TOOLTIPS_DESC": "Enable Tooltips\n\nWhen enabled, tooltips for various actions, icons, and fields will be displayed. Disabling will remove ALL tooltips. Purely cosmetic.", 
 
 "_BLACKLIST": "======== Blacklist / Whitelist Settings ========",
 "BLACKLIST": "Plugin Blacklist",
