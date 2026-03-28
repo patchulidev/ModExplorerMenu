@@ -8,18 +8,28 @@ namespace Modex
 {
 	void PlayerChestSpawn::InitializeBaseContainer()
 	{
-		auto factory = RE::IFormFactory::GetConcreteFormFactoryByType<RE::TESObjectCONT>();
-		m_chestContainer = factory ? factory->Create() : nullptr;
+		auto* handler = RE::TESDataHandler::GetSingleton();
 
-		if (!m_chestContainer) {
-			Error("Failed to create PlayerChest base container form");
+		if (!handler) {
+			Error("Failed to get TESDataHandler for PlayerChest init");
 			return;
 		}
 
-		m_chestContainer->SetFormEditorID("ModexPlayerChestCONT");
-		m_chestContainer->fullName = "ModexPlayerChest";
-		m_chestContainer->boundData = { { 0, 0, 0 }, { 0, 0, 0 } };
-		Trace("Modex PlayerChest base container initialized");
+		// Lookup valid container base form, instead of creating one (caused save corruption)
+		auto& containers = handler->GetFormArray<RE::TESObjectCONT>();
+		for (auto* form : containers) {
+			if (form && (form->GetFormID() >> 24) < 0xFF) {
+				m_chestContainer = form;
+				break;
+			}
+		}
+
+		if (!m_chestContainer) {
+			Error("Failed to find a valid container base form");
+			return;
+		}
+
+		Trace("Modex PlayerChest using base container [{:08X}]", m_chestContainer->GetFormID());
 	}
 
 	RE::TESObjectREFR* PlayerChestSpawn::SpawnChestReference()
@@ -52,6 +62,9 @@ namespace Modex
 			Error("Failed to place PlayerChest reference in the world");
 			return nullptr;
 		}
+
+		chestRef->formFlags |= RE::TESForm::RecordFlags::kTemporary;
+		chestRef->ResetInventory(false);
 
 		m_chestRefHandle = chestRef->GetHandle();
 		Debug("Spawned new PlayerChest reference [{:08X}]", chestRef->GetFormID());
