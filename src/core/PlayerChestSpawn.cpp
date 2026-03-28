@@ -66,6 +66,10 @@ namespace Modex
 		chestRef->formFlags |= RE::TESForm::RecordFlags::kTemporary;
 		chestRef->ResetInventory(false);
 
+		if (auto* playerRef = player->GetObjectReference()) {
+			chestRef->extraList.SetOwner(playerRef);
+		}
+
 		m_chestRefHandle = chestRef->GetHandle();
 		Debug("Spawned new PlayerChest reference [{:08X}]", chestRef->GetFormID());
 		return chestRef;
