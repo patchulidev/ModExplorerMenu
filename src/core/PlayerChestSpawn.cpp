@@ -167,14 +167,16 @@ namespace Modex
 					Trace("Adding Item '{}' from '{}' to PlayerChest container.", kitItem->m_editorid, kitKey);
 
 					if (boundObject) {
-						container->AddObjectToContainer(
-							boundObject->As<RE::TESBoundObject>(),
-							nullptr,
-							static_cast<std::uint32_t>(kitItem->m_amount),
-							playerRef
-						);
+						if (auto bound = boundObject->As<RE::TESBoundObject>()) {
+							container->AddObjectToContainer(
+								bound,
+								nullptr,
+								static_cast<std::uint32_t>(kitItem->m_amount),
+								playerRef
+							);
 
-						_count++;
+							_count++;
+						}
 					}
 				}
 			}
@@ -198,7 +200,7 @@ namespace Modex
 		}
 
 		// Frame 1: Spawn fresh container and populate it.
-		SKSE::GetTaskInterface()->AddTask([this, editorIDs = std::move(editorIDs)]() {
+		SKSE::GetTaskInterface()->AddTask([this, items = std::move(editorIDs)]() {
 			auto container = SpawnChestReference();
 
 			if (!container)
@@ -208,24 +210,26 @@ namespace Modex
 
 			int _count = 0;
 			if (auto playerRef = RE::PlayerCharacter::GetSingleton()->AsReference()) {
-				for (auto& editorID : editorIDs) {
+				for (auto& editorID : items) {
 					auto boundObject = RE::TESForm::LookupByEditorID(editorID);
 					Trace("Adding Item '{}' from Table to PlayerChest container", editorID);
 
 					if (boundObject) {
-						container->AddObjectToContainer(
-							boundObject->As<RE::TESBoundObject>(),
-							nullptr,
-							1,
-							playerRef
-						);
+						if (auto bound = boundObject->As<RE::TESBoundObject>()) {
+							container->AddObjectToContainer(
+								bound,
+								nullptr,
+								1,
+								playerRef
+							);
 
-						_count++;
+							_count++;
+						}
 					}
 				}
 			}
 
-			Debug("Populated PlayerChest with '{}/{}' items from Table.", _count, editorIDs.size());
+			Debug("Populated PlayerChest with '{}/{}' items from Table.", _count, items.size());
 
 			// Frame 2: Open after engine processes inventory.
 			SKSE::GetTaskInterface()->AddTask([this]() {
