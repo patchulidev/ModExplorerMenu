@@ -64,11 +64,12 @@ namespace Modex
 		}
 
 		chestRef->formFlags |= RE::TESForm::RecordFlags::kTemporary;
-		chestRef->ResetInventory(false);
 
 		if (auto* playerRef = player->GetObjectReference()) {
 			chestRef->extraList.SetOwner(playerRef);
 		}
+
+		chestRef->InitInventoryIfRequired(true);
 
 		m_chestRefHandle = chestRef->GetHandle();
 		Debug("Spawned new PlayerChest reference [{:08X}]", chestRef->GetFormID());
@@ -128,15 +129,13 @@ namespace Modex
 
 			auto resolved = Commands::ResolveOutfitItems(a_outfit, Commands::GetPlayerReference(), a_level);
 
-			if (auto playerRef = RE::PlayerCharacter::GetSingleton()->AsReference()) {
-				for (auto& entry : resolved) {
-					container->AddObjectToContainer(
-						entry.object,
-						nullptr,
-						entry.count, 
-						playerRef
-					);
-				}
+			for (auto& entry : resolved) {
+				container->AddObjectToContainer(
+					entry.object,
+					nullptr,
+					entry.count,
+					nullptr
+				);
 			}
 
 			SKSE::GetTaskInterface()->AddTask([this]() {
@@ -161,22 +160,20 @@ namespace Modex
 			container->SetDisplayName(kitName.c_str(), true);
 
 			int _count = 0;
-			if (auto playerRef = RE::PlayerCharacter::GetSingleton()->AsReference()) {
-				for (auto& kitItem : kitItems) {
-					auto boundObject = RE::TESForm::LookupByEditorID(kitItem->m_editorid);
-					Trace("Adding Item '{}' from '{}' to PlayerChest container.", kitItem->m_editorid, kitKey);
+			for (auto& kitItem : kitItems) {
+				auto boundObject = RE::TESForm::LookupByEditorID(kitItem->m_editorid);
+				Trace("Adding Item '{}' from '{}' to PlayerChest container.", kitItem->m_editorid, kitKey);
 
-					if (boundObject) {
-						if (auto bound = boundObject->As<RE::TESBoundObject>()) {
-							container->AddObjectToContainer(
-								bound,
-								nullptr,
-								static_cast<std::uint32_t>(kitItem->m_amount),
-								playerRef
-							);
+				if (boundObject) {
+					if (auto bound = boundObject->As<RE::TESBoundObject>()) {
+						container->AddObjectToContainer(
+							bound,
+							nullptr,
+							static_cast<std::uint32_t>(kitItem->m_amount),
+							nullptr
+						);
 
-							_count++;
-						}
+						_count++;
 					}
 				}
 			}
@@ -209,22 +206,20 @@ namespace Modex
 			container->SetDisplayName("Modex", true);
 
 			int _count = 0;
-			if (auto playerRef = RE::PlayerCharacter::GetSingleton()->AsReference()) {
-				for (auto& editorID : items) {
-					auto boundObject = RE::TESForm::LookupByEditorID(editorID);
-					Trace("Adding Item '{}' from Table to PlayerChest container", editorID);
+			for (auto& editorID : items) {
+				auto boundObject = RE::TESForm::LookupByEditorID(editorID);
+				Trace("Adding Item '{}' from Table to PlayerChest container", editorID);
 
-					if (boundObject) {
-						if (auto bound = boundObject->As<RE::TESBoundObject>()) {
-							container->AddObjectToContainer(
-								bound,
-								nullptr,
-								1,
-								playerRef
-							);
+				if (boundObject) {
+					if (auto bound = boundObject->As<RE::TESBoundObject>()) {
+						container->AddObjectToContainer(
+							bound,
+							nullptr,
+							1,
+							nullptr
+						);
 
-							_count++;
-						}
+						_count++;
 					}
 				}
 			}
