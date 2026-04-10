@@ -37,7 +37,11 @@ namespace Modex
 			static bool hovered = false;
 			ImGui::PushStyleColor(ImGuiCol_FrameBg, hovered ? ThemeConfig::GetHover("BG_LIGHT") : ThemeConfig::GetColor("BG_LIGHT"));
 			if (m_searchSystem->InputTextComboBox("##KitActionBar::Search", m_searchBuffer, preview_string, 256, equipment_keys, button_width)) {
-				m_selectedKit = EquipmentConfig::KitLookup(m_searchBuffer).value_or(Kit());
+				if (auto* kit = EquipmentConfig::KitLookup(m_searchBuffer)) {
+					m_selectedKit = *kit;
+				} else {
+					m_selectedKit = Kit();
+				}
 
 				m_searchBuffer[0] = '\0';
 				m_tables[1]->Refresh();
@@ -66,8 +70,8 @@ namespace Modex
 					Translate("POPUP_KIT_BROWSE_TITLE"),
 					equipment_keys,
 					[&](const std::string& a_input) {
-						if (const auto success = EquipmentConfig::KitLookup(a_input); success.has_value()) {
-							m_selectedKit = std::move(success.value());
+						if (auto* kit = EquipmentConfig::KitLookup(a_input)) {
+							m_selectedKit = *kit;
 							ImFormatString(m_searchBuffer, 256, "");
 							m_tables[1]->Refresh();
 						}
@@ -214,7 +218,9 @@ namespace Modex
 		m_searchSystem->Load(false);
 
 		const auto& last_kit_key = UserData::Get<std::string>("Equipment::LastSelectedKit", "");
-		m_selectedKit = EquipmentConfig::KitLookup(last_kit_key).value_or(Kit());
+		if (auto* kit = EquipmentConfig::KitLookup(last_kit_key)) {
+			m_selectedKit = *kit;
+		}
 		// Setup available layouts for this module.
 		// m_layouts.push_back({Translate("TAB_EQUIPMENT"), true, DrawEquipmentLayout});
 		m_layouts.push_back({Translate("TAB_EQUIPMENT"), true,

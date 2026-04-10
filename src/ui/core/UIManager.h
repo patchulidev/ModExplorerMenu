@@ -30,6 +30,11 @@ namespace Modex
 		FormSelectorOptions           m_formSelectorOptions;
 		bool                          m_formSelectorFired = false;
 
+		using KitSelectorCallback = void (*)(const char* const* a_kitKeys, uint32_t a_count);
+		KitSelectorCallback           m_kitSelectorCallback = nullptr;
+		FormSelectorOptions           m_kitSelectorOptions;
+		bool                          m_kitSelectorFired = false;
+
 		HWND                          m_hWnd = nullptr;
 		std::atomic<bool>             m_initialized = false;
 		std::unique_ptr<ModexGUIMenu> m_gui = nullptr;
@@ -87,8 +92,10 @@ namespace Modex
 		void ShowInfoBox(const std::string& a_title, const std::string& a_message);
 		void NavigateToModule(uint8_t a_moduleIndex);
 		void OpenFormSelector(Ownership a_ownership, FormSelectorCallback a_callback, const FormSelectorOptions& a_options = {});
+		void OpenKitSelector(KitSelectorCallback a_callback, const FormSelectorOptions& a_options = {});
 		FormSelectorOptions& GetFormSelectorOptions() { return m_formSelectorOptions; }
 		FormSelectorCallback GetFormSelectorCallback() const { return m_formSelectorCallback; }
+		KitSelectorCallback GetKitSelectorCallback() const { return m_kitSelectorCallback; }
 
 		template<typename T>
 		UIWindow* GetPopupWindowRef() const;

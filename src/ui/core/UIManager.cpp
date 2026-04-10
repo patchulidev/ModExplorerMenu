@@ -37,6 +37,20 @@ namespace Modex
 			});
 		}
 
+		if (m_APIWindow && m_kitSelectorCallback) {
+			m_menu->SetKitSelectorParams(m_kitSelectorOptions, [this](const std::vector<std::string>& keys) {
+				m_kitSelectorFired = true;
+				if (m_kitSelectorCallback) {
+					std::vector<const char*> cstrs;
+					cstrs.reserve(keys.size());
+					for (const auto& k : keys) {
+						cstrs.push_back(k.c_str());
+					}
+					m_kitSelectorCallback(keys.empty() ? nullptr : cstrs.data(), static_cast<uint32_t>(keys.size()));
+				}
+			});
+		}
+
 		m_menu->OpenWindow(this);
 	}
 
@@ -54,9 +68,18 @@ namespace Modex
 			m_formSelectorCallback(nullptr, 0);
 		}
 
+		if (m_APIWindow && m_kitSelectorCallback && !m_kitSelectorFired) {
+			m_kitSelectorCallback(nullptr, 0);
+		}
+
 		m_formSelectorCallback = nullptr;
 		m_formSelectorOptions.Reset();
 		m_formSelectorFired = false;
+
+		m_kitSelectorCallback = nullptr;
+		m_kitSelectorOptions.Reset();
+		m_kitSelectorFired = false;
+
 		m_APIWindow = false;
 
 		UIModule::SaveSharedReference();
@@ -75,6 +98,20 @@ namespace Modex
 		m_formSelectorOwnership = a_ownership;
 		m_formSelectorOptions = a_options;
 		m_formSelectorFired = false;
+		m_APIWindow = true;
+
+		Open();
+	}
+
+	void UIManager::OpenKitSelector(KitSelectorCallback a_callback, const FormSelectorOptions& a_options)
+	{
+		if (IsMenuOpen()) {
+			return;
+		}
+
+		m_kitSelectorCallback = a_callback;
+		m_kitSelectorOptions = a_options;
+		m_kitSelectorFired = false;
 		m_APIWindow = true;
 
 		Open();

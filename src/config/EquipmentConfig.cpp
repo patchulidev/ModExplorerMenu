@@ -3,7 +3,7 @@
 #include "core/Commands.h"
 #include "data/BaseObject.h"
 
-// TODO: Migrate to caching all kits on startup by default for quicker lookups.
+// All kits are fully loaded into memory at startup for instant access.
 
 namespace Modex
 {
@@ -57,7 +57,7 @@ namespace Modex
 	}
 
 
-	// Initialize equipment
+	// Initialize equipment — fully loads all kits into memory.
 	bool EquipmentConfig::Load()
 	{
 		Trace("Loading all equipment kits from JSON directory: '{}'", EQUIPMENT_JSON_PATH.string());
@@ -77,34 +77,23 @@ namespace Modex
 			}
 
 			auto relativePath = entry.path().lexically_relative(EQUIPMENT_JSON_PATH);
-			auto parentPath = relativePath.parent_path();
 
 			// Validate the relative path doesn't escape. Otherwise our m_key will be invalid
-			// annd result in weird behavior when renaming, copying, and saving.
-
+			// and result in weird behavior when renaming, copying, and saving.
 			if (relativePath.string().starts_with("..")) {
 				Trace("  Skipping file outside base path: '{}'", entry.path().string());
 				continue;
 			}
 
-			KitData metadata;
-			metadata.m_filepath = entry.path().string();
-			metadata.m_key = relativePath.string();
-			
-			if (parentPath.empty()) {
-				metadata.m_collection = "";
-			} else {
-				metadata.m_collection = parentPath.string();
+			if (auto kit = LoadKit(entry.path()); kit.has_value()) {
+				auto key = kit->m_key;
+				cache[key] = std::move(kit.value());
+				loaded_count++;
+				Trace("  [{}] Key: '{}'", loaded_count, key);
 			}
-			
-			// Cache metadata as KitData
-			cache[metadata.m_key] = metadata;
-			loaded_count++;
-			
-			Trace("  [{}] Key: '{}' | Collection: '{}'", loaded_count, metadata.m_key, metadata.m_collection);
 		}
-		
-		Debug("Loaded {} kits metadata from '{}'", cache.size(), EQUIPMENT_JSON_PATH.string());
+
+		Debug("Loaded {} kits from '{}'", cache.size(), EQUIPMENT_JSON_PATH.string());
 		return true;
 	}
 
@@ -135,27 +124,10 @@ namespace Modex
 			return std::nullopt;
 		}
 
-		auto& cache = GetSingleton()->m_cache;
-		cache[data.m_key] = data;
-
 		UserData::SendEvent(ModexActionType::CreateKit, data.m_key, Ownership::Kit);
 
 		Info("Created new kit: '{}'", data.m_key);
 		return data;
-	}
-
-	// Query runtime cache and load kit if metadata is found already.
-	std::optional<Kit> EquipmentConfig::LoadKit(const KitData& a_metadata)
-	{
-		Debug("Loading kit from cache: '{}'", a_metadata.m_key);
-
-		auto& cache = GetSingleton()->m_cache;
-		if (cache.find(a_metadata.m_key) != cache.end()) {
-			return LoadKit(a_metadata.m_filepath);
-		}
-
-		Error("  Kit filepath not found in cache: '{}'", a_metadata.m_filepath.string());
-		return std::nullopt;
 	}
 
 	// Open and load a kit directly from JSON file path.
@@ -207,7 +179,7 @@ namespace Modex
 		return new_kit;
 	}
 
-	// Save a Kit object to its associated JSON file.
+	// Save a Kit object to its associated JSON file and update the cache.
 	bool EquipmentConfig::SaveKit(const Kit& a_kit)
 	{
 		ASSERT_MSG(a_kit.m_filepath.empty(), "No filepath associated with kit: {}", a_kit.m_key);
@@ -215,7 +187,7 @@ namespace Modex
 
 		nlohmann::json data;
 		std::string json_key = std::filesystem::path(a_kit.m_key).stem().string();
-		
+
 		data[json_key] = nlohmann::json::object();
 		data[json_key]["Collection"] = a_kit.m_collection;
 		data[json_key]["Description"] = a_kit.m_desc;
@@ -240,6 +212,11 @@ namespace Modex
 			}
 
 			file << data.dump(4);
+
+			// Sync the kit back to the in-memory cache.
+			auto& cache = GetSingleton()->m_cache;
+			cache[a_kit.m_key] = a_kit;
+
 			Info("Saved kit '{}' to file", a_kit.m_key);
 			return true;
 		} catch (const std::exception& e) {
@@ -274,9 +251,6 @@ namespace Modex
 		if (!SaveKit(new_kit)) {
 			return std::nullopt;
 		}
-
-		auto& cache = GetSingleton()->m_cache;
-		cache[new_kit.m_key] = new_kit;
 
 		UserData::SendEvent(ModexActionType::CopyKit, new_kit.m_key, Ownership::Kit);
 		Info("Copied kit '{}' to new kit '{}'", a_kit.m_key, new_kit.m_key);
@@ -325,10 +299,9 @@ namespace Modex
 			}
 			
 			std::filesystem::remove(oldPath);
-			
+
 			auto& cache = GetSingleton()->m_cache;
 			cache.erase(old_key);
-			cache[new_key] = new_kit;
 			
 			UserData::SendEvent(ModexActionType::RenameKit, new_key, Ownership::Kit);
 			Info("Successfully renamed kit '{}' to '{}'", old_key, new_key);
@@ -366,27 +339,20 @@ namespace Modex
 		Info("Deleted kit: {}", a_kit.m_key);
 	}
 
-	// Query runtime cache and return Kit object if found.
-	std::optional<Kit> EquipmentConfig::KitLookup(const std::string& a_key)
+	// Query runtime cache and return pointer to Kit if found.
+	Kit* EquipmentConfig::KitLookup(const std::string& a_key)
 	{
 		Debug("Looking up kit by key: '{}'", a_key);
 
 		auto& cache = GetSingleton()->m_cache;
 		auto it = cache.find(a_key);
-		
+
 		if (it == cache.end()) {
 			Warn("Kit Lookup failed: key '{}' not found in cache", a_key);
-			return std::nullopt;
+			return nullptr;
 		}
 
-		Trace("  Found kit metadata in cache: '{}'", a_key);
-				
-		if (auto kit = GetSingleton()->LoadKit(it->second.m_filepath); kit.has_value()) {
-			return kit;
-		}
-		
-		ASSERT_MSG(true, "Kit Lookup for {} found in cache but failed to load!", a_key);
-		return std::nullopt;
+		return &it->second;
 	}
 
 	// Returns items in a given kit as BaseObject vector.
@@ -409,8 +375,8 @@ namespace Modex
 		return items;
 	}
 
-	// Returns reference to the runtime equipment list cache. vector<std::string, KitData>
-	std::unordered_map<std::string, KitData>& EquipmentConfig::GetEquipmentList()
+	// Returns reference to the runtime equipment list cache.
+	std::unordered_map<std::string, Kit>& EquipmentConfig::GetEquipmentList()
 	{
 		return GetSingleton()->m_cache;
 	}

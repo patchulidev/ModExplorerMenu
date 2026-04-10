@@ -899,7 +899,7 @@ namespace Modex
 			return FilterInventoryImpl();
 		}
 
-		if (tableList.empty()) 
+		if (tableList.empty())
 		{
 			if (owner == Ownership::Item)
 				return Filter(Data::GetSingleton()->GetAddItemList());
@@ -911,6 +911,8 @@ namespace Modex
 				return Filter(Data::GetSingleton()->GetOutfitList());
 			if (owner == Ownership::Cell)
 				return Filter(Data::GetSingleton()->GetTeleportList());
+			if (owner == Ownership::Kit)
+				return FilterKitListImpl();
 		}
 	}
 	
@@ -1011,6 +1013,19 @@ namespace Modex
 
 		SortListBySpecs();
 		UpdateImGuiTableIDs();
+	}
+
+	void UITable::FilterKitListImpl()
+	{
+		auto& cache = EquipmentConfig::GetEquipmentList();
+		std::vector<BaseObject> kitObjects;
+		kitObjects.reserve(cache.size());
+
+		for (const auto& [key, kit] : cache) {
+			kitObjects.emplace_back(kit.GetNameTail(), key, kit.m_collection, Ownership::Kit);
+		}
+
+		Filter(kitObjects);
 	}
 
 	void UITable::FilterInventoryImpl()
@@ -1618,10 +1633,15 @@ namespace Modex
 	void UITable::HandleLeftClickBehavior(const std::unique_ptr<BaseObject>& a_item)
 	{
 		if (HasFlag(ModexTableFlag_APIMode)) {
-			if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && m_selectionChangedCallback) {
+			if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && (m_selectionChangedCallback || m_selectionChangedStringCallback)) {
 				UICustom::InputAmountHandler(ImGui::GetIO().KeyShift, [&a_item, this](uint32_t amount = 1) {
 					for (uint32_t i = 0; i < amount; i++) {
-						m_selectionChangedCallback({ a_item->GetBaseFormID() });
+						if (m_selectionChangedCallback) {
+							m_selectionChangedCallback({ a_item->GetBaseFormID() });
+						}
+						if (m_selectionChangedStringCallback) {
+							m_selectionChangedStringCallback({ a_item->GetEditorID() });
+						}
 					}
 				});
 
@@ -1676,29 +1696,37 @@ namespace Modex
 					selectionStorage.Clear();
 				}
 
-				if (!a_item->IsDummy()) {
+				if (!a_item->IsDummy() || m_selectionChangedStringCallback) {
 					ImGui::OpenPopup("APIModeContextMenu");
 				}
 			}
 
 			if (ImGui::BeginPopup("APIModeContextMenu")) {
 				if (ImGui::MenuItem(Translate("ADD_SELECTION"))) {
-					if (m_selectionChangedCallback) {
+					if (m_selectionChangedCallback || m_selectionChangedStringCallback) {
 						UICustom::InputAmountHandler(ImGui::GetIO().KeyShift, [&](uint32_t amount = 1) {
 							std::vector<RE::FormID> selectedIDs;
+							std::vector<std::string> selectedStrings;
 							void* it = NULL;
 							ImGuiID id = 0;
 							while (selectionStorage.GetNextSelectedItem(&it, &id)) {
 								if (id < tableList.size()) {
 									selectedIDs.push_back(tableList[id]->GetBaseFormID());
+									selectedStrings.push_back(tableList[id]->GetEditorID());
 								}
 							}
 							if (selectedIDs.empty()) {
 								selectedIDs.push_back(a_item->GetBaseFormID());
+								selectedStrings.push_back(a_item->GetEditorID());
 							}
 
 							for (uint32_t i = 0; i < amount; i++) {
-								m_selectionChangedCallback(selectedIDs);
+								if (m_selectionChangedCallback) {
+									m_selectionChangedCallback(selectedIDs);
+								}
+								if (m_selectionChangedStringCallback) {
+									m_selectionChangedStringCallback(selectedStrings);
+								}
 							}
 						});
 					}
@@ -1934,17 +1962,22 @@ namespace Modex
 		}
 
 		if (HasFlag(ModexTableFlag_APIMode)) {
-			if (ImGui::Shortcut(ImGuiKey_Enter, ImGuiInputFlags_RouteFromRootWindow) && m_selectionChangedCallback) {
+			if (ImGui::Shortcut(ImGuiKey_Enter, ImGuiInputFlags_RouteFromRootWindow) && (m_selectionChangedCallback || m_selectionChangedStringCallback)) {
 				std::vector<RE::FormID> selectedIDs;
+				std::vector<std::string> selectedStrings;
 				void* it = NULL;
 				ImGuiID id = 0;
 				while (selectionStorage.GetNextSelectedItem(&it, &id)) {
 					if (id < a_tableList.size()) {
 						selectedIDs.push_back(a_tableList[id]->GetBaseFormID());
+						selectedStrings.push_back(a_tableList[id]->GetEditorID());
 					}
 				}
-				if (!selectedIDs.empty()) {
+				if (!selectedIDs.empty() && m_selectionChangedCallback) {
 					m_selectionChangedCallback(selectedIDs);
+				}
+				if (!selectedStrings.empty() && m_selectionChangedStringCallback) {
+					m_selectionChangedStringCallback(selectedStrings);
 				}
 			}
 		}

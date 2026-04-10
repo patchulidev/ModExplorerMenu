@@ -153,9 +153,11 @@ namespace Modex
 
 		//                      class builder methods
 		using SelectionChangedCallback = std::function<void(const std::vector<RE::FormID>&)>;
+		using SelectionChangedStringCallback = std::function<void(const std::vector<std::string>&)>;
 		void                    SetKitPointer(Kit* a_kit) { selectedKitPtr = a_kit; }
 		void                    SetDragDropHandle(DragDropHandle a_handle);
 		void                    SetSelectionChangedCallback(SelectionChangedCallback a_callback) { m_selectionChangedCallback = std::move(a_callback); }
+		void                    SetSelectionChangedStringCallback(SelectionChangedStringCallback a_callback) { m_selectionChangedStringCallback = std::move(a_callback); }
 
 		//                      target reference accessors
 		RE::TESObjectREFR*      GetTableTargetRef() const { return tableTargetRef; }
@@ -208,6 +210,7 @@ namespace Modex
 		void                    FilterRecentImpl();
 		void                    FilterFavoriteImpl();
 		void                    FilterKitImpl();
+		void                    FilterKitListImpl();
 		void                    FilterInventoryImpl();
 		void                    UpdateActiveInventoryTables();
 		void                    UpdateImGuiTableIDs();
@@ -258,5 +261,6 @@ namespace Modex
 		std::map<DragDropHandle, UITable*>  dragDropSourceList;
 		ImGuiSelectionBasicStorage          selectionStorage;
 		SelectionChangedCallback            m_selectionChangedCallback;
+		SelectionChangedStringCallback      m_selectionChangedStringCallback;
 	};
 }
