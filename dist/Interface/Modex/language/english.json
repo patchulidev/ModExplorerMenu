@@ -42,6 +42,9 @@
 "MAX_COST": "Max Cost:",
 "RESULTS": "Results",
 "MASTER": "Master",
+"ITEM_COUNT": "Item Count",
+"ARMOR_COUNT": "Armor Count",
+"WEAPON_COUNT": "Weapon Count",
 "SEARCH_LIST": "Active List",
 "SEARCH_KEY": "Search Key",
 "SEARCH_PHRASE": "Search Phrase",
@@ -66,6 +69,7 @@
 "TAB_INVENTORY": "Single Layout",
 "TAB_MULTI_INVENTORY": "Multi Layout",
 "TAB_EQUIPMENT": "Equipment Setup Layout",
+"TAB_KIT_BROWSER": "Equipment Browser Layout",
 "TAB_ACTOR": "Actor Table Layout",
 "TAB_OBJECT": "Object Table Layout",
 "TAB_TELEPORT": "Teleport Table Layout",
@@ -157,6 +161,7 @@
 "KIT_BROWSE": "Browse Kit Collections",
 "KIT_BROWSE_TOOLTIP": "Browse Kits\n\nOpen the kit browser to view and manage your kits and collections.",
 "KIT_FROM_OUTFIT": "Create Kit from Outfit",
+"KIT_LIST_NO_MATCH": "No kits found using the current search phrase.",
 "ADD_KIT": "Add To Target",
 
 "_KIT_POPUPS": "======== Kit Popup Dialogs ========",
@@ -239,6 +244,7 @@
 "PLUGIN_DEP_TITLE": "Plugin Dependencies",
 "PLUGIN_DEP_FOUND": "Found",
 "PLUGIN_DEP_MISSING": "Missing",
+
 
 "_HOME_MODULE": "======== Home Module ========",
 "HOME_TAB_WELCOME": "Welcome",

@@ -58,6 +58,7 @@ namespace Modex
 						if (const auto success = EquipmentConfig::RenameKit(m_selectedKit, a_input); success.has_value()) {
 							m_selectedKit = std::move(success.value());
 							m_tables[1]->Refresh();
+							RefreshKitList();
 						}
 					}
 				);
@@ -74,6 +75,7 @@ namespace Modex
 							m_selectedKit = *kit;
 							ImFormatString(m_searchBuffer, 256, "");
 							m_tables[1]->Refresh();
+							if (m_kitList) m_kitList->SetSelectedKey(a_input);
 						}
 					}
 				);
@@ -89,6 +91,7 @@ namespace Modex
 							ImFormatString(m_searchBuffer, 256, "");
 							m_selectedKit = std::move(new_kit.value());
 							m_tables[1]->Refresh();
+							RefreshKitList();
 						}
 					}
 				);
@@ -100,6 +103,7 @@ namespace Modex
 					ImFormatString(m_searchBuffer, 256, "");
 					m_selectedKit = std::move(new_kit.value());
 					m_tables[1]->Refresh();
+					RefreshKitList();
 				}
 			}
 
@@ -113,6 +117,7 @@ namespace Modex
 						EquipmentConfig::DeleteKit(m_selectedKit);
 						m_selectedKit = Kit();
 						m_tables[1]->Refresh();
+						RefreshKitList();
 					}
 				);
 			}
@@ -204,6 +209,55 @@ namespace Modex
 		UIContainers::DrawBasicTablePanel("TABLE_KIT", kit_pos, ImVec2(0.0f, 0.0f), kitTable);
 	}
 
+	void EquipmentModule::DrawKitBrowserLayout(std::vector<std::unique_ptr<UITable>>& a_tables)
+	{
+		const ImVec2 window_padding = ImGui::GetStyle().WindowPadding;
+		const float list_width = ImGui::GetContentRegionAvail().x * 0.60f;
+
+		auto& kitTable = a_tables[1];
+
+		const ImVec2 list_pos = ImGui::GetCursorPos();
+		ImGui::SetCursorPos(list_pos);
+		if (ImGui::BeginChild("TABLE_KIT_BROWSER", ImVec2(list_width, 0.0f), false, ImGuiWindowFlags_NoBringToFrontOnFocus)) {
+			ImGui::Spacing();
+			if (m_kitList) {
+				m_kitList->Draw();
+			}
+		}
+		ImGui::EndChild();
+
+		const ImVec2 action_pos = list_pos + ImVec2(list_width + window_padding.x, 0.0f);
+		DrawKitActionsPanel(action_pos, ImVec2(0.0f, 0.0f));
+
+		const ImVec2 kit_pos = action_pos + ImVec2(0.0f, ImGui::GetItemRectSize().y + window_padding.y);
+		UIContainers::DrawBasicTablePanel("TABLE_KIT", kit_pos, ImVec2(0.0f, 0.0f), kitTable);
+	}
+
+	void EquipmentModule::SelectKitByKey(const std::string& a_key)
+	{
+		if (auto* kit = EquipmentConfig::KitLookup(a_key)) {
+			m_selectedKit = *kit;
+		} else {
+			m_selectedKit = Kit();
+		}
+
+		if (!m_tables.empty() && m_tables.size() > 1) {
+			m_tables[1]->Refresh();
+		}
+	}
+
+	void EquipmentModule::RefreshKitList()
+	{
+		if (m_kitList) {
+			m_kitList->Refresh();
+			if (!m_selectedKit.m_key.empty()) {
+				m_kitList->SetSelectedKey(m_selectedKit.m_key);
+			} else {
+				m_kitList->ClearSelection();
+			}
+		}
+	}
+
 	EquipmentModule::~EquipmentModule()
 	{
 		UserData::Set<std::string>("Equipment::LastSelectedKit", m_selectedKit.m_key);
@@ -221,11 +275,33 @@ namespace Modex
 		if (auto* kit = EquipmentConfig::KitLookup(last_kit_key)) {
 			m_selectedKit = *kit;
 		}
+
+		m_kitList = std::make_unique<UIKitList>("Equipment::KitList", UIKitList::SelectionMode::Single);
+		m_kitList->SetShowDeleteAction(true);
+		m_kitList->SetSelectionChangedCallback([this](const std::vector<std::string>& keys) {
+			if (keys.empty()) {
+				m_selectedKit = Kit();
+			} else if (auto* kit = EquipmentConfig::KitLookup(keys[0])) {
+				m_selectedKit = *kit;
+			}
+			if (m_tables.size() > 1) {
+				m_tables[1]->Refresh();
+			}
+		});
+
+		if (!m_selectedKit.m_key.empty()) {
+			m_kitList->SetSelectedKey(m_selectedKit.m_key);
+		}
+
 		// Setup available layouts for this module.
-		// m_layouts.push_back({Translate("TAB_EQUIPMENT"), true, DrawEquipmentLayout});
 		m_layouts.push_back({Translate("TAB_EQUIPMENT"), true,
 				[this](std::vector<std::unique_ptr<UITable>>& a_tables) {
 					DrawEquipmentLayout(a_tables);
+				}
+			});
+		m_layouts.push_back({Translate("TAB_KIT_BROWSER"), false,
+				[this](std::vector<std::unique_ptr<UITable>>& a_tables) {
+					DrawKitBrowserLayout(a_tables);
 				}
 			});
 
