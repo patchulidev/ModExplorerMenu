@@ -2,6 +2,7 @@
 #include "config/UserData.h"
 #include "config/EquipmentConfig.h"
 #include "config/ThemeConfig.h"
+#include "external/icons/IconsLucide.h"
 #include "imgui.h"
 #include "localization/Locale.h"
 #include "ui/components/UIContainers.h"
@@ -55,8 +56,8 @@ namespace Modex
 					Translate("POPUP_KIT_RENAME_DESC"),
 					m_selectedKit.GetName(),
 					[&](std::string a_input) {
-						if (const auto success = EquipmentConfig::RenameKit(m_selectedKit, a_input); success.has_value()) {
-							m_selectedKit = std::move(success.value());
+						if (auto renamed = EquipmentConfig::RenameKit(m_selectedKit, a_input); renamed) {
+							m_selectedKit = std::move(renamed);
 							m_tables[1]->Refresh();
 							RefreshKitList();
 						}
@@ -82,29 +83,31 @@ namespace Modex
 			}
 
 			if (UICustom::ActionButton("KIT_CREATE", ImVec2(button_width, button_height), true)) {
-				UIManager::GetSingleton()->ShowInputBox(
-					Translate("POPUP_KIT_CREATE_TITLE"),
-					Translate("POPUP_KIT_CREATE_DESC"),
-					"",
-					[&](const std::string& a_input) {
-						if (auto new_kit = EquipmentConfig::CreateKit(a_input); new_kit.has_value()) {
-							ImFormatString(m_searchBuffer, 256, "");
-							m_selectedKit = std::move(new_kit.value());
-							m_tables[1]->Refresh();
-							RefreshKitList();
-						}
-					}
-				);
+				OpenCreateKitDialog();
+			}
+
+			if (UICustom::ActionButton("KIT_FROM_WORN", ImVec2(half_width, button_height), true)) {
+				OpenCreateKitFromPlayerDialog(/*wornOnly=*/true);
+			}
+
+			ImGui::SameLine();
+
+			if (UICustom::ActionButton("KIT_FROM_INVENTORY", ImVec2(half_width, button_height), true)) {
+				OpenCreateKitFromPlayerDialog(/*wornOnly=*/false);
 			}
 
 
 			if (UICustom::ActionButton("KIT_COPY", ImVec2(button_width, button_height), !m_selectedKit.empty())) {
-				if (auto new_kit = EquipmentConfig::CopyKit(m_selectedKit); new_kit.has_value()) {
+				if (auto new_kit = EquipmentConfig::CopyKit(m_selectedKit); new_kit) {
 					ImFormatString(m_searchBuffer, 256, "");
-					m_selectedKit = std::move(new_kit.value());
+					m_selectedKit = std::move(new_kit);
 					m_tables[1]->Refresh();
 					RefreshKitList();
 				}
+			}
+
+			if (UICustom::ActionButton("KIT_TAGS", ImVec2(button_width, button_height), !m_selectedKit.empty())) {
+				OpenKitTagsPopup();
 			}
 
 			if (UICustom::ActionButton("KIT_DELETE", ImVec2(button_width, button_height), !m_selectedKit.empty())) {
@@ -258,6 +261,56 @@ namespace Modex
 		}
 	}
 
+	void EquipmentModule::OpenCreateKitDialog()
+	{
+		UIManager::GetSingleton()->ShowInputBox(
+			Translate("POPUP_KIT_CREATE_TITLE"),
+			Translate("POPUP_KIT_CREATE_DESC"),
+			"",
+			[this](const std::string& a_input) {
+				if (auto new_kit = EquipmentConfig::CreateKit(a_input); new_kit) {
+					ImFormatString(m_searchBuffer, 256, "");
+					m_selectedKit = std::move(new_kit);
+					m_tables[1]->Refresh();
+					RefreshKitList();
+				}
+			}
+		);
+	}
+
+	void EquipmentModule::OpenKitTagsPopup()
+	{
+		if (m_selectedKit.empty()) return;
+		const std::string key = m_selectedKit.m_key;
+		UIManager::GetSingleton()->ShowKitTagsEditor(key, [this, key]() {
+			// Tags changed via the popup (either Apply or a cross-kit delete).
+			// Resync the selected kit from the cache so its CSV is fresh.
+			if (auto* refreshed = EquipmentConfig::KitLookup(key)) {
+				m_selectedKit = *refreshed;
+			}
+			RefreshKitList();
+		});
+	}
+
+	void EquipmentModule::OpenCreateKitFromPlayerDialog(bool a_wornOnly)
+	{
+		UIManager::GetSingleton()->ShowInputBox(
+			Translate("POPUP_KIT_CREATE_TITLE"),
+			Translate(a_wornOnly ? "POPUP_KIT_FROM_WORN_DESC" : "POPUP_KIT_FROM_INVENTORY_DESC"),
+			"",
+			[this, a_wornOnly](const std::string& a_input) {
+				auto* player = Commands::GetPlayerReference();
+				if (!player) return;
+				if (auto new_kit = EquipmentConfig::CreateKitFromReference(a_input, player, a_wornOnly); new_kit) {
+					ImFormatString(m_searchBuffer, 256, "");
+					m_selectedKit = std::move(new_kit);
+					m_tables[1]->Refresh();
+					RefreshKitList();
+				}
+			}
+		);
+	}
+
 	EquipmentModule::~EquipmentModule()
 	{
 		UserData::Set<std::string>("Equipment::LastSelectedKit", m_selectedKit.m_key);
@@ -278,6 +331,7 @@ namespace Modex
 
 		m_kitList = std::make_unique<UIKitList>("Equipment::KitList", UIKitList::SelectionMode::Single);
 		m_kitList->SetShowDeleteAction(true);
+		m_kitList->SetCreateKitCallback([this]() { OpenCreateKitDialog(); });
 		m_kitList->SetSelectionChangedCallback([this](const std::vector<std::string>& keys) {
 			if (keys.empty()) {
 				m_selectedKit = Kit();

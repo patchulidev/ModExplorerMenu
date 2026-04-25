@@ -119,7 +119,6 @@ namespace ModexAPI
 		const char* key;          // Unique kit identifier (relative path)
 		const char* name;         // Display name (file stem)
 		const char* collection;   // Collection/category grouping
-		const char* description;  // Kit description
 		uint32_t    itemCount;    // Number of items in the kit
 		int32_t     goldValue;    // Total gold value of all items
 	};

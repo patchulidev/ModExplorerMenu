@@ -13,6 +13,10 @@ namespace Modex::UICustom
 
 	void FancyTooltip(const char* a_localeString);
 	bool FancyInputText(const char* a_id, const char* a_hint, const char* a_tooltip, char* a_buffer, float a_width, ImGuiInputTextFlags a_flags = 0);
+	// Rounded, taller-frame dropdown trigger that visually matches FancyInputText.
+	// Leading icon + label + optional badge count, with a chevron drawn at the
+	// right edge. Returns true on click — caller is expected to OpenPopup.
+	bool FancyDropdownButton(const char* a_id, const char* a_label, const char* a_leadingIcon, const char* a_tooltip, float a_width, int a_badgeCount = 0);
 	bool FancyDropdown(const char* a_id, const char* a_tooltip, uint32_t& a_currentItem, const std::vector<std::string>& a_items, float a_width);
 	bool FancyDropdown(const char* a_id, const char* a_tooltip, int& a_currentItem, const std::vector<std::string>& a_items, float a_width);
 

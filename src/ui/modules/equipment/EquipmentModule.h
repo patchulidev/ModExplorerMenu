@@ -28,5 +28,8 @@ namespace Modex
 
 		void SelectKitByKey(const std::string& a_key);
 		void RefreshKitList();
+		void OpenCreateKitDialog();
+		void OpenCreateKitFromPlayerDialog(bool a_wornOnly);
+		void OpenKitTagsPopup();
 	};
 }

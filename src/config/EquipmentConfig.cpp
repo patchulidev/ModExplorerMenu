@@ -40,8 +40,9 @@ namespace Modex
 			return Warn("Kit key validation failed: empty key");
 		}
 
-		// invalid character check
-		const std::string invalid_chars = R"("')";
+		// Kit names are flat filenames — no path separators, no quote characters.
+		// Users who want to organize on disk can move files manually.
+		const std::string invalid_chars = R"("'/\)";
 		for (const char c : invalid_chars) {
 			if (a_keyName.find(c) != std::string::npos) {
 				return Warn("Kit key validation failed: invalid character ' {} ' in key '{}'", c, a_keyName);
@@ -54,6 +55,37 @@ namespace Modex
 		}
 
 		return true;
+	}
+
+	// Split tags on both `,` (new-style tag CSV) and `/` or `\` (legacy folder
+	// paths from the pre-tag schema) so old kits migrate transparently on load.
+	static std::string MigrateLegacyCollectionString(const std::string& a_raw)
+	{
+		if (a_raw.empty()) return {};
+
+		std::vector<std::string> tokens;
+		std::string current;
+		for (char c : a_raw) {
+			if (c == ',' || c == '/' || c == '\\') {
+				if (!current.empty()) tokens.push_back(current);
+				current.clear();
+			} else {
+				current.push_back(c);
+			}
+		}
+		if (!current.empty()) tokens.push_back(current);
+
+		// Trim and drop empties.
+		std::string out;
+		for (auto& tok : tokens) {
+			size_t start = 0, end = tok.size();
+			while (start < end && std::isspace(static_cast<unsigned char>(tok[start]))) start++;
+			while (end > start && std::isspace(static_cast<unsigned char>(tok[end - 1]))) end--;
+			if (start == end) continue;
+			if (!out.empty()) out += ", ";
+			out.append(tok, start, end - start);
+		}
+		return out;
 	}
 
 
@@ -94,34 +126,33 @@ namespace Modex
 		}
 
 		Debug("Loaded {} kits from '{}'", cache.size(), EQUIPMENT_JSON_PATH.string());
+		RebuildKnownTags();
 		return true;
 	}
 
-	// Create a new kit with a given relative path (key). Returns a Kit object on success.
-	std::optional<Kit> EquipmentConfig::CreateKit(const std::filesystem::path& a_relativePath)
+	Kit EquipmentConfig::CreateKit(const std::filesystem::path& a_relativePath)
 	{
-		Debug("Creating new kit at relative path: '{}'", a_relativePath.string());
+		Debug("Creating new kit '{}'", a_relativePath.string());
 
 		Kit data;
 
 		if (!ValidateKeyName(a_relativePath.string())) {
-			return std::nullopt;
+			return Kit{};
 		}
 
-		std::filesystem::path full_relative_path = a_relativePath;
-		if (full_relative_path.extension() != ".json") {
-			full_relative_path += ".json";
+		std::filesystem::path filename = a_relativePath;
+		if (filename.extension() != ".json") {
+			filename += ".json";
 		}
 
-		auto parentPath = full_relative_path.parent_path();
-		data.m_collection = parentPath.empty() ? "" : parentPath.string();
-		data.m_filepath = (EQUIPMENT_JSON_PATH / full_relative_path).string();
-		data.m_key = full_relative_path.string();
+		data.m_filepath = (EQUIPMENT_JSON_PATH / filename).string();
+		data.m_key      = filename.string();
+		// m_collection left empty — users assign tags after creation.
 
-		Debug("  Key: '{}' | Collection: '{}' | Filepath: '{}'", data.m_key, data.m_collection, data.m_filepath.string());
+		Debug("  Key: '{}' | Filepath: '{}'", data.m_key, data.m_filepath.string());
 
 		if (!SaveKit(data)) {
-			return std::nullopt;
+			return Kit{};
 		}
 
 		UserData::SendEvent(ModexActionType::CreateKit, data.m_key, Ownership::Kit);
@@ -152,8 +183,7 @@ namespace Modex
 		Kit new_kit;
 		new_kit.m_filepath = a_fullPath.string();
 		new_kit.m_key = std::filesystem::relative(a_fullPath, EQUIPMENT_JSON_PATH).string();
-		new_kit.m_collection = kit_data.value("Collection", "");
-		new_kit.m_desc = kit_data.value("Description", "No description.");
+		new_kit.m_collection = MigrateLegacyCollectionString(kit_data.value("Collection", ""));
 		new_kit.m_tableID = 0;
 
 		if (kit_data.contains("Items") && kit_data["Items"].is_object()) {
@@ -190,7 +220,6 @@ namespace Modex
 
 		data[json_key] = nlohmann::json::object();
 		data[json_key]["Collection"] = a_kit.m_collection;
-		data[json_key]["Description"] = a_kit.m_desc;
 
 		if (a_kit.m_items.empty()) {
 			data[json_key]["Items"] = nlohmann::json::object();
@@ -217,6 +246,7 @@ namespace Modex
 			auto& cache = GetSingleton()->m_cache;
 			cache[a_kit.m_key] = a_kit;
 
+			RebuildKnownTags();
 			Info("Saved kit '{}' to file", a_kit.m_key);
 			return true;
 		} catch (const std::exception& e) {
@@ -224,32 +254,23 @@ namespace Modex
 		}
 	}
 
-	// Duplicate and Save an existing kit, returns the new Kit object on success.
-	std::optional<Kit> EquipmentConfig::CopyKit(const Kit& a_kit)
+	Kit EquipmentConfig::CopyKit(const Kit& a_kit)
 	{
 		Debug("Copying kit: '{}'", a_kit.m_key);
 
 		Kit new_kit = a_kit;
-		
+
 		std::filesystem::path original_key_path(a_kit.m_key);
-		std::filesystem::path parent = original_key_path.parent_path();
-		std::string stem = original_key_path.stem().string();
+		std::string stem      = original_key_path.stem().string();
 		std::string extension = original_key_path.extension().string();
 
 		std::filesystem::path new_filename = stem + " (Copy)" + extension;
-		std::filesystem::path new_key_path = parent / new_filename;
 
-		new_kit.m_key = new_key_path.string();
-		new_kit.m_filepath = (EQUIPMENT_JSON_PATH / new_key_path).string();
-		
-		if (parent.empty()) {
-			new_kit.m_collection = "";
-		} else {
-			new_kit.m_collection = parent.string();
-		}
+		new_kit.m_key      = new_filename.string();
+		new_kit.m_filepath = (EQUIPMENT_JSON_PATH / new_filename).string();
 
 		if (!SaveKit(new_kit)) {
-			return std::nullopt;
+			return Kit{};
 		}
 
 		UserData::SendEvent(ModexActionType::CopyKit, new_kit.m_key, Ownership::Kit);
@@ -257,8 +278,7 @@ namespace Modex
 		return new_kit;
 	}
 
-	// Rename an existing kit, returns a new Kit object on success.
-	std::optional<Kit> EquipmentConfig::RenameKit(Kit& a_kit, std::string a_keyName)
+	Kit EquipmentConfig::RenameKit(Kit& a_kit, std::string a_keyName)
 	{
 		Debug("Renaming kit '{}' to '{}'", a_kit.m_key, a_keyName);
 
@@ -279,12 +299,12 @@ namespace Modex
 		std::string new_key = a_keyName + ".json";
 		std::filesystem::path oldPath = a_kit.m_filepath;
 		std::filesystem::path newPath = EQUIPMENT_JSON_PATH / new_key;
-		
+
 		if (std::filesystem::exists(newPath)) {
 			Warn("  Kit with name '{}' already exists in collection", a_keyName);
 			return a_kit;
 		}
-		
+
 		try {
 			Kit new_kit = a_kit;
 			new_kit.m_filepath = newPath.string();
@@ -292,24 +312,24 @@ namespace Modex
 
 			Debug("  Old Path: '{}'", oldPath.string());
 			Debug("  New Path: '{}'", newPath.string());
-			
+
 			if (!SaveKit(new_kit)) {
 				Warn("  Failed to save renamed kit to:  {}", newPath.string());
-				return a_kit;
+				return Kit{};
 			}
-			
+
 			std::filesystem::remove(oldPath);
 
 			auto& cache = GetSingleton()->m_cache;
 			cache.erase(old_key);
-			
+
 			UserData::SendEvent(ModexActionType::RenameKit, new_key, Ownership::Kit);
 			Info("Successfully renamed kit '{}' to '{}'", old_key, new_key);
-			return std::move(new_kit);
-			
+			return new_kit;
+
 		} catch (const std::exception& e) {
 			ASSERT_MSG(true,"Exception while renaming kit '{}':\n\n{}", old_key, e.what());
-			return a_kit;
+			return Kit{};
 		}
 	}
 
@@ -335,6 +355,7 @@ namespace Modex
 		}
 		
 		cache.erase(a_kit.m_key);
+		RebuildKnownTags();
 		UserData::SendEvent(ModexActionType::DeleteKit, a_kit.m_key, Ownership::Kit);
 		Info("Deleted kit: {}", a_kit.m_key);
 	}
@@ -381,6 +402,46 @@ namespace Modex
 		return GetSingleton()->m_cache;
 	}
 
+	// Recompute m_knownTags from the union of all kits' tag sets.
+	void EquipmentConfig::RebuildKnownTags()
+	{
+		auto* self = GetSingleton();
+		self->m_knownTags.clear();
+		for (const auto& [key, kit] : self->m_cache) {
+			for (const auto& tag : kit.GetTags()) {
+				self->m_knownTags.insert(tag);
+			}
+		}
+		Trace("Rebuilt known tags: {} unique", self->m_knownTags.size());
+	}
+
+	// Sorted list of every tag currently present on any loaded kit.
+	std::vector<std::string> EquipmentConfig::GetKnownTags()
+	{
+		const auto& set = GetSingleton()->m_knownTags;
+		return std::vector<std::string>(set.begin(), set.end());
+	}
+
+	int EquipmentConfig::DeleteTagFromAllKits(const std::string& a_tag)
+	{
+		if (a_tag.empty()) return 0;
+
+		int modified = 0;
+		auto& cache = GetSingleton()->m_cache;
+		for (auto& [key, kit] : cache) {
+			auto tags = kit.GetTags();
+			auto it = std::find(tags.begin(), tags.end(), a_tag);
+			if (it == tags.end()) continue;
+			tags.erase(it);
+			kit.SetTags(tags);
+			SaveKit(kit); // also rebuilds known tags
+			modified++;
+		}
+
+		Info("Removed tag '{}' from {} kit(s)", a_tag, modified);
+		return modified;
+	}
+
 	// Returns sorted list of equipment keys as vector<string>
 	std::vector<std::string> EquipmentConfig::GetEquipmentListSortedKeys()
 	{
@@ -409,23 +470,57 @@ namespace Modex
 		return tails;
 	}
 
+	// Snapshot a reference's current inventory into a new kit. When a_wornOnly is
+	// true, only items flagged as worn by the game engine are included — yields
+	// an "outfit" kit. When false, every inventory entry with count > 0 lands in
+	// the kit (amount + equipped state preserved per item).
+	Kit EquipmentConfig::CreateKitFromReference(const std::filesystem::path& a_relativePath, RE::TESObjectREFR* a_reference, bool a_wornOnly)
+	{
+		if (!a_reference) {
+			Warn("CreateKitFromReference: null reference");
+			return Kit{};
+		}
+
+		auto kit = CreateKit(a_relativePath);
+		if (!kit) {
+			return Kit{};
+		}
+
+		auto inventory = a_reference->GetInventory();
+		for (auto& [obj, data] : inventory) {
+			auto& [count, entry] = data;
+			if (count <= 0 || !entry) continue;
+
+			const bool worn = entry->IsWorn();
+			if (a_wornOnly && !worn) continue;
+
+			auto baseObject = BaseObject(obj, Ownership::Item, 0, 0, static_cast<int>(count), worn);
+			kit.m_items.emplace_back(CreateKitItem(baseObject));
+		}
+
+		SaveKit(kit);
+		Info("Created kit '{}' from reference ({} items, wornOnly={})",
+			kit.m_key, kit.m_items.size(), a_wornOnly);
+		return kit;
+	}
+
 	// Helper method to create a kit from a pre-existing outfit form.
 	bool EquipmentConfig::CreateKitFromOutfit(const std::string& a_name, RE::BGSOutfit* a_outfit, uint16_t a_level)
 	{
 		if (!a_outfit) return false;
 		Debug("Creating Kit {} from outfit {}.", a_name, po3_GetEditorID(a_outfit->GetFormID()));
 
-		if (auto kit = CreateKit(a_name); kit.has_value()) {
+		if (auto kit = CreateKit(a_name); kit) {
 			auto resolved = Commands::ResolveOutfitItems(a_outfit, Commands::GetPlayerReference(), a_level);
 
 			for (auto& entry : resolved) {
 				auto baseObject = BaseObject(entry.object, Ownership::Outfit, 0, 0, entry.count);
 				Trace(" - Adding {} from Outfit to Kit", baseObject.GetEditorID());
-				kit.value().m_items.emplace_back(CreateKitItem(std::move(baseObject)));
+				kit.m_items.emplace_back(CreateKitItem(std::move(baseObject)));
 			}
 
-			SaveKit(kit.value());
-			Trace("Created {} with {} items", a_name, std::ssize(kit.value().m_items));
+			SaveKit(kit);
+			Trace("Created {} with {} items", a_name, std::ssize(kit.m_items));
 			return true;
 		}
 

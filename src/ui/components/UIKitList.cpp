@@ -79,12 +79,16 @@ namespace Modex
 			return value;
 		}
 
-		void ComputeKitBreakdown(const Kit& a_kit, int& a_weapons, int& a_armor)
+		void ComputeKitBreakdown(const Kit& a_kit, int& a_weapons, int& a_armor, std::vector<std::string>& a_missing)
 		{
 			a_weapons = a_armor = 0;
+			a_missing.clear();
 			for (const auto& item : a_kit.m_items) {
 				const auto* form = RE::TESForm::LookupByEditorID(item->m_editorid);
-				if (!form) continue;
+				if (!form) {
+					a_missing.push_back(item->m_editorid);
+					continue;
+				}
 				switch (form->GetFormType()) {
 				case RE::FormType::Weapon: a_weapons++; break;
 				case RE::FormType::Armor:  a_armor++;   break;
@@ -182,8 +186,9 @@ namespace Modex
 			row.key        = key;
 			row.name       = kit.GetNameTail();
 			row.collection = kit.m_collection;
+			row.tags       = kit.GetTags();
 			row.totalCount = static_cast<int>(kit.m_items.size());
-			ComputeKitBreakdown(kit, row.weaponCount, row.armorCount);
+			ComputeKitBreakdown(kit, row.weaponCount, row.armorCount, row.missingItems);
 			row.totalValue = ComputeKitValue(kit);
 			m_rows.push_back(std::move(row));
 		}
@@ -203,6 +208,20 @@ namespace Modex
 				!ContainsICase(row.collection, needle)) {
 				continue;
 			}
+
+			// Tag filter is AND across selected tags: kit must carry every
+			// active filter tag to survive.
+			if (!m_tagFilter.empty()) {
+				bool has_all = true;
+				for (const auto& required : m_tagFilter) {
+					if (std::find(row.tags.begin(), row.tags.end(), required) == row.tags.end()) {
+						has_all = false;
+						break;
+					}
+				}
+				if (!has_all) continue;
+			}
+
 			m_visible.push_back(&row);
 		}
 
@@ -234,6 +253,11 @@ namespace Modex
 
 	void UIKitList::DrawSearchBar(float a_width)
 	{
+		const float font   = ImGui::GetFontSize();
+		const float btn_w  = font * 7.5f;
+		const float gap    = ImGui::GetStyle().ItemSpacing.x;
+		const float input_w = (std::max)(a_width - btn_w - gap, font * 8.0f);
+
 		static bool hovered = false;
 		ImGui::PushStyleColor(ImGuiCol_FrameBg,
 			hovered ? ThemeConfig::GetHover("BG_LIGHT") : ThemeConfig::GetColor("BG_LIGHT"));
@@ -241,7 +265,7 @@ namespace Modex
 		ImGui::NewLine();
 		const auto cursor_pos = ImGui::GetCursorScreenPos();
 
-		if (UICustom::FancyInputText("##UIKitList::Search", "TABLE_SEARCH_HINT", "", m_searchBuffer, a_width)) {
+		if (UICustom::FancyInputText("##UIKitList::Search", "TABLE_SEARCH_HINT", "", m_searchBuffer, input_w)) {
 			ApplyFilter();
 		}
 
@@ -250,17 +274,66 @@ namespace Modex
 		}
 		hovered = ImGui::IsItemHovered();
 
-		{ // Dropdown Descriptor
+		ImGui::PopStyleColor();
+
+		{ // Dropdown descriptor — centered over the search input width.
 			const auto draw_list = ImGui::GetWindowDrawList();
 			const auto text = Translate("SEARCH_PHRASE");
-			const auto text_pos_x = (cursor_pos.x + (a_width / 2.0f)) - (ImGui::CalcTextSize(text).x / 2.0f);
+			const auto text_pos_x = (cursor_pos.x + (input_w / 2.0f)) - (ImGui::CalcTextSize(text).x / 2.0f);
 			const auto text_pos_y = cursor_pos.y - ImGui::GetFrameHeight();
 			const auto alpha = ImGui::GetStyle().Alpha;
 			draw_list->AddText(ImVec2(text_pos_x, text_pos_y), ThemeConfig::GetColorU32("TEXT_DISABLED", alpha), text);
 		}
-		
+
+		ImGui::SameLine();
+		const int active = static_cast<int>(m_tagFilter.size());
+		if (UICustom::FancyDropdownButton("UIKitList::TagFilterBtn", "FILTER_BY_TAGS", ICON_LC_TAG, "", btn_w, active)) {
+			ImGui::OpenPopup("##UIKitList::TagFilter");
+		}
+		DrawTagFilterPopup();
+
 		ImGui::Spacing();
-		ImGui::PopStyleColor();
+	}
+
+	void UIKitList::DrawTagFilterPopup()
+	{
+		if (!ImGui::BeginPopup("##UIKitList::TagFilter")) return;
+
+		const float font  = ImGui::GetFontSize();
+		const auto  known = EquipmentConfig::GetKnownTags();
+
+		// "Clear filters" affordance only shows when something is active.
+		if (!m_tagFilter.empty()) {
+			if (ImGui::SmallButton(Translate("TAG_FILTER_CLEAR"))) {
+				m_tagFilter.clear();
+				ApplyFilter();
+			}
+			ImGui::Separator();
+		}
+
+		if (known.empty()) {
+			ImGui::TextDisabled("%s", Translate("KIT_TAGS_NONE_KNOWN"));
+		} else {
+			const float row_h   = ImGui::GetFrameHeightWithSpacing();
+			const float desired = static_cast<float>(known.size()) * row_h;
+			const float max_h   = font * 20.0f;
+			const float list_h  = (std::min)(desired, max_h);
+			const float list_w  = font * 14.0f;
+
+			if (ImGui::BeginChild("##UIKitList::TagFilter::List", ImVec2(list_w, list_h), false)) {
+				for (const auto& tag : known) {
+					bool checked = m_tagFilter.contains(tag);
+					if (ImGui::Checkbox(tag.c_str(), &checked)) {
+						if (checked) m_tagFilter.insert(tag);
+						else         m_tagFilter.erase(tag);
+						ApplyFilter();
+					}
+				}
+			}
+			ImGui::EndChild();
+		}
+
+		ImGui::EndPopup();
 	}
 
 	void UIKitList::DrawTable(const ImVec2& a_size)
@@ -372,16 +445,47 @@ namespace Modex
 			ImGui::PushID(row->key.c_str());
 
 			ImGui::TableSetColumnIndex(KitColumn_Name);
-			const bool selected = IsSelected(row->key);
+			const ImVec2 name_origin = ImGui::GetCursorScreenPos();
+			const float  name_cell_w = ImGui::GetContentRegionAvail().x;
+			const bool   selected    = IsSelected(row->key);
 			ImGuiSelectableFlags row_flags =
 				ImGuiSelectableFlags_SpanAllColumns |
 				ImGuiSelectableFlags_AllowDoubleClick |
 				ImGuiSelectableFlags_NoPadWithHalfSpacing;
-			if (m_showDeleteAction) {
+			if (m_showDeleteAction || !row->missingItems.empty()) {
 				row_flags |= ImGuiSelectableFlags_AllowOverlap;
 			}
 			if (ImGui::Selectable(row->name.c_str(), selected, row_flags, ImVec2(0.0f, t.row_h))) {
 				HandleRowClick(*row);
+			}
+
+			if (!row->missingItems.empty()) {
+				const ImVec2 icon_sz = ImGui::CalcTextSize(ICON_LC_TRIANGLE_ALERT);
+				const ImVec2 icon_pos(
+					name_origin.x + name_cell_w - icon_sz.x,
+					name_origin.y + (t.row_h - icon_sz.y) * 0.5f);
+				const ImU32 icon_col = ImGui::GetColorU32(ThemeConfig::GetColor("WARN"));
+				ImGui::GetWindowDrawList()->AddText(icon_pos, icon_col, ICON_LC_TRIANGLE_ALERT);
+
+				if (ImGui::IsMouseHoveringRect(icon_pos, icon_pos + icon_sz)) {
+					ImGui::BeginTooltip();
+					ImGui::Text("%s %d", ICON_LC_TRIANGLE_ALERT,
+						static_cast<int>(row->missingItems.size()));
+					ImGui::Separator();
+					constexpr size_t kMaxShown = 8;
+					const size_t shown = (std::min)(row->missingItems.size(), kMaxShown);
+					for (size_t i = 0; i < shown; i++) {
+						ImGui::TextUnformatted(row->missingItems[i].c_str());
+					}
+					if (row->missingItems.size() > kMaxShown) {
+						ImGui::TextDisabled("... +%d", static_cast<int>(row->missingItems.size() - kMaxShown));
+					}
+					ImGui::EndTooltip();
+				}
+			}
+
+			if (m_showDeleteAction) {
+				DrawRowContextMenu(*row);
 			}
 
 			ImGui::TableSetColumnIndex(KitColumn_Collection);
@@ -422,24 +526,7 @@ namespace Modex
 				dl->AddText(icon_pos, icon_col, ICON_LC_TRASH_2);
 
 				if (clicked) {
-					const std::string key   = row->key;
-					const std::string label = row->name;
-					UIManager::GetSingleton()->ShowWarning(
-						std::string(Translate("POPUP_KIT_DELETE_TITLE")) + " - " + label,
-						Translate("POPUP_KIT_DELETE_DESC"),
-						true,
-						[this, key]() {
-							if (auto* kit = EquipmentConfig::KitLookup(key)) {
-								EquipmentConfig::DeleteKit(*kit);
-							}
-							auto it = std::find(m_selected.begin(), m_selected.end(), key);
-							if (it != m_selected.end()) {
-								m_selected.erase(it);
-								EmitSelectionChanged();
-							}
-							Refresh();
-						}
-					);
+					RequestDeleteWithConfirm(row->key, row->name);
 				}
 			}
 
@@ -449,6 +536,75 @@ namespace Modex
 		ImGui::EndTable();
 		ImGui::PopStyleColor(3);
 		ImGui::PopStyleVar(4);
+	}
+
+	void UIKitList::DrawRowContextMenu(const Row& a_row)
+	{
+		if (!ImGui::BeginPopupContextItem("##UIKitList::RowCtx")) {
+			return;
+		}
+
+		if (ImGui::MenuItem(Translate("KIT_COPY"))) {
+			if (auto* kit = EquipmentConfig::KitLookup(a_row.key)) {
+				EquipmentConfig::CopyKit(*kit);
+				Refresh();
+			}
+		}
+
+		if (ImGui::MenuItem(Translate("KIT_TAGS"))) {
+			const std::string key = a_row.key;
+			UIManager::GetSingleton()->ShowKitTagsEditor(key, [this]() { Refresh(); });
+		}
+
+		if (ImGui::MenuItem(Translate("KIT_RENAME"))) {
+			const std::string key     = a_row.key;
+			const std::string current = a_row.name;
+			UIManager::GetSingleton()->ShowInputBox(
+				Translate("POPUP_KIT_RENAME_TITLE"),
+				Translate("POPUP_KIT_RENAME_DESC"),
+				current,
+				[this, key](std::string a_input) {
+					if (auto* kit = EquipmentConfig::KitLookup(key)) {
+						if (auto renamed = EquipmentConfig::RenameKit(*kit, a_input); renamed) {
+							auto it = std::find(m_selected.begin(), m_selected.end(), key);
+							if (it != m_selected.end()) {
+								*it = renamed.m_key;
+								EmitSelectionChanged();
+							}
+							Refresh();
+						}
+					}
+				}
+			);
+		}
+
+		ImGui::Separator();
+
+		if (ImGui::MenuItem(Translate("KIT_DELETE"))) {
+			RequestDeleteWithConfirm(a_row.key, a_row.name);
+		}
+
+		ImGui::EndPopup();
+	}
+
+	void UIKitList::RequestDeleteWithConfirm(const std::string& a_key, const std::string& a_label)
+	{
+		UIManager::GetSingleton()->ShowWarning(
+			std::string(Translate("POPUP_KIT_DELETE_TITLE")) + " - " + a_label,
+			Translate("POPUP_KIT_DELETE_DESC"),
+			true,
+			[this, key = a_key]() {
+				if (auto* kit = EquipmentConfig::KitLookup(key)) {
+					EquipmentConfig::DeleteKit(*kit);
+				}
+				auto it = std::find(m_selected.begin(), m_selected.end(), key);
+				if (it != m_selected.end()) {
+					m_selected.erase(it);
+					EmitSelectionChanged();
+				}
+				Refresh();
+			}
+		);
 	}
 
 	void UIKitList::HandleRowClick(const Row& a_row)
@@ -499,9 +655,9 @@ namespace Modex
 		const float table_h  = avail_h > 0.0f ? (std::max)(0.0f, avail_h - consumed - footer_h) : 0.0f;
 
 		if (m_rows.empty()) {
-			DrawEmptyState(ImVec2(avail_w, table_h), Translate("KIT_LIST_EMPTY"));
+			DrawEmptyState(ImVec2(avail_w, table_h), Translate("KIT_LIST_EMPTY"), /*showCreateCTA=*/true);
 		} else if (m_visible.empty()) {
-			DrawEmptyState(ImVec2(avail_w, table_h), Translate("KIT_LIST_NO_MATCH"));
+			DrawEmptyState(ImVec2(avail_w, table_h), Translate("KIT_LIST_NO_MATCH"), /*showCreateCTA=*/false);
 		} else {
 			DrawTable(ImVec2(avail_w, table_h));
 		}
@@ -509,21 +665,45 @@ namespace Modex
 		DrawFooter(avail_w);
 	}
 
-	void UIKitList::DrawEmptyState(const ImVec2& a_size, const char* a_message)
+	void UIKitList::DrawEmptyState(const ImVec2& a_size, const char* a_message, bool a_showCreateCTA)
 	{
 		const auto t = GetTokens();
+		const bool cta_visible = a_showCreateCTA && static_cast<bool>(m_onCreateRequested);
+
 		ImGui::PushStyleColor(ImGuiCol_ChildBg, ThemeConfig::GetColor("BG_LIGHT"));
 		ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, t.radius_sm);
 		if (ImGui::BeginChild("##UIKitList::EmptyState", a_size, true, ImGuiWindowFlags_NoScrollbar)) {
-			const float text_w = ImGui::CalcTextSize(a_message).x;
-			const float avail  = ImGui::GetContentRegionAvail().x;
-			const float center_x = (avail - text_w) * 0.5f;
-			const float center_y = ImGui::GetContentRegionAvail().y * 0.5f - t.font * 0.5f;
-			if (center_y > 0.0f) ImGui::SetCursorPosY(ImGui::GetCursorPosY() + center_y);
-			if (center_x > 0.0f) ImGui::SetCursorPosX(ImGui::GetCursorPosX() + center_x);
+			const float avail   = ImGui::GetContentRegionAvail().x;
+			const float text_w  = ImGui::CalcTextSize(a_message).x;
+			const float btn_w   = t.font * 12.0f;
+			const float btn_h   = t.row_h;
+
+			// Vertically center the message + optional CTA as a single block.
+			const float block_h = cta_visible ? (t.font + t.gap_sm + btn_h) : t.font;
+			const float top_pad = (ImGui::GetContentRegionAvail().y - block_h) * 0.5f;
+			if (top_pad > 0.0f) ImGui::SetCursorPosY(ImGui::GetCursorPosY() + top_pad);
+
+			// Message
+			const float msg_x = (avail - text_w) * 0.5f;
+			if (msg_x > 0.0f) ImGui::SetCursorPosX(ImGui::GetCursorPosX() + msg_x);
 			ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImGuiCol_TextDisabled));
 			ImGui::TextUnformatted(a_message);
 			ImGui::PopStyleColor();
+
+			// CTA
+			if (cta_visible) {
+				ImGui::Dummy(ImVec2(0.0f, t.gap_sm));
+				const float btn_x = (avail - btn_w) * 0.5f;
+				if (btn_x > 0.0f) ImGui::SetCursorPosX(ImGui::GetCursorPosX() + btn_x);
+				ImGui::PushStyleColor(ImGuiCol_Button,        ThemeConfig::GetColor("PRIMARY"));
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ThemeConfig::GetHover("PRIMARY"));
+				ImGui::PushStyleColor(ImGuiCol_ButtonActive,  ThemeConfig::GetActive("PRIMARY"));
+				const std::string label = std::string(ICON_LC_PLUS) + "  " + Translate("KIT_CREATE");
+				if (ImGui::Button(label.c_str(), ImVec2(btn_w, btn_h))) {
+					m_onCreateRequested();
+				}
+				ImGui::PopStyleColor(3);
+			}
 		}
 		ImGui::EndChild();
 		ImGui::PopStyleVar();

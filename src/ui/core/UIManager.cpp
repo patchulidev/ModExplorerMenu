@@ -405,6 +405,14 @@ namespace Modex
 		popup->OpenWindow(this);
 	}
 
+	void UIManager::ShowKitTagsEditor(const std::string& a_kitKey, std::function<void()> onChanged)
+	{
+		m_windowStack.push_back(std::make_unique<UIPopupKitTags>());
+		UIPopupKitTags* popup = static_cast<UIPopupKitTags*>(m_windowStack.back().get());
+		popup->PopupKitTags(a_kitKey, onChanged);
+		popup->OpenWindow(this);
+	}
+
 	void UIManager::NavigateToModule(uint8_t a_moduleIndex)
 	{
 		if (m_menu) {

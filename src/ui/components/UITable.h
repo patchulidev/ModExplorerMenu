@@ -240,7 +240,6 @@ namespace Modex
 		void                    DrawDragDropPayload(const std::string& a_icon);
 		void                    DrawItem(const std::unique_ptr<BaseObject>& a_item, const ImVec2& a_pos, bool a_selected);
 		void                    DrawKitItem(const std::unique_ptr<BaseObject>& a_item, const ImVec2& a_pos, bool a_selected);
-		void                    DrawKit(const Kit& a_kit, const ImVec2& a_pos);
 		void                    DrawPluginSearchBar(const ImVec2& a_size);
 		void                    DrawFormSearchBar(const ImVec2& a_size);
 		void                    DrawModeDropdown(const ImVec2& a_size);

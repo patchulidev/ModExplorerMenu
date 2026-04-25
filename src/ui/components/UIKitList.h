@@ -15,6 +15,7 @@ namespace Modex
 
 		using SelectionChangedCallback = std::function<void(const std::vector<std::string>&)>;
 		using KitActivatedCallback     = std::function<void(const std::string&)>;
+		using CreateKitCallback        = std::function<void()>;
 
 		explicit UIKitList(const std::string& a_dataID, SelectionMode a_mode = SelectionMode::Single);
 		~UIKitList() = default;
@@ -35,9 +36,9 @@ namespace Modex
 
 		void SetSelectionChangedCallback(SelectionChangedCallback a_cb) { m_onSelectionChanged = std::move(a_cb); }
 		void SetKitActivatedCallback(KitActivatedCallback a_cb) { m_onKitActivated = std::move(a_cb); }
+		void SetCreateKitCallback(CreateKitCallback a_cb) { m_onCreateRequested = std::move(a_cb); }
 
 		// Render a per-row trash button. Defaults to off so the selector use case
-		// stays read-only.
 		void SetShowDeleteAction(bool a_show) { m_showDeleteAction = a_show; }
 		bool GetShowDeleteAction() const { return m_showDeleteAction; }
 
@@ -47,20 +48,25 @@ namespace Modex
 			std::string key;
 			std::string name;
 			std::string collection;
+			std::vector<std::string> tags;         // parsed once from collection at BuildRows time
 			int weaponCount = 0;
 			int armorCount  = 0;
 			int totalCount  = 0;
 			int totalValue  = 0;
+			std::vector<std::string> missingItems; // editor IDs that failed LookupByEditorID
 		};
 
 		void BuildRows();
 		void ApplyFilter();
 		void SortVisible(int a_columnUserID, ImGuiSortDirection a_dir);
 		void DrawSearchBar(float a_width);
+		void DrawTagFilterPopup();
 		void DrawTable(const ImVec2& a_size);
-		void DrawEmptyState(const ImVec2& a_size, const char* a_message);
+		void DrawEmptyState(const ImVec2& a_size, const char* a_message, bool a_showCreateCTA);
 		void DrawFooter(float a_width);
+		void DrawRowContextMenu(const Row& a_row);
 		void HandleRowClick(const Row& a_row);
+		void RequestDeleteWithConfirm(const std::string& a_key, const std::string& a_label);
 		void EmitSelectionChanged();
 
 		std::string              m_data_id;
@@ -73,8 +79,12 @@ namespace Modex
 		int                      m_sortColumn    = 0;
 		ImGuiSortDirection       m_sortDirection = ImGuiSortDirection_Ascending;
 
+		// Tag filter — kit must have all selected tags to remain visible.
+		std::unordered_set<std::string> m_tagFilter;
+
 		SelectionChangedCallback m_onSelectionChanged;
 		KitActivatedCallback     m_onKitActivated;
+		CreateKitCallback        m_onCreateRequested;
 
 		bool                     m_showDeleteAction = false;
 	};

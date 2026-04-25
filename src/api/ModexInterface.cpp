@@ -376,7 +376,6 @@ namespace Modex
 				a_outBuffer[i].key = kit.m_key.c_str();
 				a_outBuffer[i].name = kit.m_key.c_str(); // Key includes relative path; consumer can extract stem
 				a_outBuffer[i].collection = kit.m_collection.c_str();
-				a_outBuffer[i].description = kit.m_desc.c_str();
 				a_outBuffer[i].itemCount = static_cast<uint32_t>(kit.m_items.size());
 				a_outBuffer[i].goldValue = KitSelectorModule::GetKitGoldValue(key);
 				i++;

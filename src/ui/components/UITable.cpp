@@ -1324,74 +1324,6 @@ namespace Modex
 		ImGui::PopStyleVar();
 	}
 
-	void UITable::DrawKit(const Kit& a_kit, const ImVec2& a_pos)
-	{
-		const auto& DrawList = ImGui::GetWindowDrawList();
-		const float fontSize = ImGui::GetFontSize(); 
-
-		// Setup box and bounding box for positioning and drawing.
-		const ImVec2 box_min(a_pos.x - 1, a_pos.y - 1);
-		const ImVec2 box_max(box_min.x + LayoutItemSize.x + 2, box_min.y + LayoutItemSize.y + 2);  // Dubious
-		ImRect bb(box_min, box_max);
-
-		// Outline & Background
-		const float global_alpha = ImGui::GetStyle().Alpha;
-		const ImU32 bg_color = ThemeConfig::GetColorU32("BG", global_alpha);
-		const ImU32 bg_color_alt = ThemeConfig::GetColorU32("BG_LIGHT", global_alpha);
-		const ImU32 outline_color = ThemeConfig::GetColorU32("BG", global_alpha);
-		const ImU32 text_color = ThemeConfig::GetColorU32("TEXT", global_alpha);
-
-		// Background
-		if (a_kit.m_tableID % 2 == 0) {
-			DrawList->AddRectFilled(bb.Min, bb.Max, bg_color);
-		} else {
-			DrawList->AddRectFilled(bb.Min, bb.Max, bg_color_alt);
-		}
-
-		// Outline
-		DrawList->AddRect(bb.Min, bb.Max, outline_color, 0.0f, 0, 1.0f);
-
-		const float spacing = LayoutColumnWidth / 3.0f;
-		const float top_align = bb.Min.y + LayoutOuterPadding;
-		const float bot_align = bb.Max.y - LayoutOuterPadding - fontSize;
-		const float center_align = bb.Min.y + ((LayoutOuterPadding + LayoutItemSize.y) / 2) - (fontSize / 2.0f);
-		const float left_align = bb.Min.x + LayoutOuterPadding;
-		const float right_align = bb.Max.x - LayoutOuterPadding - fontSize;
-		const ImVec2 top_left_align = ImVec2(left_align, top_align);
-		const ImVec2 top_right_align = ImVec2(right_align, top_align);
-		const ImVec2 bot_left_align = ImVec2(left_align, bot_align);
-		const ImVec2 bot_right_align = ImVec2(right_align, bot_align);
-		const ImVec2 center_left_align = ImVec2(left_align, center_align);
-		const ImVec2 center_right_align = ImVec2(right_align, center_align);
-
-		// Draw the kit name for now
-		const std::string name_string = TRUNCATE(a_kit.GetName(), spacing);
-		DrawList->AddText(center_left_align, text_color, name_string.c_str());
-		
-		const std::string weaponCount = a_kit.m_weaponCount == 0 ? Translate("None") : std::to_string(a_kit.m_weaponCount);
-		const std::string armorCount = a_kit.m_armorCount == 0 ? Translate("None") : std::to_string(a_kit.m_armorCount);
-		const std::string miscCount = a_kit.m_miscCount == 0 ? Translate("None") : std::to_string(a_kit.m_miscCount);
-		const std::string totalCount = std::to_string(a_kit.m_weaponCount + a_kit.m_armorCount + a_kit.m_miscCount);
-
-		// Draw the kit meta data
-		const ImVec2 total_count_pos = ImVec2(left_align + spacing, center_align);
-		const std::string total_count_string = ICON_LC_BOX + totalCount;
-		DrawList->AddText(total_count_pos, text_color, total_count_string.c_str());
-	
-
-		const std::string desc_string = a_kit.m_desc;
-
-		if (ImGui::CalcTextSize(desc_string.c_str()).x > spacing * 1.5f) {
-			std::string first_half = desc_string.substr(0, desc_string.size() / 2);
-			std::string second_half = desc_string.substr(desc_string.size() / 2);
-
-			DrawList->AddText(center_left_align, text_color, first_half.c_str());
-			DrawList->AddText(bot_left_align, text_color, second_half.c_str());
-		} else {
-			DrawList->AddText(bot_left_align, text_color, desc_string.c_str());
-		}
-	}
-
 	void UITable::ResolvePayloadDrop(UITable* origin, UITable* destination, std::vector<std::unique_ptr<BaseObject>>& payload_items)
 	{
 		// Behavior based on source and destination types.
@@ -1575,8 +1507,8 @@ namespace Modex
 								Translate("POPUP_KIT_CREATE_DESC"),
 								"",
 								[items, pointer, destination](const std::string& a_input) {
-									if (auto new_kit = EquipmentConfig::CreateKit(a_input); new_kit.has_value()) {
-										*pointer = std::move(new_kit.value());
+									if (auto new_kit = EquipmentConfig::CreateKit(a_input); new_kit) {
+										*pointer = std::move(new_kit);
 
 										for (const auto& item : *items) {
 											pointer->m_items.emplace_back(EquipmentConfig::CreateKitItem(*item));

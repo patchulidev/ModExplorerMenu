@@ -188,9 +188,53 @@ namespace Modex::UICustom
 
 		DrawList->AddText(pos, ThemeConfig::GetColorU32("TEXT", ImGui::GetStyle().Alpha), ICON_LC_SEARCH);
 		ImGui::PopFont();
-		
+
 		ImGui::PopStyleVar(2);
 		return changed;
+	}
+
+	bool FancyDropdownButton(const char* a_id, const char* a_label, const char* a_leadingIcon, const char* a_tooltip, float a_width, int a_badgeCount)
+	{
+		auto pos = ImGui::GetCursorScreenPos();
+
+		// Match FancyInputText's frame so the button sits at the same height
+		// and corner radius as the search field.
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 12.0f);
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding,  ImVec2(8.0f, 8.0f));
+		ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.0f, 0.5f));
+
+		// label = "{leadingIcon}  {label}{ (count)}##{a_id}"
+		std::string label;
+		if (a_leadingIcon && a_leadingIcon[0] != '\0') {
+			label = std::string(a_leadingIcon) + "  ";
+		}
+		label += Translate(a_label);
+		if (a_badgeCount > 0) {
+			label += std::format("  ({})", a_badgeCount);
+		}
+		label += "##";
+		label += a_id;
+
+		const bool clicked = ImGui::Button(label.c_str(), ImVec2(a_width, 0));
+
+		ImGui::PopStyleVar(3);
+
+		if (a_tooltip && a_tooltip[0] != '\0' && Locale::GetSingleton()->HasEntry(a_tooltip)) {
+			if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal | ImGuiHoveredFlags_NoSharedDelay)) {
+				UICustom::FancyTooltip(a_tooltip);
+			}
+		}
+
+		// Trailing chevron, drawn the same way FancyInputText draws its search
+		// glyph — overlay at right edge, larger font for visibility.
+		auto* DrawList = ImGui::GetWindowDrawList();
+		ImGui::PushFont(NULL, 18.0f);
+		pos.x += a_width - ImGui::GetFrameHeightWithSpacing() + ImGui::GetStyle().FramePadding.x;
+		pos.y += (ImGui::GetItemRectSize().y / 2.0f) - (ImGui::GetFontSize() / 2.0f);
+		DrawList->AddText(pos, ThemeConfig::GetColorU32("TEXT", ImGui::GetStyle().Alpha), ICON_LC_CHEVRON_DOWN);
+		ImGui::PopFont();
+
+		return clicked;
 	}
 
 	bool FancyDropdown(const char* a_id, const char* a_tooltip, uint32_t& a_currentItem, const std::vector<std::string>& a_items, float a_width)
