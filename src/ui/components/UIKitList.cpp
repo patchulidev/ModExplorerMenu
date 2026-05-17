@@ -6,6 +6,7 @@
 #include "localization/Locale.h"
 #include "ui/components/UICustom.h"
 #include "ui/core/UIManager.h"
+#include "ui/style/LayoutMetrics.h"
 
 namespace Modex
 {
@@ -33,38 +34,37 @@ namespace Modex
 			bool                    center; // center-align header label + cell content
 		};
 
-		// All layout dimensions derive from a single 4-unit base scale tied to the
-		// current font size, so spacing stays proportional across font sizes.
-		// At 16px font: u=4, pad_x=12, pad_y=8, row_h=32, gap=8, radius_sm=4.
+		// UIKitList-local view of the layout metrics. Shared scaffolding
+		// (pad/gap/radius) comes from Style::Metrics(); per-widget tunables
+		// (column widths, search button width, etc.) come from the
+		// WidgetStyle::KitList block in ThemeConfig.
 		struct Tokens
 		{
 			float font;
-			float u;          // base unit = font / 4
-			float pad_x;      // 3u — cell + frame horizontal padding
-			float pad_y;      // 2u — frame vertical padding
-			float row_h;      // font + 2 * pad_y — list row height (== GetFrameHeight when active)
-			float gap_sm;     // 2u — stack gap between sibling sections
-			float radius_sm;  // 1u — table / list rounding
-			float radius_lg;  // 2u — search field rounding
-			float col_icon_w; // 3u + font — fixed width for icon-only columns
-			float col_value_w; // 5u + font — fixed width for value column
+			float u;
+			float pad_x;
+			float pad_y;
+			float row_h;
+			float gap_sm;
+			float radius_sm;
+			float col_icon_w;
+			float col_value_w;
 		};
 
 		Tokens GetTokens()
 		{
-			const float font = ImGui::GetFontSize();
-			const float u    = font * 0.25f;
+			const auto  m  = Style::Metrics();
+			const auto& kl = ThemeConfig::GetWidgetStyle().kitList;
 			Tokens t{};
-			t.font        = font;
-			t.u           = u;
-			t.pad_x       = u * 3.0f;
-			t.pad_y       = u * 2.0f;
-			t.row_h       = font + t.pad_y * 2.0f;
-			t.gap_sm      = u * 2.0f;
-			t.radius_sm   = u * 1.0f;
-			t.radius_lg   = u * 2.0f;
-			t.col_icon_w  = font + u * 5.0f;
-			t.col_value_w = font + u * 5.0f;
+			t.font        = m.font;
+			t.u           = m.u;
+			t.pad_x       = m.padX;
+			t.pad_y       = m.padY;
+			t.row_h       = m.font + t.pad_y * 2.0f;
+			t.gap_sm      = m.gapSm;
+			t.radius_sm   = m.radiusSm;
+			t.col_icon_w  = m.font + m.u * kl.colIconWidthU;
+			t.col_value_w = m.font + m.u * kl.colValueWidthU;
 			return t;
 		}
 
@@ -254,9 +254,10 @@ namespace Modex
 	void UIKitList::DrawSearchBar(float a_width)
 	{
 		const float font   = ImGui::GetFontSize();
-		const float btn_w  = font * 7.5f;
+		const auto& kl     = ThemeConfig::GetWidgetStyle().kitList;
+		const float btn_w  = font * kl.searchBtnWidthFont;
 		const float gap    = ImGui::GetStyle().ItemSpacing.x;
-		const float input_w = (std::max)(a_width - btn_w - gap, font * 8.0f);
+		const float input_w = (std::max)(a_width - btn_w - gap, font * kl.searchMinInputFont);
 
 		static bool hovered = false;
 		ImGui::PushStyleColor(ImGuiCol_FrameBg,
@@ -314,11 +315,12 @@ namespace Modex
 		if (known.empty()) {
 			ImGui::TextDisabled("%s", Translate("KIT_TAGS_NONE_KNOWN"));
 		} else {
+			const auto& kl      = ThemeConfig::GetWidgetStyle().kitList;
 			const float row_h   = ImGui::GetFrameHeightWithSpacing();
 			const float desired = static_cast<float>(known.size()) * row_h;
-			const float max_h   = font * 20.0f;
+			const float max_h   = font * kl.tagFilterListMaxFont;
 			const float list_h  = (std::min)(desired, max_h);
-			const float list_w  = font * 14.0f;
+			const float list_w  = font * kl.tagFilterListWidthFont;
 
 			if (ImGui::BeginChild("##UIKitList::TagFilter::List", ImVec2(list_w, list_h), false)) {
 				for (const auto& tag : known) {
@@ -675,7 +677,7 @@ namespace Modex
 		if (ImGui::BeginChild("##UIKitList::EmptyState", a_size, true, ImGuiWindowFlags_NoScrollbar)) {
 			const float avail   = ImGui::GetContentRegionAvail().x;
 			const float text_w  = ImGui::CalcTextSize(a_message).x;
-			const float btn_w   = t.font * 12.0f;
+			const float btn_w   = t.font * ThemeConfig::GetWidgetStyle().kitList.emptyStateBtnFont;
 			const float btn_h   = t.row_h;
 
 			// Vertically center the message + optional CTA as a single block.

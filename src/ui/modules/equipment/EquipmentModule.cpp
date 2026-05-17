@@ -9,6 +9,7 @@
 #include "core/Commands.h"
 #include "ui/components/UITable.h"
 #include "core/PlayerChestSpawn.h"
+#include "ui/style/LayoutMetrics.h"
 
 namespace Modex
 {
@@ -197,7 +198,7 @@ namespace Modex
 	void EquipmentModule::DrawEquipmentLayout(std::vector<std::unique_ptr<UITable>>& a_tables)
 	{
 		const ImVec2 window_padding = ImGui::GetStyle().WindowPadding;
-		const float table_width = ImGui::GetContentRegionAvail().x * 0.60f;
+		const float table_width = ImGui::GetContentRegionAvail().x * Style::Ratio::TableBalanced();
 
 		auto& table = a_tables[0];
 		auto& kitTable = a_tables[1];
@@ -215,7 +216,7 @@ namespace Modex
 	void EquipmentModule::DrawKitBrowserLayout(std::vector<std::unique_ptr<UITable>>& a_tables)
 	{
 		const ImVec2 window_padding = ImGui::GetStyle().WindowPadding;
-		const float list_width = ImGui::GetContentRegionAvail().x * 0.60f;
+		const float list_width = ImGui::GetContentRegionAvail().x * Style::Ratio::TableBalanced();
 
 		auto& kitTable = a_tables[1];
 

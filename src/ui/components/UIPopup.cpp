@@ -13,7 +13,7 @@ namespace Modex
 	void UIPopupHotkey::Draw()
 	{
 		static float height;
-		auto width = ImGui::GetMainViewport()->Size.x * 0.25f;
+		auto width = ImGui::GetMainViewport()->Size.x * ThemeConfig::GetWidgetStyle().popup.widthFactor;
 		const float center_x = ImGui::GetMainViewport()->Size.x * 0.5f;
 		const float center_y = ImGui::GetMainViewport()->Size.y * 0.5f;
 		const float pos_x = center_x - (width * 0.5f);
@@ -112,7 +112,7 @@ namespace Modex
 	void UIPopupWarning::Draw()
 	{
 		static float height;
-		auto width = ImGui::GetMainViewport()->Size.x * 0.25f;
+		auto width = ImGui::GetMainViewport()->Size.x * ThemeConfig::GetWidgetStyle().popup.widthFactor;
 		const float center_x = ImGui::GetMainViewport()->Size.x * 0.5f;
 		const float center_y = ImGui::GetMainViewport()->Size.y * 0.5f;
 		const float pos_x = center_x - (width * 0.5f);
@@ -193,7 +193,7 @@ namespace Modex
 	void UIPopupInputBox::Draw()
 	{
 		static float height;
-		auto width = ImGui::GetMainViewport()->Size.x * 0.25f;
+		auto width = ImGui::GetMainViewport()->Size.x * ThemeConfig::GetWidgetStyle().popup.widthFactor;
 		const float center_x = ImGui::GetMainViewport()->Size.x * 0.5f;
 		const float center_y = ImGui::GetMainViewport()->Size.y * 0.5f;
 		const float pos_x = center_x - (width * 0.5f);
@@ -288,7 +288,7 @@ namespace Modex
 	void UIPopupInfo::Draw()
 	{
 		static float height;
-		auto width = ImGui::GetMainViewport()->Size.x * 0.25f;
+		auto width = ImGui::GetMainViewport()->Size.x * ThemeConfig::GetWidgetStyle().popup.widthFactor;
 		const float center_x = ImGui::GetMainViewport()->Size.x * 0.5f;
 		const float center_y = ImGui::GetMainViewport()->Size.y * 0.5f;
 		const float pos_x = center_x - (width * 0.5f);

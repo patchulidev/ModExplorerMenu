@@ -6,6 +6,7 @@
 #include "ui/components/UIContainers.h"
 #include "config/ThemeConfig.h"
 #include "ui/components/UICustom.h"
+#include "ui/style/LayoutMetrics.h"
 
 namespace Modex
 {
@@ -103,7 +104,7 @@ namespace Modex
 				const auto name = form->GetName()[0] != '\0' ? form->GetName() : po3_GetEditorID(m_selected[i]);
 				const auto value = m_ownership == Ownership::Item ? form->GetGoldValue() : Commands::GetOutfitValue(form->As<RE::BGSOutfit>()); 
 
-				ImGui::Text("%s", TRUNCATE(name, ImGui::GetContentRegionAvail().x / 2.25f).c_str());
+				ImGui::Text("%s", TRUNCATE(name, ImGui::GetContentRegionAvail().x * Style::Ratio::TruncateNameTight()).c_str());
 
 				if (m_options.requireTotalCost) {
 					ImGui::SameLine();
@@ -117,7 +118,7 @@ namespace Modex
 
 				if (m_ownership == Ownership::Outfit) {
 					if (const auto outfit = form->As<RE::BGSOutfit>(); outfit) {
-						ImGui::Indent(4.0f);
+						Style::GroupIndent();
 						const float max_width = ImGui::GetContentRegionAvail().x;
 
 						for (auto entry : outfit->outfitItems) {
@@ -125,7 +126,7 @@ namespace Modex
 								const auto icon = FilterProperty::GetIcon(PropertyType::kLeveledItem);
 								const auto edid = po3_GetEditorID(entry->GetFormID());
 								const auto value = Commands::GetProjectedLeveledListValue(entry->As<RE::TESLeveledList>());
-								ImGui::Text("%s %s", icon.c_str(), TRUNCATE(edid, max_width * 0.65f).c_str());
+								ImGui::Text("%s %s", icon.c_str(), TRUNCATE(edid, max_width * Style::Ratio::TruncateNameMid()).c_str());
 								ImGui::SameLine();
 								ImGui::TextDisabled("%s %d", ICON_LC_COINS, value);
 							} else {
@@ -133,13 +134,13 @@ namespace Modex
 								const auto icon = object.GetItemIcon();
 								const auto edid = object.GetEditorID();
 								const auto value = object.GetGoldValue();
-								ImGui::Text("%s %s", icon.c_str(), TRUNCATE(edid, max_width * 0.65f).c_str());
+								ImGui::Text("%s %s", icon.c_str(), TRUNCATE(edid, max_width * Style::Ratio::TruncateNameMid()).c_str());
 								ImGui::SameLine();
 								ImGui::TextDisabled("%s %d", ICON_LC_COINS, value);
 							}
 						}
 
-						ImGui::Unindent(4.0f);
+						Style::GroupUnindent();
 					}
 
 					ImGui::Spacing();

@@ -6,6 +6,7 @@
 #include "localization/Locale.h"
 #include "ui/components/UIContainers.h"
 #include "ui/components/UICustom.h"
+#include "ui/style/LayoutMetrics.h"
 
 namespace Modex
 {
@@ -109,7 +110,7 @@ namespace Modex
 				const auto name = kit ? kit->GetNameTail() : m_selectedKeys[i];
 				const auto value = kit ? GetKitGoldValue(m_selectedKeys[i]) : 0;
 
-				ImGui::Text("%s %s", ICON_LC_PACKAGE, TRUNCATE(name, ImGui::GetContentRegionAvail().x / 2.25f).c_str());
+				ImGui::Text("%s %s", ICON_LC_PACKAGE, TRUNCATE(name, ImGui::GetContentRegionAvail().x * Style::Ratio::TruncateNameTight()).c_str());
 
 				if (m_options.requireTotalCost) {
 					ImGui::SameLine();
@@ -123,7 +124,7 @@ namespace Modex
 
 				// Expand kit items
 				if (kit && !kit->m_items.empty()) {
-					ImGui::Indent(4.0f);
+					Style::GroupIndent();
 					const float max_width = ImGui::GetContentRegionAvail().x;
 
 					for (const auto& item : kit->m_items) {
@@ -133,15 +134,15 @@ namespace Modex
 							const auto icon = object.GetItemIcon();
 							const auto edid = object.GetEditorID();
 							const auto item_value = object.GetGoldValue();
-							ImGui::Text("%s %s", icon.c_str(), TRUNCATE(edid, max_width * 0.65f).c_str());
+							ImGui::Text("%s %s", icon.c_str(), TRUNCATE(edid, max_width * Style::Ratio::TruncateNameMid()).c_str());
 							ImGui::SameLine();
 							ImGui::TextDisabled("%s %d", ICON_LC_COINS, item_value);
 						} else {
-							ImGui::Text("  %s", TRUNCATE(item->m_editorid, max_width * 0.65f).c_str());
+							ImGui::Text("  %s", TRUNCATE(item->m_editorid, max_width * Style::Ratio::TruncateNameMid()).c_str());
 						}
 					}
 
-					ImGui::Unindent(4.0f);
+					Style::GroupUnindent();
 				}
 
 				ImGui::Spacing();

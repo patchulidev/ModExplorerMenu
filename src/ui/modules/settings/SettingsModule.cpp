@@ -11,7 +11,8 @@
 
 namespace Modex
 {
-	static inline float s_widgetWidth = 150.0f; // Represents fixed with for right-aligned widgets.
+	// Defined in ThemeEditor.cpp — live token editor for the active theme.
+	void DrawThemeLayout(std::vector<std::unique_ptr<UITable>>& a_tables);
 
 	static inline ImVec4 keyHoverTintColor = ImVec4(0.9f, 0.9f, 0.9f, 0.9f);
 	static inline ImVec4 modifierHoverTint = ImVec4(0.9f, 0.9f, 0.9f, 0.9f);
@@ -226,7 +227,9 @@ namespace Modex
 		// layouts
 		m_layouts.push_back({ Translate("TAB_SETTINGS"), true, DrawSettingsLayout});
 
-		m_layouts.push_back({ Translate("TAB_BLACKLIST"), false, 
+		m_layouts.push_back({ Translate("TAB_THEME"), false, DrawThemeLayout });
+
+		m_layouts.push_back({ Translate("TAB_BLACKLIST"), false,
 			[this](std::vector<std::unique_ptr<UITable>>& a_tables) {
 				DrawBlacklistLayout(a_tables);
 		}});

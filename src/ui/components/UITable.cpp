@@ -18,6 +18,7 @@
 #include "config/ThemeConfig.h"
 
 #include "ui/components/UIModule.h"
+#include "ui/style/LayoutMetrics.h"
 
 namespace Modex
 {
@@ -1098,7 +1099,7 @@ namespace Modex
 		if (tableMode != SHOWALL) ImGui::BeginDisabled();
 
 		const float input_width = a_size.x;
-		const float key_width = a_size.x * 0.45f;
+		const float key_width = a_size.x * ThemeConfig::GetWidgetStyle().table.searchKeyRatio;
 
 		int current_idx = searchSystem->GetSearchKeyIndex();
 		const std::string current_key_text = searchSystem->GetCurrentKeyString();
@@ -1238,11 +1239,11 @@ namespace Modex
 		const float full_width = ImGui::GetContentRegionAvail().x;
 		const float full_height = ImGui::GetContentRegionAvail().y;
 
-		// Magic number + user offset.
-		const float height = (styleFontSize * 1.75f) + styleHeight;
-		
+		const auto& tbl = ThemeConfig::GetWidgetStyle().table;
+		const float height = (styleFontSize * tbl.rowHeightScale) + styleHeight;
+
 		// Spacing between each element.
-		LayoutRowSpacing = 3.0f + styleSpacing;
+		LayoutRowSpacing = tbl.rowSpacingBase + styleSpacing;
 		LayoutHitSpacing = 0.0f;
 
 		// Calculate whether a scrollbar is present based on which list we're viewing.
@@ -1312,10 +1313,11 @@ namespace Modex
 		ImGui::Spacing();
 		ImGui::Spacing();
 
-		const float dropdown_width = ImGui::GetContentRegionAvail().x / 7.5f;
+		const auto& tbl = ThemeConfig::GetWidgetStyle().table;
+		const float dropdown_width = ImGui::GetContentRegionAvail().x / tbl.searchModeDivisor;
 		DrawModeDropdown(ImVec2(dropdown_width, 0.0f));
 
-		const float search_width = ImGui::GetContentRegionAvail().x / 2.5f;
+		const float search_width = ImGui::GetContentRegionAvail().x / tbl.searchFormDivisor;
 		DrawFormSearchBar(ImVec2(search_width, 0.0f));
 
 		
@@ -1434,13 +1436,16 @@ namespace Modex
 					}
 
 					if (!tooltip_string.empty()) {
+						const auto& overlay = ThemeConfig::GetWidgetStyle().dragOverlay;
 						const auto& DrawList = ImGui::GetForegroundDrawList();
 						const auto table_size = ImGui::GetItemRectSize();
 						const auto window_size = ImGui::GetWindowSize();
 						const auto window_pos = ImGui::GetWindowPos();
 						const ImVec2 min = window_pos + ImVec2(0.0f, window_size.y - table_size.y);
 						const ImVec2 max = min + table_size;
-						const float font_size = 72.0f;
+						const float font_size = overlay.iconFontSize;
+						const float label_font = font_size / overlay.labelFontDivisor;
+						const float target_font = font_size / overlay.targetFontDivisor;
 						const float center_offset = font_size / 4.0f;
 
 						ImGui::PushFont(NULL, font_size);
@@ -1455,22 +1460,22 @@ namespace Modex
 							tooltip_icon.c_str()
 						);
 
-						ImGui::PushFont(NULL, font_size / 2.0f);
+						ImGui::PushFont(NULL, label_font);
 						const ImVec2 string_size = ImGui::CalcTextSize(tooltip_string.c_str());
 						ImGui::PopFont();
 
-						DrawList->AddText(ImGui::GetFont(), font_size / 2.0f,
+						DrawList->AddText(ImGui::GetFont(), label_font,
 							min + (table_size / 2.0f) - (string_size / 2.0f) + ImVec2(0, icon_size.y / 1.5f) - ImVec2(0, center_offset),
 							ThemeConfig::GetColorU32("TEXT", 0.75f),
 							tooltip_string.c_str()
 						);
 
 						if (!tooltip_target.empty()) {
-							ImGui::PushFont(NULL, font_size / 2.0f);
+							ImGui::PushFont(NULL, label_font);
 							const ImVec2 target_size = ImGui::CalcTextSize(tooltip_target.c_str());
 							ImGui::PopFont();
 
-							DrawList->AddText(ImGui::GetFont(), font_size / 2.5f,
+							DrawList->AddText(ImGui::GetFont(), target_font,
 								min + (table_size / 2.0f) - (target_size / 2.0f) + ImVec2(0, icon_size.y * 1.25f) - ImVec2(0, center_offset),
 								ThemeConfig::GetColorU32("TEXT", 0.5f),
 								tooltip_target.c_str()
@@ -2047,7 +2052,7 @@ namespace Modex
 		draw_list->AddRect(bb.Min, bb.Max, colors.outline, 0.0f, 0, 1.0f);
 
 		// Type Color Pillar Identifier
-		const float type_pillar_width = 5.0f;
+		const float type_pillar_width = Style::Metrics().pillarWidth;
 		draw_list->AddRectFilled(
 			ImVec2(bb.Min.x + LayoutOuterPadding, bb.Min.y + LayoutOuterPadding),
 			ImVec2(bb.Min.x + LayoutOuterPadding + type_pillar_width, bb.Max.y - LayoutOuterPadding),
@@ -2175,7 +2180,7 @@ namespace Modex
 		draw_list->AddRect(bb.Min, bb.Max, colors.outline, 0.0f, 0, 1.0f);
 
 		// Type Color Pillar Identifier
-		const float type_pillar_width = 5.0f;
+		const float type_pillar_width = Style::Metrics().pillarWidth;
 		draw_list->AddRectFilled(
 			ImVec2(bb.Min.x + LayoutOuterPadding, bb.Min.y + LayoutOuterPadding),
 			ImVec2(bb.Min.x + LayoutOuterPadding + type_pillar_width, bb.Max.y - LayoutOuterPadding),
@@ -2263,28 +2268,28 @@ namespace Modex
 		const auto payload = ImGui::GetDragDropPayload();
 		if (payload && payload->IsDataType(std::to_string(tableID).c_str())) {
 			const auto payloadCount = payload->DataSize / (int)sizeof(ImGuiID);
+			const auto& overlay = ThemeConfig::GetWidgetStyle().dragOverlay;
 
 			const float mult = ImGui::GetFrameHeightWithSpacing();
-			const ImVec2 size_min = ImVec2(mult * 5.0f, mult * 5.0f);
-			const ImVec2 size_max = ImVec2(mult * 10.0f, mult * 10.0f);
+			const ImVec2 size_min = ImVec2(mult * overlay.payloadMinFrameH, mult * overlay.payloadMinFrameH);
+			const ImVec2 size_max = ImVec2(mult * overlay.payloadMaxFrameH, mult * overlay.payloadMaxFrameH);
 
 			ImGui::SetNextWindowSizeConstraints(size_min, size_max);
 			if (ImGui::BeginTooltip()) {
 				const ImVec2 start_pos = ImGui::GetCursorScreenPos();
-				ImGui::PushFontBold(36.0f);
+				ImGui::PushFontBold(overlay.payloadCountFont);
 				ImGui::SetCursorPosX(UICustom::GetCenterTextPosX(std::to_string(payloadCount).c_str()));
-				ImGui::SetCursorPosY((ImGui::GetContentRegionAvail().y / 2.0f) - 24.0f); // 6px
+				ImGui::SetCursorPosY((ImGui::GetContentRegionAvail().y / 2.0f) - (overlay.payloadCountFont / 1.5f));
 				ImGui::Text("%d", payloadCount);
 				ImGui::PopFont();
 				ImGui::SetCursorPosX(UICustom::GetCenterTextPosX(Translate("SELECTED")));
 				ImGui::Text("%s", Translate("SELECTED"));
 
 				const auto& DrawList = ImGui::GetWindowDrawList();
-				float size = 24.0f;
-				float icon_x = ImGui::GetWindowWidth() - ImGui::GetFrameHeight() * 1.5f;
-				float icon_y = -5.0f;
+				const float icon_x = ImGui::GetWindowWidth() - ImGui::GetFrameHeight() * 1.5f;
+				const float icon_y = -overlay.payloadIconSize * (5.0f / 24.0f);
 
-				ImGui::PushFont(NULL, size);
+				ImGui::PushFont(NULL, overlay.payloadIconSize);
 				DrawList->AddText(start_pos + ImVec2(icon_x, icon_y), colors.text, a_icon.c_str());
 				ImGui::PopFont();
 
@@ -2450,7 +2455,7 @@ namespace Modex
 			ImGui::PushFontBold(ImGui::GetFontSize());
 		}
 
-		const auto user_height = ImGui::GetFrameHeight() * 1.25f;
+		const auto user_height = ImGui::GetFrameHeight() * ThemeConfig::GetWidgetStyle().table.statusBarHeightScale;
 		const auto user_width = ImGui::GetContentRegionAvail().x;
 
 		ImGui::SetNextItemAllowOverlap();

@@ -10,6 +10,7 @@
 #include "imgui_internal.h"
 #include "localization/Locale.h"
 #include "ui/components/ItemPreview.h"
+#include "ui/style/LayoutMetrics.h"
 
 namespace Modex
 {
@@ -18,12 +19,17 @@ namespace Modex
 	{
 		bool success = false;
 
+		const auto& tb = ThemeConfig::GetWidgetStyle().tabButton;
 		const ImVec4 active_color = ImVec4(a_color.x, a_color.y, a_color.z, a_color.w);
-		const ImVec4 inactive_color = ImVec4(a_color.x - 0.20f, a_color.y - 0.20f, a_color.z - 0.20f, a_color.w * 0.5f);
+		const ImVec4 inactive_color = ImVec4(
+			a_color.x + tb.inactiveValueDelta,
+			a_color.y + tb.inactiveValueDelta,
+			a_color.z + tb.inactiveValueDelta,
+			a_color.w * tb.inactiveAlphaScale);
 
-		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 2.0f);
-		ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
-		ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(.0f, .0f, .0f, 1.0f));
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, Style::Metrics().radiusSm);
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, tb.borderSize);
+		ImGui::PushStyleColor(ImGuiCol_Border, tb.borderColor);
 
 		if (a_condition) {
 			ImGui::PushStyleColor(ImGuiCol_Button, active_color);
@@ -43,7 +49,7 @@ namespace Modex
 
 	void UIContainers::DrawAddItemActionPanel(const ImVec2 &a_pos, const ImVec2 &a_size, std::unique_ptr<UITable> &a_view)
 	{
-		const float button_height = ImGui::GetFontSize() * 1.5f;
+		const float button_height = ImGui::GetFontSize() * ThemeConfig::GetWidgetStyle().actionButton.heightScale;
 
 		ImGui::SameLine();
         ImGui::SetCursorPos(a_pos);
@@ -119,7 +125,7 @@ namespace Modex
 
 	void UIContainers::DrawActorActionPanel(const ImVec2 &a_pos, const ImVec2 &a_size, std::unique_ptr<UITable> &a_view)
 	{
-		const float button_height = ImGui::GetFontSize() * 1.5f;
+		const float button_height = ImGui::GetFontSize() * ThemeConfig::GetWidgetStyle().actionButton.heightScale;
 
 		ImGui::SameLine();
 		ImGui::SetCursorPos(a_pos);
@@ -209,7 +215,7 @@ namespace Modex
 	static inline int16_t s_outfitLevel = 0;
 	void UIContainers::DrawOutfitActionPanel(const ImVec2 &a_pos, const ImVec2 &a_size, std::unique_ptr<UITable> &a_view)
 	{
-		const float button_height = ImGui::GetFontSize() * 1.5f;
+		const float button_height = ImGui::GetFontSize() * ThemeConfig::GetWidgetStyle().actionButton.heightScale;
 
 		ImGui::SameLine();
 		ImGui::SetCursorPos(a_pos);
@@ -347,7 +353,7 @@ namespace Modex
 
 	void UIContainers::DrawTeleportActionPanel(const ImVec2 &a_pos, const ImVec2 &a_size, std::unique_ptr<UITable> &a_view)
 	{
-		const float button_height = ImGui::GetFontSize() * 1.5f;
+		const float button_height = ImGui::GetFontSize() * ThemeConfig::GetWidgetStyle().actionButton.heightScale;
 
 		ImGui::SameLine();
 		ImGui::SetCursorPos(a_pos);
@@ -373,7 +379,7 @@ namespace Modex
 
 	void UIContainers::DrawObjectActionPanel(const ImVec2 &a_pos, const ImVec2 &a_size, std::unique_ptr<UITable> &a_view)
 	{
-		const float button_height = ImGui::GetFontSize() * 1.5f;
+		const float button_height = ImGui::GetFontSize() * ThemeConfig::GetWidgetStyle().actionButton.heightScale;
 
 		ImGui::SameLine();
 		ImGui::SetCursorPos(a_pos);

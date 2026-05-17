@@ -1,4 +1,11 @@
 {
+	"_meta": {
+		"name": "Default",
+		"author": "Modex",
+		"description": "Modex default — dark frame with teal accents.",
+		"version": "1.0"
+	},
+
 	"SPLASH_FILE_PATH": "data/interface/splash.png",
 
 	"NONE": [0, 0, 0, 0],

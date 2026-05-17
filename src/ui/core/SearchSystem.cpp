@@ -4,6 +4,7 @@
 #include "localization/Locale.h"
 #include "config/ThemeConfig.h"
 #include "ui/components/UICustom.h"
+#include "ui/style/LayoutMetrics.h"
 
 namespace Modex
 {
@@ -330,13 +331,14 @@ namespace Modex
 		bool result = false;
 
 		ImGui::SetNextItemWidth(a_width);
-		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 12.0f);
-		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 8.0f));
+		const auto& widgetStyle = ThemeConfig::GetWidgetStyle();
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, widgetStyle.fancy.frameRounding);
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, widgetStyle.fancy.framePadding);
 
-		bool enterPressed = ImGui::InputTextWithHint(a_label, TRUNCATE(a_preview, a_width * 0.8f).c_str(), a_buffer, a_size, ImGuiInputTextFlags_EnterReturnsTrue);
+		bool enterPressed = ImGui::InputTextWithHint(a_label, TRUNCATE(a_preview, a_width * Style::Ratio::TruncateNameWide()).c_str(), a_buffer, a_size, ImGuiInputTextFlags_EnterReturnsTrue);
 
 		// Draw Search Icon;
-		ImGui::PushFont(NULL, 18.0f);
+		ImGui::PushFont(NULL, widgetStyle.fancy.glyphFontSize);
 		const auto& DrawList = ImGui::GetWindowDrawList();
 		icon_pos.x += a_width - ImGui::GetFrameHeightWithSpacing() + ImGui::GetStyle().FramePadding.x;
 		icon_pos.y += (ImGui::GetItemRectSize().y / 2.0f) - (ImGui::GetFontSize() / 2.0f);
@@ -370,7 +372,7 @@ namespace Modex
 		popup_flags |= ImGuiWindowFlags_NoNav;
 
 		auto minPopupSize = ImVec2(prevItemRectSize.x, 0);
-		auto maxPopupSize = ImVec2(prevItemRectSize.x, prevItemRectSize.y * 20);
+		auto maxPopupSize = ImVec2(prevItemRectSize.x, prevItemRectSize.y * static_cast<float>(widgetStyle.popup.searchMaxRows));
 
 		ImGui::SetNextWindowPos(ImVec2(prevItemRectMin.x, prevItemRectMax.y + ImGui::GetStyle().ItemSpacing.y));
 		ImGui::SetNextWindowSizeConstraints(minPopupSize, maxPopupSize);
@@ -431,8 +433,8 @@ namespace Modex
 				ImGui::CloseCurrentPopup();
 			} else {
 				ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.f, 0.5f));
-				ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5.0f, 5.0f));
-				ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(5.0f, 5.0f));
+				ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, widgetStyle.popup.searchItemPadding);
+				ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, widgetStyle.popup.searchItemSpacing);
 				
 				// NOTE: Bisected logic for handling keyboard navigation vs autocompletion.
 				// Now the two congruently work without interfering with each other. This is based

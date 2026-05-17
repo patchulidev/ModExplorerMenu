@@ -66,6 +66,7 @@
 "_TAB_LAYOUTS": "======== Tab / Layout Names ========",
 "TAB_ADDITEM": "AddItem Table Layout",
 "TAB_SETTINGS": "User Settings Layout",
+"TAB_THEME": "Theme Editor Layout",
 "TAB_BLACKLIST": "Blacklist Settings Layout",
 "TAB_INVENTORY": "Single Layout",
 "TAB_MULTI_INVENTORY": "Multi Layout",
