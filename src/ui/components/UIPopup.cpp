@@ -506,4 +506,56 @@ namespace Modex
 	{
 		if (m_onChanged) m_onChanged();
 	}
+
+	// Defined in ui/modules/settings/ThemeEditor.cpp — pure body renderer with
+	// no surrounding container, so it composes equally well into the Settings
+	// tab's BeginChild and this popout's ImGui::Begin.
+	void DrawThemeEditorBody();
+
+	UIPopupThemeEditor::UIPopupThemeEditor()
+	{
+		// Peer floating window — must NOT eat input from the main menu, so
+		// the user can switch modules while it stays open. Settings popups
+		// (warning, input, info) own input; this one is interaction-by-focus.
+		m_captureInput = false;
+	}
+
+	void UIPopupThemeEditor::Draw()
+	{
+		const ImVec2 viewport = ImGui::GetMainViewport()->Size;
+
+		if (m_firstFrame) {
+			// Park in the upper-right by default — leaves the main menu's
+			// central column visible while the editor is open.
+			const float defW = std::clamp(viewport.x * 0.30f, 380.0f, 700.0f);
+			const float defH = std::clamp(viewport.y * 0.80f, 400.0f, 1100.0f);
+			const float margin = 40.0f;
+			ImGui::SetNextWindowSize(ImVec2(defW, defH), ImGuiCond_FirstUseEver);
+			ImGui::SetNextWindowPos(ImVec2(viewport.x - defW - margin, margin), ImGuiCond_FirstUseEver);
+			m_firstFrame = false;
+		}
+
+		const std::string title = std::string(ICON_LC_PAINTBRUSH) + "  " +
+			Translate("THEME_EDITOR_POPOUT_TITLE") + "###Modex::ThemeEditorPopout";
+
+		// Snapshot state before Begin so we can detect the title-bar X click
+		// as a one-shot transition. Calling CloseWindow on every subsequent
+		// frame (while m_open stayed false) was re-stamping m_state to
+		// Closing in Draw, which prevented UIWindow::Update's switch from
+		// ever reaching the Closed → DeleteWindow branch.
+		const bool aliveBeforeBegin =
+			m_state != WindowState::Closing && m_state != WindowState::Closed;
+
+		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, m_alpha);
+		if (ImGui::Begin(title.c_str(), &m_open,
+				ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoFocusOnAppearing)) {
+			DrawThemeEditorBody();
+		}
+		ImGui::End();
+		ImGui::PopStyleVar();
+
+		if (!m_open && aliveBeforeBegin) {
+			CloseWindow();
+		}
+	}
 }

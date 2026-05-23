@@ -3,6 +3,8 @@
 #include "external/json_serializers.cpp"
 #include "imgui.h"
 
+#include <cctype>
+
 namespace Modex
 {
 	ImVec4 ThemeConfig::GetColor(const std::string& a_key, float a_alphaMult)
@@ -82,19 +84,13 @@ namespace Modex
 		bool theme_found = false;
 
 		ASSERT_MSG(!std::filesystem::exists(THEMES_JSON_PATH), "Default Theme not found in Modex theme directory!\n{}", THEMES_JSON_PATH.string());
-		
-		m_availableThemes.clear();
-		if (std::filesystem::exists(THEMES_JSON_PATH.parent_path()) && std::filesystem::is_directory(THEMES_JSON_PATH.parent_path())) {
-			for (const auto& entry : std::filesystem::directory_iterator(THEMES_JSON_PATH.parent_path())) {
-				if (entry.is_regular_file() && entry.path().extension() == ".json") {
-					ModexTheme theme(entry.path());
-					m_availableThemes.push_back(theme);
 
-					if (theme.m_filePath == m_file_path) {
-						const bool instantiate = theme.m_name == "default";
-						theme_found = ConfigManager::Load(instantiate);
-					}
-				}
+		RefreshAvailableThemes();
+		for (const auto& theme : m_availableThemes) {
+			if (theme.m_filePath == m_file_path) {
+				const bool instantiate = theme.m_name == "default";
+				theme_found = ConfigManager::Load(instantiate);
+				break;
 			}
 		}
 
@@ -106,6 +102,20 @@ namespace Modex
 
 		ApplyThemeToImGui();
 		return theme_found;
+	}
+
+	void ThemeConfig::RefreshAvailableThemes()
+	{
+		m_availableThemes.clear();
+		const auto dir = THEMES_JSON_PATH.parent_path();
+		if (!std::filesystem::exists(dir) || !std::filesystem::is_directory(dir)) {
+			return;
+		}
+		for (const auto& entry : std::filesystem::directory_iterator(dir)) {
+			if (entry.is_regular_file() && entry.path().extension() == ".json") {
+				m_availableThemes.emplace_back(entry.path());
+			}
+		}
 	}
 
 	bool ThemeConfig::LoadTheme(const ModexTheme& a_theme)
@@ -156,67 +166,7 @@ namespace Modex
 			style = s_baseline;
 		}
 
-		style.Colors[ImGuiCol_FrameBg] = ThemeConfig::GetColor("BG");
-		style.Colors[ImGuiCol_FrameBgHovered] = ThemeConfig::GetHover("BG");
-		style.Colors[ImGuiCol_FrameBgActive] = ThemeConfig::GetActive("BG");
-
-		style.Colors[ImGuiCol_Button] = ThemeConfig::GetColor("PRIMARY");
-		style.Colors[ImGuiCol_ButtonHovered] = ThemeConfig::GetHover("PRIMARY");
-		style.Colors[ImGuiCol_ButtonActive] = ThemeConfig::GetActive("PRIMARY");
-
-		style.Colors[ImGuiCol_Header] = ThemeConfig::GetColor("PRIMARY");
-		style.Colors[ImGuiCol_HeaderHovered] = ThemeConfig::GetHover("PRIMARY");
-		style.Colors[ImGuiCol_HeaderActive] = ThemeConfig::GetActive("PRIMARY");
-
-		style.Colors[ImGuiCol_SliderGrab] = ThemeConfig::GetColor("PRIMARY");
-		style.Colors[ImGuiCol_SliderGrabActive] = ThemeConfig::GetActive("PRIMARY");
-
-		style.Colors[ImGuiCol_ScrollbarBg] = ThemeConfig::GetColor("BG");
-		style.Colors[ImGuiCol_ScrollbarGrab] = ThemeConfig::GetColor("PRIMARY");
-		style.Colors[ImGuiCol_ScrollbarGrabHovered] = ThemeConfig::GetHover("PRIMARY");
-		style.Colors[ImGuiCol_ScrollbarGrabActive] = ThemeConfig::GetActive("PRIMARY");
-
-		style.Colors[ImGuiCol_Separator] = ThemeConfig::GetColor("PRIMARY");
-		style.Colors[ImGuiCol_SeparatorHovered] = ThemeConfig::GetHover("PRIMARY");
-		style.Colors[ImGuiCol_SeparatorActive] = ThemeConfig::GetActive("PRIMARY");
-
-		style.Colors[ImGuiCol_ChildBg] = ThemeConfig::GetColor("NONE");
-		style.Colors[ImGuiCol_WindowBg] = ThemeConfig::GetColor("FRAME");
-		style.Colors[ImGuiCol_PopupBg] = ThemeConfig::GetColor("FRAME");
-		style.Colors[ImGuiCol_MenuBarBg] = ThemeConfig::GetColor("BG");
-
-		style.Colors[ImGuiCol_TitleBg] = ThemeConfig::GetColor("BG");
-		style.Colors[ImGuiCol_TitleBgActive] = ThemeConfig::GetColor("PRIMARY");
-		style.Colors[ImGuiCol_TitleBgCollapsed] = ThemeConfig::GetColor("BG");
-
-		style.Colors[ImGuiCol_Tab] = ThemeConfig::GetColor("BG_LIGHT");
-		style.Colors[ImGuiCol_TabHovered] = ThemeConfig::GetHover("PRIMARY");
-		style.Colors[ImGuiCol_TabSelected] = ThemeConfig::GetColor("PRIMARY");
-		style.Colors[ImGuiCol_TabSelectedOverline] = ThemeConfig::GetColor("TEXT_HEADER");
-		style.Colors[ImGuiCol_TabDimmed] = ThemeConfig::GetColor("BG_LIGHT");
-		style.Colors[ImGuiCol_TabDimmedSelected] = ThemeConfig::GetColor("SECONDARY");
-
-		style.Colors[ImGuiCol_CheckMark] = ThemeConfig::GetColor("TEXT_HEADER");
-
-		style.Colors[ImGuiCol_ResizeGrip] = ThemeConfig::GetColor("PRIMARY", 0.4f);
-		style.Colors[ImGuiCol_ResizeGripHovered] = ThemeConfig::GetHover("PRIMARY");
-		style.Colors[ImGuiCol_ResizeGripActive] = ThemeConfig::GetActive("PRIMARY");
-
-		style.Colors[ImGuiCol_DragDropTarget] = ThemeConfig::GetColor("TEXT_HEADER");
-		style.Colors[ImGuiCol_TextSelectedBg] = ThemeConfig::GetColor("PRIMARY", 0.5f);
-		style.Colors[ImGuiCol_NavCursor] = ThemeConfig::GetColor("TEXT_HEADER");
-
-		style.Colors[ImGuiCol_TableHeaderBg] = ThemeConfig::GetColor("BG_LIGHT");
-		style.Colors[ImGuiCol_TableBorderStrong] = ThemeConfig::GetColor("BORDER");
-		style.Colors[ImGuiCol_TableBorderLight] = ThemeConfig::GetColor("TABLE_BORDER");
-
-		style.Colors[ImGuiCol_Text] = ThemeConfig::GetColor("TEXT");
-		style.Colors[ImGuiCol_TextDisabled] = ThemeConfig::GetColor("TEXT_DISABLED");
-
-		style.Colors[ImGuiCol_TableRowBg] = ThemeConfig::GetColor("TABLE_BG");
-		style.Colors[ImGuiCol_TableRowBgAlt] = ThemeConfig::GetHover("TABLE_BG_ALT");
-
-		style.Colors[ImGuiCol_Border] = ThemeConfig::GetColor("BORDER");
+		RefreshImGuiColors();
 
 		// _widgets block: tokens for manually-drawn widgets, grouped by
 		// widget family. Each subsection is an object whose keys map to
@@ -269,6 +219,8 @@ namespace Modex
 			if (auto* s = getSection("tabButton")) {
 				getF (*s, "inactiveValueDelta", m_widgetStyle.tabButton.inactiveValueDelta);
 				getF (*s, "inactiveAlphaScale", m_widgetStyle.tabButton.inactiveAlphaScale);
+				getF (*s, "activeValueDelta",   m_widgetStyle.tabButton.activeValueDelta);
+				getF (*s, "activeAlphaScale",   m_widgetStyle.tabButton.activeAlphaScale);
 				getF (*s, "borderSize",         m_widgetStyle.tabButton.borderSize);
 				getV4(*s, "borderColor",        m_widgetStyle.tabButton.borderColor);
 			}
@@ -389,6 +341,110 @@ namespace Modex
 		m_layoutOverrides = LayoutOverrides{};
 	}
 
+	void ThemeConfig::RefreshImGuiColors()
+	{
+		auto& style = ImGui::GetStyle();
+
+		style.Colors[ImGuiCol_FrameBg]              = GetColor("BG");
+		style.Colors[ImGuiCol_FrameBgHovered]       = GetHover("BG");
+		style.Colors[ImGuiCol_FrameBgActive]        = GetActive("BG");
+
+		style.Colors[ImGuiCol_Button]               = GetColor("PRIMARY");
+		style.Colors[ImGuiCol_ButtonHovered]        = GetHover("PRIMARY");
+		style.Colors[ImGuiCol_ButtonActive]         = GetActive("PRIMARY");
+
+		style.Colors[ImGuiCol_Header]               = GetColor("PRIMARY");
+		style.Colors[ImGuiCol_HeaderHovered]        = GetHover("PRIMARY");
+		style.Colors[ImGuiCol_HeaderActive]         = GetActive("PRIMARY");
+
+		style.Colors[ImGuiCol_SliderGrab]           = GetColor("PRIMARY");
+		style.Colors[ImGuiCol_SliderGrabActive]     = GetActive("PRIMARY");
+
+		style.Colors[ImGuiCol_ScrollbarBg]          = GetColor("BG");
+		style.Colors[ImGuiCol_ScrollbarGrab]        = GetColor("PRIMARY");
+		style.Colors[ImGuiCol_ScrollbarGrabHovered] = GetHover("PRIMARY");
+		style.Colors[ImGuiCol_ScrollbarGrabActive]  = GetActive("PRIMARY");
+
+		style.Colors[ImGuiCol_Separator]            = GetColor("PRIMARY");
+		style.Colors[ImGuiCol_SeparatorHovered]     = GetHover("PRIMARY");
+		style.Colors[ImGuiCol_SeparatorActive]      = GetActive("PRIMARY");
+
+		style.Colors[ImGuiCol_ChildBg]              = GetColor("NONE");
+		style.Colors[ImGuiCol_WindowBg]             = GetColor("FRAME");
+		style.Colors[ImGuiCol_PopupBg]              = GetColor("FRAME");
+		style.Colors[ImGuiCol_MenuBarBg]            = GetColor("BG");
+
+		style.Colors[ImGuiCol_TitleBg]              = GetColor("BG");
+		style.Colors[ImGuiCol_TitleBgActive]        = GetColor("PRIMARY");
+		style.Colors[ImGuiCol_TitleBgCollapsed]     = GetColor("BG");
+
+		style.Colors[ImGuiCol_Tab]                  = GetColor("BG_LIGHT");
+		style.Colors[ImGuiCol_TabHovered]           = GetHover("PRIMARY");
+		style.Colors[ImGuiCol_TabSelected]          = GetColor("PRIMARY");
+		style.Colors[ImGuiCol_TabSelectedOverline]  = GetColor("TEXT_HEADER");
+		style.Colors[ImGuiCol_TabDimmed]            = GetColor("BG_LIGHT");
+		style.Colors[ImGuiCol_TabDimmedSelected]    = GetColor("SECONDARY");
+
+		style.Colors[ImGuiCol_CheckMark]            = GetColor("TEXT_HEADER");
+
+		style.Colors[ImGuiCol_ResizeGrip]           = GetColor("PRIMARY", 0.4f);
+		style.Colors[ImGuiCol_ResizeGripHovered]    = GetHover("PRIMARY");
+		style.Colors[ImGuiCol_ResizeGripActive]     = GetActive("PRIMARY");
+
+		style.Colors[ImGuiCol_DragDropTarget]       = GetColor("TEXT_HEADER");
+		style.Colors[ImGuiCol_TextSelectedBg]       = GetColor("PRIMARY", 0.5f);
+		style.Colors[ImGuiCol_NavCursor]            = GetColor("TEXT_HEADER");
+
+		style.Colors[ImGuiCol_TableHeaderBg]        = GetColor("BG_LIGHT");
+		style.Colors[ImGuiCol_TableBorderStrong]    = GetColor("BORDER");
+		style.Colors[ImGuiCol_TableBorderLight]     = GetColor("TABLE_BORDER");
+
+		style.Colors[ImGuiCol_Text]                 = GetColor("TEXT");
+		style.Colors[ImGuiCol_TextDisabled]         = GetColor("TEXT_DISABLED");
+
+		style.Colors[ImGuiCol_TableRowBg]           = GetColor("TABLE_BG");
+		style.Colors[ImGuiCol_TableRowBgAlt]        = GetHover("TABLE_BG_ALT");
+
+		style.Colors[ImGuiCol_Border]               = GetColor("BORDER");
+
+		// Overlay any explicit per-color overrides saved by the editor. These
+		// take precedence over the token-derived assignments above so users
+		// can pin exact ImGui colors independent of the theme palette.
+		auto colIt = m_data.find("_imgui_colors");
+		if (colIt != m_data.end() && colIt->is_object()) {
+			for (int i = 0; i < ImGuiCol_COUNT; ++i) {
+				const char* name = ImGui::GetStyleColorName(i);
+				auto f = colIt->find(name);
+				if (f != colIt->end() && f->is_array() && f->size() == 4) {
+					style.Colors[i].x = (*f)[0].get<float>();
+					style.Colors[i].y = (*f)[1].get<float>();
+					style.Colors[i].z = (*f)[2].get<float>();
+					style.Colors[i].w = (*f)[3].get<float>();
+				}
+			}
+		}
+	}
+
+	void ThemeConfig::SetColor(const std::string& a_key, const ImVec4& a_color)
+	{
+		// Preserve on-disk format: int[0-255][4]. The from_json deserializer
+		// expects ints in that range and divides by 255 on read.
+		auto toByte = [](float v) {
+			const float clamped = std::clamp(v, 0.0f, 1.0f);
+			return static_cast<int>(std::round(clamped * 255.0f));
+		};
+		m_data[a_key] = nlohmann::json::array({
+			toByte(a_color.x), toByte(a_color.y), toByte(a_color.z), toByte(a_color.w)
+		});
+		RefreshImGuiColors();
+	}
+
+	void ThemeConfig::ResetImGuiColorsOverride()
+	{
+		m_data.erase("_imgui_colors");
+		RefreshImGuiColors();
+	}
+
 	// Helpers for SaveCurrentTheme — we write nested objects directly,
 	// shadowing the existing _widgets / _layout / _style blocks on disk
 	// so a re-load reproduces the in-memory state.
@@ -415,6 +471,8 @@ namespace Modex
 		widgets["tabButton"] = {
 			{ "inactiveValueDelta", w.tabButton.inactiveValueDelta },
 			{ "inactiveAlphaScale", w.tabButton.inactiveAlphaScale },
+			{ "activeValueDelta",   w.tabButton.activeValueDelta },
+			{ "activeAlphaScale",   w.tabButton.activeAlphaScale },
 			{ "borderSize",         w.tabButton.borderSize },
 			{ "borderColor",        ToJson(w.tabButton.borderColor) },
 		};
@@ -482,6 +540,18 @@ namespace Modex
 			{ "ratioTruncateNameWide",  l.ratioTruncateNameWide },
 		};
 
+		// Snapshot every ImGui style color verbatim. Token-derived colors
+		// match their tokens at save time; explicit user edits land here
+		// alongside them and are reapplied last on load. ResetImGuiColors
+		// drops the block when the user wants pure token derivation back.
+		const auto& sty = ImGui::GetStyle();
+		nlohmann::json imguiColors = nlohmann::json::object();
+		for (int i = 0; i < ImGuiCol_COUNT; ++i) {
+			const char* name = ImGui::GetStyleColorName(i);
+			imguiColors[name] = ToJson(sty.Colors[i]);
+		}
+		m_data["_imgui_colors"] = std::move(imguiColors);
+
 		const auto& s = ImGui::GetStyle();
 		m_data["_style"] = {
 			{ "WindowRounding",    s.WindowRounding },
@@ -507,6 +577,139 @@ namespace Modex
 		};
 
 		return Save();
+	}
+
+	void ThemeConfig::SetMeta(const ThemeMeta& a_meta)
+	{
+		nlohmann::json meta = nlohmann::json::object();
+		meta["name"]        = a_meta.name;
+		meta["author"]      = a_meta.author;
+		meta["description"] = a_meta.description;
+		meta["version"]     = a_meta.version;
+		m_data["_meta"]     = std::move(meta);
+	}
+
+	// Stems map 1:1 to filenames, so reject anything the platform might choke
+	// on. Spaces and dots are allowed but never as leading/trailing chars.
+	std::string ThemeConfig::ValidateThemeName(const std::string& a_stem, const std::string& a_existingStem)
+	{
+		if (a_stem.empty()) {
+			return "Theme name cannot be empty.";
+		}
+		for (char c : a_stem) {
+			const unsigned char uc = static_cast<unsigned char>(c);
+			const bool ok = std::isalnum(uc) || c == '_' || c == '-' || c == ' ' || c == '.';
+			if (!ok) {
+				return "Theme name may only contain letters, numbers, spaces, '_', '-', or '.'.";
+			}
+		}
+		if (a_stem.front() == '.' || a_stem.back() == '.' ||
+			a_stem.front() == ' ' || a_stem.back() == ' ') {
+			return "Theme name cannot begin or end with a space or '.'.";
+		}
+		for (const auto& t : GetSingleton()->m_availableThemes) {
+			if (t.m_name == a_stem && t.m_name != a_existingStem) {
+				return "A theme with that name already exists.";
+			}
+		}
+		return "";
+	}
+
+	bool ThemeConfig::CreateTheme(const std::string& a_stem)
+	{
+		if (!ValidateThemeName(a_stem).empty()) {
+			return false;
+		}
+		const std::filesystem::path newPath = THEMES_JSON_PATH.parent_path() / (a_stem + ".json");
+		if (std::filesystem::exists(newPath)) {
+			return false;
+		}
+
+		// Carry the editor's current edits into the new theme by reusing the
+		// existing serializer — it writes _widgets/_layout/_style from the
+		// in-memory tokens + live ImGui style. _meta is mutated in place so
+		// the new file lands with its own name.
+		if (!m_data.contains("_meta") || !m_data["_meta"].is_object()) {
+			m_data["_meta"] = nlohmann::json::object();
+		}
+		m_data["_meta"]["name"] = a_stem;
+
+		SetFilePath(newPath);
+		m_initialized = true;
+		if (!SaveCurrentTheme()) {
+			return false;
+		}
+
+		UserConfig::Get().theme = a_stem;
+		UserConfig::GetSingleton()->SaveSettings();
+
+		RefreshAvailableThemes();
+		return true;
+	}
+
+	bool ThemeConfig::DeleteTheme(const ModexTheme& a_theme)
+	{
+		if (a_theme.m_name == "default") {
+			return false;
+		}
+		if (!std::filesystem::exists(a_theme.m_filePath)) {
+			return false;
+		}
+
+		const bool wasActive = (a_theme.m_filePath == m_file_path);
+
+		try {
+			std::filesystem::remove(a_theme.m_filePath);
+		} catch (...) {
+			return false;
+		}
+
+		if (wasActive) {
+			const std::filesystem::path defaultPath = THEMES_JSON_PATH.parent_path() / "default.json";
+			if (std::filesystem::exists(defaultPath)) {
+				ModexTheme def(defaultPath);
+				LoadTheme(def);
+				UserConfig::Get().theme = "default";
+				UserConfig::GetSingleton()->SaveSettings();
+			}
+		}
+
+		RefreshAvailableThemes();
+		return true;
+	}
+
+	bool ThemeConfig::RenameTheme(const ModexTheme& a_theme, const std::string& a_newStem)
+	{
+		if (a_theme.m_name == "default") {
+			return false;
+		}
+		if (a_theme.m_name == a_newStem) {
+			return true;  // no-op
+		}
+		if (!ValidateThemeName(a_newStem, a_theme.m_name).empty()) {
+			return false;
+		}
+
+		std::filesystem::path newPath = a_theme.m_filePath;
+		newPath.replace_filename(a_newStem + ".json");
+		if (std::filesystem::exists(newPath)) {
+			return false;
+		}
+
+		try {
+			std::filesystem::rename(a_theme.m_filePath, newPath);
+		} catch (...) {
+			return false;
+		}
+
+		if (a_theme.m_filePath == m_file_path) {
+			SetFilePath(newPath);
+			UserConfig::Get().theme = a_newStem;
+			UserConfig::GetSingleton()->SaveSettings();
+		}
+
+		RefreshAvailableThemes();
+		return true;
 	}
 
 	ThemeConfig::ThemeConfig()

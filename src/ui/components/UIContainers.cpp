@@ -20,7 +20,11 @@ namespace Modex
 		bool success = false;
 
 		const auto& tb = ThemeConfig::GetWidgetStyle().tabButton;
-		const ImVec4 active_color = ImVec4(a_color.x, a_color.y, a_color.z, a_color.w);
+		const ImVec4 active_color = ImVec4(
+			a_color.x + tb.activeValueDelta,
+			a_color.y + tb.activeValueDelta,
+			a_color.z + tb.activeValueDelta,
+			a_color.w * tb.activeAlphaScale);
 		const ImVec4 inactive_color = ImVec4(
 			a_color.x + tb.inactiveValueDelta,
 			a_color.y + tb.inactiveValueDelta,

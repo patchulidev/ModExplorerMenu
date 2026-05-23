@@ -413,6 +413,22 @@ namespace Modex
 		popup->OpenWindow(this);
 	}
 
+	void UIManager::ToggleThemeEditor()
+	{
+		if (auto* existing = GetPopupWindowRef<UIPopupThemeEditor>()) {
+			existing->CloseWindow();
+			return;
+		}
+		m_windowStack.push_back(std::make_unique<UIPopupThemeEditor>());
+		auto* popup = static_cast<UIPopupThemeEditor*>(m_windowStack.back().get());
+		popup->OpenWindow(this);
+	}
+
+	bool UIManager::IsThemeEditorOpen() const
+	{
+		return GetPopupWindowRef<UIPopupThemeEditor>() != nullptr;
+	}
+
 	void UIManager::NavigateToModule(uint8_t a_moduleIndex)
 	{
 		if (m_menu) {

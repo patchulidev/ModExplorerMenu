@@ -716,19 +716,21 @@ namespace
 		const auto& draw_list = ImGui::GetWindowDrawList();
 		const float name_bar_h = font_size * preview.nameBarHeightScale;
 
-		{ // Name Bar
+		{ // Name Bar — text stays vertically centered regardless of bar height.
 			auto name = TRUNCATE(a_item->GetName(), max_width * Style::Ratio::TruncateNameWide());
-			const auto color = ImGui::GetStyleColorVec4(ImGuiCol_Border);
 			const auto text_color = a_item->IsEnchanted() ? ThemeConfig::GetColor("TEXT_ENCHANTED") : ThemeConfig::GetColor("TEXT");
 
 			draw_list->AddRectFilled(cursor, ImVec2(cursor.x + max_width, cursor.y + name_bar_h), ThemeConfig::GetColorU32("BG", alpha));
-			draw_list->AddRect(cursor, ImVec2(cursor.x + max_width, cursor.y + name_bar_h), ThemeConfig::GetColorU32("BORDER", alpha));
+			draw_list->AddRect    (cursor, ImVec2(cursor.x + max_width, cursor.y + name_bar_h), ThemeConfig::GetColorU32("BORDER", alpha));
 
-			ImGui::NewLine();
+			// Capture the local cursor at the bar's top so we can both center
+			// the text inside the bar and reserve the full bar height for the
+			// content that follows.
+			const float start_local_y = ImGui::GetCursorPosY();
 			ImGui::SetCursorPosX(UICustom::GetCenterTextPosX(name.data()));
-			ImGui::SetCursorPosY(ImGui::GetCursorPosY() - font_size / 2.0f);
+			ImGui::SetCursorPosY(start_local_y + (name_bar_h - font_size) * 0.5f);
 			ImGui::TextColored(text_color, "%s", name.data());
-			ImGui::NewLine();
+			ImGui::SetCursorPosY(start_local_y + name_bar_h);
 		}
 
 		{ // Window Adjustment Hack

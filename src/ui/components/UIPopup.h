@@ -148,6 +148,21 @@ namespace Modex
 		std::string                                 m_currentSelection;
 	};
 
+	// Floating, non-modal mirror of the Theme Editor Layout tab. Unlike the
+	// other popups it does not dim the background or steal input — it sits
+	// on top of the main menu so the user can edit theme tokens while
+	// navigating between modules to see live previews.
+	class UIPopupThemeEditor : public UIWindow
+	{
+	public:
+		UIPopupThemeEditor();
+		void Draw() override;
+
+	private:
+		bool m_firstFrame = true;
+		bool m_open       = true;  // tracks the title-bar close X
+	};
+
 	// Tag editor for a single kit. All edits — checkbox toggles, new-tag entry,
 	// per-row delete — persist immediately. The Confirm button is just a
 	// pseudo-close; ESC and the showmenu key dismiss the popup identically.

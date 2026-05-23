@@ -61,6 +61,8 @@ namespace Modex
 		struct TabButton {
 			float  inactiveValueDelta = -0.20f;
 			float  inactiveAlphaScale = 0.5f;
+			float  activeValueDelta   = 0.0f;   // no shift by default — preserves prior look
+			float  activeAlphaScale   = 1.0f;   // no alpha change by default
 			float  borderSize         = 1.0f;
 			ImVec4 borderColor        = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
 		} tabButton;
@@ -170,6 +172,32 @@ namespace Modex
 		void ApplyThemeToImGui();
 
 		ThemeMeta GetMeta() const;
+		void      SetMeta(const ThemeMeta& a_meta);
+
+		// Re-scan the themes directory and rebuild m_availableThemes. Called
+		// implicitly after Create/Delete/Rename so the dropdowns stay in sync.
+		void RefreshAvailableThemes();
+
+		// Returns empty string when a_stem is a legal theme filename stem.
+		// Otherwise returns a human-readable reason (shown verbatim in the
+		// editor). a_existingStem is the current name of the theme being
+		// renamed (excluded from the duplicate check); pass empty for create.
+		static std::string ValidateThemeName(const std::string& a_stem, const std::string& a_existingStem = "");
+
+		// Clone the current in-memory state to a new file named a_stem.json,
+		// switch the active theme to it, and persist UserConfig. Edits made
+		// in the editor before Create are carried into the new file.
+		bool CreateTheme(const std::string& a_stem);
+
+		// Delete a_theme's file. Refuses if a_theme is "default" or if the
+		// file is missing. When deleting the active theme, switches to
+		// "default" first so the user is never left without a live theme.
+		bool DeleteTheme(const ModexTheme& a_theme);
+
+		// Rename a_theme on disk. Refuses on "default" or on duplicate/invalid
+		// stems. When renaming the active theme, updates m_file_path and the
+		// "Modex Theme" UserConfig setting so the next launch finds the file.
+		bool RenameTheme(const ModexTheme& a_theme, const std::string& a_newStem);
 
 		static const WidgetStyle&     GetWidgetStyle()     { return GetSingleton()->m_widgetStyle; }
 		static const LayoutOverrides& GetLayoutOverrides() { return GetSingleton()->m_layoutOverrides; }
@@ -200,6 +228,22 @@ namespace Modex
 		static ImVec4 GetActive(const std::string& a_key, float a_alphaMult = 1.0f);
 
 		static ImU32 GetColorU32(const std::string& a_key, float a_alphaMult = 1.0f);
+
+		// Write a named theme color back to m_data and push the change into the
+		// live ImGui style so PRIMARY/BG/etc. edits are visible immediately.
+		// Stored as int[0-255][4] to match the on-disk format.
+		void SetColor(const std::string& a_key, const ImVec4& a_color);
+
+		// Re-derive ImGui style.Colors[*] from the current theme tokens, then
+		// overlay any saved per-color overrides from the _imgui_colors block.
+		// Cheap — call after editing a theme color token so derived ImGui
+		// colors track the change without a full theme reload.
+		void RefreshImGuiColors();
+
+		// Drop the _imgui_colors override block and re-derive ImGui style
+		// colors from theme tokens. Use this when overrides have drifted from
+		// the intended look and you want a clean slate.
+		void ResetImGuiColorsOverride();
 
 		static const std::vector<ModexTheme>& GetAvailableThemes() { return GetSingleton()->m_availableThemes; }
 	};
