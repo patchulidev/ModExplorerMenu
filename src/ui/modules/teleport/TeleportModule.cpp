@@ -1,6 +1,7 @@
 #include "TeleportModule.h"
 #include "localization/Locale.h"
 #include "ui/components/UIContainers.h"
+#include "ui/style/LayoutMetrics.h"
 
 namespace Modex
 {
@@ -12,7 +13,7 @@ namespace Modex
 	static inline void DrawTeleportLayout(std::vector<std::unique_ptr<UITable>>& a_tables)
 	{
 		const ImVec2 window_padding = ImGui::GetStyle().WindowPadding;
-		const float table_width = ImGui::GetContentRegionAvail().x * 0.75f + window_padding.x;
+		const float table_width = ImGui::GetContentRegionAvail().x * Style::Ratio::TablePrimary() + window_padding.x;
 		const float table_height = ImGui::GetContentRegionAvail().y - window_padding.y;
 		const float full_width = ImGui::GetContentRegionAvail().x;
 

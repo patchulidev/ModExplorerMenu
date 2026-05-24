@@ -1,21 +1,21 @@
-#include "FormSelectorModule.h"
-#include "core/Commands.h"
+#include "KitSelectorModule.h"
+#include "config/EquipmentConfig.h"
+#include "config/ThemeConfig.h"
 #include "data/BaseObject.h"
 #include "imgui.h"
 #include "localization/Locale.h"
 #include "ui/components/UIContainers.h"
-#include "config/ThemeConfig.h"
 #include "ui/components/UICustom.h"
 #include "ui/style/LayoutMetrics.h"
 
 namespace Modex
 {
-	void FormSelectorModule::Draw()
+	void KitSelectorModule::Draw()
 	{
 		DrawTabMenu();
 	}
 
-	void FormSelectorModule::DrawTabMenu()
+	void KitSelectorModule::DrawTabMenu()
 	{
 		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetStyle().WindowPadding.x);
 
@@ -26,32 +26,38 @@ namespace Modex
 		const float table_width = avail_width - action_pane_width - window_padding.x;
 
 		ImVec2 table_pos = ImGui::GetCursorPos();
-		UIContainers::DrawBasicTablePanel("TABLE_FORMSELECTOR", table_pos, ImVec2(table_width, avail_height), m_tables[0]);
+		UIContainers::DrawBasicTablePanel("TABLE_KITSELECTOR", table_pos, ImVec2(table_width, avail_height), m_tables[0]);
 
 		ImGui::SameLine();
 		DrawActionPane(ImVec2(action_pane_width, avail_height));
 	}
 
-	int FormSelectorModule::GetTotalCost() const
+	int KitSelectorModule::GetKitGoldValue(const std::string& a_kitKey)
 	{
-		int value = 0;
+		auto* kit = EquipmentConfig::KitLookup(a_kitKey);
+		if (!kit) return 0;
 
-		for (auto formID : m_selected) {
-			if (auto* form = RE::TESForm::LookupByID(formID); form) {
-				if (form->GetFormType() == RE::FormType::Outfit) {
-					value += Commands::GetOutfitValue(form->As<RE::BGSOutfit>());
-				} else {
-					value += static_cast<int>(form->GetGoldValue() * m_options.costMultiplier);
-				}
+		int value = 0;
+		for (const auto& item : kit->m_items) {
+			if (auto* form = RE::TESForm::LookupByEditorID(item->m_editorid); form) {
+				value += form->GetGoldValue();
 			}
 		}
-
 		return value;
 	}
 
-	bool FormSelectorModule::CanConfirm() const
+	int KitSelectorModule::GetTotalCost() const
 	{
-		if (m_selected.empty()) {
+		int value = 0;
+		for (const auto& key : m_selectedKeys) {
+			value += static_cast<int>(GetKitGoldValue(key) * m_options.costMultiplier);
+		}
+		return value;
+	}
+
+	bool KitSelectorModule::CanConfirm() const
+	{
+		if (m_selectedKeys.empty()) {
 			return false;
 		}
 
@@ -71,40 +77,40 @@ namespace Modex
 		return true;
 	}
 
-	void FormSelectorModule::DrawActionPane(const ImVec2& a_size)
+	void KitSelectorModule::DrawActionPane(const ImVec2& a_size)
 	{
-		ImGui::BeginChild("##FormSelector::ActionPane", a_size, false);
+		ImGui::BeginChild("##KitSelector::ActionPane", a_size, false);
 
 		const float padding = ImGui::GetStyle().WindowPadding.y;
 
 		// Title
 		if (!m_options.title.empty()) {
-			ImGui::Text("%s  %s", ICON_LC_LIST, m_options.title.c_str());
+			ImGui::Text("%s  %s", ICON_LC_PACKAGE, m_options.title.c_str());
 		} else {
-			ImGui::Text("%s  %s (%d)", ICON_LC_LIST, Translate("SELECTION"), static_cast<int>(m_selected.size()));
+			ImGui::Text("%s  %s (%d)", ICON_LC_PACKAGE, Translate("SELECTION"), static_cast<int>(m_selectedKeys.size()));
 		}
 
 		// Max count indicator
 		if (m_options.maxCount > 0) {
 			ImGui::SameLine();
-			ImGui::TextDisabled("[%d / %d]", static_cast<int>(m_selected.size()), m_options.maxCount);
+			ImGui::TextDisabled("[%d / %d]", static_cast<int>(m_selectedKeys.size()), m_options.maxCount);
 		}
 
 		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 
-		const float lower_padding = m_options.showTotalCost || m_options.requireTotalCost ? 3.0f : 2.0f; 
+		const float lower_padding = m_options.showTotalCost || m_options.requireTotalCost ? 3.0f : 2.0f;
 		const float list_height = a_size.y - padding - ImGui::GetFrameHeightWithSpacing() * lower_padding;
 
-		if (ImGui::BeginChild("##FormSelector::SelectionList", ImVec2(0, list_height), false, false)) {
+		if (ImGui::BeginChild("##KitSelector::SelectionList", ImVec2(0, list_height), false, false)) {
 			int remove_index = -1;
-			for (int i = 0; i < static_cast<int>(m_selected.size()); i++) {
+			for (int i = 0; i < static_cast<int>(m_selectedKeys.size()); i++) {
 				ImGui::PushID(i);
 
-				const auto* form = RE::TESForm::LookupByID(m_selected[i]);
-				const auto name = form->GetName()[0] != '\0' ? form->GetName() : po3_GetEditorID(m_selected[i]);
-				const auto value = m_ownership == Ownership::Item ? form->GetGoldValue() : Commands::GetOutfitValue(form->As<RE::BGSOutfit>()); 
+				auto* kit = EquipmentConfig::KitLookup(m_selectedKeys[i]);
+				const auto name = kit ? kit->GetNameTail() : m_selectedKeys[i];
+				const auto value = kit ? GetKitGoldValue(m_selectedKeys[i]) : 0;
 
-				ImGui::Text("%s", TRUNCATE(name, ImGui::GetContentRegionAvail().x * Style::Ratio::TruncateNameTight()).c_str());
+				ImGui::Text("%s %s", ICON_LC_PACKAGE, TRUNCATE(name, ImGui::GetContentRegionAvail().x * Style::Ratio::TruncateNameTight()).c_str());
 
 				if (m_options.requireTotalCost) {
 					ImGui::SameLine();
@@ -116,44 +122,38 @@ namespace Modex
 					remove_index = i;
 				}
 
-				if (m_ownership == Ownership::Outfit) {
-					if (const auto outfit = form->As<RE::BGSOutfit>(); outfit) {
-						Style::GroupIndent();
-						const float max_width = ImGui::GetContentRegionAvail().x;
+				// Expand kit items
+				if (kit && !kit->m_items.empty()) {
+					Style::GroupIndent();
+					const float max_width = ImGui::GetContentRegionAvail().x;
 
-						for (auto entry : outfit->outfitItems) {
-							if (entry->GetFormType() == RE::FormType::LeveledItem) {
-								const auto icon = FilterProperty::GetIcon(PropertyType::kLeveledItem);
-								const auto edid = po3_GetEditorID(entry->GetFormID());
-								const auto value = Commands::GetProjectedLeveledListValue(entry->As<RE::TESLeveledList>());
-								ImGui::Text("%s %s", icon.c_str(), TRUNCATE(edid, max_width * Style::Ratio::TruncateNameMid()).c_str());
-								ImGui::SameLine();
-								ImGui::TextDisabled("%s %d", ICON_LC_COINS, value);
-							} else {
-								const auto object = BaseObject(entry, Ownership::None);
-								const auto icon = object.GetItemIcon();
-								const auto edid = object.GetEditorID();
-								const auto value = object.GetGoldValue();
-								ImGui::Text("%s %s", icon.c_str(), TRUNCATE(edid, max_width * Style::Ratio::TruncateNameMid()).c_str());
-								ImGui::SameLine();
-								ImGui::TextDisabled("%s %d", ICON_LC_COINS, value);
-							}
+					for (const auto& item : kit->m_items) {
+						auto* form = RE::TESForm::LookupByEditorID(item->m_editorid);
+						if (form) {
+							const auto object = BaseObject(form, Ownership::None);
+							const auto icon = object.GetItemIcon();
+							const auto edid = object.GetEditorID();
+							const auto item_value = object.GetGoldValue();
+							ImGui::Text("%s %s", icon.c_str(), TRUNCATE(edid, max_width * Style::Ratio::TruncateNameMid()).c_str());
+							ImGui::SameLine();
+							ImGui::TextDisabled("%s %d", ICON_LC_COINS, item_value);
+						} else {
+							ImGui::Text("  %s", TRUNCATE(item->m_editorid, max_width * Style::Ratio::TruncateNameMid()).c_str());
 						}
-
-						Style::GroupUnindent();
 					}
 
-					ImGui::Spacing();
+					Style::GroupUnindent();
 				}
 
+				ImGui::Spacing();
 				ImGui::PopID();
 			}
 
 			if (remove_index >= 0) {
-				m_selected.erase(m_selected.begin() + remove_index);
+				m_selectedKeys.erase(m_selectedKeys.begin() + remove_index);
 			}
 
-			if (m_selected.empty()) {
+			if (m_selectedKeys.empty()) {
 				ImGui::SetCursorPosY(ImGui::GetContentRegionAvail().y / 2.0f);
 
 				const auto hint_1_pos = UICustom::GetCenterTextPosX(Translate("API_SELECTION_HINT_1"));
@@ -169,7 +169,7 @@ namespace Modex
 
 		const float button_width = ImGui::GetContentRegionAvail().x;
 
-		// Cost display (only when showTotalCost or requireTotalCost is set)
+		// Cost display
 		if (m_options.showTotalCost || m_options.requireTotalCost) {
 			auto cost = GetTotalCost();
 			auto player_gold = RE::PlayerCharacter::GetSingleton()->GetGoldAmount();
@@ -233,59 +233,50 @@ namespace Modex
 		ImGui::EndChild();
 	}
 
-	void FormSelectorModule::AddSelection(RE::FormID a_formID)
+	void KitSelectorModule::AddSelection(const std::string& a_kitKey)
 	{
 		// Single select mode: replace existing selection
 		if (m_options.singleSelect) {
-			m_selected.clear();
-			m_selected.push_back(a_formID);
+			m_selectedKeys.clear();
+			m_selectedKeys.push_back(a_kitKey);
 			return;
 		}
 
 		// Max count enforcement
-		if (m_options.maxCount > 0 && static_cast<int>(m_selected.size()) >= m_options.maxCount) {
+		if (m_options.maxCount > 0 && static_cast<int>(m_selectedKeys.size()) >= m_options.maxCount) {
 			return;
 		}
 
-		m_selected.push_back(a_formID);
+		m_selectedKeys.push_back(a_kitKey);
 	}
 
-	void FormSelectorModule::RemoveSelection(RE::FormID a_formID)
+	void KitSelectorModule::RemoveSelection(int a_index)
 	{
-		m_selected.erase(std::remove(m_selected.begin(), m_selected.end(), a_formID), m_selected.end());
+		if (a_index >= 0 && a_index < static_cast<int>(m_selectedKeys.size())) {
+			m_selectedKeys.erase(m_selectedKeys.begin() + a_index);
+		}
 	}
 
-	void FormSelectorModule::ClearSelection()
+	void KitSelectorModule::ClearSelection()
 	{
-		m_selected.clear();
+		m_selectedKeys.clear();
 	}
 
-	void FormSelectorModule::ConfirmSelection()
+	void KitSelectorModule::ConfirmSelection()
 	{
 		if (m_callback) {
-			m_callback(m_selected);
+			m_callback(m_selectedKeys);
 		}
 
 		UIManager::GetSingleton()->Close();
 	}
 
-	FormSelectorModule::~FormSelectorModule()
+	KitSelectorModule::~KitSelectorModule()
 	{
 	}
 
-	const char* GetOwnershipType(Ownership a_ownership)
-	{
-		switch (a_ownership) {
-			case Ownership::Outfit:
-				return "Outfit";
-			default:
-				return "AddItem";
-		}
-	}
-
-	FormSelectorModule::FormSelectorModule(Ownership a_ownership, const FormSelectorOptions& a_options, SelectionCallback a_callback)
-		: m_ownership(a_ownership)
-		, m_options(a_options)
+	KitSelectorModule::KitSelectorModule(const FormSelectorOptions& a_options, SelectionCallback a_callback)
+		: m_options(a_options)
 		, m_callback(std::move(a_callback))
 	{
 		m_layouts.push_back({ Translate("TAB_FORMSELECTOR"), true, nullptr });
@@ -293,17 +284,16 @@ namespace Modex
 		constexpr auto table_flags =
 			UITable::ModexTableFlag_Base |
 			UITable::ModexTableFlag_APIMode |
-			UITable::ModexTableFlag_EnableItemPreviewOnHover |
-			UITable::ModexTableFlag_EnableFilterTree |
 			UITable::ModexTableFlag_EnableSearch |
 			UITable::ModexTableFlag_EnableHeader;
 
-		auto table = std::make_unique<UITable>(GetOwnershipType(a_ownership), true, m_ownership, table_flags);
-		table->SetSelectionChangedCallback([this](const std::vector<RE::FormID>& ids) {
-			for (const auto& id : ids) {
-				AddSelection(id);
+		auto table = std::make_unique<UITable>("Kit", true, Ownership::Kit, table_flags);
+		table->SetSelectionChangedStringCallback([this](const std::vector<std::string>& keys) {
+			for (const auto& key : keys) {
+				AddSelection(key);
 			}
 		});
+
 		m_tables.push_back(std::move(table));
 	}
 }

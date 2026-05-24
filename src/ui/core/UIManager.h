@@ -30,6 +30,11 @@ namespace Modex
 		FormSelectorOptions           m_formSelectorOptions;
 		bool                          m_formSelectorFired = false;
 
+		using KitSelectorCallback = void (*)(const char* const* a_kitKeys, uint32_t a_count);
+		KitSelectorCallback           m_kitSelectorCallback = nullptr;
+		FormSelectorOptions           m_kitSelectorOptions;
+		bool                          m_kitSelectorFired = false;
+
 		HWND                          m_hWnd = nullptr;
 		std::atomic<bool>             m_initialized = false;
 		std::unique_ptr<ModexGUIMenu> m_gui = nullptr;
@@ -85,10 +90,19 @@ namespace Modex
 		void ShowInputBox(const std::string& a_title, const std::string& a_message, std::string a_hint = "", std::function<void(const std::string&)> onConfirmCallback = nullptr);
 		void ShowBrowser(const std::string& a_title, const std::vector<std::string>& a_items, std::function<void(const std::string&)> onSelectCallback = nullptr);
 		void ShowInfoBox(const std::string& a_title, const std::string& a_message);
+		void ShowKitTagsEditor(const std::string& a_kitKey, std::function<void()> onChanged = nullptr);
+
+		// Opens or closes the floating theme-editor popout. Non-modal; the
+		// main menu remains fully interactive behind it so the user can
+		// switch modules to preview theme changes live.
+		void ToggleThemeEditor();
+		bool IsThemeEditorOpen() const;
 		void NavigateToModule(uint8_t a_moduleIndex);
 		void OpenFormSelector(Ownership a_ownership, FormSelectorCallback a_callback, const FormSelectorOptions& a_options = {});
+		void OpenKitSelector(KitSelectorCallback a_callback, const FormSelectorOptions& a_options = {});
 		FormSelectorOptions& GetFormSelectorOptions() { return m_formSelectorOptions; }
 		FormSelectorCallback GetFormSelectorCallback() const { return m_formSelectorCallback; }
+		KitSelectorCallback GetKitSelectorCallback() const { return m_kitSelectorCallback; }
 
 		template<typename T>
 		UIWindow* GetPopupWindowRef() const;

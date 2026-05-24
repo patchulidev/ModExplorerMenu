@@ -48,7 +48,9 @@ namespace Modex
 			ImGuiWindowFlags_NoBringToFrontOnFocus;
 
 		using FormSelectorCallback = std::function<void(const std::vector<RE::FormID>&)>;
+		using KitSelectorCallback = std::function<void(const std::vector<std::string>&)>;
 		void SetFormSelectorParams(Ownership a_ownership, const FormSelectorOptions& a_options, FormSelectorCallback a_callback);
+		void SetKitSelectorParams(const FormSelectorOptions& a_options, KitSelectorCallback a_callback);
 
 	private:
 		void DrawSidebar();
@@ -59,6 +61,9 @@ namespace Modex
 		Ownership m_formSelectorOwnership = Ownership::Item;
 		FormSelectorOptions m_formSelectorOptions;
 		FormSelectorCallback m_formSelectorCallback;
+
+		FormSelectorOptions m_kitSelectorOptions;
+		KitSelectorCallback m_kitSelectorCallback;
 		bool expand_sidebar;
 		bool sidebar_initialized = false;
 
@@ -100,5 +105,6 @@ namespace Modex
 		std::unique_ptr<UIModule> CreateModule(ModuleType a_type, Ownership a_owner = Ownership::None);
 		std::unique_ptr<UIModule> CreateModule(uint8_t a_index);
 		std::unique_ptr<UIModule> CreateFormSelectorModule(Ownership a_owner, const FormSelectorOptions& a_options);
+		std::unique_ptr<UIModule> CreateKitSelectorModule(const FormSelectorOptions& a_options);
 	};
 }

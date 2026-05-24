@@ -1,6 +1,8 @@
 #include "UIPopup.h"
 #include "UIContainers.h"
+#include "config/EquipmentConfig.h"
 #include "config/Keycodes.h"
+#include "external/icons/IconsLucide.h"
 #include "imgui.h"
 #include "localization/Locale.h"
 #include "config/ThemeConfig.h"
@@ -11,7 +13,7 @@ namespace Modex
 	void UIPopupHotkey::Draw()
 	{
 		static float height;
-		auto width = ImGui::GetMainViewport()->Size.x * 0.25f;
+		auto width = ImGui::GetMainViewport()->Size.x * ThemeConfig::GetWidgetStyle().popup.widthFactor;
 		const float center_x = ImGui::GetMainViewport()->Size.x * 0.5f;
 		const float center_y = ImGui::GetMainViewport()->Size.y * 0.5f;
 		const float pos_x = center_x - (width * 0.5f);
@@ -110,7 +112,7 @@ namespace Modex
 	void UIPopupWarning::Draw()
 	{
 		static float height;
-		auto width = ImGui::GetMainViewport()->Size.x * 0.25f;
+		auto width = ImGui::GetMainViewport()->Size.x * ThemeConfig::GetWidgetStyle().popup.widthFactor;
 		const float center_x = ImGui::GetMainViewport()->Size.x * 0.5f;
 		const float center_y = ImGui::GetMainViewport()->Size.y * 0.5f;
 		const float pos_x = center_x - (width * 0.5f);
@@ -191,7 +193,7 @@ namespace Modex
 	void UIPopupInputBox::Draw()
 	{
 		static float height;
-		auto width = ImGui::GetMainViewport()->Size.x * 0.25f;
+		auto width = ImGui::GetMainViewport()->Size.x * ThemeConfig::GetWidgetStyle().popup.widthFactor;
 		const float center_x = ImGui::GetMainViewport()->Size.x * 0.5f;
 		const float center_y = ImGui::GetMainViewport()->Size.y * 0.5f;
 		const float pos_x = center_x - (width * 0.5f);
@@ -286,7 +288,7 @@ namespace Modex
 	void UIPopupInfo::Draw()
 	{
 		static float height;
-		auto width = ImGui::GetMainViewport()->Size.x * 0.25f;
+		auto width = ImGui::GetMainViewport()->Size.x * ThemeConfig::GetWidgetStyle().popup.widthFactor;
 		const float center_x = ImGui::GetMainViewport()->Size.x * 0.5f;
 		const float center_y = ImGui::GetMainViewport()->Size.y * 0.5f;
 		const float pos_x = center_x - (width * 0.5f);
@@ -342,5 +344,218 @@ namespace Modex
 	void UIPopupInfo::CloseInfo()
 	{
 		CloseWindow();
+	}
+
+	// Persist edits to disk and notify the opener. No undo — the popup's
+	// philosophy is "every action is immediate".
+	static void ApplyKitTagMutation(const std::string& a_kitKey, std::function<void(std::vector<std::string>&)> a_mutate)
+	{
+		auto* kit = EquipmentConfig::KitLookup(a_kitKey);
+		if (!kit) return;
+		auto tags = kit->GetTags();
+		a_mutate(tags);
+		// Dedupe + canonical ordering.
+		std::sort(tags.begin(), tags.end());
+		tags.erase(std::unique(tags.begin(), tags.end()), tags.end());
+		kit->SetTags(tags);
+		EquipmentConfig::SaveKit(*kit);
+	}
+
+	void UIPopupKitTags::Draw()
+	{
+		const float  font     = ImGui::GetFontSize();
+		const ImVec2 viewport = ImGui::GetMainViewport()->Size;
+		const ImVec2 size(font * 32.0f, font * 28.0f);
+		const ImVec2 pos((viewport.x - size.x) * 0.5f, (viewport.y - size.y) * 0.5f);
+
+		DrawPopupBackground(m_alpha);
+
+		ImGui::SetNextWindowSize(size);
+		ImGui::SetNextWindowPos(pos);
+		ImGui::SetNextWindowFocus();
+
+		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, m_alpha);
+		if (ImGui::Begin("##Modex::KitTagsPopup", nullptr,
+				ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
+				ImGuiWindowFlags_NoMove     | ImGuiWindowFlags_NoScrollbar |
+				ImGuiWindowFlags_NoFocusOnAppearing)) {
+
+			if (ImGui::IsWindowAppearing()) {
+				ImGui::GetIO().ClearInputKeys();
+			}
+
+			// Fresh lookup each frame — SaveKit replaces entries in the cache.
+			auto* kit = EquipmentConfig::KitLookup(m_kitKey);
+
+			if (UICustom::Popup_MenuHeader(Translate("KIT_TAGS_TITLE"))) {
+				CloseWindow();
+			}
+
+			ImGui::TextDisabled("%s", kit ? kit->GetNameTail().c_str() : m_kitKey.c_str());
+			ImGui::Separator();
+
+			const float footer_h =
+				ImGui::GetFrameHeightWithSpacing() * 2.0f +
+				ImGui::GetStyle().ItemSpacing.y * 2.0f;
+			const float list_h = (std::max)(ImGui::GetContentRegionAvail().y - footer_h, font * 4.0f);
+
+			// Current tags (which checkboxes are checked) + known tags (which
+			// checkboxes exist) — rendering reads both, writes hit disk immediately.
+			const auto kit_tags_vec = kit ? kit->GetTags() : std::vector<std::string>{};
+			const std::unordered_set<std::string> kit_tags(kit_tags_vec.begin(), kit_tags_vec.end());
+			const auto known_vec = EquipmentConfig::GetKnownTags();
+			const std::set<std::string> visible(known_vec.begin(), known_vec.end());
+
+			if (visible.empty()) {
+				if (ImGui::BeginChild("##KitTags::Empty", ImVec2(0.0f, list_h), true)) {
+					ImGui::TextDisabled("%s", Translate("KIT_TAGS_NONE_KNOWN"));
+				}
+				ImGui::EndChild();
+			} else {
+				if (ImGui::BeginChild("##KitTags::List", ImVec2(0.0f, list_h), true)) {
+					const ImU32 disabled_col = ImGui::GetColorU32(ImGuiCol_TextDisabled);
+					const float trash_w = ImGui::GetFrameHeight();
+
+					for (const auto& tag : visible) {
+						ImGui::PushID(tag.c_str());
+
+						bool checked = kit_tags.contains(tag);
+						if (ImGui::Checkbox(tag.c_str(), &checked)) {
+							ApplyKitTagMutation(m_kitKey, [&](std::vector<std::string>& a_tags) {
+								if (checked) {
+									a_tags.push_back(tag);
+								} else {
+									a_tags.erase(std::remove(a_tags.begin(), a_tags.end(), tag), a_tags.end());
+								}
+							});
+							NotifyChanged();
+						}
+
+						ImGui::SameLine(ImGui::GetContentRegionAvail().x - trash_w + ImGui::GetStyle().ItemSpacing.x);
+						ImGui::PushStyleColor(ImGuiCol_Button,        ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+						ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ThemeConfig::GetHover("DECLINE"));
+						ImGui::PushStyleColor(ImGuiCol_ButtonActive,  ThemeConfig::GetActive("DECLINE"));
+						ImGui::PushStyleColor(ImGuiCol_Text,          disabled_col);
+						if (ImGui::Button(ICON_LC_TRASH_2, ImVec2(trash_w, 0.0f))) {
+							EquipmentConfig::DeleteTagFromAllKits(tag);
+							NotifyChanged();
+						}
+						ImGui::PopStyleColor(4);
+
+						ImGui::PopID();
+					}
+				}
+				ImGui::EndChild();
+			}
+
+			ImGui::Separator();
+
+			// Add-new-tag row. Enter or + saves the typed tag onto this kit
+			// immediately and the new checkbox appears on the next frame.
+			const float add_w = font * 4.0f;
+			ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - add_w - ImGui::GetStyle().ItemSpacing.x);
+			const bool submitted = ImGui::InputTextWithHint(
+				"##KitTags::NewTag",
+				Translate("KIT_TAGS_NEW_HINT"),
+				m_pendingTagInput, sizeof(m_pendingTagInput),
+				ImGuiInputTextFlags_EnterReturnsTrue);
+			ImGui::SameLine();
+			const bool clicked_add = ImGui::Button(ICON_LC_PLUS, ImVec2(add_w, 0.0f));
+			if (submitted || clicked_add) {
+				std::string candidate = m_pendingTagInput;
+				size_t s = 0, e = candidate.size();
+				while (s < e && std::isspace(static_cast<unsigned char>(candidate[s]))) s++;
+				while (e > s && std::isspace(static_cast<unsigned char>(candidate[e - 1]))) e--;
+				candidate = candidate.substr(s, e - s);
+				if (!candidate.empty() && candidate.find(',') == std::string::npos) {
+					ApplyKitTagMutation(m_kitKey, [&](std::vector<std::string>& a_tags) {
+						a_tags.push_back(candidate);
+					});
+					NotifyChanged();
+					m_pendingTagInput[0] = '\0';
+				}
+				if (submitted) {
+					ImGui::SetKeyboardFocusHere(-1);
+				}
+			}
+
+			ImGui::Separator();
+
+			// Confirm is a pseudo-close — all edits already persisted.
+			ImGui::PushStyleColor(ImGuiCol_Button,        ThemeConfig::GetColor("CONFIRM"));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ThemeConfig::GetHover("CONFIRM"));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive,  ThemeConfig::GetActive("CONFIRM"));
+			if (ImGui::Button(Translate("CONFIRM"), ImVec2(ImGui::GetContentRegionAvail().x, 0.0f))) {
+				CloseWindow();
+			}
+			ImGui::PopStyleColor(3);
+		}
+		ImGui::End();
+		ImGui::PopStyleVar();
+	}
+
+	void UIPopupKitTags::PopupKitTags(const std::string& a_kitKey, std::function<void()> a_onChanged)
+	{
+		m_kitKey = a_kitKey;
+		m_onChanged = std::move(a_onChanged);
+		m_pendingTagInput[0] = '\0';
+		m_captureInput = true;
+	}
+
+	void UIPopupKitTags::NotifyChanged()
+	{
+		if (m_onChanged) m_onChanged();
+	}
+
+	// Defined in ui/modules/settings/ThemeEditor.cpp — pure body renderer with
+	// no surrounding container, so it composes equally well into the Settings
+	// tab's BeginChild and this popout's ImGui::Begin.
+	void DrawThemeEditorBody();
+
+	UIPopupThemeEditor::UIPopupThemeEditor()
+	{
+		// Peer floating window — must NOT eat input from the main menu, so
+		// the user can switch modules while it stays open. Settings popups
+		// (warning, input, info) own input; this one is interaction-by-focus.
+		m_captureInput = false;
+	}
+
+	void UIPopupThemeEditor::Draw()
+	{
+		const ImVec2 viewport = ImGui::GetMainViewport()->Size;
+
+		if (m_firstFrame) {
+			// Park in the upper-right by default — leaves the main menu's
+			// central column visible while the editor is open.
+			const float defW = std::clamp(viewport.x * 0.30f, 380.0f, 700.0f);
+			const float defH = std::clamp(viewport.y * 0.80f, 400.0f, 1100.0f);
+			const float margin = 40.0f;
+			ImGui::SetNextWindowSize(ImVec2(defW, defH), ImGuiCond_FirstUseEver);
+			ImGui::SetNextWindowPos(ImVec2(viewport.x - defW - margin, margin), ImGuiCond_FirstUseEver);
+			m_firstFrame = false;
+		}
+
+		const std::string title = std::string(ICON_LC_PAINTBRUSH) + "  " +
+			Translate("THEME_EDITOR_POPOUT_TITLE") + "###Modex::ThemeEditorPopout";
+
+		// Snapshot state before Begin so we can detect the title-bar X click
+		// as a one-shot transition. Calling CloseWindow on every subsequent
+		// frame (while m_open stayed false) was re-stamping m_state to
+		// Closing in Draw, which prevented UIWindow::Update's switch from
+		// ever reaching the Closed → DeleteWindow branch.
+		const bool aliveBeforeBegin =
+			m_state != WindowState::Closing && m_state != WindowState::Closed;
+
+		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, m_alpha);
+		if (ImGui::Begin(title.c_str(), &m_open,
+				ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoFocusOnAppearing)) {
+			DrawThemeEditorBody();
+		}
+		ImGui::End();
+		ImGui::PopStyleVar();
+
+		if (!m_open && aliveBeforeBegin) {
+			CloseWindow();
+		}
 	}
 }

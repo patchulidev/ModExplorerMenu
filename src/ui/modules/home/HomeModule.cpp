@@ -7,11 +7,21 @@
 #include "localization/Locale.h"
 #include "ui/components/UICustom.h"
 #include "ui/core/UIManager.h"
+#include "ui/style/LayoutMetrics.h"
 
 // A large part of the ImGui design/layout code here was written by Claude AI. <3
 
 namespace Modex
 {
+	namespace
+	{
+		// Card-background alpha multipliers. Named to indicate visual weight
+		// rather than a precise tier — these are layout-local, not project-wide.
+		constexpr float kBgFaint    = 0.4f;  // base panel / non-hover card
+		constexpr float kBgMuted    = 0.6f;  // hovered button / secondary border
+		constexpr float kBgEmphasis = 0.8f;  // key chip / hint text
+	}
+
 	void HomeModule::Draw()
 	{
 		DrawTabMenu();
@@ -94,7 +104,7 @@ namespace Modex
 		ImVec2 cursor = ImGui::GetCursorScreenPos();
 
 		// Key background rectangle.
-		ImU32 key_bg = ThemeConfig::GetColorU32("BG", 0.8f * alpha);
+		ImU32 key_bg = ThemeConfig::GetColorU32("BG", kBgEmphasis * alpha);
 		ImU32 key_border = ThemeConfig::GetColorU32("BORDER", alpha);
 		draw_list->AddRectFilled(cursor, ImVec2(cursor.x + key_width, cursor.y + key_height), key_bg, 3.0f);
 		draw_list->AddRect(cursor, ImVec2(cursor.x + key_width, cursor.y + key_height), key_border, 3.0f);
@@ -138,7 +148,7 @@ namespace Modex
 		auto* data = Data::GetSingleton();
 		const float alpha = ImGui::GetStyle().Alpha;
 		const float inner_pad = 4.0f;
-		const float badge_gap = 20.0f;
+		const float badge_gap = Style::Metrics().gapMd;
 
 		struct Stat {
 			const char* icon;
@@ -220,7 +230,7 @@ namespace Modex
 		// Background.
 		ImU32 bg = hovered
 			? ThemeConfig::GetColorU32("BG", 0.7f * alpha)
-			: ThemeConfig::GetColorU32("BG", 0.4f * alpha);
+			: ThemeConfig::GetColorU32("BG", kBgFaint * alpha);
 		dl->AddRectFilled(cursor, ImVec2(cursor.x + a_width, cursor.y + a_height), bg, 4.0f);
 
 		auto* target = UIModule::GetTargetReference();
@@ -267,7 +277,7 @@ namespace Modex
 		// Hover hint.
 		if (hovered) {
 			float hint_y = detail_y + ImGui::GetFontSize() * 1.4f;
-			dl->AddText(ImVec2(content_x + padding, hint_y), ThemeConfig::GetColorU32("PRIMARY", 0.8f * alpha), Translate("HOME_TARGET_CLICK"));
+			dl->AddText(ImVec2(content_x + padding, hint_y), ThemeConfig::GetColorU32("PRIMARY", kBgEmphasis * alpha), Translate("HOME_TARGET_CLICK"));
 		}
 
 		if (clicked) {
@@ -296,7 +306,7 @@ namespace Modex
 
 		// Panel background.
 		dl->AddRectFilled(cursor, ImVec2(cursor.x + a_width, cursor.y + a_height),
-			ThemeConfig::GetColorU32("BG", 0.4f * alpha), 4.0f);
+			ThemeConfig::GetColorU32("BG", kBgFaint * alpha), 4.0f);
 
 		// Left border accent.
 		dl->AddRectFilled(cursor, ImVec2(cursor.x + border_width, cursor.y + a_height),
@@ -341,7 +351,7 @@ namespace Modex
 			// Button background on hover.
 			if (btn_hovered) {
 				dl->AddRectFilled(btn_pos, btn_end,
-					ThemeConfig::GetColorU32("BG", 0.6f * alpha), 3.0f);
+					ThemeConfig::GetColorU32("BG", kBgMuted * alpha), 3.0f);
 			}
 
 			// Icon + label.
@@ -386,11 +396,11 @@ namespace Modex
 
 		// Background.
 		dl->AddRectFilled(cursor, ImVec2(cursor.x + a_width, cursor.y + a_height),
-			ThemeConfig::GetColorU32("BG", 0.4f * alpha), 4.0f);
+			ThemeConfig::GetColorU32("BG", kBgFaint * alpha), 4.0f);
 
 		// Left border.
 		dl->AddRectFilled(cursor, ImVec2(cursor.x + border_width, cursor.y + a_height),
-			ThemeConfig::GetColorU32("TEXT_DISABLED", 0.6f * alpha), 4.0f, ImDrawFlags_RoundCornersLeft);
+			ThemeConfig::GetColorU32("TEXT_DISABLED", kBgMuted * alpha), 4.0f, ImDrawFlags_RoundCornersLeft);
 
 		float content_x = cursor.x + border_width + padding * 2;
 

@@ -1610,7 +1610,6 @@ namespace Modex
 	{
 		int					m_amount;
 		bool				m_equipped;
-		BaseObject*			m_ref;
 
 		// Custom comparator for equality based on editorid
 		bool operator==(const KitItem& other) const
@@ -1674,25 +1673,49 @@ namespace Modex
 		operator bool() const {
 			return !empty();
 		}
+
+		// Split m_collection CSV into trimmed non-empty tags.
+		std::vector<std::string> GetTags() const {
+			std::vector<std::string> out;
+			std::string_view view = m_collection;
+			size_t start = 0;
+			while (start <= view.size()) {
+				size_t comma = view.find(',', start);
+				std::string_view token = comma == std::string_view::npos
+					? view.substr(start)
+					: view.substr(start, comma - start);
+				while (!token.empty() && std::isspace(static_cast<unsigned char>(token.front()))) token.remove_prefix(1);
+				while (!token.empty() && std::isspace(static_cast<unsigned char>(token.back())))  token.remove_suffix(1);
+				if (!token.empty()) out.emplace_back(token);
+				if (comma == std::string_view::npos) break;
+				start = comma + 1;
+			}
+			return out;
+		}
+
+		// Re-join tags into m_collection as a canonical "tag1, tag2" string.
+		void SetTags(const std::vector<std::string>& a_tags) {
+			m_collection.clear();
+			for (const auto& tag : a_tags) {
+				if (tag.empty()) continue;
+				if (!m_collection.empty()) m_collection += ", ";
+				m_collection += tag;
+			}
+		}
+
+		bool HasTag(const std::string& a_tag) const {
+			const auto tags = GetTags();
+			return std::find(tags.begin(), tags.end(), a_tag) != tags.end();
+		}
 	};
 
 	class Kit : public KitData
 	{
 	public:
-		std::string m_desc;
 		std::vector<std::shared_ptr<KitItem>> m_items;
 
 		// runtime
 		ImGuiID m_tableID = 0;
 		bool    m_dirty = false;
-		int     m_weaponCount;
-		int     m_armorCount;
-		int     m_miscCount;
-
-		Kit() : 
-			m_weaponCount(0),
-			m_armorCount(0),
-			m_miscCount(0)
-		{}
 	};
 }

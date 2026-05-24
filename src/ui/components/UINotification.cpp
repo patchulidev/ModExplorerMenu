@@ -5,6 +5,7 @@
 #include "external/icons/IconsLucide.h"
 #include "imgui_internal.h"
 #include "ui/components/UICustom.h"
+#include "ui/style/LayoutMetrics.h"
 
 // TODO: Add a Modex Console / Log to display notification history
 
@@ -83,11 +84,12 @@ namespace Modex
 
 		const float progress = a_msg.GetProgress();
 		const float remainingWidth = a_width * (1.0f - progress);
+		const float bar_thickness = Style::Metrics().radiusSm;
 
 		ImVec2 progress_min = ImGui::GetWindowPos();
-		progress_min.y += a_height - 2.0f;
-		
-		ImVec2 progress_max(progress_min.x + remainingWidth, progress_min.y + 2.0f);
+		progress_min.y += a_height - bar_thickness;
+
+		ImVec2 progress_max(progress_min.x + remainingWidth, progress_min.y + bar_thickness);
 
 		ImGui::GetWindowDrawList()->AddRectFilled(
 				progress_min,
@@ -101,10 +103,11 @@ namespace Modex
 		ImGui::SetNextWindowPos(a_pos);
 		ImGui::SetNextWindowSize(a_size);
 
+		const float tight = Style::Metrics().u * 0.5f;
 		if (a_padding == 0)
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 		if (a_padding == 1)
-			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(2.0f, 2.0f));
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(tight, tight));
 
 		return {a_pos, a_size, WINDOW_FLAGS, a_padding};
 	}
@@ -122,7 +125,7 @@ namespace Modex
 		const float window_width = a_windowSize.x;
 		const float window_height = (msg_height * MAX_COUNT);
 
-		const ImVec2 pos(a_windowPos.x, a_windowPos.y + a_windowSize.y - window_height - 2.0f);
+		const ImVec2 pos(a_windowPos.x, a_windowPos.y + a_windowSize.y - window_height - Style::Metrics().u * 0.5f);
 		auto config = SetupContainer(pos, ImVec2(window_width, window_height), 1);
 		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha);
 
@@ -152,7 +155,7 @@ namespace Modex
 		if (!s_messages.empty()) return;
 		if (!UserConfig::Get().enableTooltips) return;
 
-		const float msg_height = ImGui::GetFrameHeight() * 1.5f;
+		const float msg_height = ImGui::GetFrameHeight() * ThemeConfig::GetWidgetStyle().notification.tooltipHeightScale;
 		const float window_width = a_parentSize.x;
 
 		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, s_tooltip.GetAlpha() * ImGui::GetStyle().Alpha);
@@ -180,7 +183,7 @@ namespace Modex
 			const auto draw_list = ImGui::GetWindowDrawList();
 			draw_list->AddRectFilledMultiColor(ImGui::GetWindowPos(), ImGui::GetWindowPos() + ImVec2(a_width, a_height), bgColor, 0, 0, bgColor);
 
-			ImGui::SetCursorPosX(ImGui::GetStyle().WindowPadding.x + 2.0f);
+			ImGui::SetCursorPosX(ImGui::GetStyle().WindowPadding.x + Style::Metrics().u * 0.5f);
 
 			// Icon
 			if (!a_msg.icon.empty()) {
@@ -189,7 +192,7 @@ namespace Modex
 			}
 
 			// Message
-			ImGui::Text("%s", TRUNCATE(a_msg.text.c_str(), a_width / 1.5f).c_str());
+			ImGui::Text("%s", TRUNCATE(a_msg.text.c_str(), a_width / ThemeConfig::GetWidgetStyle().notification.textTruncDivisor).c_str());
 
 			// Previous style implementation: unused for now.
 			// DrawProgressBar(a_msg, a_width, a_height, alpha);
@@ -213,7 +216,7 @@ namespace Modex
 			// Enlarge Tooltip Icon
 			if (!a_msg.icon.empty()) {
 				ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetFrameHeight() / 2.0f);
-				ImGui::PushFont(NULL, ImGui::GetFontSize() + 4.0f);
+				ImGui::PushFont(NULL, ImGui::GetFontSize() + Style::Metrics().u);
 				ImGui::SetCursorPosY((a_height / 2.0f) - (ImGui::CalcTextSize(a_msg.icon.c_str()).y / 2.0f));
 				ImGui::Text("%s", a_msg.icon.c_str());
 				ImGui::PopFont();

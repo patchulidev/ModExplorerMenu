@@ -33,6 +33,7 @@ namespace ModexAPI
 		kObject,
 		kCell,
 		kOutfit,
+		kKit,
 	};
 
 	// Property types for querying form data via GetFormProperty().
@@ -109,6 +110,17 @@ namespace ModexAPI
 		const char* name;
 		const char* editorID;
 		const char* plugin;
+	};
+
+	// Kit entry returned by GetCachedKits().
+	// String pointers are valid for the lifetime of the Modex kit cache (until game exit).
+	struct KitEntry
+	{
+		const char* key;          // Unique kit identifier (relative path)
+		const char* name;         // Display name (file stem)
+		const char* collection;   // Collection/category grouping
+		uint32_t    itemCount;    // Number of items in the kit
+		int32_t     goldValue;    // Total gold value of all items
 	};
 
 	// A message used to fetch Modex's interface.
@@ -245,6 +257,23 @@ namespace ModexAPI
 		/// @param a_outfitFormID The FormID of the BGSOutfit to assign.
 		/// @param a_targetReference The actor reference whose base record to modify.
 		virtual void SetSleepOutfit(uint32_t a_outfitFormID, uint32_t a_targetReference) = 0;
+
+		/// Opens the Kit Selector UI, allowing the user to browse and select equipment kits.
+		/// The callback is invoked when the user confirms their selection.
+		/// @param a_callback Called with an array of kit key strings and the count.
+		///                   The pointers are valid only for the duration of the callback.
+		virtual void OpenKitSelector(void (*a_callback)(const char* const* a_kitKeys, uint32_t a_count)) = 0;
+
+		/// Opens the Kit Selector UI with custom options.
+		/// @param a_options  Configuration options for the selector behavior.
+		/// @param a_callback Called with an array of kit key strings and the count.
+		virtual void OpenKitSelector(const FormSelectorOptions& a_options, void (*a_callback)(const char* const* a_kitKeys, uint32_t a_count)) = 0;
+
+		/// Copies cached kit entries into a user-provided buffer.
+		/// @param a_outBuffer Pointer to a KitEntry array to fill. Pass nullptr to query count only.
+		/// @param a_maxCount  Maximum number of entries to write into a_outBuffer.
+		/// @return            The total number of kits in the cache (regardless of a_maxCount).
+		virtual uint32_t GetCachedKits(KitEntry* a_outBuffer, uint32_t a_maxCount) = 0;
 	};
 
 }  // namespace ModexAPI

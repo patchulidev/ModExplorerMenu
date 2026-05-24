@@ -7,11 +7,14 @@
 #include "config/ThemeConfig.h"
 #include "localization/FontManager.h"
 #include "localization/Locale.h"
+#include "ui/style/LayoutMetrics.h"
 
 
 namespace Modex::UICustom
 {
-	static inline float s_widgetWidth = 150.0f; // Fixed Settings right-align widget width.
+	// Right-align width for Settings_* widgets. Font-proportional so the
+	// settings panel scales consistently when the user changes font size.
+	static inline float s_widgetWidth() { return Style::Metrics().settingsWidgetWidth; }
 
 	[[nodiscard]] float GetCenterTextPosX(const char* a_text)
 	{
@@ -161,8 +164,9 @@ namespace Modex::UICustom
 		bool changed = false;
 		auto pos = ImGui::GetCursorScreenPos();
 
-		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 12.0f);
-		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 8.0f));
+		const auto& w = ThemeConfig::GetWidgetStyle();
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, w.fancy.frameRounding);
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, w.fancy.framePadding);
 
 		ImGui::SetNextItemWidth(a_width);
 		if (ImGui::InputTextWithHint(a_id, Translate(a_hint), a_buffer, MAX_PATH, a_flags)) {
@@ -181,16 +185,61 @@ namespace Modex::UICustom
 
 		ImGui::SameLine();
 
-		ImGui::PushFont(NULL, 18.0f);
+		ImGui::PushFont(NULL, w.fancy.glyphFontSize);
 		auto DrawList = ImGui::GetWindowDrawList();
 		pos.x += a_width - ImGui::GetFrameHeightWithSpacing() + ImGui::GetStyle().FramePadding.x;
 		pos.y += (ImGui::GetItemRectSize().y / 2.0f) - (ImGui::GetFontSize() / 2.0f);
 
 		DrawList->AddText(pos, ThemeConfig::GetColorU32("TEXT", ImGui::GetStyle().Alpha), ICON_LC_SEARCH);
 		ImGui::PopFont();
-		
+
 		ImGui::PopStyleVar(2);
 		return changed;
+	}
+
+	bool FancyDropdownButton(const char* a_id, const char* a_label, const char* a_leadingIcon, const char* a_tooltip, float a_width, int a_badgeCount)
+	{
+		auto pos = ImGui::GetCursorScreenPos();
+
+		// Match FancyInputText's frame so the button sits at the same height
+		// and corner radius as the search field.
+		const auto& w = ThemeConfig::GetWidgetStyle();
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, w.fancy.frameRounding);
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding,  w.fancy.framePadding);
+		ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.0f, 0.5f));
+
+		// label = "{leadingIcon}  {label}{ (count)}##{a_id}"
+		std::string label;
+		if (a_leadingIcon && a_leadingIcon[0] != '\0') {
+			label = std::string(a_leadingIcon) + "  ";
+		}
+		label += Translate(a_label);
+		if (a_badgeCount > 0) {
+			label += std::format("  ({})", a_badgeCount);
+		}
+		label += "##";
+		label += a_id;
+
+		const bool clicked = ImGui::Button(label.c_str(), ImVec2(a_width, 0));
+
+		ImGui::PopStyleVar(3);
+
+		if (a_tooltip && a_tooltip[0] != '\0' && Locale::GetSingleton()->HasEntry(a_tooltip)) {
+			if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal | ImGuiHoveredFlags_NoSharedDelay)) {
+				UICustom::FancyTooltip(a_tooltip);
+			}
+		}
+
+		// Trailing chevron, drawn the same way FancyInputText draws its search
+		// glyph — overlay at right edge, larger font for visibility.
+		auto* DrawList = ImGui::GetWindowDrawList();
+		ImGui::PushFont(NULL, w.fancy.glyphFontSize);
+		pos.x += a_width - ImGui::GetFrameHeightWithSpacing() + ImGui::GetStyle().FramePadding.x;
+		pos.y += (ImGui::GetItemRectSize().y / 2.0f) - (ImGui::GetFontSize() / 2.0f);
+		DrawList->AddText(pos, ThemeConfig::GetColorU32("TEXT", ImGui::GetStyle().Alpha), ICON_LC_CHEVRON_DOWN);
+		ImGui::PopFont();
+
+		return clicked;
 	}
 
 	bool FancyDropdown(const char* a_id, const char* a_tooltip, uint32_t& a_currentItem, const std::vector<std::string>& a_items, float a_width)
@@ -205,8 +254,9 @@ namespace Modex::UICustom
 	{
 		bool changed = false;
 
-		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 12.0f);
-		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 8.0f));
+		const auto& w = ThemeConfig::GetWidgetStyle();
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, w.fancy.frameRounding);
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, w.fancy.framePadding);
 		auto pos = ImGui::GetCursorScreenPos();
 
 		if (a_width == 0.0f) {
@@ -257,7 +307,7 @@ namespace Modex::UICustom
 
 		ImGui::SameLine();
 
-		ImGui::PushFont(NULL, 18.0f);
+		ImGui::PushFont(NULL, w.fancy.glyphFontSize);
 		auto DrawList = ImGui::GetWindowDrawList();
 		pos.x += a_width - ImGui::GetFrameHeightWithSpacing() + ImGui::GetStyle().FramePadding.x;
 		pos.y += (ImGui::GetItemRectSize().y / 2.0f) - (ImGui::GetFontSize() / 2.0f);
@@ -272,7 +322,8 @@ namespace Modex::UICustom
 	void FancyTooltip(const char* a_localeString)
 	{
 		if (!UserConfig::Get().enableTooltips) return;
-		const float width = ImGui::GetIO().DisplaySize.x * 0.20f;
+		const auto& tt = ThemeConfig::GetWidgetStyle().tooltip;
+		const float width = ImGui::GetIO().DisplaySize.x * tt.widthFactor;
 
 		float window_pos_x = ImGui::GetMousePos().x - width;
 		float window_pos_y = ImGui::GetMousePos().y + ImGui::GetFrameHeight();
@@ -281,17 +332,18 @@ namespace Modex::UICustom
 
 		ImGui::SetNextWindowSize(ImVec2(width, 0.0f));
 		ImGui::SetNextWindowPos(ImVec2(window_pos_x, window_pos_y));
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 5.0f);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, tt.rounding);
 		if (ImGui::BeginTooltip()) {
 			const auto& drawList = ImGui::GetWindowDrawList();
 			const ImVec2 pos = ImGui::GetCursorScreenPos();
 			const ImVec2 size = ImGui::GetWindowSize();
-			
+
 			ImGui::TextWrapped("%s", Translate(a_localeString));
 
+			const float accent_y = pos.y + (ImGui::GetFontSize() * tt.accentLineYScale);
 			drawList->AddRectFilled(
-				ImVec2(pos.x - ImGui::GetStyle().WindowPadding.x, pos.y + (ImGui::GetFontSize() * 1.5f)),
-				ImVec2(pos.x + size.x, pos.y + (ImGui::GetFontSize() * 1.5f) + 1.0f),
+				ImVec2(pos.x - ImGui::GetStyle().WindowPadding.x, accent_y),
+				ImVec2(pos.x + size.x, accent_y + 1.0f),
 				ThemeConfig::GetColorU32("PRIMARY"));
 
 			ImGui::EndTooltip();
@@ -438,11 +490,11 @@ namespace Modex::UICustom
 		ImGui::Text("%s", Translate(a_localeString));
 		ImGui::HelpMarker(a_localeString);
 
-		ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth);
+		ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth());
 		ImGui::PushStyleColor(ImGuiCol_Button, ThemeConfig::GetColor(button_color));
 		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ThemeConfig::GetHover(button_color));
 		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ThemeConfig::GetActive(button_color));
-		bool pressed = ImGui::Button(button_text.c_str(), ImVec2(s_widgetWidth, 0.0f));
+		bool pressed = ImGui::Button(button_text.c_str(), ImVec2(s_widgetWidth(), 0.0f));
 		ImGui::PopStyleColor(3);
 
 		if (pressed) {
@@ -464,8 +516,8 @@ namespace Modex::UICustom
 		ImGui::Text("%s", Translate(a_localeString));
 		ImGui::HelpMarker(a_localeString);
 
-		ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth);
-		ImGui::SetNextItemWidth(s_widgetWidth);
+		ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth());
+		ImGui::SetNextItemWidth(s_widgetWidth());
 		bool pressed = ImGui::SliderInt(id.c_str(), &a_value, a_min, a_max);
 
 		ImGui::Unindent();
@@ -483,8 +535,8 @@ namespace Modex::UICustom
 		ImGui::Text("%s", Translate(a_localeString));
 		ImGui::HelpMarker(a_localeString);
 
-		ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth);
-		ImGui::SetNextItemWidth(s_widgetWidth);
+		ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth());
+		ImGui::SetNextItemWidth(s_widgetWidth());
 		if (ImGui::SliderFloat(id.c_str(), &a_valRef, a_min, a_max, "%.3f", ImGuiSliderFlags_ClampOnInput)) {
 			changes = true;
 		}
@@ -540,10 +592,10 @@ namespace Modex::UICustom
 				label = GetKeyName(a_keybind);
 			}
 
-			ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth);
+			ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth());
 			ImGui::SetCursorPosY(ImGui::GetCursorPosY() - (ImGui::GetFrameHeight() / 2.0f));
 
-			if (ImGui::Button(label.c_str(), ImVec2(s_widgetWidth, height))) {
+			if (ImGui::Button(label.c_str(), ImVec2(s_widgetWidth(), height))) {
 				openPopup();
 			}
 		} else {
@@ -633,8 +685,8 @@ namespace Modex::UICustom
 		ImGui::Text("%s", Translate(a_localeString));
 		ImGui::HelpMarker(a_localeString);
 
-		ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth);
-		ImGui::SetNextItemWidth(s_widgetWidth);
+		ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth());
+		ImGui::SetNextItemWidth(s_widgetWidth());
 		if (ImGui::BeginCombo(id.c_str(), Translate(a_options[a_value].c_str()))) {
 			for (uint8_t i = 0; i < a_options.size(); ++i) {
 				const char* entry = a_localizeList ? Translate(a_options[i].c_str()) : a_options[i].c_str();
@@ -661,9 +713,9 @@ namespace Modex::UICustom
 		ImGui::Text("%s", Translate(a_localeString));
 		ImGui::HelpMarker(a_localeString);
 
-		ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth);
+		ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth());
 		
-		ImGui::SetNextItemWidth(s_widgetWidth);
+		ImGui::SetNextItemWidth(s_widgetWidth());
 		const auto fontLibrary = FontManager::GetSingleton()->GetFontLibrary();
 		if (ImGui::BeginCombo(id.c_str(), a_font->c_str())) {
 			ImGui::PushID("##Settings::FontDropdown::Combo");
@@ -694,8 +746,8 @@ namespace Modex::UICustom
 		ImGui::Text("%s", Translate(a_localeString));
 		ImGui::HelpMarker(a_localeString);
 
-		ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth);
-		ImGui::SetNextItemWidth(s_widgetWidth);
+		ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth());
+		ImGui::SetNextItemWidth(s_widgetWidth());
 		const auto languages = Locale::GetSingleton()->GetLanguages();
 		if (ImGui::BeginCombo(id.c_str(), a_config->c_str())) {
 			ImGui::PushID("##Settings::Language::Combo");
@@ -731,8 +783,8 @@ namespace Modex::UICustom
 		ImGui::AlignTextToFramePadding();
 		ImGui::Text("%s", Translate(a_localeString));
 		
-		ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth);
-		ImGui::SetNextItemWidth(s_widgetWidth);
+		ImGui::SameLine(ImGui::GetContentRegionAvail().x - s_widgetWidth());
+		ImGui::SetNextItemWidth(s_widgetWidth());
 
 		std::vector<ModexTheme> themes = ThemeConfig::GetAvailableThemes();
 		if (ImGui::BeginCombo("##ThemeSelection", a_config->c_str())) {

@@ -8,6 +8,7 @@
 #include "localization/Locale.h"
 #include "config/ThemeConfig.h"
 #include "ui/components/UINotification.h"
+#include "ui/style/LayoutMetrics.h"
 #include "external/framework/DescriptionFrameworkImpl.h"
 
 namespace Modex
@@ -37,7 +38,7 @@ namespace
 	{
 		const auto& draw_list = ImGui::GetWindowDrawList();
 		const float max_width = ImGui::GetContentRegionAvail().x;
-		const ImVec2 bar_size = ImVec2(max_width / 3.0f, ImGui::GetFrameHeight());
+		const ImVec2 bar_size = ImVec2(max_width / ThemeConfig::GetWidgetStyle().itemPreview.inlineBarDivisor, ImGui::GetFrameHeight());
 		const ImVec2 start = ImGui::GetCursorScreenPos();
 
 		char buffer[256];
@@ -72,7 +73,7 @@ namespace
 		const float max_width = ImGui::GetContentRegionAvail().x;
 		const std::string icon = a_item->GetPropertyTypeWithIcon(a_property);
 		const std::string tooltip = FilterProperty::GetPropertyTooltipKey(a_property);
-		const ImVec2 bar_size = ImVec2(max_width / 4.0f, ImGui::GetFontSize());
+		const ImVec2 bar_size = ImVec2(max_width / ThemeConfig::GetWidgetStyle().itemPreview.inlineBarMiniDivisor, ImGui::GetFontSize());
 
 		float value = 0;
 		char buffer[256];
@@ -471,7 +472,7 @@ namespace
 	{
 		const auto displayObject = std::make_unique<BaseObject>(a_form, Ownership::Outfit);
 		const auto& draw_list = ImGui::GetWindowDrawList();
-		const float pillar_width = 5.0f;
+		const float pillar_width = Style::Metrics().pillarWidth;
 
 		std::string icon = displayObject->GetItemIcon();
 		std::string formid = std::format("{:08X}", a_form->GetFormID());
@@ -537,7 +538,7 @@ namespace
 
 		auto renderTypePillar = [&a_form]() {
 			const auto& draw_list = ImGui::GetWindowDrawList();
-			const float pillar_width = 5.0f;
+			const float pillar_width = Style::Metrics().pillarWidth;
 			const ImRect bb(ImGui::GetItemRectMin() - ImVec2(pillar_width, 0.0f), ImGui::GetItemRectMax()); 
 			draw_list->AddRectFilled(
 				ImVec2(bb.Min.x, bb.Min.y),
@@ -546,7 +547,7 @@ namespace
 			);
 		};
 
-		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 5.0f);
+		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + Style::Metrics().pillarWidth);
 		if (ImGui::TreeNode(label.c_str())) {
 			renderTypePillar();
 			showTreeNodePreview();
@@ -649,7 +650,7 @@ namespace
 
 		const bool  use_plugin = plugin.length() > edid.length();
 		const float desc = ImGui::CalcTextSize(FilterProperty::GetString(PropertyType::kEditorID).c_str()).x;
-		const float padding = ImGui::GetFontSize() * 5.0f;
+		const float padding = ImGui::GetFontSize() * ThemeConfig::GetWidgetStyle().itemPreview.desiredWidthPadFont;
 		const float text_width = use_plugin ? ImGui::CalcTextSize(plugin.c_str()).x : ImGui::CalcTextSize(edid.c_str()).x;
 
 		return max(padding + desc + text_width, a_min);
@@ -706,26 +707,30 @@ namespace
 		if (a_item == nullptr) return;
 		if (a_item->IsDummy()) return;
 
+		const auto& preview = ThemeConfig::GetWidgetStyle().itemPreview;
 		const auto cursor = ImGui::GetCursorScreenPos();
 		const float alpha = ImGui::GetStyle().Alpha;
 		const float font_size = ImGui::GetFontSize();
-		const float tooltip_width = getDesiredWidth(a_item, 200.0f);
+		const float tooltip_width = getDesiredWidth(a_item, preview.minTooltipWidth);
 		const float max_width = a_tooltip ? tooltip_width : ImGui::GetContentRegionAvail().x;
 		const auto& draw_list = ImGui::GetWindowDrawList();
+		const float name_bar_h = font_size * preview.nameBarHeightScale;
 
-		{ // Name Bar
-			auto name = TRUNCATE(a_item->GetName(), max_width * 0.80f);
-			const auto color = ImGui::GetStyleColorVec4(ImGuiCol_Border);
+		{ // Name Bar — text stays vertically centered regardless of bar height.
+			auto name = TRUNCATE(a_item->GetName(), max_width * Style::Ratio::TruncateNameWide());
 			const auto text_color = a_item->IsEnchanted() ? ThemeConfig::GetColor("TEXT_ENCHANTED") : ThemeConfig::GetColor("TEXT");
 
-			draw_list->AddRectFilled(cursor, ImVec2(cursor.x + max_width, cursor.y + font_size * 2.5f), ThemeConfig::GetColorU32("BG", alpha));
-			draw_list->AddRect(cursor, ImVec2(cursor.x + max_width, cursor.y + font_size * 2.5f), ThemeConfig::GetColorU32("BORDER", alpha));
+			draw_list->AddRectFilled(cursor, ImVec2(cursor.x + max_width, cursor.y + name_bar_h), ThemeConfig::GetColorU32("BG", alpha));
+			draw_list->AddRect    (cursor, ImVec2(cursor.x + max_width, cursor.y + name_bar_h), ThemeConfig::GetColorU32("BORDER", alpha));
 
-			ImGui::NewLine();
+			// Capture the local cursor at the bar's top so we can both center
+			// the text inside the bar and reserve the full bar height for the
+			// content that follows.
+			const float start_local_y = ImGui::GetCursorPosY();
 			ImGui::SetCursorPosX(UICustom::GetCenterTextPosX(name.data()));
-			ImGui::SetCursorPosY(ImGui::GetCursorPosY() - font_size / 2.0f);
+			ImGui::SetCursorPosY(start_local_y + (name_bar_h - font_size) * 0.5f);
 			ImGui::TextColored(text_color, "%s", name.data());
-			ImGui::NewLine();
+			ImGui::SetCursorPosY(start_local_y + name_bar_h);
 		}
 
 		{ // Window Adjustment Hack
@@ -777,7 +782,7 @@ namespace
 		if (!a_tooltip) ImGui::EndChild();
 
 		// Draw FormType color gradient over Name container.
-		const float height = ImGui::GetFrameHeight() * 2.0f;
+		const float height = ImGui::GetFrameHeight() * preview.gradientHeightScale;
 
 		const ImVec2 start = a_tooltip ?
 			ImGui::GetWindowPos() :

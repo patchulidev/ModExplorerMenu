@@ -4,9 +4,11 @@
 #include "SKSE/API.h"
 #include "SKSE/Events.h"
 #include "core/Commands.h"
+#include "config/EquipmentConfig.h"
 #include "data/Data.h"
 #include "ui/core/UIManager.h"
 #include "ui/modules/formselector/FormSelectorOptions.h"
+#include "ui/modules/kitselector/KitSelectorModule.h"
 
 namespace Modex::PapyrusAPI
 {
@@ -373,6 +375,106 @@ namespace Modex::PapyrusAPI
 		return total;
 	}
 
+	/// Kit Selector UI
+
+	// Selection buffer for kit keys. Populated by the callback, consumed once by GetSelectedKits().
+	static std::vector<std::string> s_selectedKits;
+
+	// Static callback for the kit selector. Fires an SKSE ModEvent so
+	// Papyrus scripts can react to the selection via RegisterForModEvent.
+	// Runs on the render thread, so we defer to the game thread via AddTask.
+	static void KitSelectorModEventCallback(const char* const* a_kitKeys, uint32_t a_count)
+	{
+		std::vector<std::string> keys;
+		if (a_kitKeys && a_count > 0) {
+			for (uint32_t i = 0; i < a_count; i++) {
+				keys.emplace_back(a_kitKeys[i]);
+			}
+		}
+
+		SKSE::GetTaskInterface()->AddTask([keys = std::move(keys)]() {
+			s_selectedKits = keys;
+
+			auto* eventSource = SKSE::GetModCallbackEventSource();
+			if (!eventSource) {
+				Warn("Modex.OpenKitSelector: ModCallbackEventSource unavailable");
+				return;
+			}
+
+			SKSE::ModCallbackEvent event{
+				"Modex_OnKitSelected",
+				!keys.empty() ? RE::BSFixedString(keys[0]) : "",
+				static_cast<float>(keys.size()),
+				nullptr
+			};
+
+			eventSource->SendEvent(&event);
+		});
+	}
+
+	static void OpenKitSelector(RE::StaticFunctionTag*)
+	{
+		auto* ui = UIManager::GetSingleton();
+
+		// Consume pending options (shared with form selector builder) and reset.
+		FormSelectorOptions options = s_pendingOptions;
+		s_pendingOptions.Reset();
+
+		ui->OpenKitSelector(KitSelectorModEventCallback, options);
+	}
+
+	// Returns the kit keys from the last selection and clears the buffer.
+	static std::vector<RE::BSFixedString> GetSelectedKits(RE::StaticFunctionTag*)
+	{
+		std::vector<RE::BSFixedString> result;
+		result.reserve(s_selectedKits.size());
+
+		for (const auto& key : s_selectedKits) {
+			result.emplace_back(key);
+		}
+
+		s_selectedKits.clear();
+		return result;
+	}
+
+	static int32_t GetSelectedKitCount(RE::StaticFunctionTag*)
+	{
+		return static_cast<int32_t>(s_selectedKits.size());
+	}
+
+	static int32_t GetSelectedKitCost(RE::StaticFunctionTag*)
+	{
+		int32_t total = 0;
+		for (const auto& key : s_selectedKits) {
+			total += KitSelectorModule::GetKitGoldValue(key);
+		}
+		return total;
+	}
+
+	static void ApplySelectedKitsToPlayer(RE::StaticFunctionTag*)
+	{
+		auto* player = RE::PlayerCharacter::GetSingleton();
+		if (!player) return;
+
+		auto* playerRef = player->AsReference();
+		if (!playerRef) return;
+
+		for (const auto& key : s_selectedKits) {
+			auto* kit = EquipmentConfig::KitLookup(key);
+			if (!kit) continue;
+
+			for (const auto& item : kit->m_items) {
+				if (item->m_equipped) {
+					Commands::AddAndEquipItemToInventory(Ownership::Kit, playerRef, item->m_formID);
+				} else {
+					Commands::AddItemToRefInventory(Ownership::Kit, playerRef, item->m_formID, static_cast<uint32_t>(item->m_amount));
+				}
+			}
+		}
+
+		s_selectedKits.clear();
+	}
+
 	/// Papyrus Native Function Registration
 
 	bool Register(RE::BSScript::IVirtualMachine* a_vm)
@@ -418,7 +520,14 @@ namespace Modex::PapyrusAPI
 		a_vm->RegisterFunction("GetSelectedFormCount"sv, SCRIPT_NAME, GetSelectedFormCount);
 		a_vm->RegisterFunction("GetSelectedFormCost"sv, SCRIPT_NAME, GetSelectedFormCost);
 
-		Info("Registered {} Papyrus native functions for script '{}'.", 27, SCRIPT_NAME);
+		// Kit Selector
+		a_vm->RegisterFunction("OpenKitSelector"sv, SCRIPT_NAME, OpenKitSelector);
+		a_vm->RegisterFunction("GetSelectedKits"sv, SCRIPT_NAME, GetSelectedKits);
+		a_vm->RegisterFunction("GetSelectedKitCount"sv, SCRIPT_NAME, GetSelectedKitCount);
+		a_vm->RegisterFunction("GetSelectedKitCost"sv, SCRIPT_NAME, GetSelectedKitCost);
+		a_vm->RegisterFunction("ApplySelectedKitsToPlayer"sv, SCRIPT_NAME, ApplySelectedKitsToPlayer);
+
+		Info("Registered {} Papyrus native functions for script '{}'.", 32, SCRIPT_NAME);
 		return true;
 	}
 }

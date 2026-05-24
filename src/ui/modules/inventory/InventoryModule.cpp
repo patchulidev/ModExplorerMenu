@@ -1,6 +1,7 @@
 #include "InventoryModule.h"
 
 #include "ui/components/UIContainers.h"
+#include "ui/style/LayoutMetrics.h"
 
 namespace Modex
 {
@@ -12,7 +13,7 @@ namespace Modex
 	static inline void DrawInventoryLayout(std::vector<std::unique_ptr<UITable>>& a_tables)
 	{
 		const ImVec2 window_padding = ImGui::GetStyle().WindowPadding;
-		const float table_width = ImGui::GetContentRegionAvail().x * 0.5f;
+		const float table_width = ImGui::GetContentRegionAvail().x * Style::Ratio::TableEqual();
 		const float table_height = ImGui::GetContentRegionAvail().y - (window_padding.y * 2.0f);
 
 		auto& table = a_tables[0];
@@ -29,7 +30,7 @@ namespace Modex
 	static inline void DrawDoubleInventoryLayout(std::vector<std::unique_ptr<UITable>>& a_tables)
 	{
 		const ImVec2 window_padding = ImGui::GetStyle().WindowPadding;
-		const float table_width = ImGui::GetContentRegionAvail().x * 0.5f;
+		const float table_width = ImGui::GetContentRegionAvail().x * Style::Ratio::TableEqual();
 		const float table_height = ImGui::GetContentRegionAvail().y - (window_padding.y * 2.0f);
 
 		auto& invTableRHS = a_tables[1];

@@ -61,6 +61,10 @@ namespace Modex
 		void SetDefaultOutfit(uint32_t a_outfitFormID, uint32_t a_targetReference) override;
 		void SetSleepOutfit(uint32_t a_outfitFormID, uint32_t a_targetReference) override;
 
+		void OpenKitSelector(void (*a_callback)(const char* const* a_kitKeys, uint32_t a_count)) override;
+		void OpenKitSelector(const ModexAPI::FormSelectorOptions& a_options, void (*a_callback)(const char* const* a_kitKeys, uint32_t a_count)) override;
+		uint32_t GetCachedKits(ModexAPI::KitEntry* a_outBuffer, uint32_t a_maxCount) override;
+
 		// Called after Data::Run() completes to signal the API is ready.
 		static void SetDataReady(bool a_ready);
 

@@ -13,6 +13,7 @@
 #include "ui/modules/inventory/InventoryModule.h"
 #include "ui/modules/outfit/OutfitModule.h"
 #include "ui/modules/formselector/FormSelectorModule.h"
+#include "ui/modules/kitselector/KitSelectorModule.h"
 
 #include "config/UserData.h"
 #include "config/UserConfig.h"
@@ -33,6 +34,12 @@ namespace Modex
 			this->sidebar_initialized = false;
 
 			LoadModule(last_module, last_layout);
+		} else if (m_kitSelectorCallback) {
+			m_activeModule = CreateKitSelectorModule(m_kitSelectorOptions);
+			m_activeModuleIndex = 0;
+
+			auto* selector = static_cast<KitSelectorModule*>(m_activeModule.get());
+			selector->SetCallback(m_kitSelectorCallback);
 		} else {
 			m_activeModule = CreateFormSelectorModule(m_formSelectorOwnership, m_formSelectorOptions);
 			m_activeModuleIndex = 0;
@@ -49,6 +56,12 @@ namespace Modex
 		m_formSelectorOwnership = a_ownership;
 		m_formSelectorOptions = a_options;
 		m_formSelectorCallback = std::move(a_callback);
+	}
+
+	void Menu::SetKitSelectorParams(const FormSelectorOptions& a_options, KitSelectorCallback a_callback)
+	{
+		m_kitSelectorOptions = a_options;
+		m_kitSelectorCallback = std::move(a_callback);
 	}
 
 	void Menu::OnOpened()
@@ -333,6 +346,11 @@ namespace Modex
 	std::unique_ptr<UIModule> Menu::CreateFormSelectorModule(Ownership a_owner, const FormSelectorOptions& a_options)
 	{
 		return std::make_unique<FormSelectorModule>(a_owner, a_options);
+	}
+
+	std::unique_ptr<UIModule> Menu::CreateKitSelectorModule(const FormSelectorOptions& a_options)
+	{
+		return std::make_unique<KitSelectorModule>(a_options);
 	}
 
 	Menu::~Menu()

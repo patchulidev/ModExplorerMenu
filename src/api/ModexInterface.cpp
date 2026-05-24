@@ -5,9 +5,11 @@
 #include "data/Data.h"
 #include "core/Commands.h"
 #include "core/PlayerChestSpawn.h"
+#include "config/EquipmentConfig.h"
 #include "config/UserConfig.h"
 #include "ui/core/UIManager.h"
 #include "ui/modules/formselector/FormSelectorOptions.h"
+#include "ui/modules/kitselector/KitSelectorModule.h"
 
 // Revision number is the contract for a specific version of the API. Calling `GetApi(1)` will
 // always return the v001 interface. Breaking changes are introduced in later subsequent revisions.
@@ -341,6 +343,46 @@ namespace Modex
 		}
 
 		return false;
+	}
+
+	void ModexInterface::OpenKitSelector(void (*a_callback)(const char* const* a_kitKeys, uint32_t a_count))
+	{
+		if (!IsDataReady() || !a_callback) {
+			return;
+		}
+
+		UIManager::GetSingleton()->OpenKitSelector(a_callback);
+	}
+
+	void ModexInterface::OpenKitSelector(const ModexAPI::FormSelectorOptions& a_options, void (*a_callback)(const char* const* a_kitKeys, uint32_t a_count))
+	{
+		if (!IsDataReady() || !a_callback) {
+			return;
+		}
+
+		UIManager::GetSingleton()->OpenKitSelector(a_callback, ConvertOptions(a_options));
+	}
+
+	uint32_t ModexInterface::GetCachedKits(ModexAPI::KitEntry* a_outBuffer, uint32_t a_maxCount)
+	{
+		auto& cache = EquipmentConfig::GetEquipmentList();
+		uint32_t total = static_cast<uint32_t>(cache.size());
+
+		if (a_outBuffer && a_maxCount > 0) {
+			uint32_t i = 0;
+			for (const auto& [key, kit] : cache) {
+				if (i >= a_maxCount) break;
+
+				a_outBuffer[i].key = kit.m_key.c_str();
+				a_outBuffer[i].name = kit.m_key.c_str(); // Key includes relative path; consumer can extract stem
+				a_outBuffer[i].collection = kit.m_collection.c_str();
+				a_outBuffer[i].itemCount = static_cast<uint32_t>(kit.m_items.size());
+				a_outBuffer[i].goldValue = KitSelectorModule::GetKitGoldValue(key);
+				i++;
+			}
+		}
+
+		return total;
 	}
 
 	// Specify which struct a user is requesting as API revisions may differ.
