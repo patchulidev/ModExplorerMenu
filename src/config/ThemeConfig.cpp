@@ -237,6 +237,8 @@ namespace Modex
 				getF(*s, "inlineBarMiniDivisor", m_widgetStyle.itemPreview.inlineBarMiniDivisor);
 				getF(*s, "minTooltipWidth",      m_widgetStyle.itemPreview.minTooltipWidth);
 				getF(*s, "desiredWidthPadFont",  m_widgetStyle.itemPreview.desiredWidthPadFont);
+				getF(*s, "previewBoxScale",      m_widgetStyle.itemPreview.previewBoxScale);
+				getF(*s, "previewModelScale",    m_widgetStyle.itemPreview.previewModelScale);
 			}
 			if (auto* s = getSection("notification")) {
 				getF(*s, "tooltipHeightScale", m_widgetStyle.notification.tooltipHeightScale);
@@ -489,6 +491,8 @@ namespace Modex
 			{ "inlineBarMiniDivisor", w.itemPreview.inlineBarMiniDivisor },
 			{ "minTooltipWidth",      w.itemPreview.minTooltipWidth },
 			{ "desiredWidthPadFont",  w.itemPreview.desiredWidthPadFont },
+			{ "previewBoxScale",      w.itemPreview.previewBoxScale },
+			{ "previewModelScale",    w.itemPreview.previewModelScale },
 		};
 		widgets["notification"] = {
 			{ "tooltipHeightScale", w.notification.tooltipHeightScale },

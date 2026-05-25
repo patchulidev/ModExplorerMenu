@@ -428,6 +428,8 @@ namespace Modex
 				DrawFloat(Translate("THEME_EDITOR_LBL_INLINE_BAR_MINI_DIVISOR"), w.itemPreview.inlineBarMiniDivisor, 1.5f, 8.0f);
 				DrawFloat(Translate("THEME_EDITOR_LBL_MIN_TOOLTIP_WIDTH_PX"),    w.itemPreview.minTooltipWidth,      100.0f, 600.0f, "%.0f");
 				DrawFloat(Translate("THEME_EDITOR_LBL_DESIRED_WIDTH_PAD_FONT"),  w.itemPreview.desiredWidthPadFont,  1.0f, 12.0f);
+				DrawFloat(Translate("THEME_EDITOR_LBL_PREVIEW_BOX_SCALE"),       w.itemPreview.previewBoxScale,      0.10f, 1.0f, "%.2f");
+				DrawFloat(Translate("THEME_EDITOR_LBL_PREVIEW_MODEL_SCALE"),     w.itemPreview.previewModelScale,    0.25f, 1.0f, "%.2f");
 				EndSection(true);
 			} else EndSection(false);
 
