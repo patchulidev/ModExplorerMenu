@@ -152,22 +152,6 @@ namespace Modex
 
 	void ThemeConfig::ApplyThemeToImGui()
 	{
-		// Snapshot ImGui's defaults the first time we apply, so future theme
-		// switches can restore any style fields that the next theme omits.
-		// Without this, e.g. switching from a sharp theme (Rounding=0) back
-		// to default would leave rounding stuck at 0.
-		static ImGuiStyle s_baseline = ImGui::GetStyle();
-		static bool s_baselineCaptured = false;
-		auto& style = ImGui::GetStyle();
-		if (!s_baselineCaptured) {
-			s_baseline = style;
-			s_baselineCaptured = true;
-		} else {
-			style = s_baseline;
-		}
-
-		RefreshImGuiColors();
-
 		// _widgets block: tokens for manually-drawn widgets, grouped by
 		// widget family. Each subsection is an object whose keys map to
 		// fields on the matching WidgetStyle::* struct. Defaults reset
@@ -298,6 +282,22 @@ namespace Modex
 			getF("ratioTruncateNameWide",  m_layoutOverrides.ratioTruncateNameWide);
 		}
 
+		if (ImGui::GetCurrentContext() == nullptr) {
+			return;
+		}
+
+		static ImGuiStyle s_baseline = ImGui::GetStyle();
+		static bool s_baselineCaptured = false;
+		auto& style = ImGui::GetStyle();
+		if (!s_baselineCaptured) {
+			s_baseline = style;
+			s_baselineCaptured = true;
+		} else {
+			style = s_baseline;
+		}
+
+		RefreshImGuiColors();
+
 		// Optional _style block: per-theme rounding/border/padding overrides.
 		// Anything omitted falls back to the captured ImGui defaults above.
 		auto styleIt = m_data.find("_style");
@@ -345,6 +345,9 @@ namespace Modex
 
 	void ThemeConfig::RefreshImGuiColors()
 	{
+		if (ImGui::GetCurrentContext() == nullptr) {
+			return;
+		}
 		auto& style = ImGui::GetStyle();
 
 		style.Colors[ImGuiCol_FrameBg]              = GetColor("BG");

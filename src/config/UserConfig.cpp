@@ -65,7 +65,7 @@ namespace Modex
 		user.globalFont 	= ConfigManager::Get<std::string>("Global Font", _default.globalFont);
 
 		Locale::GetSingleton()->SetFilePath(LOCALE_JSON_DIR / (user.language + ".json"));
-		ThemeConfig::GetSingleton()->SetFilePath(THEMES_JSON_PATH / (user.theme + ".json"));
+		ThemeConfig::GetSingleton()->SetFilePath(THEMES_JSON_PATH.parent_path() / (user.theme + ".json"));
 		spdlog::set_level(static_cast<spdlog::level::level_enum>(user.logLevel));
 		spdlog::flush_on(static_cast<spdlog::level::level_enum>(user.logLevel));
 	}

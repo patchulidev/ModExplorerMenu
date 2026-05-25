@@ -3,6 +3,7 @@
 #include "ui/Menu.h"
 #include "config/UserConfig.h"
 #include "config/UserData.h"
+#include "config/ThemeConfig.h"
 #include "ui/components/UIPopup.h"
 
 #include "ui/modules/actor/ActorModule.h"
@@ -306,6 +307,8 @@ namespace Modex
 		style.SelectableTextAlign = ImVec2(0.5f, 0.5f);
 
 		ImGui::StyleColorsDark(); // ?
+
+		ThemeConfig::GetSingleton()->ApplyThemeToImGui();
 
 		return true;
 	}
