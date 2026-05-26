@@ -104,6 +104,18 @@ namespace Modex
 				UserConfig::GetSingleton()->SaveSettings();
 			}
 
+			if (!config.pauseGame) ImGui::BeginDisabled();
+			if (UICustom::Settings_ToggleButton("SETTINGS_SHOW_3D_PREVIEW", config.show3DPreview))
+			{
+				UserConfig::GetSingleton()->SaveSettings();
+			}
+			if (!config.pauseGame) {
+				ImGui::EndDisabled();
+				ImGui::Indent();
+				ImGui::TextDisabled("%s", Translate("SETTINGS_SHOW_3D_PREVIEW_REQUIRES_PAUSE"));
+				ImGui::Unindent();
+			}
+
 			ImGui::NewLine();
 			UICustom::Settings_Header(Translate("SETTINGS_HEADER_GENERAL"));
 

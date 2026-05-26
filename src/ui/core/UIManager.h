@@ -92,9 +92,6 @@ namespace Modex
 		void ShowInfoBox(const std::string& a_title, const std::string& a_message);
 		void ShowKitTagsEditor(const std::string& a_kitKey, std::function<void()> onChanged = nullptr);
 
-		// Opens or closes the floating theme-editor popout. Non-modal; the
-		// main menu remains fully interactive behind it so the user can
-		// switch modules to preview theme changes live.
 		void ToggleThemeEditor();
 		bool IsThemeEditorOpen() const;
 		void NavigateToModule(uint8_t a_moduleIndex);
@@ -108,6 +105,8 @@ namespace Modex
 		UIWindow* GetPopupWindowRef() const;
 
 		int GetWindowCount() const { return static_cast<int>(m_windowStack.size()); }
+
+		[[nodiscard]] bool IsMenuFullyOpen() const { return m_menu && m_menu->IsFullyOpen(); }
 		static bool CloseAllGameMenus(bool a_model = false);
 
 	private:
@@ -157,7 +156,7 @@ namespace Modex
 			RE::MapMenu::MENU_NAME,
 			RE::StatsMenu::MENU_NAME,
 			RE::LevelUpMenu::MENU_NAME,
-			"LootMenu"sv, // Quickloot
+			// "LootMenu"sv, // Quickloot
 			// "CustomMenu"sv, // Unexpected Behavior ?
 		};
 		

@@ -7,6 +7,8 @@
 #include "imgui_internal.h"
 #include "localization/Locale.h"
 #include "config/ThemeConfig.h"
+#include "config/UserConfig.h"
+#include "ui/components/Item3DPreview.h"
 #include "ui/components/UINotification.h"
 #include "ui/style/LayoutMetrics.h"
 #include "external/framework/DescriptionFrameworkImpl.h"
@@ -71,8 +73,8 @@ namespace
 	inline void inlineBar(const std::unique_ptr<BaseObject>& a_item, PropertyType a_property, float max_value)
 	{
 		const float max_width = ImGui::GetContentRegionAvail().x;
-		const std::string icon = a_item->GetPropertyTypeWithIcon(a_property);
-		const std::string tooltip = FilterProperty::GetPropertyTooltipKey(a_property);
+		const std::string  icon    = FilterProperty::GetIcon(a_property);
+		const std::string  tooltip = FilterProperty::GetPropertyTooltipKey(a_property);
 		const ImVec2 bar_size = ImVec2(max_width / ThemeConfig::GetWidgetStyle().itemPreview.inlineBarMiniDivisor, ImGui::GetFontSize());
 
 		float value = 0;
@@ -88,7 +90,7 @@ namespace
 			ImFormatString(buffer, IM_ARRAYSIZE(buffer), "%.2f", value);
 		}
 
-		// Icon + Property Type
+		// Icon-only descriptor
 		ImGui::Text("%s", icon.c_str());
 
 		if (ImGui::IsItemHovered()) {
@@ -107,15 +109,15 @@ namespace
 	inline void inlineCheckbox(const std::unique_ptr<BaseObject>& a_item, PropertyType a_property)
 	{
 		const float max_width = ImGui::GetContentRegionAvail().x;
-		const std::string& icon = a_item->GetPropertyTypeWithIcon(a_property);
-		const std::string& tooltip = FilterProperty::GetPropertyTooltipKey(a_property);
+		const std::string  icon    = FilterProperty::GetIcon(a_property);
+		const std::string  tooltip = FilterProperty::GetPropertyTooltipKey(a_property);
 		bool flag = a_item->GetPropertyByValue(a_property).find("true") == std::string::npos ? false : true;
 		const float box_width = ImGui::GetFontSize();
 		const float width = (std::max)(max_width - box_width, ImGui::GetContentRegionAvail().x - box_width);
 
+		// Icon-only descriptor
 		ImGui::Text("%s", icon.c_str());
 
-		// Icon + Property Type
 		if (ImGui::IsItemHovered()) {
 			UINotification::ShowTooltip(tooltip.c_str());
 		}
@@ -127,17 +129,18 @@ namespace
 		ImGui::PopStyleVar();
 	}
 
-	inline void inlineText(const std::unique_ptr<BaseObject>& a_item, PropertyType a_property)
+	inline void inlineText(const std::unique_ptr<BaseObject>& a_item, PropertyType a_property, bool a_useLabel = false)
 	{
 		const float max_width = ImGui::GetContentRegionAvail().x;
-		const std::string& icon = a_item->GetPropertyTypeWithIcon(a_property);
-		const std::string& tooltip = FilterProperty::GetPropertyTooltipKey(a_property);
-		const std::string& text = TRUNCATE(a_item->GetPropertyByValue(a_property).c_str(), max_width * 0.75f);
+		const std::string  descriptor = a_useLabel
+			? FilterProperty::GetString(a_property)
+			: FilterProperty::GetIcon(a_property);
+		const std::string  tooltip = FilterProperty::GetPropertyTooltipKey(a_property);
+		const std::string& text    = TRUNCATE(a_item->GetPropertyByValue(a_property).c_str(), max_width * 0.75f);
 		const float text_width = ImGui::CalcTextSize(text.c_str()).x;
 		const float width = (std::max)(max_width - text_width, ImGui::GetContentRegionAvail().x - text_width);
 
-		// Icon + Property Type
-		ImGui::Text("%s", icon.c_str());
+		ImGui::Text("%s", descriptor.c_str());
 
 		if (ImGui::IsItemHovered()) {
 			UINotification::ShowTooltip(tooltip.c_str());
@@ -146,6 +149,81 @@ namespace
 		// Right-Align Property's Value
 		ImGui::SameLine(width - 1.0f);
 		ImGui::Text("%s", text.c_str());
+	}
+
+	// Two inlineText cells on a single row, each occupying half the region
+	inline void inlineTextPair(const std::unique_ptr<BaseObject>& a_item, PropertyType a_propA, PropertyType a_propB)
+	{
+		const float  total_width = ImGui::GetContentRegionAvail().x;
+		const float  gap         = ImGui::GetStyle().ItemSpacing.x;
+		const float  col_width   = (total_width - gap) * 0.5f;
+		const ImVec2 start_pos   = ImGui::GetCursorPos();
+		const float  col1_x      = start_pos.x;
+		const float  col2_x      = col1_x + col_width + gap;
+
+		auto drawCell = [&](PropertyType prop, float col_x) {
+			const std::string  icon    = FilterProperty::GetIcon(prop);
+			const std::string  tooltip = FilterProperty::GetPropertyTooltipKey(prop);
+			const std::string& text    = TRUNCATE(a_item->GetPropertyByValue(prop).c_str(), col_width * 0.75f);
+			const float        text_w  = ImGui::CalcTextSize(text.c_str()).x;
+
+			ImGui::SetCursorPosX(col_x);
+			// Icon-only descriptor
+			ImGui::Text("%s", icon.c_str());
+
+			if (ImGui::IsItemHovered()) {
+				UINotification::ShowTooltip(tooltip.c_str());
+			}
+
+			// Right-align value within this column.
+			ImGui::SameLine(col_x + col_width - text_w - 1.0f);
+			ImGui::Text("%s", text.c_str());
+		};
+
+		drawCell(a_propA, col1_x);
+		ImGui::SetCursorPos(ImVec2(col2_x, start_pos.y));
+		drawCell(a_propB, col2_x);
+	}
+
+	// Render a list of strings as two columns, each cell = icon + value
+	inline void inlineListPair(const std::vector<std::string>& a_items, const char* a_icon, const char* a_tooltip)
+	{
+		const float  total_width = ImGui::GetContentRegionAvail().x;
+		const float  gap         = ImGui::GetStyle().ItemSpacing.x;
+		const float  col_width   = (total_width - gap) * 0.5f;
+		const float  col1_x      = ImGui::GetCursorPosX();
+		const float  col2_x      = col1_x + col_width + gap;
+
+		auto drawCell = [&](const std::string& value, float col_x) {
+			const std::string& text   = TRUNCATE(value.c_str(), col_width * 0.75f);
+			const float        text_w = ImGui::CalcTextSize(text.c_str()).x;
+
+			ImGui::SetCursorPosX(col_x);
+			ImGui::Text("%s", a_icon);
+
+			if (ImGui::IsItemHovered()) {
+				UINotification::ShowTooltip(a_tooltip);
+			}
+
+			ImGui::SameLine(col_x + col_width - text_w - 1.0f);
+			ImGui::Text("%s", text.c_str());
+		};
+
+		std::vector<const std::string*> entries;
+		entries.reserve(a_items.size());
+		for (const auto& v : a_items) {
+			if (!v.empty()) entries.push_back(&v);
+		}
+
+		for (size_t i = 0; i < entries.size(); i += 2) {
+			const ImVec2 row_start = ImGui::GetCursorPos();
+			drawCell(*entries[i], col1_x);
+
+			if (i + 1 < entries.size()) {
+				ImGui::SetCursorPos(ImVec2(col2_x, row_start.y));
+				drawCell(*entries[i + 1], col2_x);
+			}
+		}
 	}
 
 	inline void inlineTextEx(const char* a_left, const char* a_right, const char* a_tooltip)
@@ -168,32 +246,15 @@ namespace
 
 	inline void drawBasePreview(const std::unique_ptr<BaseObject>& a_object)
 	{
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		ImGui::Spacing();
-		inlineText(a_object, PropertyType::kFormID);
-		inlineText(a_object, PropertyType::kPlugin);
-		inlineText(a_object, PropertyType::kEditorID);
+		ImGui::SeparatorText(Translate("INFO"));
+		inlineText(a_object, PropertyType::kFormID,   true);
+		inlineText(a_object, PropertyType::kPlugin,   true);
+		inlineText(a_object, PropertyType::kEditorID, true);
 	}
 
 	inline void drawLoadOrder(const std::unique_ptr<BaseObject>& a_object)
 	{
-		ImGui::Spacing();
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-
-		// Load Order Header with Tooltip
-		ImGui::SetCursorPosX(UICustom::GetCenterTextPosX(Translate("ORDER")));
-		ImGui::AlignTextToFramePadding();
-		ImGui::Text("%s", Translate("ORDER"));
-		ImGui::SameLine();
-		ImGui::AlignTextToFramePadding();
-		ImGui::Text(ICON_LC_MESSAGE_CIRCLE_QUESTION);
-
-		if (ImGui::IsItemHovered(ImGuiHoveredFlags_NoSharedDelay | ImGuiHoveredFlags_DelayShort)) {
-			UICustom::FancyTooltip(Translate("ORDER_TOOLTIP"));
-		}
-
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		ImGui::Spacing();
+		ImGui::SeparatorText(Translate("ORDER"));
 
 		// Populate list of plugins sorted by compileIdx
 		if (const auto item_file = a_object->GetFile(UserConfig::GetCompileIndex()); item_file.has_value()) {
@@ -206,7 +267,7 @@ namespace
 				for (uint32_t i = 0; i < source_files->size(); i++) {
 					if (const auto file = (*source_files)[i]) {
 						const std::string fileName = file->GetFilename().data();
-						
+
 						ImGui::Text("%d: %s", i, fileName.c_str());
 					}
 				}
@@ -214,39 +275,64 @@ namespace
 		}
 	}
 
-	inline void drawDescription(const std::unique_ptr<BaseObject>& a_object)
+	inline void drawDescriptionOverlay(const std::unique_ptr<BaseObject>& a_object, ImVec2 a_anchor, ImVec2 a_anchorSize)
 	{
-		if (const std::string desc = DescriptionFramework_Impl::GetItemDescription(a_object->GetTESForm()); !desc.empty()) {
-			if (a_object->GetFormType() != RE::FormType::Book) {
-				ImGui::Spacing();
-				ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-				ImGui::SetCursorPosX(UICustom::GetCenterTextPosX(Translate("DESCRIPTION")));
-				ImGui::AlignTextToFramePadding();
-				ImGui::Text("%s", Translate("DESCRIPTION"));
-				ImGui::SameLine();
-				ImGui::AlignTextToFramePadding();
-				ImGui::Text(ICON_LC_MESSAGE_CIRCLE_QUESTION);
+		const std::string desc = DescriptionFramework_Impl::GetItemDescription(a_object->GetTESForm());
+		if (desc.empty() || a_object->GetFormType() == RE::FormType::Book) return;
 
-				if (ImGui::IsItemHovered(ImGuiHoveredFlags_NoSharedDelay | ImGuiHoveredFlags_DelayShort)) {
-					UICustom::FancyTooltip(Translate("DESCRIPTION_TOOLTIP"));
-				}
+		auto*       dl        = ImGui::GetWindowDrawList();
+		auto*       font      = ImGui::GetFont();
+		const float font_size = ImGui::GetFontSize();
+		const float line_h    = ImGui::GetTextLineHeight();
+		const ImVec2 pad      = ImGui::GetStyle().FramePadding;
 
-				ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-				ImGui::Spacing();
+		const float card_w = a_anchorSize.x * 0.85f;
+		const float wrap_w = card_w - pad.x * 2.0f;
 
-				ImGui::TextWrapped("%s", desc.c_str());  // Archmage Robe Crash
+		// Word-wrap the description into [line_start, line_end) pairs,
+		// honouring explicit \n. We render each line individually so we
+		// can centre them, which ImGui::TextWrapped can't do natively.
+		const char* text_end   = desc.c_str() + desc.size();
+		const char* line_start = desc.c_str();
+		std::vector<std::pair<const char*, const char*>> lines;
+		while (line_start < text_end) {
+			const char* line_end = font->CalcWordWrapPosition(font_size, line_start, text_end, wrap_w);
+			if (line_end == line_start) line_end = line_start + 1;
+			for (const char* p = line_start; p < line_end; ++p) {
+				if (*p == '\n') { line_end = p; break; }
 			}
+			lines.emplace_back(line_start, line_end);
+			line_start = line_end;
+			while (line_start < text_end && (*line_start == ' ' || *line_start == '\n')) ++line_start;
+		}
+
+		const float text_h = line_h * static_cast<float>(lines.size());
+		const float card_h = text_h + pad.y * 2.0f;
+
+		// Anchor near the bottom of the supplied rect with a small margin.
+		const float card_x = a_anchor.x + (a_anchorSize.x - card_w) * 0.5f;
+		const float card_y = a_anchor.y + a_anchorSize.y - card_h - pad.y;
+
+		const float alpha   = ImGui::GetStyle().Alpha;
+		const ImU32 bg      = ThemeConfig::GetColorU32("BG",     alpha);
+		const ImU32 border  = ThemeConfig::GetColorU32("BORDER", alpha);
+		const ImU32 textCol = ImGui::GetColorU32(ImGuiCol_Text,  alpha);
+
+		dl->AddRectFilled(ImVec2(card_x, card_y), ImVec2(card_x + card_w, card_y + card_h), bg);
+		dl->AddRect      (ImVec2(card_x, card_y), ImVec2(card_x + card_w, card_y + card_h), border);
+
+		float ty = card_y + pad.y;
+		for (const auto& [s, e] : lines) {
+			const ImVec2 line_sz = ImGui::CalcTextSize(s, e);
+			const float  tx      = card_x + (card_w - line_sz.x) * 0.5f;
+			dl->AddText(ImVec2(tx, ty), textCol, s, e);
+			ty += line_h;
 		}
 	}
 
 	inline void drawDebugInfo(const std::unique_ptr<BaseObject>& a_object)
 	{
 		if (!UserConfig::Get().developerMode) return;
-
-		ImGui::Spacing();
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		ImGui::Spacing();
-
 		inlineTextEx("TableID", std::to_string(a_object->m_tableID).c_str(), "");
 	}
 
@@ -254,28 +340,15 @@ namespace
 	{
 		if (a_tooltip) return;
 
-		constexpr auto header_flags = ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_DefaultOpen;
-
-		// Item/Object Keyword Dropdown
+		// Item/Object Keywords — two-column layout to save vertical space.
 		if (const auto keywords = a_object->GetKeywordList(); !keywords.empty()) {
-			ImGui::Spacing();
-			if (ImGui::CollapsingHeader(Translate("KEYWORDS"), header_flags)) {
-				const auto tooltip = FilterProperty::GetPropertyTooltipKey(PropertyType::kKeyword);
-				const auto icon = FilterProperty::GetIcon(PropertyType::kKeyword);
+			const auto tooltip = FilterProperty::GetPropertyTooltipKey(PropertyType::kKeyword);
+			const auto icon    = FilterProperty::GetIcon(PropertyType::kKeyword);
 
-				ImGui::PushID("ItemPreview::Keywords");
-				for (const auto& keyword : keywords) {
-					if (keyword.empty())
-						continue;
-
-					inlineTextEx(icon.c_str(), keyword.c_str(), tooltip.c_str());
-				}
-				ImGui::PopID();
-			} else {
-				if (ImGui::IsItemHovered()) {
-					UINotification::ShowTooltip(Translate(FilterProperty::GetPropertyTooltipKey(PropertyType::kKeywordList).c_str()));
-				}
-			}
+			ImGui::SeparatorText(Translate("KEYWORDS"));
+			ImGui::PushID("ItemPreview::Keywords");
+			inlineListPair(keywords, icon.c_str(), tooltip.c_str());
+			ImGui::PopID();
 		}
 
 		// Dummy Object's don't contain valid form pointers, stop here.
@@ -283,7 +356,6 @@ namespace
 
 		drawDebugInfo(a_object);
 		drawLoadOrder(a_object);
-		drawDescription(a_object);
 	}
 
 	inline void drawObjectPreview(const std::unique_ptr<BaseObject>& a_object)
@@ -298,172 +370,98 @@ namespace
 		inlineText(a_npc, PropertyType::kMagicka);
 		inlineText(a_npc, PropertyType::kStamina);
 
-		ImGui::Spacing();
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		ImGui::Spacing();
-
 		inlineText(a_npc, PropertyType::kRace);
 		inlineText(a_npc, PropertyType::kClass);
 		inlineText(a_npc, PropertyType::kGender);
 		inlineText(a_npc, PropertyType::kLevel);
 
-		ImGui::Spacing();
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		ImGui::Spacing();
-
 		inlineText(a_npc, PropertyType::kDefaultOutfit);
 		inlineText(a_npc, PropertyType::kSleepOutfit);
 
-		ImGui::Spacing();
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		ImGui::Spacing();
-
 		if (!a_tooltip) {
-			constexpr auto header_flags = ImGuiTreeNodeFlags_SpanAvailWidth;
-
 			if (const auto skills = a_npc->GetSkills(); skills.has_value()) {
-				ImGui::Spacing();
-				if (ImGui::CollapsingHeader(Translate("SKILLS"), header_flags)) {
-					ImGui::PushID("ItemPreview::Skills");
-					for (size_t i = 0; i < RE::TESNPC::Skills::Skills::kTotal; i++) {
-						uint32_t offset = static_cast<uint8_t>(RE::ActorValue::kOneHanded);
+				ImGui::PushID("ItemPreview::Skills");
+				for (size_t i = 0; i < RE::TESNPC::Skills::Skills::kTotal; i++) {
+					uint32_t offset = static_cast<uint8_t>(RE::ActorValue::kOneHanded);
 
-						uint8_t skillValue = skills.value().values[i];
-						const std::string_view skillName = magic_enum::enum_name(static_cast<RE::ActorValue>(offset + i));
+					uint8_t skillValue = skills.value().values[i];
+					const std::string_view skillName = magic_enum::enum_name(static_cast<RE::ActorValue>(offset + i));
 
-						inlineBarEx(skillName.data(), skillValue, 100.0f);
-
-					}
-					ImGui::PopID();
-				} else {
-					if (ImGui::IsItemHovered()) {
-						UINotification::ShowTooltip(Translate("ACTOR_SKILLS"));
-					}
+					inlineBarEx(skillName.data(), skillValue, 100.0f);
 				}
+				ImGui::PopID();
 			}
-
 
 			if (const auto spells = a_npc->GetSpellList(); !spells.empty()) {
-				ImGui::Spacing();
-				if (ImGui::CollapsingHeader(Translate("SPELLS"), header_flags)) {
-					const auto tooltip = FilterProperty::GetPropertyTooltipKey(PropertyType::kSpell);
-					const auto icon = FilterProperty::GetIcon(PropertyType::kSpell);
+				const auto tooltip = FilterProperty::GetPropertyTooltipKey(PropertyType::kSpell);
+				const auto icon    = FilterProperty::GetIcon(PropertyType::kSpell);
 
-					ImGui::PushID("ItemPreview::Spells");
-					for (const auto& spell : spells) {
-						if (spell.empty())
-							continue;
+				ImGui::PushID("ItemPreview::Spells");
+				for (const auto& spell : spells) {
+					if (spell.empty())
+						continue;
 
-						inlineTextEx(icon.c_str(), spell.c_str(), tooltip.c_str());
-					}
-					ImGui::PopID();
-				} else {
-					if (ImGui::IsItemHovered()) {
-						UINotification::ShowTooltip(Translate(FilterProperty::GetPropertyTooltipKey(PropertyType::kSpellList).c_str()));
-					}
+					inlineTextEx(icon.c_str(), spell.c_str(), tooltip.c_str());
 				}
+				ImGui::PopID();
 			}
 
-
 			if (const auto factions = a_npc->GetFactions(); factions.has_value()) {
-				ImGui::Spacing();
-				if (ImGui::CollapsingHeader(Translate("FACTION"), header_flags)) {
-					const auto tooltip = FilterProperty::GetPropertyTooltipKey(PropertyType::kFaction);
-					const auto icon = FilterProperty::GetIcon(PropertyType::kFaction);
+				const auto tooltip = FilterProperty::GetPropertyTooltipKey(PropertyType::kFaction);
+				const auto icon    = FilterProperty::GetIcon(PropertyType::kFaction);
 
-					ImGui::PushID("ItemPreview::Factions");
-					for (const auto& faction : factions.value()) {
-						std::string factionName = faction.faction->GetName();
+				ImGui::PushID("ItemPreview::Factions");
+				for (const auto& faction : factions.value()) {
+					std::string factionName = faction.faction->GetName();
 
-						if (factionName.empty()) {
-							factionName = faction.faction->GetFullName();
-						}
-
-						if (factionName.empty()) {
-							factionName = "";
-						}
-
-						inlineTextEx(icon.c_str(), factionName.c_str(), tooltip.c_str());
+					if (factionName.empty()) {
+						factionName = faction.faction->GetFullName();
 					}
-					ImGui::PopID();
-				} else {
-					if (ImGui::IsItemHovered()) {
-						UINotification::ShowTooltip(Translate(FilterProperty::GetPropertyTooltipKey(PropertyType::kFactionList).c_str()));
+
+					if (factionName.empty()) {
+						factionName = "";
 					}
+
+					inlineTextEx(icon.c_str(), factionName.c_str(), tooltip.c_str());
 				}
+				ImGui::PopID();
 			}
 		}
 	}
 
 	inline void drawWeaponPreview(const std::unique_ptr<BaseObject>& a_weapon)
 	{
-		inlineText(a_weapon, PropertyType::kWeaponDamage);
+		// Staves are governed by the spell socketed in them — speed, DPS,
+		// crit, range, and stagger have no meaning, so we skip those rows.
+		const bool isStaff = a_weapon->HasKeyword("WeapTypeStaff");
 
-		// Exclude redundant properties for ineligible types.
-		if (!a_weapon->HasKeyword("WeapTypeStaff")) {
-			inlineText(a_weapon, PropertyType::kWeaponSpeed);
-			inlineText(a_weapon, PropertyType::kWeaponDamagePerSecond);
-			inlineText(a_weapon, PropertyType::kWeaponCriticalDamage);
+		if (isStaff) {
+			inlineText(a_weapon, PropertyType::kWeaponDamage);
+		} else {
+			inlineTextPair(a_weapon, PropertyType::kWeaponDamage, PropertyType::kWeaponDamagePerSecond);
+			inlineTextPair(a_weapon, PropertyType::kWeaponSpeed,  PropertyType::kWeaponCriticalDamage);
+			inlineTextPair(a_weapon, PropertyType::kWeaponRange,  PropertyType::kWeaponStagger);
 		}
 
-		ImGui::Spacing();
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		ImGui::Spacing();
-
-		inlineText(a_weapon, PropertyType::kWeaponType);
-		inlineText(a_weapon, PropertyType::kWeaponSkill);
-
-		// Exclude more redundancy for ineligible types.
-		if (!a_weapon->HasKeyword("WeapTypeStaff")) {
-			ImGui::Spacing();
-			ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-			ImGui::Spacing();
-
-			inlineBar(a_weapon, PropertyType::kWeaponRange, 1.5f);
-			inlineBar(a_weapon, PropertyType::kWeaponStagger, 2.0f);
-		}
-
-		ImGui::Spacing();
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		ImGui::Spacing();
-
-		inlineText(a_weapon, PropertyType::kCarryWeight);
-		inlineText(a_weapon, PropertyType::kGoldValue);
-
+		inlineTextPair(a_weapon, PropertyType::kWeaponType,    PropertyType::kWeaponSkill);
+		inlineTextPair(a_weapon, PropertyType::kCarryWeight,   PropertyType::kGoldValue);
 	}
 
 	inline void drawArmorPreview(const std::unique_ptr<BaseObject>& a_armor, bool a_tooltip)
 	{
-		inlineText(a_armor, PropertyType::kArmorRating);
-		inlineText(a_armor, PropertyType::kArmorType);
-
-		ImGui::Spacing();
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		ImGui::Spacing();
-
-		inlineText(a_armor, PropertyType::kCarryWeight);
-		inlineText(a_armor, PropertyType::kGoldValue);
+		inlineTextPair(a_armor, PropertyType::kArmorRating, PropertyType::kArmorType);
+		inlineTextPair(a_armor, PropertyType::kCarryWeight, PropertyType::kGoldValue);
 
 		const auto equip_slots = a_armor->GetArmorSlots();
 
 		if (!a_tooltip && !equip_slots.empty()) {
-			ImGui::Spacing();
-			ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-			ImGui::Spacing();
+			const auto tooltip = FilterProperty::GetPropertyTooltipKey(PropertyType::kArmorSlot);
+			const auto icon    = FilterProperty::GetIcon(PropertyType::kArmorSlot);
 
-			constexpr auto header_flags = ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_DefaultOpen;
-
-			ImGui::Spacing();
-			if (ImGui::CollapsingHeader(Translate("SLOTS"), header_flags)) {
-				const auto tooltip = FilterProperty::GetPropertyTooltipKey(PropertyType::kArmorSlot);
-				const auto icon = FilterProperty::GetIcon(PropertyType::kArmorSlot);
-
-				ImGui::PushID("ItemPreview::ArmorSlots");
-				for (const auto& slot : equip_slots) {
-					inlineTextEx(icon.c_str(), slot.c_str(), tooltip.c_str());
-				}
-				ImGui::PopID();
-			}
+			ImGui::SeparatorText(Translate("SLOTS"));
+			ImGui::PushID("ItemPreview::ArmorSlots");
+			inlineListPair(equip_slots, icon.c_str(), tooltip.c_str());
+			ImGui::PopID();
 		}
 	}
 
@@ -573,19 +571,10 @@ namespace
 
 	inline void drawLeveledListPreview(const std::unique_ptr<BaseObject>& a_list)
 	{
-		ImGui::Spacing();
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		ImGui::Spacing();
-
 		inlineCheckbox(a_list, PropertyType::kLeveledAllLevelsFlag);
 		inlineCheckbox(a_list, PropertyType::kLeveledEachFlag);
 		inlineCheckbox(a_list, PropertyType::kLeveledUseAllFlag);
 		inlineCheckbox(a_list, PropertyType::kLeveledSpecialFlag);
-
-		ImGui::Spacing();
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		ImGui::Spacing();
-
 		inlineText(a_list, PropertyType::kLeveledChance);
 	}
 
@@ -635,10 +624,6 @@ namespace
 
 	inline void drawCellPreview(const std::unique_ptr<BaseObject>& a_item)
 	{
-		ImGui::Spacing();
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		ImGui::Spacing();
-
 		inlineText(a_item, PropertyType::kName);
 		inlineText(a_item, PropertyType::kEditorID);
 	}
@@ -654,6 +639,82 @@ namespace
 		const float text_width = use_plugin ? ImGui::CalcTextSize(plugin.c_str()).x : ImGui::CalcTextSize(edid.c_str()).x;
 
 		return max(padding + desc + text_width, a_min);
+	}
+
+	inline void drawModelPreview(const std::unique_ptr<BaseObject>& a_item, bool /*a_tooltip*/)
+	{
+		const bool atMainMenu     = RE::UI::GetSingleton()->IsMenuOpen(RE::MainMenu::MENU_NAME);
+		const bool previewEnabled = UserConfig::Get().show3DPreview && UserConfig::Get().pauseGame;
+		if (!previewEnabled) return;
+
+		const auto& preview   = ThemeConfig::GetWidgetStyle().itemPreview;
+		const float max_width = ImGui::GetContentRegionAvail().x;
+
+		RE::TESBoundObject* previewObj    = nullptr;
+		float               previewHeight = 0.0f;
+		bool                showMenuHint  = false;
+
+		// TODO: Determine why main menu positioning is offset so poorly.
+
+		if (atMainMenu) {
+			showMenuHint  = true;
+			previewHeight = ImGui::GetTextLineHeightWithSpacing() * 2.0f;
+		} else if (auto* form = a_item->GetTESForm()) {
+			if (auto* boundObj = form->As<RE::TESBoundObject>()) {
+				previewObj    = boundObj;
+				previewHeight = max_width * preview.previewBoxScale;
+			}
+		}
+
+		if (!previewObj && !showMenuHint) return;
+
+		const ImVec2 size(max_width, previewHeight);
+
+		// Visual divider between the name bar and the preview slot.
+		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
+
+		// Helper: reserve a `size`-tall layout slot at the cursor and
+		// draw a centred string inside it via the raw draw list.
+		auto centredFallback = [&](const char* hint) {
+			const ImVec2 cur = ImGui::GetCursorScreenPos();
+			const ImVec2 ts  = ImGui::CalcTextSize(hint);
+			const float  tx  = cur.x + (size.x - ts.x) * 0.5f;
+			const float  ty  = cur.y + (size.y - ts.y) * 0.5f;
+			ImGui::Dummy(size);
+			ImGui::GetWindowDrawList()->AddText(ImVec2(tx, ty),
+				ImGui::GetColorU32(ImGuiCol_TextDisabled), hint);
+		};
+
+		if (showMenuHint) {
+			centredFallback(Translate("ITEM_PREVIEW_MAIN_MENU_HINT"));
+			return;
+		}
+
+		// Invalid/No Model placeholder
+		if (!Item3DPreview::HasValidModel(previewObj)) {
+			centredFallback(Translate("ITEM_PREVIEW_NO_MODEL"));
+			return;
+		}
+
+		auto* preview3D = Item3DPreview::GetSingleton();
+		const ImVec2 image_pos = ImGui::GetCursorScreenPos();
+		preview3D->Request(previewObj, image_pos, size);
+
+		void*        srv     = preview3D->GetSRV();
+		const ImVec2 capSize = preview3D->GetCapturedSize();
+		if (srv && capSize.x > 0.0f && capSize.y > 0.0f) {
+			ImVec2 uv0, uv1;
+			preview3D->GetDisplayUV(uv0, uv1);
+			const float  a = ImGui::GetStyle().Alpha;
+			const ImVec4 tint(1.0f, 1.0f, 1.0f, a);
+			ImGui::ImageWithBg(static_cast<ImTextureID>(reinterpret_cast<intptr_t>(srv)),
+				size, uv0, uv1,
+				ImVec4(0.0f, 0.0f, 0.0f, 0.0f), tint);
+
+			drawDescriptionOverlay(a_item, image_pos, size);
+		} else {
+			ImGui::Dummy(size);
+		}
 	}
 }
 
@@ -708,11 +769,11 @@ namespace
 		if (a_item->IsDummy()) return;
 
 		const auto& preview = ThemeConfig::GetWidgetStyle().itemPreview;
+		const float tooltip_width = getDesiredWidth(a_item, preview.minTooltipWidth);
+		const float max_width = a_tooltip ? tooltip_width : ImGui::GetContentRegionAvail().x;
 		const auto cursor = ImGui::GetCursorScreenPos();
 		const float alpha = ImGui::GetStyle().Alpha;
 		const float font_size = ImGui::GetFontSize();
-		const float tooltip_width = getDesiredWidth(a_item, preview.minTooltipWidth);
-		const float max_width = a_tooltip ? tooltip_width : ImGui::GetContentRegionAvail().x;
 		const auto& draw_list = ImGui::GetWindowDrawList();
 		const float name_bar_h = font_size * preview.nameBarHeightScale;
 
@@ -737,11 +798,19 @@ namespace
 			ImGui::SetNextItemAllowOverlap();
 			ImGui::Dummy(ImVec2(max_width, 0));
 		}
- 
-		// Tooltips don't play well with autosizing child windows.
-		if (!a_tooltip) ImGui::BeginChild("##ItemPreview::ScrollArea", ImVec2(0, 0), false, false);
+
 		{
 			ImGui::PushStyleColor(ImGuiCol_Separator, ThemeConfig::GetColorU32("PRIMARY"));
+
+			if (a_item->GetTESForm() && (a_item->GetTESForm()->IsInventoryObject() || a_item->IsObject())) {
+				drawModelPreview(a_item, a_tooltip);
+			}
+
+			const bool useScroll = !a_tooltip;
+			if (useScroll) {
+				ImGui::BeginChild("##ItemPreview::Info", ImVec2(0, 0), false, ImGuiWindowFlags_NoMove);
+			}
+			
 			drawBasePreview(a_item);
 
 			if (a_item->GetTESNPC()) {
@@ -776,10 +845,12 @@ namespace
 
 			drawFooter(a_item, a_tooltip);
 
+			if (useScroll) {
+				ImGui::EndChild();
+			}
+
 			ImGui::PopStyleColor();
 		}
-
-		if (!a_tooltip) ImGui::EndChild();
 
 		// Draw FormType color gradient over Name container.
 		const float height = ImGui::GetFrameHeight() * preview.gradientHeightScale;

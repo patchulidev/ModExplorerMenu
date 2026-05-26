@@ -1,5 +1,6 @@
 #include "UIMenuImpl.h"
 #include "ui/core/UIManager.h"
+#include "ui/components/Item3DPreview.h"
 #include "core/InputManager.h"
 #include "config/Keycodes.h"
 #include "config/UserConfig.h"
@@ -150,6 +151,7 @@ namespace Modex
 
 	void ModexGUIMenu::PostDisplay()
 	{
+		Item3DPreview::GetSingleton()->Render();
 		UIManager::GetSingleton()->Render();
 		ForceCursor();
 	}
@@ -160,12 +162,14 @@ namespace Modex
 
 		RE::ControlMap::GetSingleton()->ToggleControls(kGameplayControls, false);
 		UIManager::GetSingleton()->OnShow();
+		Item3DPreview::GetSingleton()->Begin();
 	}
 
 	void ModexGUIMenu::OnHide()
 	{
 		m_fShow = false;
 
+		Item3DPreview::GetSingleton()->End();
 		RE::ControlMap::GetSingleton()->ToggleControls(kGameplayControls, true);
 		UIManager::GetSingleton()->OnClose();
 	}
@@ -219,7 +223,7 @@ namespace Modex
 		menu->depthPriority = 11;
 
 		if (UserConfig::Get().pauseGame) {
-			menu->menuFlags.set(Flags::kPausesGame);
+			menu->menuFlags.set(Flags::kPausesGame, Flags::kDisablePauseMenu);
 		}
 
 		menu->inputContext.set(Context::kMenuMode);

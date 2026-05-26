@@ -18,6 +18,9 @@ namespace Modex
 		virtual void CloseWindow();
 		virtual bool WantsInputCapture() const { return m_captureInput; }
 
+		[[nodiscard]] float GetAlpha() const { return m_alpha; }
+		[[nodiscard]] bool  IsFullyOpen() const { return m_state == WindowState::Open && m_alpha >= 0.999f; }
+
 		virtual void Update(float a_deltaTime);
 
 		inline static constexpr float FADE_IN = 0.3f;

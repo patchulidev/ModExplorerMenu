@@ -152,22 +152,6 @@ namespace Modex
 
 	void ThemeConfig::ApplyThemeToImGui()
 	{
-		// Snapshot ImGui's defaults the first time we apply, so future theme
-		// switches can restore any style fields that the next theme omits.
-		// Without this, e.g. switching from a sharp theme (Rounding=0) back
-		// to default would leave rounding stuck at 0.
-		static ImGuiStyle s_baseline = ImGui::GetStyle();
-		static bool s_baselineCaptured = false;
-		auto& style = ImGui::GetStyle();
-		if (!s_baselineCaptured) {
-			s_baseline = style;
-			s_baselineCaptured = true;
-		} else {
-			style = s_baseline;
-		}
-
-		RefreshImGuiColors();
-
 		// _widgets block: tokens for manually-drawn widgets, grouped by
 		// widget family. Each subsection is an object whose keys map to
 		// fields on the matching WidgetStyle::* struct. Defaults reset
@@ -237,6 +221,8 @@ namespace Modex
 				getF(*s, "inlineBarMiniDivisor", m_widgetStyle.itemPreview.inlineBarMiniDivisor);
 				getF(*s, "minTooltipWidth",      m_widgetStyle.itemPreview.minTooltipWidth);
 				getF(*s, "desiredWidthPadFont",  m_widgetStyle.itemPreview.desiredWidthPadFont);
+				getF(*s, "previewBoxScale",      m_widgetStyle.itemPreview.previewBoxScale);
+				getF(*s, "previewModelScale",    m_widgetStyle.itemPreview.previewModelScale);
 			}
 			if (auto* s = getSection("notification")) {
 				getF(*s, "tooltipHeightScale", m_widgetStyle.notification.tooltipHeightScale);
@@ -296,6 +282,22 @@ namespace Modex
 			getF("ratioTruncateNameWide",  m_layoutOverrides.ratioTruncateNameWide);
 		}
 
+		if (ImGui::GetCurrentContext() == nullptr) {
+			return;
+		}
+
+		static ImGuiStyle s_baseline = ImGui::GetStyle();
+		static bool s_baselineCaptured = false;
+		auto& style = ImGui::GetStyle();
+		if (!s_baselineCaptured) {
+			s_baseline = style;
+			s_baselineCaptured = true;
+		} else {
+			style = s_baseline;
+		}
+
+		RefreshImGuiColors();
+
 		// Optional _style block: per-theme rounding/border/padding overrides.
 		// Anything omitted falls back to the captured ImGui defaults above.
 		auto styleIt = m_data.find("_style");
@@ -343,6 +345,9 @@ namespace Modex
 
 	void ThemeConfig::RefreshImGuiColors()
 	{
+		if (ImGui::GetCurrentContext() == nullptr) {
+			return;
+		}
 		auto& style = ImGui::GetStyle();
 
 		style.Colors[ImGuiCol_FrameBg]              = GetColor("BG");
@@ -489,6 +494,8 @@ namespace Modex
 			{ "inlineBarMiniDivisor", w.itemPreview.inlineBarMiniDivisor },
 			{ "minTooltipWidth",      w.itemPreview.minTooltipWidth },
 			{ "desiredWidthPadFont",  w.itemPreview.desiredWidthPadFont },
+			{ "previewBoxScale",      w.itemPreview.previewBoxScale },
+			{ "previewModelScale",    w.itemPreview.previewModelScale },
 		};
 		widgets["notification"] = {
 			{ "tooltipHeightScale", w.notification.tooltipHeightScale },

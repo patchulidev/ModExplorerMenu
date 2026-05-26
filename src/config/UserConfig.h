@@ -49,6 +49,7 @@ namespace Modex
 			bool showMissing		= true;
 			bool developerMode		= false;
 			bool enableTooltips 	= true;
+			bool show3DPreview 		= true;  // requires pauseGame; effective only when both are on
 
 			std::string language 		= "English";
 			std::string theme 			= "default";

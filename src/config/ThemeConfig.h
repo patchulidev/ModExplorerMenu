@@ -83,6 +83,8 @@ namespace Modex
 			float inlineBarMiniDivisor = 4.0f;
 			float minTooltipWidth      = 200.0f;
 			float desiredWidthPadFont  = 5.0f;   // padding term in getDesiredWidth
+			float previewBoxScale      = 0.75f;  // square side = max_width * scale
+			float previewModelScale    = 0.5f;   // model fills box at scale × engine natural size (1.0 = engine default)
 		} itemPreview;
 
 		// UINotification message rows + transient tooltip strip.
