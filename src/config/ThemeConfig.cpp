@@ -83,7 +83,7 @@ namespace Modex
 		(void)a_create;
 		bool theme_found = false;
 
-		ASSERT_MSG(!std::filesystem::exists(THEMES_JSON_PATH), "Default Theme not found in Modex theme directory!\n{}", THEMES_JSON_PATH.string());
+		ASSERT_MSG(!std::filesystem::exists(THEMES_JSON_PATH), "Default Theme not found in Modex theme directory!\n{}", PathToUtf8(THEMES_JSON_PATH));
 
 		RefreshAvailableThemes();
 		for (const auto& theme : m_availableThemes) {
@@ -631,7 +631,7 @@ namespace Modex
 		if (!ValidateThemeName(a_stem).empty()) {
 			return false;
 		}
-		const std::filesystem::path newPath = THEMES_JSON_PATH.parent_path() / (a_stem + ".json");
+		const std::filesystem::path newPath = THEMES_JSON_PATH.parent_path() / PathFromUtf8(a_stem + ".json");
 		if (std::filesystem::exists(newPath)) {
 			return false;
 		}
@@ -702,7 +702,7 @@ namespace Modex
 		}
 
 		std::filesystem::path newPath = a_theme.m_filePath;
-		newPath.replace_filename(a_newStem + ".json");
+		newPath.replace_filename(PathFromUtf8(a_newStem + ".json"));
 		if (std::filesystem::exists(newPath)) {
 			return false;
 		}

@@ -67,7 +67,7 @@ namespace Modex
 			return m_initialized = true;
 		}
 
-		ASSERT_MSG(a_create, "No FilterProperty found in JSON.\n\nFile: {}", m_file_path.string());
+		ASSERT_MSG(a_create, "No FilterProperty found in JSON.\n\nFile: {}", PathToUtf8(m_file_path));
 
 		return m_initialized = !a_create;
 	}

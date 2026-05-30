@@ -596,8 +596,8 @@ namespace Modex
 
 			if (s_dirty) {
 				const std::string fmt = std::string(ICON_LC_TRIANGLE_ALERT) + "  " + Translate("THEME_EDITOR_UNSAVED_FORMAT");
-				ImGui::TextDisabled(fmt.c_str(),
-					ThemeConfig::GetSingleton()->GetFilePath().filename().string().c_str());
+				const std::string filename = PathToUtf8(ThemeConfig::GetSingleton()->GetFilePath().filename());
+				ImGui::TextDisabled(fmt.c_str(), filename.c_str());
 			}
 		}
 	}

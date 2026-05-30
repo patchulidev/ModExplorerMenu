@@ -2,6 +2,7 @@
 
 #include "UICustom.h"
 #include "UIContainers.h"
+#include "core/PathUtf8.h"
 #include "localization/Locale.h"
 
 namespace Modex 
@@ -21,24 +22,24 @@ namespace Modex
 
 		// Build tree structure from file path vector
 		for (const auto& item : itemList) {
-			std::filesystem::path itemPath(item);
+			std::filesystem::path itemPath = PathFromUtf8(item);
 			std::filesystem::path parentPath = itemPath.parent_path();
-			
+
 			if (parentPath.empty()) {
 				outRootFiles.push_back(item);
 				continue;
 			}
-			
-			std::string parentStr = parentPath.string();
+
+			std::string parentStr = PathToUtf8(parentPath);
 			outTree[parentStr].files.push_back(item);
-			
+
 			// Build subdirectory hierarchy
 			std::filesystem::path currentPath;
 			for (const auto& component : parentPath) {
-				std::string parent = currentPath.string();
+				std::string parent = PathToUtf8(currentPath);
 				currentPath = currentPath.empty() ? component : currentPath / component;
-				std::string current = currentPath.string();
-				
+				std::string current = PathToUtf8(currentPath);
+
 				auto& subdirs = outTree[parent].subdirectories;
 				if (std::find(subdirs.begin(), subdirs.end(), current) == subdirs.end()) {
 					subdirs.push_back(current);
@@ -49,16 +50,16 @@ namespace Modex
 
 	bool RenderFileItem(const std::string& filePath, ImGuiTreeNodeFlags baseFlags = 0)
 	{
-		std::string displayName = std::filesystem::path(filePath).filename().string();
+		std::string displayName = PathToUtf8(PathFromUtf8(filePath).filename());
 		ImGuiTreeNodeFlags flags = baseFlags | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
-		
+
 		ImGui::TreeNodeEx(filePath.c_str(), flags, "%s %s", ICON_LC_FILE_CODE, displayName.c_str());
 		return ImGui::IsItemClicked();
 	}
 
 	bool RenderFolderItem(const std::string& folderPath, bool isOpen, bool asTreeNode = true)
 	{
-		std::string folder_name = std::filesystem::path(folderPath).filename().string();
+		std::string folder_name = PathToUtf8(PathFromUtf8(folderPath).filename());
 		const char* folder_icon = isOpen ? ICON_LC_FOLDER_OPEN : ICON_LC_FOLDER_CLOSED;
 		
 		if (asTreeNode) {
@@ -247,8 +248,8 @@ namespace Modex
 				// Parent directory navigation
 				if (!currentDir.empty()) {
 					if (ImGui::Selectable(ICON_LC_FOLDER_UP " ...", false)) {
-						std::filesystem::path parentPath = std::filesystem::path(currentDir).parent_path();
-						ImFormatString(currentDirectory, IM_ARRAYSIZE(currentDirectory), "%s", parentPath.string().c_str());
+						std::filesystem::path parentPath = PathFromUtf8(currentDir).parent_path();
+						ImFormatString(currentDirectory, IM_ARRAYSIZE(currentDirectory), "%s", PathToUtf8(parentPath).c_str());
 					}
 				}
 
@@ -264,7 +265,7 @@ namespace Modex
 				// Display files
 				if (currentDir.empty()) {
 					for (const auto& file : rootFiles) {
-						std::string displayName = std::filesystem::path(file).filename().string();
+						std::string displayName = PathToUtf8(PathFromUtf8(file).filename());
 						if (ImGui::Selectable((std::string(ICON_LC_FILE_CODE) + " " + displayName).c_str(), false)) {
 							for (size_t i = 0; i < m_pendingBrowserList.size(); i++) {
 								if (m_pendingBrowserList[i] == file) {
@@ -277,7 +278,7 @@ namespace Modex
 					}
 				} else {
 					for (const auto& file : files) {
-						std::string displayName = std::filesystem::path(file).filename().string();
+						std::string displayName = PathToUtf8(PathFromUtf8(file).filename());
 						if (ImGui::Selectable((std::string(ICON_LC_FILE_CODE) + " " + displayName).c_str(), false)) {
 							for (size_t i = 0; i < m_pendingBrowserList.size(); i++) {
 								if (m_pendingBrowserList[i] == file) {

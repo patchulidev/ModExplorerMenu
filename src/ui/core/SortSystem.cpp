@@ -1,4 +1,5 @@
 #include "SortSystem.h"
+#include "core/PathUtf8.h"
 
 namespace Modex
 {
@@ -24,7 +25,7 @@ namespace Modex
 			return m_initialized = true;
 		}
 
-		ASSERT_MSG(a_create, "SortSystem::Load() - No SortProperty found in JSON. File: {}", m_file_path.string());
+		ASSERT_MSG(a_create, "SortSystem::Load() - No SortProperty found in JSON. File: {}", PathToUtf8(m_file_path));
 		return m_initialized = !a_create;
 	}
 

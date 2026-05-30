@@ -1,6 +1,7 @@
 #pragma once
 
 #include "pch.h"
+#include "core/PathUtf8.h"
 
 namespace Modex
 {
@@ -62,7 +63,7 @@ namespace Modex
 		std::string filepath;
 
 		FontInfo(const std::string& a_name, const std::filesystem::path& a_path)
-			: name(a_name), filepath(a_path.string())
+			: name(a_name), filepath(PathToUtf8(a_path))
 		{}
 	};
 

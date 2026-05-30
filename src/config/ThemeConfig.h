@@ -2,6 +2,7 @@
 
 #include "config/ConfigManager.h"
 #include "core/Graphic.h"
+#include "core/PathUtf8.h"
 
 namespace Modex
 {
@@ -15,7 +16,7 @@ namespace Modex
 
 		ModexTheme(const std::filesystem::path& a_path) : m_filePath(a_path)
 		{
-			m_name = a_path.stem().string();
+			m_name = PathToUtf8(a_path.stem());
 			m_filePath = a_path;
 		}
 	};
