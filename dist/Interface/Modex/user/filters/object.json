@@ -24,15 +24,6 @@
             }
         },
         {
-            "id": "animated_object",
-            "displayName": "Animated Object",
-            "rule": {
-                "property": "kFormType",
-                "operator": "equals",
-                "value": "ANIO"
-            }
-        },
-        {
             "id": "container",
             "displayName": "Container",
             "rule": {

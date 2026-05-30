@@ -1013,7 +1013,6 @@ namespace Modex
 				case RE::FormType::Light:
 				case RE::FormType::Flora:
 				case RE::FormType::Furniture:
-				case RE::FormType::AnimatedObject:
 				case RE::FormType::Grass:
 					return true;
 				default: return false;

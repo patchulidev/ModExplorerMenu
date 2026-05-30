@@ -531,7 +531,7 @@ namespace Modex
 				DrawColorTokenGroup(Translate("THEME_EDITOR_COLORS_FORMTYPES"),
 					{ "ARMO", "ALCH", "AMMO", "BOOK", "INGR", "KEYM", "MISC", "SCRL",
 					  "WEAP", "NPC_", "TREE", "STAT", "CONT", "ACTI", "LIGH", "DOOR",
-					  "FURN", "OTFT", "LVLI", "ANIO", "GRAS" });
+					  "FURN", "OTFT", "LVLI", "GRAS" });
 				ImGui::TreePop();
 			}
 
