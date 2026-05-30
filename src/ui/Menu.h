@@ -25,6 +25,7 @@ namespace Modex
 		void OnOpened() override;
 
 		void LoadModule(uint8_t a_module, uint8_t a_layoutIndex);
+		void RequestLoadModule(uint8_t a_module, uint8_t a_layoutIndex);
 
 		void NextWindow();
 
@@ -99,7 +100,8 @@ namespace Modex
 
 		std::vector<ModuleInfo>   m_moduleInfo;
 		std::unique_ptr<UIModule> m_activeModule;
-		uint8_t                   m_activeModuleIndex; 
+		uint8_t                   m_activeModuleIndex;
+		std::optional<std::pair<uint8_t, uint8_t>> m_pendingLoad;
 
 		// Helpers
 		std::unique_ptr<UIModule> CreateModule(ModuleType a_type, Ownership a_owner = Ownership::None);

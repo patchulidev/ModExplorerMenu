@@ -435,7 +435,7 @@ namespace Modex
 	void UIManager::NavigateToModule(uint8_t a_moduleIndex)
 	{
 		if (m_menu) {
-			m_menu->LoadModule(a_moduleIndex, 0);
+			m_menu->RequestLoadModule(a_moduleIndex, 0);
 		}
 	}
 

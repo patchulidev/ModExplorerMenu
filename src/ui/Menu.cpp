@@ -100,6 +100,11 @@ namespace Modex
 		}
 	}
 
+	void Menu::RequestLoadModule(uint8_t a_moduleIndex, uint8_t a_layoutIndex)
+	{
+		m_pendingLoad = std::make_pair(a_moduleIndex, a_layoutIndex);
+	}
+
 	void Menu::NextWindow()
 	{
 		uint8_t next_index = (m_activeModuleIndex + 1) % static_cast<uint8_t>(m_moduleInfo.size());
@@ -176,6 +181,12 @@ namespace Modex
 		DrawBackground(displaySize);
 
 		ImGui::PopStyleVar(); // alpha
+
+		if (m_pendingLoad) {
+			auto [moduleIndex, layoutIndex] = *m_pendingLoad;
+			m_pendingLoad.reset();
+			LoadModule(moduleIndex, layoutIndex);
+		}
 	}
 
 	void Menu::DrawBackground(const ImVec2& a_displaySize)
