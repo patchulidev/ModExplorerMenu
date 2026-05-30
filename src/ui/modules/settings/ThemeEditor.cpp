@@ -430,6 +430,8 @@ namespace Modex
 				DrawFloat(Translate("THEME_EDITOR_LBL_DESIRED_WIDTH_PAD_FONT"),  w.itemPreview.desiredWidthPadFont,  1.0f, 12.0f);
 				DrawFloat(Translate("THEME_EDITOR_LBL_PREVIEW_BOX_SCALE"),       w.itemPreview.previewBoxScale,      0.10f, 1.0f, "%.2f");
 				DrawFloat(Translate("THEME_EDITOR_LBL_PREVIEW_MODEL_SCALE"),     w.itemPreview.previewModelScale,    0.25f, 1.0f, "%.2f");
+				DrawFloat(Translate("THEME_EDITOR_LBL_PREVIEW_OFFSET_X"),        w.itemPreview.previewOffsetX,       -300.0f, 300.0f, "%.0f px");
+				DrawFloat(Translate("THEME_EDITOR_LBL_PREVIEW_OFFSET_Y"),        w.itemPreview.previewOffsetY,       -300.0f, 300.0f, "%.0f px");
 				EndSection(true);
 			} else EndSection(false);
 
@@ -529,7 +531,7 @@ namespace Modex
 				DrawColorTokenGroup(Translate("THEME_EDITOR_COLORS_FORMTYPES"),
 					{ "ARMO", "ALCH", "AMMO", "BOOK", "INGR", "KEYM", "MISC", "SCRL",
 					  "WEAP", "NPC_", "TREE", "STAT", "CONT", "ACTI", "LIGH", "DOOR",
-					  "FURN", "OTFT", "LVLI", "ANIO", "GRAS" });
+					  "FURN", "OTFT", "LVLI", "GRAS" });
 				ImGui::TreePop();
 			}
 
@@ -594,8 +596,8 @@ namespace Modex
 
 			if (s_dirty) {
 				const std::string fmt = std::string(ICON_LC_TRIANGLE_ALERT) + "  " + Translate("THEME_EDITOR_UNSAVED_FORMAT");
-				ImGui::TextDisabled(fmt.c_str(),
-					ThemeConfig::GetSingleton()->GetFilePath().filename().string().c_str());
+				const std::string filename = PathToUtf8(ThemeConfig::GetSingleton()->GetFilePath().filename());
+				ImGui::TextDisabled(fmt.c_str(), filename.c_str());
 			}
 		}
 	}

@@ -1,12 +1,13 @@
 #include "ConfigManager.h"
 #include "config/UserData.h"
+#include "core/PathUtf8.h"
 
 namespace Modex
 {
 	// Used by Load() to populate an empty JSON at specified location.
 	void ConfigManager::CreateAndDumpJson(const std::filesystem::path& a_path, const nlohmann::json& a_data)
 	{
-		Debug("Creating new config file at '{}'", a_path.string());
+		Debug("Creating new config file at '{}'", PathToUtf8(a_path));
 
 		std::filesystem::create_directories(a_path.parent_path());
 
@@ -54,7 +55,7 @@ namespace Modex
 	bool ConfigManager::Load(bool a_create)
 	{
 		ASSERT_MSG(a_create && m_file_path.empty(), "ConfigManager::Load() Called before setting file path!");
-		Trace("ConfigManager Load called for file '{}'", m_file_path.stem().string());
+		Trace("ConfigManager Load called for file '{}'", PathToUtf8(m_file_path.stem()));
 			
 		m_data = nlohmann::json::object();
 
@@ -76,11 +77,11 @@ namespace Modex
 			file >> m_data;
 			return m_initialized = true;
 		} catch (std::exception& e) {
-			ASSERT_MSG(true, "Failed to load file '{}'\n'{}'", m_file_path.stem().string(), e.what());
+			ASSERT_MSG(true, "Failed to load file '{}'\n'{}'", PathToUtf8(m_file_path.stem()), e.what());
 			return m_initialized = false;
 		}
 
-		Trace("Config file '{}' loaded successfully", m_file_path.stem().string());
+		Trace("Config file '{}' loaded successfully", PathToUtf8(m_file_path.stem()));
 	}
 
 	bool ConfigManager::Save()
@@ -90,7 +91,7 @@ namespace Modex
 		try {
 			// Create directories if they don't exist
 			if (!std::filesystem::exists(m_file_path.parent_path())) {
-				Trace("Creating directory to save Config File '{}'", m_file_path.string());
+				Trace("Creating directory to save Config File '{}'", PathToUtf8(m_file_path));
 				std::filesystem::create_directories(m_file_path.parent_path());
 			}
 
@@ -104,7 +105,7 @@ namespace Modex
 			return false;
 		}
 
-		Trace("Config file '{}' saved successfully", m_file_path.stem().string());
+		Trace("Config file '{}' saved successfully", PathToUtf8(m_file_path.stem()));
 	}
 
 	// Export vector of JSON keys, does not include values!

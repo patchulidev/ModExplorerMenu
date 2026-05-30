@@ -36,8 +36,8 @@ namespace Modex
 		static bool SaveKit(const Kit& a_kit);
 
 		static Kit RenameKit(Kit& a_kit, std::string a_new_name);
-		static Kit CreateKit(const std::filesystem::path& a_relativePath);
-		static Kit CreateKitFromReference(const std::filesystem::path& a_relativePath, RE::TESObjectREFR* a_reference, bool a_wornOnly = false);
+		static Kit CreateKit(const std::string& a_name);
+		static Kit CreateKitFromReference(const std::string& a_name, RE::TESObjectREFR* a_reference, bool a_wornOnly = false);
 
 		static std::vector<BaseObject> 	GetItems(const Kit& a_kit);
 		static Kit* 					KitLookup(const std::string& a_key);

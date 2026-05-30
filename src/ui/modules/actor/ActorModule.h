@@ -15,5 +15,6 @@ namespace Modex
 		ActorModule& operator=(ActorModule&&) = delete;
 
 		void Draw() override;
+		float GetContentRatio() const override;
 	};
 }

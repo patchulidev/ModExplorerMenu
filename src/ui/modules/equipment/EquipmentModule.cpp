@@ -18,6 +18,11 @@ namespace Modex
 		DrawTabMenu();
 	}
 
+	float EquipmentModule::GetContentRatio() const
+	{
+		return Style::Ratio::TableBalanced();
+	}
+
 	// Used exclusively in the equipment module window for rendering Kit actionable buttons.
 	void EquipmentModule::DrawKitActionsPanel(const ImVec2 &a_pos, const ImVec2 &a_size)
 	{

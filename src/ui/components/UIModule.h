@@ -28,6 +28,8 @@ namespace Modex
 		virtual void Draw() {};
 		virtual void DrawTabMenu();
 
+		virtual float GetContentRatio() const { return 1.0f; }
+
 		float& GetSidebarWidth() { return m_sidebar; };
 
 		void SetOffset(float a_offset) { m_offset = a_offset; };

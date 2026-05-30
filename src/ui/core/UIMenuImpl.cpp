@@ -279,7 +279,6 @@ namespace Modex
 		const auto imguiKey = GFxKeyToImGuiKey(keyEvent->keyCode);
 		const auto showMenu = UserConfig::GetShowMenuKeys();
 		const auto scanCode = KeyCode::ImGuiKeyToScanCode(imguiKey);
-		const auto modifier = InputManager::GetSingleton()->IsBoundModifierDown();
 
 		if (m_listeners.size() > 0) {
 			// If the pressed key is a modifier, feed it to ImGui so it tracks the held state, but don't fire the listener yet.

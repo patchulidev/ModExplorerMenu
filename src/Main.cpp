@@ -2,6 +2,7 @@
 #include "core/Hooks.h"
 #include "core/Graphic.h"
 #include "core/InputManager.h"
+#include "core/PathUtf8.h"
 #include "data/Data.h"
 #include "ui/core/UIManager.h"
 
@@ -79,7 +80,7 @@ namespace
 		auto pluginName = SKSE::PluginDeclaration::GetSingleton()->GetName();
 		auto logFilePath = *logsFolder / std::format("{}.log", pluginName);
 
-		auto fileLoggerPtr = std::make_shared<spdlog::sinks::basic_file_sink_mt>(logFilePath.string(), true);
+		auto fileLoggerPtr = std::make_shared<spdlog::sinks::basic_file_sink_mt>(Modex::PathToUtf8(logFilePath), true);
 		auto loggerPtr = std::make_shared<spdlog::logger>("log", std::move(fileLoggerPtr));
 		spdlog::set_default_logger(std::move(loggerPtr));
 	}

@@ -100,6 +100,11 @@ namespace Modex
 		}
 	}
 
+	void Menu::RequestLoadModule(uint8_t a_moduleIndex, uint8_t a_layoutIndex)
+	{
+		m_pendingLoad = std::make_pair(a_moduleIndex, a_layoutIndex);
+	}
+
 	void Menu::NextWindow()
 	{
 		uint8_t next_index = (m_activeModuleIndex + 1) % static_cast<uint8_t>(m_moduleInfo.size());
@@ -160,8 +165,10 @@ namespace Modex
 
 			if (!m_apiMode) {
 				UINotification::DrawMessageContainer(ImGui::GetWindowPos(), ImVec2(size_x / 2.0f, size_h));
-				UINotification::DrawTooltipContainer(ImVec2(ImGui::GetWindowPos().x + sidebar_w, ImGui::GetWindowPos().y), ImVec2(window_w - sidebar_w, window_h));
 
+				const float content_ratio = m_activeModule ? m_activeModule->GetContentRatio() : 1.0f;
+				const float tooltip_w = (window_w - sidebar_w) * content_ratio;
+				UINotification::DrawTooltipContainer(ImVec2(ImGui::GetWindowPos().x + sidebar_w, ImGui::GetWindowPos().y), ImVec2(tooltip_w, window_h));
 			}
 
 			DrawSidebar();
@@ -174,6 +181,12 @@ namespace Modex
 		DrawBackground(displaySize);
 
 		ImGui::PopStyleVar(); // alpha
+
+		if (m_pendingLoad) {
+			auto [moduleIndex, layoutIndex] = *m_pendingLoad;
+			m_pendingLoad.reset();
+			LoadModule(moduleIndex, layoutIndex);
+		}
 	}
 
 	void Menu::DrawBackground(const ImVec2& a_displaySize)

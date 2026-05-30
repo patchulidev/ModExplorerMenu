@@ -41,7 +41,7 @@ namespace Modex
 		}
 
 		// If we ensure JSON creation (a_create == true), we assume that the absence of SearchProperty is an error!
-		ASSERT_MSG(a_create, "No SearchProperty found in JSON.\nFile: {}", m_file_path.string());
+		ASSERT_MSG(a_create, "No SearchProperty found in JSON.\nFile: {}", PathToUtf8(m_file_path));
 
 		return m_initialized = !a_create;
 	}

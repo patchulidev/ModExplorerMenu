@@ -1,4 +1,5 @@
 #include "localization/Locale.h"
+#include "core/PathUtf8.h"
 
 namespace Modex
 {
@@ -111,12 +112,12 @@ namespace Modex
 
 	std::filesystem::path Locale::GetFilepath(const std::string& a_stem)
 	{
-		Debug("Conducting Lookup for Locale file '{}' in '{}'", a_stem, LOCALE_JSON_DIR.string());
+		Debug("Conducting Lookup for Locale file '{}' in '{}'", a_stem, PathToUtf8(LOCALE_JSON_DIR));
 
 		for (const auto& entry : std::filesystem::directory_iterator(LOCALE_JSON_DIR)) {
 			if (entry.is_regular_file() && entry.path().extension() == ".json") {
-				if (entry.path().stem().string() == a_stem) {
-					Debug(" - Found locale file: '{}'", entry.path().filename().stem().string());
+				if (PathToUtf8(entry.path().stem()) == a_stem) {
+					Debug(" - Found locale file: '{}'", PathToUtf8(entry.path().filename().stem()));
 					return entry.path();
 				}
 			}
@@ -128,13 +129,13 @@ namespace Modex
 
 	void Locale::BuildLocaleList()
 	{
-		Debug("Building Locale List from: '{}'", LOCALE_JSON_DIR.string());
+		Debug("Building Locale List from: '{}'", PathToUtf8(LOCALE_JSON_DIR));
 
 		for (const auto& entry : std::filesystem::directory_iterator(LOCALE_JSON_DIR)) {
 			if (entry.is_regular_file() && entry.path().extension() == ".json") {
-				Trace(" - Found locale file: '{}'", entry.path().filename().string());
+				Trace(" - Found locale file: '{}'", PathToUtf8(entry.path().filename()));
 
-				const std::string language = entry.path().filename().stem().string();
+				const std::string language = PathToUtf8(entry.path().filename().stem());
 				m_languages.push_back(language);
 			}
 		}

@@ -4,6 +4,7 @@
 #include "external/magic_enum.hpp"
 #include "external/icons/IconsLucide.h"
 #include "config/UserConfig.h"
+#include "core/PathUtf8.h"
 
 // TODO: chore: move Property implementation outside of BaseObject header.
 
@@ -1013,7 +1014,6 @@ namespace Modex
 				case RE::FormType::Light:
 				case RE::FormType::Flora:
 				case RE::FormType::Furniture:
-				case RE::FormType::AnimatedObject:
 				case RE::FormType::Grass:
 					return true;
 				default: return false;
@@ -1662,8 +1662,7 @@ namespace Modex
 		}
 
 		const std::string GetNameTail() const {
-			const std::string tail = m_filepath.stem().string();
-			return tail;
+			return PathToUtf8(m_filepath.stem());
 		}
 
 		bool empty() const {

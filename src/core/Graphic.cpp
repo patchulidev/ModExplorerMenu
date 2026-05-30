@@ -1,7 +1,9 @@
 #define STB_IMAGE_IMPLEMENTATION
+#define STBI_WINDOWS_UTF8
 
 #include "Graphic.h"
 #include "config/Keycodes.h"
+#include "core/PathUtf8.h"
 #include "external/stb_image.h"
 
 namespace Modex
@@ -110,28 +112,29 @@ namespace Modex
 
 	void GraphicManager::LoadImagesFromFilepath(const std::filesystem::path& a_path, std::map<std::string, Image>& out_struct)
 	{
-		ASSERT_MSG(!std::filesystem::exists(a_path), "Could not locate Image directory, expected at: {}", a_path.string());
+		ASSERT_MSG(!std::filesystem::exists(a_path), "Could not locate Image directory, expected at: {}", PathToUtf8(a_path));
 
 		for (const auto& entry : std::filesystem::directory_iterator(a_path)) {
 			if (entry.path().extension() != ".png") {
 				continue;
 			}
 
-			auto index = entry.path().stem().string();
+			auto index = PathToUtf8(entry.path().stem());
+			auto utf8_path = PathToUtf8(entry.path());
 
-			bool success = GraphicManager::GetD3D11Texture(entry.path().string().c_str(), 
+			bool success = GraphicManager::GetD3D11Texture(utf8_path.c_str(),
 				&out_struct[index].texture,
-				out_struct[index].width, 
+				out_struct[index].width,
 				out_struct[index].height);
 
 			if (!success) {
-				Error("Failed to get D3D11 texture from image: {}", entry.path().string());
+				Error("Failed to get D3D11 texture from image: {}", utf8_path);
 			} else {
-				Trace("Loaded image: '{}'", entry.path().string());
+				Trace("Loaded image: '{}'", utf8_path);
 			}
 		}
 
-		Debug("Loaded {} images from '{}'", out_struct.size(), a_path.string());
+		Debug("Loaded {} images from '{}'", out_struct.size(), PathToUtf8(a_path));
 	}
 
 	bool GraphicManager::ValidateImGuiIcons()

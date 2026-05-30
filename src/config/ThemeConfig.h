@@ -2,6 +2,7 @@
 
 #include "config/ConfigManager.h"
 #include "core/Graphic.h"
+#include "core/PathUtf8.h"
 
 namespace Modex
 {
@@ -15,7 +16,7 @@ namespace Modex
 
 		ModexTheme(const std::filesystem::path& a_path) : m_filePath(a_path)
 		{
-			m_name = a_path.stem().string();
+			m_name = PathToUtf8(a_path.stem());
 			m_filePath = a_path;
 		}
 	};
@@ -85,6 +86,8 @@ namespace Modex
 			float desiredWidthPadFont  = 5.0f;   // padding term in getDesiredWidth
 			float previewBoxScale      = 0.75f;  // square side = max_width * scale
 			float previewModelScale    = 0.5f;   // model fills box at scale × engine natural size (1.0 = engine default)
+			float previewOffsetX       = 0.0f;   // screen-pixel nudge applied to the capture origin — lets the user compensate for mods (Show Player In Menus, MCM 3DItemXOffset, etc.) that shift the engine-rendered model
+			float previewOffsetY       = 0.0f;   // screen-pixel nudge applied to the capture origin
 		} itemPreview;
 
 		// UINotification message rows + transient tooltip strip.

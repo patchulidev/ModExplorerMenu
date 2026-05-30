@@ -1,6 +1,7 @@
 #include "EquipmentConfig.h"
 #include "config/UserData.h"
 #include "core/Commands.h"
+#include "core/PathUtf8.h"
 #include "data/BaseObject.h"
 
 // All kits are fully loaded into memory at startup for instant access.
@@ -12,7 +13,7 @@ namespace Modex
 	{
 		nlohmann::json data;
 		if (!std::filesystem::exists(a_path)) {
-			Warn("JSON file does not exist: '{}'", a_path.stem().string());
+			Warn("JSON file does not exist: '{}'", PathToUtf8(a_path.stem()));
 			return nlohmann::json::object();
 		}
 
@@ -20,15 +21,15 @@ namespace Modex
 			std::ifstream file(a_path);
 
 			if (!file.is_open()) {
-				Error("Could not open JSON file: '{}'", a_path.stem().string());
+				Error("Could not open JSON file: '{}'", PathToUtf8(a_path.stem()));
 				return nlohmann::json::object();
 			}
 
 			file >> data;
-			Trace("Successfully opened JSON file: '{}'", a_path.stem().string());
+			Trace("Successfully opened JSON file: '{}'", PathToUtf8(a_path.stem()));
 			return data;
 		} catch (...) {
-			ASSERT_MSG(true, "Failed to open JSON file: '{}'", a_path.stem().string());
+			ASSERT_MSG(true, "Failed to open JSON file: '{}'", PathToUtf8(a_path.stem()));
 			return nlohmann::json::object();
 		}
 	}
@@ -112,8 +113,8 @@ namespace Modex
 
 			// Validate the relative path doesn't escape. Otherwise our m_key will be invalid
 			// and result in weird behavior when renaming, copying, and saving.
-			if (relativePath.string().starts_with("..")) {
-				Trace("  Skipping file outside base path: '{}'", entry.path().string());
+			if (relativePath.wstring().starts_with(L"..")) {
+				Trace("  Skipping file outside base path: '{}'", PathToUtf8(entry.path()));
 				continue;
 			}
 
@@ -130,26 +131,26 @@ namespace Modex
 		return true;
 	}
 
-	Kit EquipmentConfig::CreateKit(const std::filesystem::path& a_relativePath)
+	Kit EquipmentConfig::CreateKit(const std::string& a_name)
 	{
-		Debug("Creating new kit '{}'", a_relativePath.string());
+		Debug("Creating new kit '{}'", a_name);
 
 		Kit data;
 
-		if (!ValidateKeyName(a_relativePath.string())) {
+		if (!ValidateKeyName(a_name)) {
 			return Kit{};
 		}
 
-		std::filesystem::path filename = a_relativePath;
-		if (filename.extension() != ".json") {
-			filename += ".json";
+		std::string key = a_name;
+		if (!key.ends_with(".json")) {
+			key += ".json";
 		}
 
-		data.m_filepath = (EQUIPMENT_JSON_PATH / filename).string();
-		data.m_key      = filename.string();
+		data.m_key      = key;
+		data.m_filepath = EQUIPMENT_JSON_PATH / PathFromUtf8(key);
 		// m_collection left empty — users assign tags after creation.
 
-		Debug("  Key: '{}' | Filepath: '{}'", data.m_key, data.m_filepath.string());
+		Debug("  Key: '{}' | Filepath: '{}'", data.m_key, PathToUtf8(data.m_filepath));
 
 		if (!SaveKit(data)) {
 			return Kit{};
@@ -164,16 +165,16 @@ namespace Modex
 	// Open and load a kit directly from JSON file path.
 	std::optional<Kit> EquipmentConfig::LoadKit(const std::filesystem::path& a_fullPath)
 	{
-		Debug("Loading kit from JSON file: '{}'", a_fullPath.string());
+		Debug("Loading kit from JSON file: '{}'", PathToUtf8(a_fullPath));
 
 		auto JSON = OpenJSON(a_fullPath);
 		if (JSON.is_null() || JSON.empty()) {
-			ASSERT_MSG(true, "Failed to read or parse JSON kit: {}", a_fullPath.string());
+			ASSERT_MSG(true, "Failed to read or parse JSON kit: {}", PathToUtf8(a_fullPath));
 			return std::nullopt;
 		}
 
 		if (JSON.size() != 1) {
-			ASSERT_MSG(true, "Expected exactly 1 kit in file, found {}:  {}", JSON.size(), a_fullPath.string());
+			ASSERT_MSG(true, "Expected exactly 1 kit in file, found {}:  {}", JSON.size(), PathToUtf8(a_fullPath));
 			return std::nullopt;
 		}
 
@@ -181,8 +182,8 @@ namespace Modex
 		const auto& kit_data = kit_entry.value();
 
 		Kit new_kit;
-		new_kit.m_filepath = a_fullPath.string();
-		new_kit.m_key = std::filesystem::relative(a_fullPath, EQUIPMENT_JSON_PATH).string();
+		new_kit.m_filepath = a_fullPath;
+		new_kit.m_key = PathToUtf8(std::filesystem::relative(a_fullPath, EQUIPMENT_JSON_PATH));
 		new_kit.m_collection = MigrateLegacyCollectionString(kit_data.value("Collection", ""));
 		new_kit.m_tableID = 0;
 
@@ -213,10 +214,10 @@ namespace Modex
 	bool EquipmentConfig::SaveKit(const Kit& a_kit)
 	{
 		ASSERT_MSG(a_kit.m_filepath.empty(), "No filepath associated with kit: {}", a_kit.m_key);
-		Debug("Saving kit to JSON file: '{}'", a_kit.m_filepath.string());
+		Debug("Saving kit to JSON file: '{}'", PathToUtf8(a_kit.m_filepath));
 
 		nlohmann::json data;
-		std::string json_key = std::filesystem::path(a_kit.m_key).stem().string();
+		std::string json_key = PathToUtf8(PathFromUtf8(a_kit.m_key).stem());
 
 		data[json_key] = nlohmann::json::object();
 		data[json_key]["Collection"] = a_kit.m_collection;
@@ -237,7 +238,7 @@ namespace Modex
 		try {
 			std::ofstream file(a_kit.m_filepath);
 			if (!file.is_open()) {
-				return Error("  Could not open JSON file for writing: '{}'", a_kit.m_filepath.string());
+				return Error("  Could not open JSON file for writing: '{}'", PathToUtf8(a_kit.m_filepath));
 			}
 
 			file << data.dump(4);
@@ -250,7 +251,7 @@ namespace Modex
 			Info("Saved kit '{}' to file", a_kit.m_key);
 			return true;
 		} catch (const std::exception& e) {
-			return Error("  Exception occurred while saving kit: '{}'\n\n{}", a_kit.m_filepath.string(), e.what());
+			return Error("  Exception occurred while saving kit: '{}'\n\n{}", PathToUtf8(a_kit.m_filepath), e.what());
 		}
 	}
 
@@ -260,14 +261,14 @@ namespace Modex
 
 		Kit new_kit = a_kit;
 
-		std::filesystem::path original_key_path(a_kit.m_key);
-		std::string stem      = original_key_path.stem().string();
-		std::string extension = original_key_path.extension().string();
+		std::filesystem::path original_key_path = PathFromUtf8(a_kit.m_key);
+		std::string stem      = PathToUtf8(original_key_path.stem());
+		std::string extension = PathToUtf8(original_key_path.extension());
 
-		std::filesystem::path new_filename = stem + " (Copy)" + extension;
+		std::string new_key = stem + " (Copy)" + extension;
 
-		new_kit.m_key      = new_filename.string();
-		new_kit.m_filepath = (EQUIPMENT_JSON_PATH / new_filename).string();
+		new_kit.m_key      = new_key;
+		new_kit.m_filepath = EQUIPMENT_JSON_PATH / PathFromUtf8(new_key);
 
 		if (!SaveKit(new_kit)) {
 			return Kit{};
@@ -298,7 +299,7 @@ namespace Modex
 		std::string old_key = a_kit.m_key;
 		std::string new_key = a_keyName + ".json";
 		std::filesystem::path oldPath = a_kit.m_filepath;
-		std::filesystem::path newPath = EQUIPMENT_JSON_PATH / new_key;
+		std::filesystem::path newPath = EQUIPMENT_JSON_PATH / PathFromUtf8(new_key);
 
 		if (std::filesystem::exists(newPath)) {
 			Warn("  Kit with name '{}' already exists in collection", a_keyName);
@@ -307,14 +308,14 @@ namespace Modex
 
 		try {
 			Kit new_kit = a_kit;
-			new_kit.m_filepath = newPath.string();
+			new_kit.m_filepath = newPath;
 			new_kit.m_key = new_key;
 
-			Debug("  Old Path: '{}'", oldPath.string());
-			Debug("  New Path: '{}'", newPath.string());
+			Debug("  Old Path: '{}'", PathToUtf8(oldPath));
+			Debug("  New Path: '{}'", PathToUtf8(newPath));
 
 			if (!SaveKit(new_kit)) {
-				Warn("  Failed to save renamed kit to:  {}", newPath.string());
+				Warn("  Failed to save renamed kit to:  {}", PathToUtf8(newPath));
 				return Kit{};
 			}
 
@@ -350,7 +351,7 @@ namespace Modex
 				std::filesystem::remove(kit_path);
 			}
 		} catch (const std::exception& e) {
-			ASSERT_MSG(true, "Failed to delete kit JSON file: {}\n\n{}", kit_path.string(), e.what());
+			ASSERT_MSG(true, "Failed to delete kit JSON file: {}\n\n{}", PathToUtf8(kit_path), e.what());
 			return;
 		}
 		
@@ -474,14 +475,14 @@ namespace Modex
 	// true, only items flagged as worn by the game engine are included — yields
 	// an "outfit" kit. When false, every inventory entry with count > 0 lands in
 	// the kit (amount + equipped state preserved per item).
-	Kit EquipmentConfig::CreateKitFromReference(const std::filesystem::path& a_relativePath, RE::TESObjectREFR* a_reference, bool a_wornOnly)
+	Kit EquipmentConfig::CreateKitFromReference(const std::string& a_name, RE::TESObjectREFR* a_reference, bool a_wornOnly)
 	{
 		if (!a_reference) {
 			Warn("CreateKitFromReference: null reference");
 			return Kit{};
 		}
 
-		auto kit = CreateKit(a_relativePath);
+		auto kit = CreateKit(a_name);
 		if (!kit) {
 			return Kit{};
 		}

@@ -68,8 +68,6 @@ namespace Modex::UICustom
 			return ThemeConfig::GetColorU32("OTFT", alpha);
 		case RE::FormType::LeveledItem:
 			return ThemeConfig::GetColorU32("LVLI", alpha);
-		case RE::FormType::AnimatedObject:
-			return ThemeConfig::GetColorU32("ANIO", alpha);
 		case RE::FormType::Grass:
 			return ThemeConfig::GetColorU32("GRAS", alpha);
 		default:

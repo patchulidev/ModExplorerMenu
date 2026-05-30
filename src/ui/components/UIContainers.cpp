@@ -244,8 +244,6 @@ namespace Modex
 			ImGui::Spacing();
 			ImGui::Spacing();
 
-			UICustom::SubCategoryHeader(Translate("HEADER_PREVIEW"));
-
 			ShowItemPreview(a_view->GetItemPreview());
 		}
 		ImGui::EndChild();
@@ -384,8 +382,6 @@ namespace Modex
 			ImGui::Spacing();
 			ImGui::Spacing();
 
-			UICustom::SubCategoryHeader(Translate("HEADER_PREVIEW"));
-
 			ShowItemPreview(a_view->GetItemPreview());
 		}
 		ImGui::EndChild();
@@ -438,8 +434,6 @@ namespace Modex
 
 			ImGui::Spacing();
 			ImGui::Spacing();
-
-			UICustom::SubCategoryHeader(Translate("HEADER_PREVIEW"));
 
 			ShowItemPreview(a_view->GetItemPreview());
 		}

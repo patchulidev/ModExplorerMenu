@@ -19,6 +19,7 @@ namespace Modex
 
 		void Draw() override;
 		void DrawTabMenu() override;
+		float GetContentRatio() const override;
 
 		void AddSelection(const std::string& a_kitKey);
 		void RemoveSelection(int a_index);

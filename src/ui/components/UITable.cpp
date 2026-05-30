@@ -1681,14 +1681,52 @@ namespace Modex
 				selectionStorage.Clear();
 			}
 
-			if (!a_item->IsDummy() && owner != Ownership::Cell) {
+			if (!a_item->IsDummy() || a_item->GetOwnership() == Ownership::Cell) {
 				ImGui::OpenPopup("TableViewContextMenu");
 			}
 		}
 
 		if (ImGui::BeginPopup("TableViewContextMenu")) {
 			const bool shift_down = ImGui::GetIO().KeyShift;
-			
+
+			if (owner == Ownership::Cell) {
+				if (UserData::IsFavorited(a_item->GetEditorID())) {
+					if (ImGui::MenuItem(Translate("REMOVE_FROM_FAVORITES"))) {
+						RemoveSelectionFromFavorites();
+					}
+				} else {
+					if (ImGui::MenuItem(Translate("ADD_TO_FAVORITES"))) {
+						AddSelectionToFavorites();
+					}
+				}
+
+				if (ImGui::MenuItem(Translate("CENTER_ON_CELL"))) {
+					Commands::CenterOnCell(Ownership::Cell, a_item->GetEditorID());
+					UserData::SendEvent(ModexActionType::CenterOnCell, a_item);
+				}
+
+				ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
+
+				if (ImGui::BeginMenu(Translate("COPY"))) {
+					if (ImGui::MenuItem(Translate("COPY_FORMID"))) {
+						ImGui::SetClipboardText(a_item->GetFormID().c_str());
+					}
+					if (ImGui::MenuItem(Translate("COPY_EDITORID"))) {
+						ImGui::SetClipboardText(a_item->GetEditorID().c_str());
+					}
+					if (ImGui::MenuItem(Translate("COPY_NAME"))) {
+						ImGui::SetClipboardText(a_item->GetName().c_str());
+					}
+					if (ImGui::MenuItem(Translate("COPY_PLUGIN"))) {
+						ImGui::SetClipboardText(a_item->GetPluginName().c_str());
+					}
+					ImGui::EndMenu();
+				}
+
+				ImGui::EndPopup();
+				return;
+			}
+
 			if (!tableTargetRef || !IsValidTargetReference()) {
 				ImGui::TextColored(ThemeConfig::GetColor("ERROR"), "%s", Translate("ERROR_INVALID_REFERENCE"));
 				ImGui::EndPopup();

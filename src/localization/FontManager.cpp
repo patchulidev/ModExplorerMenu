@@ -1,5 +1,6 @@
 #include "FontManager.h"
 #include "config/UserConfig.h"
+#include "core/PathUtf8.h"
 #include "external/icons/IconsLucide.h"
 
 namespace Modex
@@ -19,7 +20,7 @@ namespace Modex
 		Debug("Building Font Library for font configuration...");
 
 		if (!std::filesystem::exists(MODEX_ICON_FILE)) {
-			Warn("Modex Icon Font not found at expected path: {}. Icons may not display correctly.", MODEX_ICON_FILE.string());
+			Warn("Modex Icon Font not found at expected path: {}. Icons may not display correctly.", PathToUtf8(MODEX_ICON_FILE));
 		}
 
 		// Iterate through fonts relative to Modex Font directory.
@@ -33,7 +34,7 @@ namespace Modex
 					continue;
 				}
 
-				const auto filename = entry.path().stem().string();
+				const auto filename = PathToUtf8(entry.path().stem());
 				const auto filepath = entry.path();
 
 				m_library.emplace_back(filename, filepath);
@@ -48,7 +49,7 @@ namespace Modex
 					continue;
 				}
 
-				const auto filename = entry.path().stem().string();
+				const auto filename = PathToUtf8(entry.path().stem());
 				const auto filepath = entry.path();
 
 				m_library.emplace_back(filename, filepath);
@@ -97,7 +98,7 @@ namespace Modex
 		icon_config.GlyphOffset.y = 3.0f;
 		icon_config.DstFont = m_base.font;
 
-		io.Fonts->AddFontFromFileTTF(MODEX_ICON_FILE.string().c_str(), 0.0f, &icon_config);
+		io.Fonts->AddFontFromFileTTF(PathToUtf8(MODEX_ICON_FILE).c_str(), 0.0f, &icon_config);
 	}
 
 	void FontManager::SetFont(const std::filesystem::path& a_path)
@@ -106,12 +107,14 @@ namespace Modex
 		auto _base = std::move(m_base);
 		auto _bold = std::move(m_bold);
 
+		const auto utf8_path = PathToUtf8(a_path);
+
 		m_base = FontData(false);
-		m_base.font = io.Fonts->AddFontFromFileTTF(a_path.string().c_str(), 0.0f, &m_base.config);
+		m_base.font = io.Fonts->AddFontFromFileTTF(utf8_path.c_str(), 0.0f, &m_base.config);
 		m_base.owner = m_base.font->OwnerAtlas;
 
 		m_bold = FontData(true);
-		m_bold.font = io.Fonts->AddFontFromFileTTF(a_path.string().c_str(), 0.0f, &m_bold.config);
+		m_bold.font = io.Fonts->AddFontFromFileTTF(utf8_path.c_str(), 0.0f, &m_bold.config);
 		m_bold.owner = m_bold.font->OwnerAtlas;
 
 		MergeIcons();
@@ -119,6 +122,6 @@ namespace Modex
 		_base.Cleanup();
 		_bold.Cleanup();
 
-		Info("Set font to: {}", a_path.string());
+		Info("Set font to: {}", utf8_path);
 	}
 }
