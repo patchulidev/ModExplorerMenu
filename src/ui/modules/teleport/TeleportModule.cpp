@@ -10,6 +10,11 @@ namespace Modex
 		DrawTabMenu();
 	}
 
+	float TeleportModule::GetContentRatio() const
+	{
+		return Style::Ratio::TablePrimary();
+	}
+
 	static inline void DrawTeleportLayout(std::vector<std::unique_ptr<UITable>>& a_tables)
 	{
 		const ImVec2 window_padding = ImGui::GetStyle().WindowPadding;

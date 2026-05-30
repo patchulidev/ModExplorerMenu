@@ -71,6 +71,49 @@ namespace
 		ImGui::Dummy(ImVec2(max_width, bar_size.y)); // reserve space for the custom bar
 	}
 
+	inline void inlineBarExPair(const char* a_labelA, float a_valueA,
+	                            const char* a_labelB, float a_valueB,
+	                            float a_max)
+	{
+		const auto&  draw_list   = ImGui::GetWindowDrawList();
+		const float  total_width = ImGui::GetContentRegionAvail().x;
+		const float  gap         = ImGui::GetStyle().ItemSpacing.x;
+		const float  col_width   = (total_width - gap) * 0.5f;
+		const float  bar_h       = ImGui::GetFrameHeight();
+
+		auto drawBar = [&](const char* a_label, float a_value) {
+			const ImVec2 start = ImGui::GetCursorScreenPos();
+
+			char buffer[256];
+			ImFormatString(buffer, IM_ARRAYSIZE(buffer), "%d", static_cast<int>(a_value));
+
+			draw_list->AddRectFilled(
+				ImVec2(start.x, start.y),
+				ImVec2(start.x + (col_width * (a_value / a_max)), start.y + bar_h),
+				progressColor(a_value, a_max)
+			);
+
+			draw_list->AddText(
+				ImVec2(start.x + 4.0f, start.y + (bar_h - ImGui::GetFontSize()) / 2.0f),
+				ImGui::GetColorU32(ImGuiCol_Text),
+				a_label
+			);
+
+			draw_list->AddText(
+				ImVec2(start.x + col_width - ImGui::CalcTextSize(buffer).x - 4.0f,
+				       start.y + (bar_h - ImGui::GetFontSize()) / 2.0f),
+				ImGui::GetColorU32(ImGuiCol_Text),
+				buffer
+			);
+
+			ImGui::Dummy(ImVec2(col_width, bar_h));
+		};
+
+		drawBar(a_labelA, a_valueA);
+		ImGui::SameLine(0.0f, gap);
+		drawBar(a_labelB, a_valueB);
+	}
+
 	inline void inlineBar(const std::unique_ptr<BaseObject>& a_item, PropertyType a_property, float max_value)
 	{
 		const float max_width = ImGui::GetContentRegionAvail().x;
@@ -107,17 +150,19 @@ namespace
 		ImGui::PopStyleVar(1);
 	}
 
-	inline void inlineCheckbox(const std::unique_ptr<BaseObject>& a_item, PropertyType a_property)
+	inline void inlineCheckbox(const std::unique_ptr<BaseObject>& a_item, PropertyType a_property, bool a_useLabel = false)
 	{
 		const float max_width = ImGui::GetContentRegionAvail().x;
 		const std::string  icon    = FilterProperty::GetIcon(a_property);
 		const std::string  tooltip = FilterProperty::GetPropertyTooltipKey(a_property);
+		const std::string  descriptor = a_useLabel
+			? icon + " " + FilterProperty::GetString(a_property)
+			: icon;
 		bool flag = a_item->GetPropertyByValue(a_property).find("true") == std::string::npos ? false : true;
 		const float box_width = ImGui::GetFontSize();
 		const float width = (std::max)(max_width - box_width, ImGui::GetContentRegionAvail().x - box_width);
 
-		// Icon-only descriptor
-		ImGui::Text("%s", icon.c_str());
+		ImGui::Text("%s", descriptor.c_str());
 
 		if (ImGui::IsItemHovered()) {
 			UINotification::ShowTooltip(tooltip.c_str());
@@ -367,66 +412,62 @@ namespace
 
 	inline void drawActorPreview(const std::unique_ptr<BaseObject>& a_npc, bool a_tooltip)
 	{
-		inlineText(a_npc, PropertyType::kHealth);
-		inlineText(a_npc, PropertyType::kMagicka);
-		inlineText(a_npc, PropertyType::kStamina);
+		// Vitals + level — pair related stats two per row to match the
+		// weapon/armor preview density.
+		inlineTextPair(a_npc, PropertyType::kHealth,  PropertyType::kMagicka);
+		inlineTextPair(a_npc, PropertyType::kStamina, PropertyType::kLevel);
 
-		inlineText(a_npc, PropertyType::kRace);
-		inlineText(a_npc, PropertyType::kClass);
-		inlineText(a_npc, PropertyType::kGender);
-		inlineText(a_npc, PropertyType::kLevel);
+		// Identity
+		inlineTextPair(a_npc, PropertyType::kRace,   PropertyType::kClass);
+		inlineText    (a_npc, PropertyType::kGender);
 
-		inlineText(a_npc, PropertyType::kDefaultOutfit);
-		inlineText(a_npc, PropertyType::kSleepOutfit);
+		// Outfits
+		inlineTextPair(a_npc, PropertyType::kDefaultOutfit, PropertyType::kSleepOutfit);
 
-		if (!a_tooltip) {
-			if (const auto skills = a_npc->GetSkills(); skills.has_value()) {
-				ImGui::PushID("ItemPreview::Skills");
-				for (size_t i = 0; i < RE::TESNPC::Skills::Skills::kTotal; i++) {
-					uint32_t offset = static_cast<uint8_t>(RE::ActorValue::kOneHanded);
+		if (a_tooltip) return;
 
-					uint8_t skillValue = skills.value().values[i];
-					const std::string_view skillName = magic_enum::enum_name(static_cast<RE::ActorValue>(offset + i));
+		// Skills — two columns to halve the 18-row block.
+		if (const auto skills = a_npc->GetSkills(); skills.has_value()) {
+			ImGui::SeparatorText(Translate("SKILLS"));
+			ImGui::PushID("ItemPreview::Skills");
 
-					inlineBarEx(skillName.data(), skillValue, 100.0f);
-				}
-				ImGui::PopID();
+			constexpr auto kOffset = static_cast<uint8_t>(RE::ActorValue::kOneHanded);
+			constexpr auto kTotal  = static_cast<size_t>(RE::TESNPC::Skills::Skills::kTotal);
+			const auto&    values  = skills.value().values;
+
+			size_t i = 0;
+			for (; i + 1 < kTotal; i += 2) {
+				const auto nameA = magic_enum::enum_name(static_cast<RE::ActorValue>(kOffset + i));
+				const auto nameB = magic_enum::enum_name(static_cast<RE::ActorValue>(kOffset + i + 1));
+				inlineBarExPair(nameA.data(), values[i], nameB.data(), values[i + 1], 100.0f);
 			}
-
-			if (const auto spells = a_npc->GetSpellList(); !spells.empty()) {
-				const auto tooltip = FilterProperty::GetPropertyTooltipKey(PropertyType::kSpell);
-				const auto icon    = FilterProperty::GetIcon(PropertyType::kSpell);
-
-				ImGui::PushID("ItemPreview::Spells");
-				for (const auto& spell : spells) {
-					if (spell.empty())
-						continue;
-
-					inlineTextEx(icon.c_str(), spell.c_str(), tooltip.c_str());
-				}
-				ImGui::PopID();
+			if (i < kTotal) {
+				const auto name = magic_enum::enum_name(static_cast<RE::ActorValue>(kOffset + i));
+				inlineBarEx(name.data(), values[i], 100.0f);
 			}
+			ImGui::PopID();
+		}
 
-			if (const auto factions = a_npc->GetFactions(); factions.has_value()) {
-				const auto tooltip = FilterProperty::GetPropertyTooltipKey(PropertyType::kFaction);
-				const auto icon    = FilterProperty::GetIcon(PropertyType::kFaction);
+		// Spells — two-column list to match KEYWORDS / SLOTS density.
+		if (const auto spells = a_npc->GetSpellList(); !spells.empty()) {
+			const auto tooltip = FilterProperty::GetPropertyTooltipKey(PropertyType::kSpell);
+			const auto icon    = FilterProperty::GetIcon(PropertyType::kSpell);
 
-				ImGui::PushID("ItemPreview::Factions");
-				for (const auto& faction : factions.value()) {
-					std::string factionName = faction.faction->GetName();
+			ImGui::SeparatorText(Translate("SPELLS"));
+			ImGui::PushID("ItemPreview::Spells");
+			inlineListPair(spells, icon.c_str(), tooltip.c_str());
+			ImGui::PopID();
+		}
 
-					if (factionName.empty()) {
-						factionName = faction.faction->GetFullName();
-					}
+		// Factions — two-column list.
+		if (const auto factions = a_npc->GetFactionList(); !factions.empty()) {
+			const auto tooltip = FilterProperty::GetPropertyTooltipKey(PropertyType::kFaction);
+			const auto icon    = FilterProperty::GetIcon(PropertyType::kFaction);
 
-					if (factionName.empty()) {
-						factionName = "";
-					}
-
-					inlineTextEx(icon.c_str(), factionName.c_str(), tooltip.c_str());
-				}
-				ImGui::PopID();
-			}
+			ImGui::SeparatorText(Translate("kFactionList"));
+			ImGui::PushID("ItemPreview::Factions");
+			inlineListPair(factions, icon.c_str(), tooltip.c_str());
+			ImGui::PopID();
 		}
 	}
 
@@ -572,33 +613,28 @@ namespace
 
 	inline void drawLeveledListPreview(const std::unique_ptr<BaseObject>& a_list)
 	{
-		inlineCheckbox(a_list, PropertyType::kLeveledAllLevelsFlag);
-		inlineCheckbox(a_list, PropertyType::kLeveledEachFlag);
-		inlineCheckbox(a_list, PropertyType::kLeveledUseAllFlag);
-		inlineCheckbox(a_list, PropertyType::kLeveledSpecialFlag);
-		inlineText(a_list, PropertyType::kLeveledChance);
+		// Shown via tooltip context where hovering the icon for its label
+		// isn't viable — all four flag icons are identical, so render the
+		// property name alongside each.
+		inlineCheckbox(a_list, PropertyType::kLeveledAllLevelsFlag, true);
+		inlineCheckbox(a_list, PropertyType::kLeveledEachFlag,      true);
+		inlineCheckbox(a_list, PropertyType::kLeveledUseAllFlag,    true);
+		inlineCheckbox(a_list, PropertyType::kLeveledSpecialFlag,   true);
+
+		const auto chanceLabel = FilterProperty::GetIcon(PropertyType::kLeveledChance) + " " +
+		                         FilterProperty::GetString(PropertyType::kLeveledChance);
+		const auto chanceValue = a_list->GetPropertyByValue(PropertyType::kLeveledChance);
+		const auto chanceTip   = FilterProperty::GetPropertyTooltipKey(PropertyType::kLeveledChance);
+		inlineTextEx(chanceLabel.c_str(), chanceValue.c_str(), chanceTip.c_str());
 	}
 
 	inline void drawOutfitPreview(const std::unique_ptr<BaseObject>& a_item)
 	{
-		ImGui::Spacing();
-		ImGui::Spacing();
-
-		// Outfit Item List Header
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		ImGui::SetCursorPosX(UICustom::GetCenterTextPosX(Translate("HEADER_OUTFIT_ITEMS")));
-		ImGui::AlignTextToFramePadding();
-		ImGui::Text("%s", Translate("HEADER_OUTFIT_ITEMS"));
-		ImGui::SameLine();
-		ImGui::AlignTextToFramePadding();
-		ImGui::Text(ICON_LC_MESSAGE_CIRCLE_QUESTION);
+		ImGui::SeparatorText(Translate("HEADER_OUTFIT_ITEMS"));
 
 		if (ImGui::IsItemHovered(ImGuiHoveredFlags_NoSharedDelay | ImGuiHoveredFlags_DelayShort)) {
 			UICustom::FancyTooltip(Translate("HEADER_OUTFIT_TOOLTIP"));
 		}
-
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-		ImGui::Spacing();
 
 		// Show the item list of the selected outfit
 		if (a_item) {
@@ -878,7 +914,8 @@ namespace
 
 			const bool useScroll = !a_tooltip;
 			if (useScroll) {
-				ImGui::BeginChild("##ItemPreview::Info", ImVec2(0, 0), false, ImGuiWindowFlags_NoMove);
+				ImGui::BeginChild("##ItemPreview::Info", ImVec2(0, 0), false,
+				                  ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar);
 			}
 			
 			drawBasePreview(a_item);

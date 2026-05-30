@@ -11,6 +11,11 @@ namespace Modex
 		DrawTabMenu();
 	}
 
+	float ObjectModule::GetContentRatio() const
+	{
+		return Style::Ratio::TablePrimary();
+	}
+
 	static inline void DrawTableView(std::vector<std::unique_ptr<UITable>>& a_tables)
 	{
 		const ImVec2 window_padding = ImGui::GetStyle().WindowPadding;

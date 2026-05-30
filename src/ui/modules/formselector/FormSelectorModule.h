@@ -19,6 +19,7 @@ namespace Modex
 
 		void Draw() override;
 		void DrawTabMenu() override;
+		float GetContentRatio() const override;
 
 		void AddSelection(RE::FormID a_formID);
 		void RemoveSelection(RE::FormID a_formID);

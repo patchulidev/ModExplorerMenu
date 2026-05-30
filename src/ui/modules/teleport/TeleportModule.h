@@ -15,5 +15,6 @@ namespace Modex
 		TeleportModule& operator=(TeleportModule&&) = delete;
 
 		void Draw() override;
+		float GetContentRatio() const override;
 	};
 }

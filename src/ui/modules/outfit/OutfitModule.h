@@ -15,5 +15,6 @@ namespace Modex
 		OutfitModule& operator=(OutfitModule&&) = delete;
 
 		void Draw() override;
+		float GetContentRatio() const override;
 	};
 }

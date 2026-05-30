@@ -15,5 +15,6 @@ namespace Modex
 		ObjectModule& operator=(ObjectModule&&) = delete;
 
 		void Draw() override;
+		float GetContentRatio() const override;
 	};
 }

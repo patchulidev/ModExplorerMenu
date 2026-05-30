@@ -15,6 +15,11 @@ namespace Modex
 		DrawTabMenu();
 	}
 
+	float FormSelectorModule::GetContentRatio() const
+	{
+		return 2.0f / 3.0f;
+	}
+
 	void FormSelectorModule::DrawTabMenu()
 	{
 		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetStyle().WindowPadding.x);
@@ -125,18 +130,18 @@ namespace Modex
 							if (entry->GetFormType() == RE::FormType::LeveledItem) {
 								const auto icon = FilterProperty::GetIcon(PropertyType::kLeveledItem);
 								const auto edid = po3_GetEditorID(entry->GetFormID());
-								const auto value = Commands::GetProjectedLeveledListValue(entry->As<RE::TESLeveledList>());
+								const auto entry_value = Commands::GetProjectedLeveledListValue(entry->As<RE::TESLeveledList>());
 								ImGui::Text("%s %s", icon.c_str(), TRUNCATE(edid, max_width * Style::Ratio::TruncateNameMid()).c_str());
 								ImGui::SameLine();
-								ImGui::TextDisabled("%s %d", ICON_LC_COINS, value);
+								ImGui::TextDisabled("%s %d", ICON_LC_COINS, entry_value);
 							} else {
 								const auto object = BaseObject(entry, Ownership::None);
 								const auto icon = object.GetItemIcon();
 								const auto edid = object.GetEditorID();
-								const auto value = object.GetGoldValue();
+								const auto entry_value = object.GetGoldValue();
 								ImGui::Text("%s %s", icon.c_str(), TRUNCATE(edid, max_width * Style::Ratio::TruncateNameMid()).c_str());
 								ImGui::SameLine();
-								ImGui::TextDisabled("%s %d", ICON_LC_COINS, value);
+								ImGui::TextDisabled("%s %d", ICON_LC_COINS, entry_value);
 							}
 						}
 

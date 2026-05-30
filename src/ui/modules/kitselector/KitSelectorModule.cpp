@@ -15,6 +15,11 @@ namespace Modex
 		DrawTabMenu();
 	}
 
+	float KitSelectorModule::GetContentRatio() const
+	{
+		return 2.0f / 3.0f;
+	}
+
 	void KitSelectorModule::DrawTabMenu()
 	{
 		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetStyle().WindowPadding.x);
