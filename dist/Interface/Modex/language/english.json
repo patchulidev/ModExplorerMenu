@@ -216,6 +216,7 @@
 "_CONTAINER_VIEW": "======== Container View Actions ========",
 "CONTAINER_VIEW": "Show Results In-game",
 "CONTAINER_VIEW_TOOLTIP": "Show Results\n\nView the contents of your search in an in-game container. There you can preview, or loot items directly in-game",
+"CONTAINER_VIEW_HIDDEN_TOOLTIP": "Hide Chest\n\nWhen enabled, the chest spawns hidden beneath you instead of being placed in front. The container menu still opens normally — useful when you only want the inventory without a visible chest in the world.",
 "CONTAINER_VIEW_KIT": "Show Kit In-game",
 "CONTAINER_VIEW_KIT_TOOLTIP": "Show Results\n\nView the contents of this Kit in an in-game container. Allowing you to preview, or loot items directly in-game.",
 "CONTAINER_VIEW_TARGET": "Open Target Inventory",
