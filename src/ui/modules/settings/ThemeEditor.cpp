@@ -430,6 +430,8 @@ namespace Modex
 				DrawFloat(Translate("THEME_EDITOR_LBL_DESIRED_WIDTH_PAD_FONT"),  w.itemPreview.desiredWidthPadFont,  1.0f, 12.0f);
 				DrawFloat(Translate("THEME_EDITOR_LBL_PREVIEW_BOX_SCALE"),       w.itemPreview.previewBoxScale,      0.10f, 1.0f, "%.2f");
 				DrawFloat(Translate("THEME_EDITOR_LBL_PREVIEW_MODEL_SCALE"),     w.itemPreview.previewModelScale,    0.25f, 1.0f, "%.2f");
+				DrawFloat(Translate("THEME_EDITOR_LBL_PREVIEW_OFFSET_X"),        w.itemPreview.previewOffsetX,       -300.0f, 300.0f, "%.0f px");
+				DrawFloat(Translate("THEME_EDITOR_LBL_PREVIEW_OFFSET_Y"),        w.itemPreview.previewOffsetY,       -300.0f, 300.0f, "%.0f px");
 				EndSection(true);
 			} else EndSection(false);
 

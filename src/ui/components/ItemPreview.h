@@ -5,6 +5,7 @@
 #include "core/Commands.h"
 #include "imgui.h"
 #include "imgui_internal.h"
+#include "localization/FontManager.h"
 #include "localization/Locale.h"
 #include "config/ThemeConfig.h"
 #include "config/UserConfig.h"
@@ -714,6 +715,75 @@ namespace
 			drawDescriptionOverlay(a_item, image_pos, size);
 		} else {
 			ImGui::Dummy(size);
+		}
+
+		// Settings cog overlay — top-left of the preview pane. Opens a popup
+		// with the theme tokens that directly drive the preview's visual size.
+		// Autosaves on slider release; no explicit Save button.
+		{
+			constexpr const char* kPopupId = "##PreviewSettingsPopup";
+
+			const ImVec2 cursorAfter = ImGui::GetCursorScreenPos();
+			const float  iconSize    = ImGui::GetFontSize() * 1.3f;
+			const float  pad         = ImGui::GetStyle().FramePadding.x;
+
+			ImGui::SetCursorScreenPos(ImVec2(image_pos.x + pad,
+			                                 image_pos.y + pad));
+			ImGui::PushID("##PreviewSettingsCog");
+
+			// Frameless icon-only button: zero frame padding so the clickable
+			// area matches the glyph; transparent normal/hover/active colors
+			// so only the white cog shows. The hover/active overlays are kept
+			// faint so the user still gets affordance feedback.
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, 0.0f));
+			ImGui::PushStyleColor(ImGuiCol_Button,        ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(1.0f, 1.0f, 1.0f, 0.10f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive,  ImVec4(1.0f, 1.0f, 1.0f, 0.20f));
+			ImGui::PushFontRegular(iconSize);
+			const bool clicked = ImGui::Button(ICON_LC_SETTINGS);
+			ImGui::PopFont();
+			ImGui::PopStyleColor(3);
+			ImGui::PopStyleVar();
+
+			if (clicked) {
+				ImGui::OpenPopup(kPopupId);
+			}
+
+			if (ImGui::BeginPopup(kPopupId)) {
+				auto& widgets = ThemeConfig::GetWidgetStyleMutable();
+				bool  persist = false;
+
+				ImGui::TextDisabled("%s", Translate("THEME_EDITOR_SECT_ITEM_PREVIEW"));
+				ImGui::Separator();
+
+				constexpr float kSliderWidth = 180.0f;
+				ImGui::SetNextItemWidth(kSliderWidth);
+				ImGui::SliderFloat(Translate("THEME_EDITOR_LBL_PREVIEW_BOX_SCALE"),
+				                   &widgets.itemPreview.previewBoxScale,   0.10f, 1.0f, "%.2f");
+				persist |= ImGui::IsItemDeactivatedAfterEdit();
+
+				ImGui::SetNextItemWidth(kSliderWidth);
+				ImGui::SliderFloat(Translate("THEME_EDITOR_LBL_PREVIEW_MODEL_SCALE"),
+				                   &widgets.itemPreview.previewModelScale, 0.25f, 1.0f, "%.2f");
+				persist |= ImGui::IsItemDeactivatedAfterEdit();
+
+				ImGui::SetNextItemWidth(kSliderWidth);
+				ImGui::SliderFloat(Translate("THEME_EDITOR_LBL_PREVIEW_OFFSET_X"),
+				                   &widgets.itemPreview.previewOffsetX, -300.0f, 300.0f, "%.0f px");
+				persist |= ImGui::IsItemDeactivatedAfterEdit();
+
+				ImGui::SetNextItemWidth(kSliderWidth);
+				ImGui::SliderFloat(Translate("THEME_EDITOR_LBL_PREVIEW_OFFSET_Y"),
+				                   &widgets.itemPreview.previewOffsetY, -300.0f, 300.0f, "%.0f px");
+				persist |= ImGui::IsItemDeactivatedAfterEdit();
+
+				if (persist) {
+					ThemeConfig::GetSingleton()->SaveCurrentTheme();
+				}
+				ImGui::EndPopup();
+			}
+			ImGui::PopID();
+			ImGui::SetCursorScreenPos(cursorAfter);
 		}
 	}
 }

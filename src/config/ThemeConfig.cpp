@@ -223,6 +223,8 @@ namespace Modex
 				getF(*s, "desiredWidthPadFont",  m_widgetStyle.itemPreview.desiredWidthPadFont);
 				getF(*s, "previewBoxScale",      m_widgetStyle.itemPreview.previewBoxScale);
 				getF(*s, "previewModelScale",    m_widgetStyle.itemPreview.previewModelScale);
+				getF(*s, "previewOffsetX",       m_widgetStyle.itemPreview.previewOffsetX);
+				getF(*s, "previewOffsetY",       m_widgetStyle.itemPreview.previewOffsetY);
 			}
 			if (auto* s = getSection("notification")) {
 				getF(*s, "tooltipHeightScale", m_widgetStyle.notification.tooltipHeightScale);
@@ -496,6 +498,8 @@ namespace Modex
 			{ "desiredWidthPadFont",  w.itemPreview.desiredWidthPadFont },
 			{ "previewBoxScale",      w.itemPreview.previewBoxScale },
 			{ "previewModelScale",    w.itemPreview.previewModelScale },
+			{ "previewOffsetX",       w.itemPreview.previewOffsetX },
+			{ "previewOffsetY",       w.itemPreview.previewOffsetY },
 		};
 		widgets["notification"] = {
 			{ "tooltipHeightScale", w.notification.tooltipHeightScale },

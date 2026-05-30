@@ -32,16 +32,8 @@ namespace Modex
 
 		const float effectiveWidth = (m_innerSize.x > 0.0f) ? (std::min)(m_innerSize.x, m_lastCapturedSize.x) : m_lastCapturedSize.x;
 		const float effectiveHeight = (m_innerSize.y > 0.0f) ? (std::min)(m_innerSize.y, m_lastCapturedSize.y) : m_lastCapturedSize.y;
-		float startX = m_modelInTexture.x - effectiveWidth * 0.5f;
-		float startY = m_modelInTexture.y - effectiveHeight * 0.5f;
-
-		// Keep the UV window fully inside the captured pixels.
-		if (startX < 0.0f) startX = 0.0f;
-		if (startY < 0.0f) startY = 0.0f;
-		const float maxStartX = m_lastCapturedSize.x - effectiveWidth;
-		const float maxStartY = m_lastCapturedSize.y - effectiveHeight;
-		if (startX > maxStartX) startX = maxStartX;
-		if (startY > maxStartY) startY = maxStartY;
+		const float startX = m_modelInTexture.x - effectiveWidth * 0.5f;
+		const float startY = m_modelInTexture.y - effectiveHeight * 0.5f;
 
 		a_uv0 = ImVec2(startX / kTex,             startY / kTex);
 		a_uv1 = ImVec2((startX + effectiveWidth) / kTex,   (startY + effectiveHeight) / kTex);
@@ -316,5 +308,9 @@ namespace Modex
 		const float model_cy = m_capturePos.y + m_captureSize.y * 0.5f;
 		m_modelInTexture = ImVec2(model_cx - static_cast<float>(left),
 		                          model_cy - static_cast<float>(top));
+
+		const auto& offsets = ThemeConfig::GetWidgetStyle().itemPreview;
+		m_modelInTexture.x -= offsets.previewOffsetX;
+		m_modelInTexture.y -= offsets.previewOffsetY;
 	}
 }
