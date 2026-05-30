@@ -1,5 +1,6 @@
 #include "core/Hooks.h"
 #include "core/InputManager.h"
+#include "core/PlayerChestSpawn.h"
 #include "ui/core/UIManager.h"
 #include "ui/core/UIMenuImpl.h"
 #include <memory>
@@ -12,6 +13,14 @@ namespace Hooks
 {
 	RE::BSEventNotifyControl IMenuOpenCloseEvent::ProcessEvent(const RE::MenuOpenCloseEvent* event, RE::BSTEventSource<RE::MenuOpenCloseEvent>*) {
 		if (!event->opening) {
+			if (event->menuName == Modex::ModexGUIMenu::MENU_NAME) {
+				Modex::PlayerChestSpawn::GetSingleton()->OnModexClosed();
+			}
+
+			if (event->menuName == RE::ContainerMenu::MENU_NAME) {
+				Modex::PlayerChestSpawn::GetSingleton()->OnContainerMenuClosed();
+			}
+
 			if (const auto& manager = Modex::UIManager::GetSingleton(); manager != nullptr) {
 				if (event->menuName == RE::ContainerMenu::MENU_NAME) {
 					if (manager->GetMenuListener()) {

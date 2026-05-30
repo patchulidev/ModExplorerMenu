@@ -73,11 +73,49 @@ namespace Modex
 				Commands::OpenActorInventory(a_view->GetTableTargetRef());
 			}
 
-			if (UICustom::ActionButton("CONTAINER_VIEW", ImVec2(max_width, button_height), !Commands::IsGameMenuOpen())) {
-				bool max_query = std::ssize(a_view->GetTableList()) >= UserConfig::Get().maxQuery;
-				UIManager::GetSingleton()->ShowWarning(Translate("WARNING"), Translate("ERROR_MAX_QUERY"), max_query, [&a_view]() {
-					PlayerChestSpawn::GetSingleton()->PopulateChestWithItems(a_view->GetTableList());
-				});
+			{
+				const float padding_x = ImGui::GetStyle().FramePadding.x;
+				const float padding_y = (button_height - ImGui::GetFontSize()) * 0.5f;
+				ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(padding_x, padding_y));
+
+				const float checkbox_w = ImGui::GetFrameHeight();
+				const float container_view_w = max_width - checkbox_w;
+
+				bool hideChest = UserData::Get<bool>("ShowResults.HideChest", true);
+
+				ImGui::PushStyleColor(ImGuiCol_FrameBg, ThemeConfig::GetColor("BG_LIGHT"));
+				ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ThemeConfig::GetHover("BG_LIGHT"));
+				ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ThemeConfig::GetActive("BG_LIGHT"));
+				ImGui::PushStyleColor(ImGuiCol_CheckMark, ThemeConfig::GetColor("PRIMARY"));
+				if (ImGui::Checkbox("##CONTAINER_VIEW_HIDDEN", &hideChest)) {
+					UserData::Set<bool>("ShowResults.HideChest", hideChest);
+				}
+				ImGui::PopStyleColor(4);
+				ImGui::PopStyleVar();
+
+				if (ImGui::IsItemHovered()) {
+					UICustom::FancyTooltip("CONTAINER_VIEW_HIDDEN_TOOLTIP");
+				}
+
+				ImGui::SameLine(0.0f, 0.0f);
+
+				const ImVec2 text_size = ImGui::CalcTextSize(Translate("CONTAINER_VIEW"));
+				const float free_space = container_view_w - text_size.x;
+				const float align_x = free_space > 0.0f
+					? ((max_width - text_size.x) * 0.5f - checkbox_w) / free_space
+					: 0.5f;
+
+				ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(align_x, 0.5f));
+				if (UICustom::ActionButton("CONTAINER_VIEW", ImVec2(container_view_w, button_height), !Commands::IsGameMenuOpen())) {
+					bool max_query = std::ssize(a_view->GetTableList()) >= UserConfig::Get().maxQuery;
+					UIManager::GetSingleton()->ShowWarning(Translate("WARNING"), Translate("ERROR_MAX_QUERY"), max_query, [&a_view, hideChest]() {
+						const auto placement = hideChest
+							? PlayerChestSpawn::Placement::HiddenBelowPlayer
+							: PlayerChestSpawn::Placement::InFrontOfPlayer;
+						PlayerChestSpawn::GetSingleton()->PopulateChestWithItems(a_view->GetTableList(), placement);
+					});
+				}
+				ImGui::PopStyleVar();
 			}
 			ImGui::PopStyleColor(3);
 
@@ -146,10 +184,10 @@ namespace Modex
 			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ThemeConfig::GetHover("SECONDARY"));
 			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ThemeConfig::GetActive("SECONDARY"));
 			if (UICustom::ActionButton("CONTAINER_VIEW_TARGET", ImVec2(max_width, button_height), valid_table_target)) {
-				Commands::OpenActorInventory(a_view->GetTableTargetRef());
+				PlayerChestSpawn::GetSingleton()->PopulateChestWithActorInventory(a_view->GetTableTargetRef());
 			}
 			if (UICustom::ActionButton("CONTAINER_VIEW_SELECTION", ImVec2(max_width, button_height), valid_selection_target)) {
-				Commands::OpenActorInventory(a_view->GetSelectedReference());
+				PlayerChestSpawn::GetSingleton()->PopulateChestWithActorInventory(a_view->GetSelectedReference());
 			}
 			ImGui::PopStyleColor(3);
 
