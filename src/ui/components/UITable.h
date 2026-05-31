@@ -132,7 +132,8 @@ namespace Modex
 		enum class DragDropHandle {
 			Table,
 			Kit,
-			Inventory
+			Inventory,
+			SpellSource
 		};
 
 		void AddFlag(TableFlag flag) { flags |= flag; }

@@ -25,6 +25,7 @@ namespace Modex
 		float GetContentRatio() const override;
 		void DrawEquipmentLayout(std::vector<std::unique_ptr<UITable>>& a_tables);
 		void DrawKitBrowserLayout(std::vector<std::unique_ptr<UITable>>& a_tables);
+		void DrawSpellLayout(std::vector<std::unique_ptr<UITable>>& a_tables);
 		void DrawKitActionsPanel(const ImVec2 &a_pos, const ImVec2 &a_size);
 
 		void SelectKitByKey(const std::string& a_key);

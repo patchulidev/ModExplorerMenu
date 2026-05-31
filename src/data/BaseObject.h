@@ -1674,7 +1674,7 @@ namespace Modex
 		int rank;
 	};
 
-	struct KitSpell : KitBase // unused
+	struct KitSpell : KitBase
 	{
 	};
 
@@ -1741,7 +1741,8 @@ namespace Modex
 	class Kit : public KitData
 	{
 	public:
-		std::vector<std::shared_ptr<KitItem>> m_items;
+		std::vector<std::shared_ptr<KitItem>>  m_items;
+		std::vector<std::shared_ptr<KitSpell>> m_spells;
 
 		// runtime
 		ImGuiID m_tableID = 0;

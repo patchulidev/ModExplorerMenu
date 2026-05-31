@@ -73,6 +73,7 @@
 "TAB_INVENTORY": "Single Layout",
 "TAB_MULTI_INVENTORY": "Multi Layout",
 "TAB_EQUIPMENT": "Equipment Setup Layout",
+"TAB_KIT_SPELLS": "Equipment Spells Layout",
 "TAB_KIT_BROWSER": "Equipment Browser Layout",
 "TAB_ACTOR": "Actor Table Layout",
 "TAB_OBJECT": "Object Table Layout",

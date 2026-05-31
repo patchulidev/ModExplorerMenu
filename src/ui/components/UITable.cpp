@@ -325,7 +325,7 @@ namespace Modex
 		if (tableList.empty())
 			return;
 
-		if (a_kit.m_items.empty())
+		if (a_kit.m_items.empty() && a_kit.m_spells.empty())
 			return;
 
 		if (!tableTargetRef)
@@ -333,10 +333,14 @@ namespace Modex
 
 		for (auto& kitItem : a_kit.m_items) {
 			if (kitItem->m_equipped) {
-				Commands::AddAndEquipItemToInventory(owner, tableTargetRef, kitItem->m_formID);
+				Commands::AddAndEquipItemToInventory(Ownership::Item, tableTargetRef, kitItem->m_formID);
 			} else {
-				Commands::AddItemToRefInventory(owner, tableTargetRef, kitItem->m_formID, static_cast<std::uint32_t>(kitItem->m_amount));
+				Commands::AddItemToRefInventory(Ownership::Item, tableTargetRef, kitItem->m_formID, static_cast<std::uint32_t>(kitItem->m_amount));
 			}
+		}
+
+		for (auto& kitSpell : a_kit.m_spells) {
+			Commands::AddSpellToActor(Ownership::Spell, tableTargetRef, kitSpell->m_formID);
 		}
 
 		UpdateActiveInventoryTables();
@@ -622,13 +626,16 @@ namespace Modex
 
 	void UITable::AddPayloadToKit(const std::unique_ptr<BaseObject>& a_item)
 	{
+		// Spells are binary owned (HasSpell/AddSpell) — no quantity to merge.
+		auto* form = a_item->GetTESForm();
+		const bool is_spell = form && form->As<RE::SpellItem>();
+
 		bool has_item = false;
-		if (!tableList.empty()) {
-			for (auto& item : tableList) {
-				if (item->GetEditorID() == a_item->GetEditorID()) {
-					item->m_quantity++;
-					has_item = true;
-				}
+		for (auto& item : tableList) {
+			if (item->GetEditorID() == a_item->GetEditorID()) {
+				if (!is_spell) item->m_quantity++;
+				has_item = true;
+				break;
 			}
 		}
 
@@ -776,11 +783,14 @@ namespace Modex
 			if (selectedKitPtr && !selectedKitPtr->empty()) {
 				auto equipmentConfig = EquipmentConfig::GetSingleton();
 				selectedKitPtr->m_items.clear();
+				selectedKitPtr->m_spells.clear();
 
-				if (!this->tableList.empty()) {
-
-					for (auto& item : this->tableList) {
-						selectedKitPtr->m_items.emplace_back(EquipmentConfig::CreateKitItem(*item));
+				for (auto& entry : this->tableList) {
+					auto* form = entry->GetTESForm();
+					if (form && form->As<RE::SpellItem>()) {
+						selectedKitPtr->m_spells.emplace_back(EquipmentConfig::CreateKitSpell(*entry));
+					} else {
+						selectedKitPtr->m_items.emplace_back(EquipmentConfig::CreateKitItem(*entry));
 					}
 				}
 
@@ -987,15 +997,23 @@ namespace Modex
 		if (!selectedKitPtr)
 			return;
 
-		const auto& kit = selectedKitPtr->m_items;
-
-		for (const auto& item : kit) {
+		for (const auto& item : selectedKitPtr->m_items) {
 			RE::TESForm* form = RE::TESForm::LookupByEditorID(item->m_editorid);
 
 			if (form) {
-				tableList.emplace_back(std::make_unique<BaseObject>(form, owner, 0, 0, item->m_amount, item->m_equipped));
+				tableList.emplace_back(std::make_unique<BaseObject>(form, Ownership::Item, 0, 0, item->m_amount, item->m_equipped));
 			} else {
-				tableList.emplace_back(std::make_unique<BaseObject>(item->m_name, item->m_editorid, item->m_plugin, owner, 0, item->m_amount, item->m_equipped));
+				tableList.emplace_back(std::make_unique<BaseObject>(item->m_name, item->m_editorid, item->m_plugin, Ownership::Item, 0, item->m_amount, item->m_equipped));
+			}
+		}
+
+		for (const auto& spell : selectedKitPtr->m_spells) {
+			RE::TESForm* form = RE::TESForm::LookupByEditorID(spell->m_editorid);
+
+			if (form) {
+				tableList.emplace_back(std::make_unique<BaseObject>(form, Ownership::Spell));
+			} else {
+				tableList.emplace_back(std::make_unique<BaseObject>(spell->m_name, spell->m_editorid, spell->m_plugin, Ownership::Spell));
 			}
 		}
 
@@ -1503,7 +1521,12 @@ namespace Modex
 										*pointer = std::move(new_kit);
 
 										for (const auto& item : *items) {
-											pointer->m_items.emplace_back(EquipmentConfig::CreateKitItem(*item));
+											auto* form = item->GetTESForm();
+											if (form && form->As<RE::SpellItem>()) {
+												pointer->m_spells.emplace_back(EquipmentConfig::CreateKitSpell(*item));
+											} else {
+												pointer->m_items.emplace_back(EquipmentConfig::CreateKitItem(*item));
+											}
 											destination->Refresh();
 										}
 									}
