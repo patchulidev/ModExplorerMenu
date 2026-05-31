@@ -329,7 +329,7 @@ namespace Modex
 
 		static const ActionInfo actions[] = {
 			{ ICON_LC_CROSSHAIR, "HOME_ACTION_SET_PLAYER", 0xFF },
-			{ ICON_LC_SETTINGS,  "HOME_ACTION_SETTINGS",   7 },
+			{ ICON_LC_SETTINGS,  "HOME_ACTION_SETTINGS",   9 },
 			{ ICON_LC_PACKAGE,   "HOME_ACTION_KITS",       2 },
 		};
 
@@ -480,18 +480,19 @@ namespace Modex
 				uint8_t     moduleIndex;
 			};
 
-			// m_moduleInfo vector indices (Object commented out):
-			// Home=0, AddItem=1, Equipment=2, Inventory=3, Actor=4, Teleport=5, Outfit=6, Settings=7
 			static const CardInfo cards[] = {
-				{ ICON_LC_PLUS,    "HOME_CARD_ADDITEM",    "HOME_CARD_ADDITEM_DESC",    1 },
-				{ ICON_LC_PACKAGE, "HOME_CARD_EQUIPMENT",  "HOME_CARD_EQUIPMENT_DESC",  2 },
-				{ ICON_LC_PACKAGE, "HOME_CARD_INVENTORY",  "HOME_CARD_INVENTORY_DESC",  3 },
-				{ ICON_LC_USER,    "HOME_CARD_ACTOR",      "HOME_CARD_ACTOR_DESC",      4 },
-				{ ICON_LC_MAP_PIN, "HOME_CARD_TELEPORT",   "HOME_CARD_TELEPORT_DESC",   5 },
-				{ ICON_LC_SHIRT,   "HOME_CARD_OUTFIT",     "HOME_CARD_OUTFIT_DESC",     6 },
+				{ ICON_LC_PLUS,           "HOME_CARD_ADDITEM",    "HOME_CARD_ADDITEM_DESC",    1 },
+				{ ICON_LC_PACKAGE,        "HOME_CARD_EQUIPMENT",  "HOME_CARD_EQUIPMENT_DESC",  2 },
+				{ ICON_LC_PACKAGE,        "HOME_CARD_INVENTORY",  "HOME_CARD_INVENTORY_DESC",  3 },
+				{ ICON_LC_USER,           "HOME_CARD_ACTOR",      "HOME_CARD_ACTOR_DESC",      4 },
+				{ ICON_LC_BLOCKS,         "HOME_CARD_OBJECT",     "HOME_CARD_OBJECT_DESC",     5 },
+				{ ICON_LC_MAP_PIN,        "HOME_CARD_TELEPORT",   "HOME_CARD_TELEPORT_DESC",   6 },
+				{ ICON_LC_SHIRT,          "HOME_CARD_OUTFIT",     "HOME_CARD_OUTFIT_DESC",     7 },
+				{ ICON_LC_WAND_SPARKLES,  "HOME_CARD_SPELL",      "HOME_CARD_SPELL_DESC",      8 },
 			};
 
-			for (int i = 0; i < 6; i++) {
+			constexpr int num_cards = IM_ARRAYSIZE(cards);
+			for (int i = 0; i < num_cards; i++) {
 				if (i % 2 != 0) {
 					ImGui::SameLine(0, spacing);
 				}

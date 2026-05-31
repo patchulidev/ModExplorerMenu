@@ -825,6 +825,70 @@ namespace Modex::Commands
 		});
 	}
 
+	static inline void AddSpellToActor(Ownership a_owner, RE::TESObjectREFR* a_targetRef, RE::FormID a_spellID)
+	{
+		if (!a_targetRef) {
+			UINotification::ShowError("Failed to obtain Target Reference");
+			return;
+		}
+
+		SKSE::GetTaskInterface()->AddTask([a_owner, a_targetRef, a_spellID]() {
+			auto actor = a_targetRef->As<RE::Actor>();
+
+			if (!actor)
+				return UINotification::ShowError("Target Reference is not an Actor");
+
+			auto form = RE::TESForm::LookupByID(a_spellID);
+
+			if (!form)
+				return UINotification::ShowError("Failed to lookup Spell FormID");
+
+			auto spell = form->As<RE::SpellItem>();
+
+			if (!spell)
+				return UINotification::ShowError("Failed to cast Form to SpellItem");
+
+			if (actor->HasSpell(spell)) {
+				const auto* name = spell->GetName();
+				UINotification::ShowAction(Translate("SPELL_ALREADY_KNOWN"), name ? name : "", ICON_LC_BOOK_OPEN_CHECK, UIMessageType::Warning);
+				return true;
+			}
+
+			actor->AddSpell(spell);
+			UserData::SendEvent(ModexActionType::AddSpell, a_spellID, a_owner);
+			return true;
+		});
+	}
+
+	static inline void RemoveSpellFromActor(Ownership a_owner, RE::TESObjectREFR* a_targetRef, RE::FormID a_spellID)
+	{
+		if (!a_targetRef) {
+			UINotification::ShowError("Failed to obtain Target Reference");
+			return;
+		}
+
+		SKSE::GetTaskInterface()->AddTask([a_owner, a_targetRef, a_spellID]() {
+			auto actor = a_targetRef->As<RE::Actor>();
+
+			if (!actor)
+				return UINotification::ShowError("Target Reference is not an Actor");
+
+			auto form = RE::TESForm::LookupByID(a_spellID);
+
+			if (!form)
+				return UINotification::ShowError("Failed to lookup Spell FormID");
+
+			auto spell = form->As<RE::SpellItem>();
+
+			if (!spell)
+				return UINotification::ShowError("Failed to cast Form to SpellItem");
+
+			actor->RemoveSpell(spell);
+			UserData::SendEvent(ModexActionType::RemoveSpell, a_spellID, a_owner);
+			return true;
+		});
+	}
+
 	static inline void PlaceAtMe(Ownership a_owner, RE::FormID a_formID, uint32_t a_count = 1, bool persistent = true, bool disabled = false)
 	{
 		SKSE::GetTaskInterface()->AddTask([a_owner, a_formID, a_count, persistent, disabled]() {

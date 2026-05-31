@@ -45,7 +45,7 @@ using namespace std::literals;
 
 namespace Modex
 {
-	enum class Ownership : uint32_t 
+	enum class Ownership : uint32_t
 	{
 		None = 0,
 		Item,
@@ -54,16 +54,21 @@ namespace Modex
 		Object,
 		Cell,
 		Outfit,
+		Spell,
 		All
 	};
 
-	enum class PluginSort : uint32_t 
+	enum class PluginSort : uint32_t
 	{
 		Alphabetical = 0,
 		Load_Order_Ascending,
 		Load_Order_Descending,
 		kTotal,
 	};
+
+	// Global filter context read by target-dependent property evaluators (kKnownByTarget,
+	// kSpellCost). UITable writes this whenever its target changes.
+	inline RE::FormID g_modexFilterTargetID = 0x14;
 }
 
 namespace stl

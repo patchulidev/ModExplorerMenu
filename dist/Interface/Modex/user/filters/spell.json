@@ -1,0 +1,147 @@
+{
+    "SearchProperty": [
+		"kEditorID",
+		"kName",
+		"kFormID"
+	],
+    "SortProperty": [
+		"kPlugin",
+		"kEditorID",
+		"kName",
+		"<separator>",
+		"kSpellType",
+		"kSpellCastType",
+		"kSpellDelivery",
+		"kSpellSkill",
+		"kSpellCost",
+		"kKnownByTarget"
+	],
+    "FilterProperty": [
+        {
+            "id": "spell",
+            "displayName": "Spell",
+            "rule": {
+                "property": "kSpellType",
+                "operator": "equals",
+                "value": "Spell"
+            }
+        },
+        {
+            "id": "power",
+            "displayName": "Power",
+            "rule": {
+                "property": "kSpellType",
+                "operator": "equals",
+                "value": "Power"
+            }
+        },
+        {
+            "id": "lesser_power",
+            "displayName": "Lesser Power",
+            "rule": {
+                "property": "kSpellType",
+                "operator": "equals",
+                "value": "Lesser Power"
+            }
+        },
+        {
+            "id": "voice_power",
+            "displayName": "Voice Power",
+            "rule": {
+                "property": "kSpellType",
+                "operator": "equals",
+                "value": "Voice Power"
+            }
+        },
+        {
+            "id": "ability",
+            "displayName": "Ability",
+            "rule": {
+                "property": "kSpellType",
+                "operator": "equals",
+                "value": "Ability"
+            }
+        },
+        {
+            "id": "disease",
+            "displayName": "Disease",
+            "rule": {
+                "property": "kSpellType",
+                "operator": "equals",
+                "value": "Disease"
+            }
+        },
+        {
+            "id": "poison",
+            "displayName": "Poison",
+            "rule": {
+                "property": "kSpellType",
+                "operator": "equals",
+                "value": "Poison"
+            }
+        },
+        {
+            "id": "known",
+            "displayName": "Known",
+            "rule": {
+                "property": "kKnownByTarget",
+                "operator": "equals",
+                "value": "true"
+            }
+        },
+        {
+            "id": "unknown",
+            "displayName": "Unknown",
+            "rule": {
+                "property": "kKnownByTarget",
+                "operator": "equals",
+                "value": "false"
+            }
+        },
+        {
+            "id": "destruction",
+            "displayName": "Destruction",
+            "rule": {
+                "property": "kSpellSkill",
+                "operator": "equals",
+                "value": "Destruction"
+            }
+        },
+        {
+            "id": "restoration",
+            "displayName": "Restoration",
+            "rule": {
+                "property": "kSpellSkill",
+                "operator": "equals",
+                "value": "Restoration"
+            }
+        },
+        {
+            "id": "illusion",
+            "displayName": "Illusion",
+            "rule": {
+                "property": "kSpellSkill",
+                "operator": "equals",
+                "value": "Illusion"
+            }
+        },
+        {
+            "id": "conjuration",
+            "displayName": "Conjuration",
+            "rule": {
+                "property": "kSpellSkill",
+                "operator": "equals",
+                "value": "Conjuration"
+            }
+        },
+        {
+            "id": "alteration",
+            "displayName": "Alteration",
+            "rule": {
+                "property": "kSpellSkill",
+                "operator": "equals",
+                "value": "Alteration"
+            }
+        }
+    ]
+}

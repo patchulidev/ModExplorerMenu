@@ -426,6 +426,30 @@ namespace Modex
 		Debug("Cached {} outfits.", m_outfitCache.size());
 	}
 
+	void Data::GenerateSpellList()
+	{
+		m_spellCache.clear();
+
+		Debug("Generating Spell List...");
+
+		if (auto dataHandler = RE::TESDataHandler::GetSingleton()) {
+			for (RE::TESForm* form : dataHandler->GetFormArray<RE::SpellItem>()) {
+				if (!form)
+					continue;
+
+				const RE::TESFile* mod = form->GetFile(UserConfig::GetCompileIndex());
+
+				if (!mod)
+					continue;
+
+				m_spellCache.push_back(BaseObject{ form, Ownership::Spell });
+				AddModToIndex(mod, m_spellModList);
+			}
+		}
+
+		Debug("Cached {} spells.", m_spellCache.size());
+	}
+
 
 	// Source: https://github.com/shad0wshayd3-TES5/BakaHelpExtender | License: MIT
 	// Reads cell FormIDs and editor IDs directly from plugin files on disk,
@@ -532,7 +556,8 @@ namespace Modex
 		GenerateObjectList();
 		GenerateCellList();
 		GenerateOutfitList();
-		
+		GenerateSpellList();
+
 
 		Info("Successfully registered data from {} mods.", m_modList.size());
 		for (auto& file : m_modList) {

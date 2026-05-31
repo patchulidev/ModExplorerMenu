@@ -157,7 +157,7 @@ namespace Modex
 			ImGui::Spacing();
 			ImGui::Spacing();
 
-			ShowItemPreview(a_view->GetItemPreview());
+			ShowItemPreview(a_view->GetItemPreview(), false, a_view->GetDataID());
 		}
 
 		ImGui::EndChild();
@@ -244,7 +244,7 @@ namespace Modex
 			ImGui::Spacing();
 			ImGui::Spacing();
 
-			ShowItemPreview(a_view->GetItemPreview());
+			ShowItemPreview(a_view->GetItemPreview(), false, a_view->GetDataID());
 		}
 		ImGui::EndChild();
 
@@ -382,7 +382,7 @@ namespace Modex
 			ImGui::Spacing();
 			ImGui::Spacing();
 
-			ShowItemPreview(a_view->GetItemPreview());
+			ShowItemPreview(a_view->GetItemPreview(), false, a_view->GetDataID());
 		}
 		ImGui::EndChild();
 	}
@@ -435,8 +435,50 @@ namespace Modex
 			ImGui::Spacing();
 			ImGui::Spacing();
 
-			ShowItemPreview(a_view->GetItemPreview());
+			ShowItemPreview(a_view->GetItemPreview(), false, a_view->GetDataID());
 		}
+		ImGui::EndChild();
+	}
+
+	void UIContainers::DrawSpellActionPanel(const ImVec2 &a_pos, const ImVec2 &a_size, std::unique_ptr<UITable> &a_view)
+	{
+		const float button_height = ImGui::GetFontSize() * ThemeConfig::GetWidgetStyle().actionButton.heightScale;
+
+		ImGui::SameLine();
+		ImGui::SetCursorPos(a_pos);
+		if (ImGui::BeginChild("Modex::SpellWindow::Actions", a_size)) {
+			const float max_width = ImGui::GetContentRegionAvail().x;
+			const bool action_allowed = a_view->IsActionAllowed();
+			const auto action_header = a_view->IsValidTargetReference() ? a_view->GetTableTargetRef()->GetName() : Translate("HEADER_ACTIONS");
+
+			UICustom::SubCategoryHeader(action_header);
+
+			ImGui::PushStyleColor(ImGuiCol_Button, ThemeConfig::GetColor("SECONDARY"));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ThemeConfig::GetHover("SECONDARY"));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ThemeConfig::GetActive("SECONDARY"));
+			if (UICustom::ActionButton("ADD_SPELL_TO_TARGET", ImVec2(max_width, button_height), action_allowed)) {
+				a_view->ExecuteCommandOnSelection([&a_view](const std::unique_ptr<BaseObject>& a_spell) {
+					Commands::AddSpellToActor(a_view->GetOwnership(), a_view->GetTableTargetRef(), a_spell->GetBaseFormID());
+				});
+			}
+			ImGui::PopStyleColor(3);
+
+			ImGui::PushStyleColor(ImGuiCol_Button, ThemeConfig::GetColor("DECLINE"));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ThemeConfig::GetHover("DECLINE"));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ThemeConfig::GetActive("DECLINE"));
+			if (UICustom::ActionButton("REMOVE_SPELL_FROM_TARGET", ImVec2(max_width, button_height), action_allowed)) {
+				a_view->ExecuteCommandOnSelection([&a_view](const std::unique_ptr<BaseObject>& a_spell) {
+					Commands::RemoveSpellFromActor(a_view->GetOwnership(), a_view->GetTableTargetRef(), a_spell->GetBaseFormID());
+				});
+			}
+			ImGui::PopStyleColor(3);
+
+			ImGui::Spacing();
+			ImGui::Spacing();
+
+			ShowItemPreview(a_view->GetItemPreview(), false, a_view->GetDataID());
+		}
+
 		ImGui::EndChild();
 	}
 

@@ -34,6 +34,7 @@ namespace ModexAPI
 		kCell,
 		kOutfit,
 		kKit,
+		kSpell,
 	};
 
 	// Property types for querying form data via GetFormProperty().

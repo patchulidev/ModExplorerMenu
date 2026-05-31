@@ -251,8 +251,16 @@ namespace Modex
 			return;
 		}
 
-		// Inventory has in-method generator.
+		// Target-dependent property evaluators (kKnownByTarget, kSpellCost) read this global.
+		const RE::FormID previousFilterTargetID = g_modexFilterTargetID;
+		g_modexFilterTargetID = a_reference->GetFormID();
+
+		// Inventory tables refresh because their data is the target's contents. Spell tables
+		// refresh on target change so target-dependent filters/sorts re-evaluate. Other
+		// modules deliberately preserve selection across target swaps.
 		if (HasFlag(ModexTableFlag_Inventory)) {
+			this->Refresh();
+		} else if (owner == Ownership::Spell && previousFilterTargetID != g_modexFilterTargetID) {
 			this->Refresh();
 		}
 
@@ -912,6 +920,8 @@ namespace Modex
 				return Filter(Data::GetSingleton()->GetOutfitList());
 			if (owner == Ownership::Cell)
 				return Filter(Data::GetSingleton()->GetTeleportList());
+			if (owner == Ownership::Spell)
+				return Filter(Data::GetSingleton()->GetSpellList());
 			if (owner == Ownership::Kit)
 				return FilterKitListImpl();
 		}
@@ -1611,6 +1621,10 @@ namespace Modex
 				});
 			}
 
+			if (owner == Ownership::Spell && IsValidTargetReference()) {
+				Commands::AddSpellToActor(owner, GetTableTargetRef(), a_item->GetBaseFormID());
+			}
+
 			// BUG: Returning to menu after double-click casues first left-click to not register ?
 
 			if (owner == Ownership::Cell) {
@@ -1858,6 +1872,22 @@ namespace Modex
 							}
 						}
 					}
+				}
+			}
+
+			if (owner == Ownership::Spell && this->GetTableTargetRef() != nullptr) {
+				ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
+
+				if (ImGui::MenuItem(Translate("ADD_SPELL_TO_TARGET"))) {
+					ExecuteCommandOnSelection([this](const std::unique_ptr<BaseObject>& a_spell) {
+						Commands::AddSpellToActor(owner, this->GetTableTargetRef(), a_spell->GetBaseFormID());
+					});
+				}
+
+				if (ImGui::MenuItem(Translate("REMOVE_SPELL_FROM_TARGET"))) {
+					ExecuteCommandOnSelection([this](const std::unique_ptr<BaseObject>& a_spell) {
+						Commands::RemoveSpellFromActor(owner, this->GetTableTargetRef(), a_spell->GetBaseFormID());
+					});
 				}
 			}
 
@@ -2422,6 +2452,7 @@ namespace Modex
 			case Ownership::Kit: return "TABLE_KIT";
 			case Ownership::Object: return "TABLE_OBJECT";
 			case Ownership::Outfit: return "TABLE_OUTFIT";
+			case Ownership::Spell: return "TABLE_SPELL";
 			case Ownership::None: return "TABLE_NONE";
 		}
 

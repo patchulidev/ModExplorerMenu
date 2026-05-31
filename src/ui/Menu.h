@@ -85,6 +85,7 @@ namespace Modex
 			Object,
 			Teleport,
 			Outfit,
+			Spell,
 			Settings,
 			FormSelector,
 			Count
