@@ -6,10 +6,10 @@
 namespace Modex
 {
 
-	static_assert(static_cast<uint32_t>(Modex::PropertyType::kTotal) == 83,
+	static_assert(static_cast<uint32_t>(Modex::PropertyType::kTotal) == 85,
 		"Internal PropertyType changed - update ModexAPI::PropertyType to match");
 
-	static_assert(static_cast<uint32_t>(Modex::Ownership::All) == 7,
+	static_assert(static_cast<uint32_t>(Modex::Ownership::All) == 8,
 		"Internal Ownership changed - update ModexAPI::CacheType to match");
 
 	class ModexInterface : public ModexAPI::IModexInterface001

@@ -218,6 +218,14 @@ namespace Modex
 				AddToRecentList(a_item);
 				UINotification::ShowAction(Translate("CENTER_ON_CELL"), a_item->GetName(), ICON_LC_PIN);
 				break;
+			case ModexActionType::AddSpell:
+				AddToRecentList(a_item);
+				UINotification::ShowAction(Translate("ADD_SPELL_TO_TARGET"), a_item->GetName(), ICON_LC_WAND_SPARKLES);
+				break;
+			case ModexActionType::RemoveSpell:
+				AddToRecentList(a_item);
+				UINotification::ShowAction(Translate("REMOVE_SPELL_FROM_TARGET"), a_item->GetName(), ICON_LC_WAND, UIMessageType::Warning);
+				break;
 			default: Error("Missed switch case for SendEvent(ModexActionType a_actionType, const std::unique_ptr<BaseObject>& a_item)");
 				break;
 		}

@@ -138,6 +138,8 @@ namespace Modex
 			case PropertyType::kSpellType:
 			case PropertyType::kSpellCastType:
 			case PropertyType::kSpellDelivery:
+			case PropertyType::kSpellSkill:
+			case PropertyType::kKnownByTarget:
 			case PropertyType::kTomeSpell:
 			case PropertyType::kTomeSkill:
 			case PropertyType::kImGuiSeparator:

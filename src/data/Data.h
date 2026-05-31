@@ -62,6 +62,7 @@ namespace Modex
 		[[nodiscard]] inline std::vector<BaseObject>& 	GetObjectList() 	{ return m_staticCache;		}
 		[[nodiscard]] inline std::vector<BaseObject>& 	GetTeleportList() 	{ return m_cellCache; 		}
 		[[nodiscard]] inline std::vector<BaseObject>& 	GetOutfitList() 	{ return m_outfitCache; 	}
+		[[nodiscard]] inline std::vector<BaseObject>& 	GetSpellList() 		{ return m_spellCache; 		}
 		[[nodiscard]] inline std::set<std::string> 		GetNPCClassList() 	{ return m_npcClassList; 	}
 		[[nodiscard]] inline std::set<std::string> 		GetNPCRaceList() 	{ return m_npcRaceList; 	}
 		[[nodiscard]] inline std::set<std::string> 		GetNPCFactionList() { return m_npcFactionList; 	}
@@ -72,6 +73,7 @@ namespace Modex
 		void 											GenerateObjectList();
 		void 											GenerateCellList();
 		void 											GenerateOutfitList();
+		void 											GenerateSpellList();
 
 
 		void SortAddItemList();
@@ -83,6 +85,7 @@ namespace Modex
 		std::vector<BaseObject> 						m_npcCache;
 		std::vector<BaseObject>	 						m_cellCache;
 		std::vector<BaseObject> 						m_outfitCache;
+		std::vector<BaseObject> 						m_spellCache;
 		std::vector<RE::TESObjectREFR*> 				m_npcRefIds;
 		std::unordered_set<const RE::TESFile*> 			m_modList;
 		std::set<std::string> 							m_modListSorted;
@@ -92,6 +95,7 @@ namespace Modex
 		std::unordered_set<const RE::TESFile*> 			m_staticModList;
 		std::unordered_set<const RE::TESFile*> 			m_cellModList;
 		std::unordered_set<const RE::TESFile*> 			m_outfitModList;
+		std::unordered_set<const RE::TESFile*> 			m_spellModList;
 
 		std::set<std::string> 							m_npcClassList;
 		std::set<std::string> 							m_npcRaceList;

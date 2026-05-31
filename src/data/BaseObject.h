@@ -87,6 +87,8 @@ namespace Modex
 		kSpellType,
 		kSpellCastType,
 		kSpellDelivery,
+		kSpellSkill,			// School of magic (Destruction/Restoration/Illusion/Conjuration/Alteration).
+		kKnownByTarget,			// True if the table's current target actor knows this spell.
 		kTomeSpell,
 		kTomeSkill,
 		kImGuiSeparator,        // Special ImGui Separator
@@ -279,6 +281,10 @@ namespace Modex
 				return ICON_LC_HAND;
 			case PropertyType::kSpellDelivery:
 				return ICON_LC_WAND;
+			case PropertyType::kSpellSkill:
+				return ICON_LC_GRADUATION_CAP;
+			case PropertyType::kKnownByTarget:
+				return ICON_LC_BOOK_OPEN_CHECK;
 			case PropertyType::kCell:
 				return ICON_LC_MAP_PIN;
 			case PropertyType::kLand:
@@ -853,6 +859,23 @@ namespace Modex
 				}
 			}
 			
+			return "";
+		}
+
+		// Returns "" for abilities/powers/etc. whose associated skill is kNone.
+		inline const std::string GetSpellSkill() const {
+			if (auto spell = m_formWrapper.As<RE::SpellItem>()) {
+				switch (spell->GetAssociatedSkill())
+				{
+					case RE::ActorValue::kAlteration:   return "Alteration";
+					case RE::ActorValue::kConjuration:  return "Conjuration";
+					case RE::ActorValue::kDestruction:  return "Destruction";
+					case RE::ActorValue::kIllusion:     return "Illusion";
+					case RE::ActorValue::kRestoration:  return "Restoration";
+					default:                            return "";
+				}
+			}
+
 			return "";
 		}
 
@@ -1558,14 +1581,30 @@ namespace Modex
 					return GetSleepOutfit();
 				case PropertyType::kSpell:
 					return HasSpell(a_arg) ? "true" : "false";
-				case PropertyType::kSpellCost:
-					return ""; // BUG: Not working, needs Actor context for cost.
+				case PropertyType::kSpellCost: {
+					auto spell = m_formWrapper.As<RE::SpellItem>();
+					if (!spell) return "0";
+					auto caster = g_modexFilterTargetID != 0
+						? RE::TESForm::LookupByID<RE::Actor>(g_modexFilterTargetID)
+						: nullptr;
+					return std::to_string(static_cast<int>(spell->CalculateMagickaCost(caster)));
+				}
 				case PropertyType::kSpellDelivery:
 					return GetDeliveryType();
 				case PropertyType::kSpellCastType:
 					return GetCastType();
 				case PropertyType::kSpellType:
 					return GetSpellType();
+				case PropertyType::kSpellSkill:
+					return GetSpellSkill();
+				case PropertyType::kKnownByTarget: {
+					auto spell = m_formWrapper.As<RE::SpellItem>();
+					if (!spell) return "false";
+					if (g_modexFilterTargetID == 0) return "false";
+					auto target = RE::TESForm::LookupByID<RE::Actor>(g_modexFilterTargetID);
+					if (!target) return "false";
+					return target->HasSpell(spell) ? "true" : "false";
+				}
 				case PropertyType::kTomeSpell:
 					return GetBookSpell();
 				case PropertyType::kTomeSkill:

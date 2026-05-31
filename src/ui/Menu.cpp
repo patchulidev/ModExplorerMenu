@@ -12,6 +12,7 @@
 #include "ui/modules/settings/SettingsModule.h"
 #include "ui/modules/inventory/InventoryModule.h"
 #include "ui/modules/outfit/OutfitModule.h"
+#include "ui/modules/spell/SpellModule.h"
 #include "ui/modules/formselector/FormSelectorModule.h"
 #include "ui/modules/kitselector/KitSelectorModule.h"
 
@@ -335,6 +336,8 @@ namespace Modex
 			return std::make_unique<TeleportModule>();
 		case ModuleType::Outfit:
 			return std::make_unique<OutfitModule>();
+		case ModuleType::Spell:
+			return std::make_unique<SpellModule>();
 		case ModuleType::Settings:
 			return std::make_unique<SettingsModule>();
 		case ModuleType::FormSelector:
@@ -390,6 +393,7 @@ namespace Modex
 				{Translate("MODULE_OBJECT"), ICON_LC_BLOCKS, .0f, ModuleType::Object},
 				{Translate("MODULE_TELEPORT"), ICON_LC_MAP_PIN, .0f, ModuleType::Teleport},
 				{Translate("MODULE_OUTFIT"), ICON_LC_SHIRT, .0f, ModuleType::Outfit},
+				{Translate("MODULE_SPELL"), ICON_LC_WAND_SPARKLES, .0f, ModuleType::Spell},
 				{Translate("MODULE_SETTINGS"), ICON_LC_SETTINGS, .0f, ModuleType::Settings}
 			};
 		} else {

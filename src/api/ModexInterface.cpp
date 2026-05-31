@@ -33,6 +33,8 @@ namespace Modex
 			return &data->GetTeleportList();
 		case ModexAPI::CacheType::kOutfit:
 			return &data->GetOutfitList();
+		case ModexAPI::CacheType::kSpell:
+			return &data->GetSpellList();
 		default:
 			return nullptr;
 		}
@@ -253,6 +255,7 @@ namespace Modex
 		case ModexAPI::CacheType::kCell:   return Ownership::Cell;
 		case ModexAPI::CacheType::kOutfit: return Ownership::Outfit;
 		case ModexAPI::CacheType::kObject: return Ownership::Object;
+		case ModexAPI::CacheType::kSpell:  return Ownership::Spell;
 		default:                           return Ownership::Item;
 		}
 	}

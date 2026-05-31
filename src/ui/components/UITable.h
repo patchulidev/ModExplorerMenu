@@ -144,6 +144,7 @@ namespace Modex
 		void                    Refresh();
 
 		Ownership               GetOwnership() { return owner; };
+		const std::string&      GetDataID() const { return data_id; }
 		TableList*              GetTableListPtr() { return &tableList; }
 		TableList&              GetTableListRef() { return tableList; }
 		const PluginList&       GetPluginList() const { return pluginList; };

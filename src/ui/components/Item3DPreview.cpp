@@ -141,7 +141,8 @@ namespace Modex
 		Shutdown();
 	}
 
-	void Item3DPreview::Request(RE::TESBoundObject* a_item, ImVec2 a_screenPos, ImVec2 a_screenSize)
+	void Item3DPreview::Request(RE::TESBoundObject* a_item, ImVec2 a_screenPos, ImVec2 a_screenSize,
+	                            float a_modelScale, float a_offsetX, float a_offsetY)
 	{
 		if (!m_running || a_item == nullptr) return;
 
@@ -153,13 +154,20 @@ namespace Modex
 			m_current = a_item;
 		}
 
-		const float modelScale = ThemeConfig::GetWidgetStyle().itemPreview.previewModelScale;
+		// Negative a_modelScale = use theme defaults for both scale and offsets.
+		const float modelScale = (a_modelScale >= 0.0f)
+			? a_modelScale
+			: ThemeConfig::GetWidgetStyle().itemPreview.previewModelScale;
 		const float expand     = (modelScale > 0.0f) ? (1.0f / modelScale) : 1.0f;
 
 		m_capturePos  = a_screenPos;
 		m_innerSize   = ImVec2(a_screenSize.x * expand,                 a_screenSize.y * expand);
 		m_captureSize = ImVec2(m_innerSize.x * kSafetyMargin, m_innerSize.y * kSafetyMargin);
 		m_requested   = true;
+
+		m_hasOverrideOffset = (a_modelScale >= 0.0f);
+		m_overrideOffsetX   = a_offsetX;
+		m_overrideOffsetY   = a_offsetY;
 	}
 
 	void Item3DPreview::Render()
@@ -309,8 +317,13 @@ namespace Modex
 		m_modelInTexture = ImVec2(model_cx - static_cast<float>(left),
 		                          model_cy - static_cast<float>(top));
 
-		const auto& offsets = ThemeConfig::GetWidgetStyle().itemPreview;
-		m_modelInTexture.x -= offsets.previewOffsetX;
-		m_modelInTexture.y -= offsets.previewOffsetY;
+		if (m_hasOverrideOffset) {
+			m_modelInTexture.x -= m_overrideOffsetX;
+			m_modelInTexture.y -= m_overrideOffsetY;
+		} else {
+			const auto& offsets = ThemeConfig::GetWidgetStyle().itemPreview;
+			m_modelInTexture.x -= offsets.previewOffsetX;
+			m_modelInTexture.y -= offsets.previewOffsetY;
+		}
 	}
 }

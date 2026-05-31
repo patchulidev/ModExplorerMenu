@@ -27,7 +27,8 @@ namespace Modex
 		void End();
 		void Render();
 
-		void Request(RE::TESBoundObject* a_item, ImVec2 a_screenPos, ImVec2 a_screenSize);
+		void Request(RE::TESBoundObject* a_item, ImVec2 a_screenPos, ImVec2 a_screenSize,
+		             float a_modelScale = -1.0f, float a_offsetX = 0.0f, float a_offsetY = 0.0f);
 		void* GetSRV() const;
 
 		ImVec2 GetCapturedSize() const { return m_lastCapturedSize; }
@@ -50,6 +51,11 @@ namespace Modex
 		ImVec2 m_innerSize         = ImVec2(0.0f, 0.0f);   // displayed portion (no margin) — drives UV crop
 		ImVec2 m_lastCapturedSize  = ImVec2(0.0f, 0.0f);   // actual captured pixels after backbuffer clamp
 		ImVec2 m_modelInTexture    = ImVec2(0.0f, 0.0f);   // model's centre position in captured-texture pixels
+
+		// Per-request offset overrides applied at Render; falls back to theme when false.
+		float  m_overrideOffsetX   = 0.0f;
+		float  m_overrideOffsetY   = 0.0f;
+		bool   m_hasOverrideOffset = false;
 
 		REX::W32::ID3D11Texture2D*          m_dstTex     = nullptr;
 		REX::W32::ID3D11ShaderResourceView* m_dstSRV     = nullptr;

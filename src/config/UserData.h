@@ -37,6 +37,8 @@ namespace Modex
 		EquipOutfit,
 		AddOutfit,
 		CenterOnCell,
+		AddSpell,
+		RemoveSpell,
 		Total,
 	};
 

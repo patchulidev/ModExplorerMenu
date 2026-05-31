@@ -17,7 +17,7 @@
 namespace Modex
 {
 	// Forward declaration for use in drawOutfitItem.
-	inline void ShowItemPreview(const std::unique_ptr<BaseObject>& a_item, bool a_tooltip = false);
+	inline void ShowItemPreview(const std::unique_ptr<BaseObject>& a_item, bool a_tooltip = false, const std::string& a_moduleId = "");
 
 namespace
 {
@@ -179,7 +179,7 @@ namespace
 	{
 		const float max_width = ImGui::GetContentRegionAvail().x;
 		const std::string  descriptor = a_useLabel
-			? FilterProperty::GetString(a_property)
+			? FilterProperty::GetIcon(a_property) + " " + FilterProperty::GetString(a_property)
 			: FilterProperty::GetIcon(a_property);
 		const std::string  tooltip = FilterProperty::GetPropertyTooltipKey(a_property);
 		const std::string& text    = TRUNCATE(a_item->GetPropertyByValue(a_property).c_str(), max_width * 0.75f);
@@ -665,6 +665,15 @@ namespace
 		inlineText(a_item, PropertyType::kEditorID);
 	}
 
+	inline void drawSpellPreview(const std::unique_ptr<BaseObject>& a_spell)
+	{
+		inlineText(a_spell, PropertyType::kSpellType,     true);
+		inlineText(a_spell, PropertyType::kSpellSkill,    true);
+		inlineText(a_spell, PropertyType::kSpellCastType, true);
+		inlineText(a_spell, PropertyType::kSpellDelivery, true);
+		inlineText(a_spell, PropertyType::kSpellCost,     true);
+	}
+
 	inline float getDesiredWidth(const std::unique_ptr<BaseObject>& a_item, float a_min)
 	{
 		const auto& edid = a_item->GetEditorID();
@@ -678,7 +687,20 @@ namespace
 		return max(padding + desc + text_width, a_min);
 	}
 
-	inline void drawModelPreview(const std::unique_ptr<BaseObject>& a_item, bool /*a_tooltip*/)
+	// Empty moduleId routes to the shared theme defaults (e.g. tooltip-context previews).
+	inline float getPreviewSetting(const std::string& a_moduleId, const std::string& a_key, float a_themeDefault)
+	{
+		if (a_moduleId.empty()) return a_themeDefault;
+		return UserData::Get<float>(a_moduleId + "::ItemPreview::" + a_key, a_themeDefault);
+	}
+
+	inline void setPreviewSetting(const std::string& a_moduleId, const std::string& a_key, float a_value)
+	{
+		if (a_moduleId.empty()) return;
+		UserData::Set<float>(a_moduleId + "::ItemPreview::" + a_key, a_value);
+	}
+
+	inline void drawModelPreview(const std::unique_ptr<BaseObject>& a_item, bool /*a_tooltip*/, const std::string& a_moduleId)
 	{
 		const bool atMainMenu     = RE::UI::GetSingleton()->IsMenuOpen(RE::MainMenu::MENU_NAME);
 		const bool previewEnabled = UserConfig::Get().show3DPreview && UserConfig::Get().pauseGame;
@@ -686,6 +708,12 @@ namespace
 
 		const auto& preview   = ThemeConfig::GetWidgetStyle().itemPreview;
 		const float max_width = ImGui::GetContentRegionAvail().x;
+
+		// Per-module overrides, falling back to theme defaults.
+		const float boxScale    = getPreviewSetting(a_moduleId, "BoxScale",    preview.previewBoxScale);
+		const float modelScale  = getPreviewSetting(a_moduleId, "ModelScale",  preview.previewModelScale);
+		const float offsetX     = getPreviewSetting(a_moduleId, "OffsetX",     preview.previewOffsetX);
+		const float offsetY     = getPreviewSetting(a_moduleId, "OffsetY",     preview.previewOffsetY);
 
 		RE::TESBoundObject* previewObj    = nullptr;
 		float               previewHeight = 0.0f;
@@ -699,7 +727,7 @@ namespace
 		} else if (auto* form = a_item->GetTESForm()) {
 			if (auto* boundObj = form->As<RE::TESBoundObject>()) {
 				previewObj    = boundObj;
-				previewHeight = max_width * preview.previewBoxScale;
+				previewHeight = max_width * boxScale;
 			}
 		}
 
@@ -735,7 +763,7 @@ namespace
 
 		auto* preview3D = Item3DPreview::GetSingleton();
 		const ImVec2 image_pos = ImGui::GetCursorScreenPos();
-		preview3D->Request(previewObj, image_pos, size);
+		preview3D->Request(previewObj, image_pos, size, modelScale, offsetX, offsetY);
 
 		void*        srv     = preview3D->GetSRV();
 		const ImVec2 capSize = preview3D->GetCapturedSize();
@@ -786,36 +814,36 @@ namespace
 			}
 
 			if (ImGui::BeginPopup(kPopupId)) {
-				auto& widgets = ThemeConfig::GetWidgetStyleMutable();
-				bool  persist = false;
-
 				ImGui::TextDisabled("%s", Translate("THEME_EDITOR_SECT_ITEM_PREVIEW"));
 				ImGui::Separator();
 
 				constexpr float kSliderWidth = 180.0f;
-				ImGui::SetNextItemWidth(kSliderWidth);
-				ImGui::SliderFloat(Translate("THEME_EDITOR_LBL_PREVIEW_BOX_SCALE"),
-				                   &widgets.itemPreview.previewBoxScale,   0.10f, 1.0f, "%.2f");
-				persist |= ImGui::IsItemDeactivatedAfterEdit();
 
-				ImGui::SetNextItemWidth(kSliderWidth);
-				ImGui::SliderFloat(Translate("THEME_EDITOR_LBL_PREVIEW_MODEL_SCALE"),
-				                   &widgets.itemPreview.previewModelScale, 0.25f, 1.0f, "%.2f");
-				persist |= ImGui::IsItemDeactivatedAfterEdit();
+				// UserData writes are in-memory; theme fallback flushes to disk on deactivate
+				// to avoid spamming I/O.
+				auto sliderRow = [&](const char* a_label, const char* a_key, float a_curValue,
+				                     float a_min, float a_max, const char* a_fmt,
+				                     float& a_themeField) {
+					float v = a_curValue;
+					ImGui::SetNextItemWidth(kSliderWidth);
+					if (ImGui::SliderFloat(a_label, &v, a_min, a_max, a_fmt)) {
+						if (a_moduleId.empty()) {
+							a_themeField = v;
+						} else {
+							setPreviewSetting(a_moduleId, a_key, v);
+						}
+					}
+					if (a_moduleId.empty() && ImGui::IsItemDeactivatedAfterEdit()) {
+						ThemeConfig::GetSingleton()->SaveCurrentTheme();
+					}
+				};
 
-				ImGui::SetNextItemWidth(kSliderWidth);
-				ImGui::SliderFloat(Translate("THEME_EDITOR_LBL_PREVIEW_OFFSET_X"),
-				                   &widgets.itemPreview.previewOffsetX, -300.0f, 300.0f, "%.0f px");
-				persist |= ImGui::IsItemDeactivatedAfterEdit();
+				auto& w = ThemeConfig::GetWidgetStyleMutable();
+				sliderRow(Translate("THEME_EDITOR_LBL_PREVIEW_BOX_SCALE"),   "BoxScale",   boxScale,    0.10f,    1.0f, "%.2f",     w.itemPreview.previewBoxScale);
+				sliderRow(Translate("THEME_EDITOR_LBL_PREVIEW_MODEL_SCALE"), "ModelScale", modelScale,  0.25f,    1.0f, "%.2f",     w.itemPreview.previewModelScale);
+				sliderRow(Translate("THEME_EDITOR_LBL_PREVIEW_OFFSET_X"),    "OffsetX",    offsetX,    -300.0f, 300.0f, "%.0f px",  w.itemPreview.previewOffsetX);
+				sliderRow(Translate("THEME_EDITOR_LBL_PREVIEW_OFFSET_Y"),    "OffsetY",    offsetY,    -300.0f, 300.0f, "%.0f px",  w.itemPreview.previewOffsetY);
 
-				ImGui::SetNextItemWidth(kSliderWidth);
-				ImGui::SliderFloat(Translate("THEME_EDITOR_LBL_PREVIEW_OFFSET_Y"),
-				                   &widgets.itemPreview.previewOffsetY, -300.0f, 300.0f, "%.0f px");
-				persist |= ImGui::IsItemDeactivatedAfterEdit();
-
-				if (persist) {
-					ThemeConfig::GetSingleton()->SaveCurrentTheme();
-				}
 				ImGui::EndPopup();
 			}
 			ImGui::PopID();
@@ -869,7 +897,8 @@ namespace
 	}
 
 	// @arg a_tooltip: the item preview is shown in a tooltip instead of a widget.
-	inline void ShowItemPreview(const std::unique_ptr<BaseObject>& a_item, bool a_tooltip)
+	// @arg a_moduleId: scopes preview scale/offset via UserData; empty falls back to theme.
+	inline void ShowItemPreview(const std::unique_ptr<BaseObject>& a_item, bool a_tooltip, const std::string& a_moduleId)
 	{
 		if (a_item == nullptr) return;
 		if (a_item->IsDummy()) return;
@@ -908,8 +937,8 @@ namespace
 		{
 			ImGui::PushStyleColor(ImGuiCol_Separator, ThemeConfig::GetColorU32("PRIMARY"));
 
-			if (a_item->GetTESForm() && (a_item->GetTESForm()->IsInventoryObject() || a_item->IsObject())) {
-				drawModelPreview(a_item, a_tooltip);
+			if (a_item->GetTESForm() && (a_item->GetTESForm()->IsInventoryObject() || a_item->IsObject() || a_item->GetTESForm()->As<RE::SpellItem>())) {
+				drawModelPreview(a_item, a_tooltip, a_moduleId);
 			}
 
 			const bool useScroll = !a_tooltip;
@@ -942,6 +971,10 @@ namespace
 
 			if (a_item->GetFormType() == RE::FormType::Cell) {
 				drawCellPreview(a_item);
+			}
+
+			if (a_item->GetTESForm() && a_item->GetTESForm()->As<RE::SpellItem>()) {
+				drawSpellPreview(a_item);
 			}
 
 			if (auto form = a_item->GetTESForm(); form) {
