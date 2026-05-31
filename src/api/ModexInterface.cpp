@@ -380,12 +380,27 @@ namespace Modex
 				a_outBuffer[i].name = kit.m_key.c_str(); // Key includes relative path; consumer can extract stem
 				a_outBuffer[i].collection = kit.m_collection.c_str();
 				a_outBuffer[i].itemCount = static_cast<uint32_t>(kit.m_items.size());
+				a_outBuffer[i].spellCount = static_cast<uint32_t>(kit.m_spells.size());
 				a_outBuffer[i].goldValue = KitSelectorModule::GetKitGoldValue(key);
 				i++;
 			}
 		}
 
 		return total;
+	}
+
+	void ModexInterface::AddSpellToActor(uint32_t a_spellFormID, uint32_t a_targetReference)
+	{
+		if (auto* target = RE::TESForm::LookupByID<RE::TESObjectREFR>(a_targetReference); target) {
+			Commands::AddSpellToActor(Ownership::None, target, a_spellFormID);
+		}
+	}
+
+	void ModexInterface::RemoveSpellFromActor(uint32_t a_spellFormID, uint32_t a_targetReference)
+	{
+		if (auto* target = RE::TESForm::LookupByID<RE::TESObjectREFR>(a_targetReference); target) {
+			Commands::RemoveSpellFromActor(Ownership::None, target, a_spellFormID);
+		}
 	}
 
 	// Specify which struct a user is requesting as API revisions may differ.

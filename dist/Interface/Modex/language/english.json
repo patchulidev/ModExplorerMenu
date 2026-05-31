@@ -80,6 +80,8 @@
 "TAB_TELEPORT": "Teleport Table Layout",
 "TAB_OUTFIT": "Outfit Table Layout",
 "TAB_SPELL": "Spell Table Layout",
+"TAB_KITSELECTOR": "Kit Selector Layout",
+"TAB_FORMSELECTOR": "Form Selector Layout",
 
 "_TABLE_NAMES": "======== Table Names ========",
 "TABLE_ITEM": "Item Table",
@@ -91,6 +93,7 @@
 "TABLE_OUTFIT": "Outfit Table",
 "TABLE_SPELL": "Spell Table",
 "TABLE_FORMSELECTOR": "Form Selection Menu",
+"TABLE_KITSELECTOR": "Kit Selection Menu",
 
 "_FILTER_MODES": "======== Filter / View Modes ========",
 "SHOWALL": "All",
@@ -502,6 +505,8 @@
 "kTomeSpell": "Tome Spell",
 "kTomeSkill": "Tome Skill",
 "kKitItemCount": "Item Count",
+"kKitTags": "Tags",
+"kKitGoldValue": "Gold",
 "kLeveledAllLevelsFlag": "Calculate All Levels",
 "kLeveledEachFlag": "Calculate For Each",
 "kLeveledUseAllFlag": "Return All",

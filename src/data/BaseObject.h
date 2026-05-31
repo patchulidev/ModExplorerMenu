@@ -87,8 +87,6 @@ namespace Modex
 		kSpellType,
 		kSpellCastType,
 		kSpellDelivery,
-		kSpellSkill,			// School of magic (Destruction/Restoration/Illusion/Conjuration/Alteration).
-		kKnownByTarget,			// True if the table's current target actor knows this spell.
 		kTomeSpell,
 		kTomeSkill,
 		kImGuiSeparator,        // Special ImGui Separator
@@ -103,6 +101,11 @@ namespace Modex
 		kLeveledUseAllFlag,
 		kLeveledSpecialFlag,
 		kLeveledChance,
+		// NEW entries must append here to preserve public API enum positions.
+		kSpellSkill,			// School of magic (Destruction/Restoration/Illusion/Conjuration/Alteration).
+		kKnownByTarget,			// True if the table's current target actor knows this spell.
+		kKitTags,				// CSV of tags; reads m_plugin on kit BaseObjects (where tags are stashed).
+		kKitGoldValue,			// Precomputed kit gold value; reads m_quantity on kit BaseObjects.
 		kTotal
 	};
 
@@ -285,6 +288,10 @@ namespace Modex
 				return ICON_LC_GRADUATION_CAP;
 			case PropertyType::kKnownByTarget:
 				return ICON_LC_BOOK_OPEN_CHECK;
+			case PropertyType::kKitTags:
+				return ICON_LC_TAG;
+			case PropertyType::kKitGoldValue:
+				return ICON_LC_COINS;
 			case PropertyType::kCell:
 				return ICON_LC_MAP_PIN;
 			case PropertyType::kLand:
@@ -1601,7 +1608,11 @@ namespace Modex
 				case PropertyType::kTomeSkill:
 					return GetBookSkill();
 				case PropertyType::kKitItemCount:
-					return std::to_string(m_quantity); 
+					return std::to_string(m_quantity);
+				case PropertyType::kKitTags:
+					return m_plugin;
+				case PropertyType::kKitGoldValue:
+					return std::to_string(m_quantity);
 				case PropertyType::kOutfitItems:
 					return GetOutfitItemCount();
 				case PropertyType::kLeveledItem: // Chance, flagged, count?

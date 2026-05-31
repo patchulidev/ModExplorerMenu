@@ -146,6 +146,7 @@ namespace Modex
 			case PropertyType::kImGuiSeparator:
 			case PropertyType::kCell:
 			case PropertyType::kLand:
+			case PropertyType::kKitTags:
 			case PropertyType::kTotal: {
 				delta = rhs_value.compare(lhs_value);
 				break; // All direct string comparions.
@@ -162,7 +163,8 @@ namespace Modex
 				delta = lhs_is_armor - rhs_is_armor;
 				break;
 			}
-			case PropertyType::kKitItemCount: {
+			case PropertyType::kKitItemCount:
+			case PropertyType::kKitGoldValue: {
 				const auto lhs_count = std::stoi(lhs_value);
 				const auto rhs_count = std::stoi(rhs_value);
 				delta = lhs_count - rhs_count;

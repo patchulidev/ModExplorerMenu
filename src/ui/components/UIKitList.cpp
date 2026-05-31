@@ -187,7 +187,8 @@ namespace Modex
 			row.name       = kit.GetNameTail();
 			row.collection = kit.m_collection;
 			row.tags       = kit.GetTags();
-			row.totalCount = static_cast<int>(kit.m_items.size());
+			row.spellCount = static_cast<int>(kit.m_spells.size());
+			row.totalCount = static_cast<int>(kit.m_items.size() + kit.m_spells.size());
 			ComputeKitBreakdown(kit, row.weaponCount, row.armorCount, row.missingItems);
 			row.totalValue = ComputeKitValue(kit);
 			m_rows.push_back(std::move(row));

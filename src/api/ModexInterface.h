@@ -6,7 +6,7 @@
 namespace Modex
 {
 
-	static_assert(static_cast<uint32_t>(Modex::PropertyType::kTotal) == 85,
+	static_assert(static_cast<uint32_t>(Modex::PropertyType::kTotal) == 87,
 		"Internal PropertyType changed - update ModexAPI::PropertyType to match");
 
 	static_assert(static_cast<uint32_t>(Modex::Ownership::All) == 8,
@@ -64,6 +64,9 @@ namespace Modex
 		void OpenKitSelector(void (*a_callback)(const char* const* a_kitKeys, uint32_t a_count)) override;
 		void OpenKitSelector(const ModexAPI::FormSelectorOptions& a_options, void (*a_callback)(const char* const* a_kitKeys, uint32_t a_count)) override;
 		uint32_t GetCachedKits(ModexAPI::KitEntry* a_outBuffer, uint32_t a_maxCount) override;
+
+		void AddSpellToActor(uint32_t a_spellFormID, uint32_t a_targetReference) override;
+		void RemoveSpellFromActor(uint32_t a_spellFormID, uint32_t a_targetReference) override;
 
 		// Called after Data::Run() completes to signal the API is ready.
 		static void SetDataReady(bool a_ready);

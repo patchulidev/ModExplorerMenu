@@ -576,6 +576,13 @@ namespace Modex
 		dragDropHandle = a_id;
 	}
 
+	void UITable::SetSortColumns(const std::vector<SortSystem::SortQuery>& a_columns)
+	{
+		if (sortSystem) {
+			sortSystem->SetupColumns(a_columns);
+		}
+	}
+
 	const std::vector<std::unique_ptr<BaseObject>> UITable::GetSelection() const
 	{
 		std::vector<std::unique_ptr<BaseObject>> selectedItems;
@@ -1028,7 +1035,15 @@ namespace Modex
 		kitObjects.reserve(cache.size());
 
 		for (const auto& [key, kit] : cache) {
-			kitObjects.emplace_back(kit.GetNameTail(), key, kit.m_collection, Ownership::Kit);
+			int gold = 0;
+			for (const auto& item : kit.m_items) {
+				if (auto* form = RE::TESForm::LookupByEditorID(item->m_editorid); form) {
+					gold += form->GetGoldValue() * (std::max)(1, item->m_amount);
+				}
+			}
+			// Dummy ctor positional args: name, editorid, plugin, owner, refid, tableID, quantity.
+			// Stashing gold value in quantity so kKitGoldValue can read it cheaply.
+			kitObjects.emplace_back(kit.GetNameTail(), key, kit.m_collection, Ownership::Kit, 0, 0, gold);
 		}
 
 		Filter(kitObjects);
@@ -1569,7 +1584,7 @@ namespace Modex
 			}
 		}
 
-		if (a_item->IsDummy() && owner != Ownership::Cell) {
+		if (a_item->IsDummy() && owner != Ownership::Cell && owner != Ownership::Kit) {
 			UINotification::ShowTooltip(Translate("DUMMY_OBJECT_INFO"), ICON_LC_MESSAGE_CIRCLE_QUESTION);
 		}
 	}
@@ -2118,7 +2133,7 @@ namespace Modex
 			draw_list->AddRectFilled(bb.Min, bb.Max, colors.selected);
 		}
 
-		if (a_item->IsDummy() && owner != Ownership::Cell) {
+		if (a_item->IsDummy() && owner != Ownership::Cell && owner != Ownership::Kit) {
 			draw_list->AddRectFilled(bb.Min, bb.Max, colors.error);
 		}
 
@@ -2246,7 +2261,7 @@ namespace Modex
 		}
 
 		// Invalid / Missing plugin indicator
-		if (a_item->IsDummy() && owner != Ownership::Cell) {
+		if (a_item->IsDummy() && owner != Ownership::Cell && owner != Ownership::Kit) {
 			draw_list->AddRectFilled(bb.Min, bb.Max, colors.error);
 		}
 

@@ -157,6 +157,7 @@ namespace Modex
 		using SelectionChangedCallback = std::function<void(const std::vector<RE::FormID>&)>;
 		using SelectionChangedStringCallback = std::function<void(const std::vector<std::string>&)>;
 		void                    SetKitPointer(Kit* a_kit) { selectedKitPtr = a_kit; }
+		void                    SetSortColumns(const std::vector<SortSystem::SortQuery>& a_columns);
 		void                    SetDragDropHandle(DragDropHandle a_handle);
 		void                    SetSelectionChangedCallback(SelectionChangedCallback a_callback) { m_selectionChangedCallback = std::move(a_callback); }
 		void                    SetSelectionChangedStringCallback(SelectionChangedStringCallback a_callback) { m_selectionChangedStringCallback = std::move(a_callback); }

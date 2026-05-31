@@ -85,12 +85,17 @@ namespace ModexAPI
 		kTomeSkill = 68,
 		kOutfitItems = 72,
 		kPersistent = 73,
-		kDeleted = 74
+		kDeleted = 74,
+		kSpellSkill = 83,      // School of magic for spells
+		kKnownByTarget = 84,   // True if Modex's current table target knows this spell
+		kKitTags = 85,         // Comma-separated tag string on a kit entry
+		kKitGoldValue = 86     // Precomputed total gold value of a kit's items
 	};
 
-	// Options for configuring the Form Selector UI before opening.
-	// Use the builder pattern: set options, then call OpenFormSelector.
-	struct FormSelectorOptions
+	// Options for configuring a selector UI before opening. Shared shape between the form
+	// and kit selectors — both consume the same fields. Use the alias `KitSelectorOptions`
+	// when configuring the kit selector for readability.
+	struct SelectorOptions
 	{
 		bool singleSelect{ false };       // Replace selection instead of accumulating
 		bool showTotalCost{ false };      // Display gold cost tally in action pane
@@ -100,6 +105,9 @@ namespace ModexAPI
 		float costMultiplier{ 1.0f };     // Scale factor for gold costs
 		const char* title{ nullptr };     // Custom window title (nullptr = default)
 	};
+
+	using FormSelectorOptions = SelectorOptions;  // existing name; kept for ABI compatibility
+	using KitSelectorOptions  = SelectorOptions;  // readability alias for kit selector calls
 
 	// Lightweight form entry returned by GetCachedForms().
 	// String pointers are valid for the lifetime of the Modex cache (until game exit).
@@ -121,7 +129,8 @@ namespace ModexAPI
 		const char* name;         // Display name (file stem)
 		const char* collection;   // Collection/category grouping
 		uint32_t    itemCount;    // Number of items in the kit
-		int32_t     goldValue;    // Total gold value of all items
+		uint32_t    spellCount;   // Number of spells in the kit
+		int32_t     goldValue;    // Total gold value of all items (spells have no gold value)
 	};
 
 	// A message used to fetch Modex's interface.
@@ -268,13 +277,24 @@ namespace ModexAPI
 		/// Opens the Kit Selector UI with custom options.
 		/// @param a_options  Configuration options for the selector behavior.
 		/// @param a_callback Called with an array of kit key strings and the count.
-		virtual void OpenKitSelector(const FormSelectorOptions& a_options, void (*a_callback)(const char* const* a_kitKeys, uint32_t a_count)) = 0;
+		virtual void OpenKitSelector(const KitSelectorOptions& a_options, void (*a_callback)(const char* const* a_kitKeys, uint32_t a_count)) = 0;
 
 		/// Copies cached kit entries into a user-provided buffer.
 		/// @param a_outBuffer Pointer to a KitEntry array to fill. Pass nullptr to query count only.
 		/// @param a_maxCount  Maximum number of entries to write into a_outBuffer.
 		/// @return            The total number of kits in the cache (regardless of a_maxCount).
 		virtual uint32_t GetCachedKits(KitEntry* a_outBuffer, uint32_t a_maxCount) = 0;
+
+		/// Teach a spell to the actor at the specified reference.
+		/// No-op if the actor already knows the spell.
+		/// @param a_spellFormID FormID of the SpellItem to teach.
+		/// @param a_targetReference Actor reference to teach the spell to.
+		virtual void AddSpellToActor(uint32_t a_spellFormID, uint32_t a_targetReference) = 0;
+
+		/// Remove a spell from the actor at the specified reference.
+		/// @param a_spellFormID FormID of the SpellItem to remove.
+		/// @param a_targetReference Actor reference to remove the spell from.
+		virtual void RemoveSpellFromActor(uint32_t a_spellFormID, uint32_t a_targetReference) = 0;
 	};
 
 }  // namespace ModexAPI
