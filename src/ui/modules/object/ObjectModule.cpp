@@ -31,10 +31,7 @@ namespace Modex
 		UIContainers::DrawObjectActionPanel(action_pos, ImVec2(full_width - table_width - window_padding.x, 0.0f), a_tables[0]);
 	}
 
-	ObjectModule::~ObjectModule()
-	{
-		// Destructor
-	}
+	ObjectModule::~ObjectModule() = default;
 
 	ObjectModule::ObjectModule()
 	{

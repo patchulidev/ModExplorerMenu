@@ -425,7 +425,7 @@ namespace Modex
 			while (selectionStorage.GetNextSelectedItem(&it, &id)) {
 				if (id < std::ssize(tableList) && id >= 0) {
 					const auto& item = tableList[id];
-					if (item && !itemPreview->IsDummy() && (item->IsArmor() || item->IsWeapon())) {
+					if (item && !item->IsDummy() && (item->IsArmor() || item->IsWeapon())) {
 						Commands::AddAndEquipItemToInventory(owner, tableTargetRef, item->GetBaseFormID());
 					}
 				}
@@ -460,29 +460,6 @@ namespace Modex
 				}
 			}
 		}
-	}
-
-	bool UITable::SelectionContainsOnlyReferences()
-	{
-		if (GetSelectionCount() == 0) {
-			if (itemPreview && !itemPreview->IsDummy()) {
-				return itemPreview->GetRefID() != 0;
-			}
-		}
-		else {
-			void* it = NULL;
-			ImGuiID id = 0;
-
-			while (selectionStorage.GetNextSelectedItem(&it, &id)) {
-				if (id < std::ssize(tableList) && id >= 0) {
-					const auto& item = tableList[id];
-					if (item->IsDummy()) return false;
-					if (item->GetRefID() == 0) return false;
-				}
-			}
-		}
-
-		return false;
 	}
 
 	void UITable::ExecuteCommandOnSelection(const std::function<void(const std::unique_ptr<BaseObject>&)>& a_command)
@@ -1625,7 +1602,13 @@ namespace Modex
 				Commands::AddSpellToActor(owner, GetTableTargetRef(), a_item->GetBaseFormID());
 			}
 
-			// BUG: Returning to menu after double-click casues first left-click to not register ?
+			if (owner == Ownership::Outfit && tableTargetRef && !Commands::IsGameMenuOpen()) {
+				if (auto outfit = a_item->GetTESOutfit(); outfit) {
+					Commands::AddOutfitItemsToInventory(owner, tableTargetRef, outfit);
+				}
+			}
+
+			// BUG: Returning to menu after double-click causes first left-click to not register?
 
 			if (owner == Ownership::Cell) {
 				Commands::CenterOnCell(Ownership::Cell, a_item->GetEditorID());

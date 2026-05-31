@@ -226,7 +226,7 @@ namespace Modex
 		bool clicked = false;
 
 		for (size_t i = 0; i < m_filteredList.size(); i++) {
-			ImGui::PushID(i);
+			ImGui::PushID(static_cast<int>(i));
 			const auto& item = m_filteredList[i];
 			
 			if ((item.show || m_forceDropdown) && !item.name.empty()) {

@@ -30,10 +30,7 @@ namespace Modex
 		UIContainers::DrawTeleportActionPanel(action_pos, ImVec2(full_width - table_width - window_padding.x, 0.0f), a_tables[0]);
 	}
 
-	TeleportModule::~TeleportModule()
-	{
-		// Destructor
-	}
+	TeleportModule::~TeleportModule() = default;
 
 	TeleportModule::TeleportModule()
 	{

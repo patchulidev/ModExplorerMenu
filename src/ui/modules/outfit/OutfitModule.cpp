@@ -30,10 +30,7 @@ namespace Modex
 		UIContainers::DrawOutfitActionPanel(action_pos, ImVec2(full_width - table_width - window_padding.x, 0.0f), a_tables[0]);
 	}
 
-	OutfitModule::~OutfitModule()
-	{
-		// Destructor
-	}
+	OutfitModule::~OutfitModule() = default;
 
 	OutfitModule::OutfitModule()
 	{

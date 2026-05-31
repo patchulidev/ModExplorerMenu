@@ -166,7 +166,6 @@ namespace Modex
 		bool                    IsActionAllowed();
 		bool                    IsValidTargetReference(RE::TESObjectREFR* a_reference = nullptr);
 		bool                    IsValidSelectionReference() const;
-		bool                    SelectionContainsOnlyReferences();
 		RE::TESObjectREFR*      GetSelectedReference() const;
 		
 		//                      drag n drop behaviors

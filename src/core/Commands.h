@@ -142,7 +142,9 @@ namespace Modex::Commands
 			if (a_targetRef) {
 				a_level = a_targetRef->GetCalcLevel(true);
 			} else if (auto player = RE::PlayerCharacter::GetSingleton()) {
-				a_level = player->AsReference()->GetCalcLevel(true);
+				if (auto playerRef = player->AsReference()) {
+					a_level = playerRef->GetCalcLevel(true);
+				}
 			}
 		}
 
@@ -232,9 +234,8 @@ namespace Modex::Commands
 		return useAll ? sumValue : maxValue;
 	}
 
-	static inline int GetOutfitValue(const RE::BGSOutfit* a_outfit, uint16_t a_level = 0)
+	static inline int GetOutfitValue(const RE::BGSOutfit* a_outfit)
 	{
-		(void)a_level;
 		if (!a_outfit || a_outfit->outfitItems.size() == 0) return 0;
 
 		int value = 0;
@@ -306,8 +307,6 @@ namespace Modex::Commands
 			if (!form)
 				return UINotification::ShowError("Failed to lookup FormID");
 
-			Info("Pre BoundObject FormType {}", RE::FormTypeToString(form->GetFormType()));
-
 			auto boundObject = form->As<RE::TESBoundObject>();
 
 			if (!boundObject)
@@ -327,32 +326,6 @@ namespace Modex::Commands
 		}
 
 		Commands::AddItemToInventory(a_owner, a_targetRef, a_formID, a_amount);
-	}
-
-	static inline void AddLeveledListToRefInventory(Ownership a_owner, RE::TESObjectREFR* a_targetRef, RE::FormID a_formID, int16_t a_amount = 1)
-	{
-		if (!a_targetRef) {
-			UINotification::ShowError("Failed to obtain Target Reference");
-			return;
-		}
-
-		SKSE::GetTaskInterface()->AddTask([a_owner, a_targetRef, a_formID, a_amount]() {
-			auto leveled = RE::TESForm::LookupByID<RE::TESLeveledList>(a_formID);
-
-			if (!leveled)
-				return UINotification::ShowError("Failed to lookup LeveledList EditorID");
-
-			auto resolved = ResolveLeveledList(leveled, a_targetRef, a_amount);
-
-			for (auto& entry : resolved) {
-				a_targetRef->AddObjectToContainer(entry.object, nullptr, entry.count, nullptr);
-
-				auto editorid = po3_GetEditorID(entry.object->GetFormID());
-				UserData::SendEvent(ModexActionType::AddItem, editorid, a_owner);
-			}
-
-			return true;
-		});
 	}
 
 	static inline void AddLeveledListToRefInventory(Ownership a_owner, RE::TESObjectREFR* a_targetRef, RE::FormID a_formID, uint16_t a_amount = 1)
@@ -487,6 +460,9 @@ namespace Modex::Commands
     // Helper function for inventory item binding
     inline int InventoryBoundObjects(RE::TESObjectREFR* a_targetRef, const RE::TESForm* a_form, RE::TESBoundObject*& out_object, RE::ExtraDataList*& out_extra)
 	{
+		out_object = nullptr;
+		out_extra  = nullptr;
+
 		RE::TESBoundObject* foundObject = nullptr;
 		std::vector<RE::ExtraDataList*> extraDataCopy;
 		RE::FormType a_type = a_form->GetFormType();
@@ -558,7 +534,7 @@ namespace Modex::Commands
 				actor->AddWornItem(equipObject, 1, false, 0, 0);
 				UserData::SendEvent(ModexActionType::EquipItem, a_formID, a_owner);
 			} else {
-				UINotification::ShowError("Failed to resolve equipObject for InvenotryItem");
+				UINotification::ShowError("Failed to resolve equipObject for InventoryItem");
 			}
 
 			return true;
@@ -618,15 +594,11 @@ namespace Modex::Commands
 			int found = InventoryBoundObjects(playerRef, form, equipObject, extraData);
 
 			if (found == 0)
-				return UINotification::ShowError("Unable to locate distributed Book in Invenotry");
+				return UINotification::ShowError("Unable to locate distributed Book in Inventory");
 
+			// bookRef is the world-placed instance; nullptr for an inventory book read.
 			RE::TESObjectREFR* bookRef = equipObject->As<RE::TESObjectREFR>();
-
-			if (equipObject) {
-				RE::BookMenu::OpenBookMenu(buf, extraData, bookRef, book, defaultPos, defaultPos, 1.0f, true);
-			} else {
-				return UINotification::ShowError("Unable to resolve equipObject in Inventory");
-			}
+			RE::BookMenu::OpenBookMenu(buf, extraData, bookRef, book, defaultPos, defaultPos, 1.0f, true);
 
 			return true;
 		});
@@ -734,7 +706,7 @@ namespace Modex::Commands
 				a_targetRef->AddObjectToContainer(entry.object, nullptr, entry.count, nullptr);
 			}
 
-			return UserData::SendEvent(ModexActionType::AddItem, po3_GetEditorID(a_outfit->GetFormID()), a_owner);
+			return UserData::SendEvent(ModexActionType::AddOutfit, po3_GetEditorID(a_outfit->GetFormID()), a_owner);
 		});
 	}
 
@@ -774,7 +746,6 @@ namespace Modex::Commands
 		});
 	}
 
-	// TEST: What happens when we call this on Player?
 	static inline void SetSleepOutfitOnActor(Ownership a_owner, RE::TESObjectREFR* a_targetRef, RE::BGSOutfit* a_outfit)
 	{
 		if (!a_targetRef || !a_outfit) {
