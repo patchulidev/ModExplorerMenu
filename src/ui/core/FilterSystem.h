@@ -281,10 +281,6 @@ namespace Modex
 		ImVec4 GetParentColor(FilterNode* a_node);
 		FilterNode* GetSelectedRootNode() const;
 		
-		bool ItemMatchesNode(const BaseObject& a_item, const std::vector<std::string>& a_path);
-		bool ItemMatchesPath(const BaseObject* item, const std::vector<std::string>& path) const;
-		bool HasAnySelectedDescendant(FilterNode* node) const;
-		void CollectActivePaths(FilterNode* node,std::vector<std::string> currentPath, std::vector<std::vector<std::string>>& outPaths) const;  
 		void CollectSelectedNodesByParent(FilterNode* node, std::map<FilterNode*, std::vector<FilterNode*>>& outMap) const;
 		void CollectSelectedNodesByID(FilterNode* a_node, std::vector<std::string>& a_out) const;
 

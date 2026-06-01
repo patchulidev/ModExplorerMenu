@@ -136,7 +136,7 @@ namespace Modex
 				
 				static auto targetRefr = m_tables[1]->GetTableTargetRef();
 				static std::string target_name = targetRefr ? targetRefr->GetName() : Translate("NO_CONSOLE_SELECTION");
-				const bool action_allowed = !m_selectedKit.empty() && m_selectedKit.m_items.size() > 0;
+				const bool action_allowed = !m_selectedKit.empty() && (m_selectedKit.m_items.size() > 0 || m_selectedKit.m_spells.size() > 0);
 				const bool shift_down = ImGui::GetIO().KeyShift;
 
 				{ // Side-by-side buttons group.
@@ -162,6 +162,12 @@ namespace Modex
 					for (auto& item : m_selectedKit.m_items) {
 						if (!dependencies.contains(item->m_plugin)) {
 							dependencies.insert(item->m_plugin);
+						}
+					}
+
+					for (auto& spell : m_selectedKit.m_spells) {
+						if (!dependencies.contains(spell->m_plugin)) {
+							dependencies.insert(spell->m_plugin);
 						}
 					}
 
@@ -210,6 +216,24 @@ namespace Modex
 
 		const ImVec2 table_pos = ImGui::GetCursorPos();
 		UIContainers::DrawBasicTablePanel("TABLE_ITEM", table_pos, ImVec2(table_width, 0.0f), table);
+
+		const ImVec2 action_pos = table_pos + ImVec2(table_width + window_padding.x, 0.0f);
+		DrawKitActionsPanel(action_pos, ImVec2(0.0f, 0.0f));
+
+		const ImVec2 kit_pos = action_pos + ImVec2(0.0f, ImGui::GetItemRectSize().y + window_padding.y);
+		UIContainers::DrawBasicTablePanel("TABLE_KIT", kit_pos, ImVec2(0.0f, 0.0f), kitTable);
+	}
+
+	void EquipmentModule::DrawSpellLayout(std::vector<std::unique_ptr<UITable>>& a_tables)
+	{
+		const ImVec2 window_padding = ImGui::GetStyle().WindowPadding;
+		const float table_width = ImGui::GetContentRegionAvail().x * Style::Ratio::TableBalanced();
+
+		auto& spellTable = a_tables[2];
+		auto& kitTable = a_tables[1];
+
+		const ImVec2 table_pos = ImGui::GetCursorPos();
+		UIContainers::DrawBasicTablePanel("TABLE_SPELL", table_pos, ImVec2(table_width, 0.0f), spellTable);
 
 		const ImVec2 action_pos = table_pos + ImVec2(table_width + window_padding.x, 0.0f);
 		DrawKitActionsPanel(action_pos, ImVec2(0.0f, 0.0f));
@@ -359,6 +383,11 @@ namespace Modex
 					DrawEquipmentLayout(a_tables);
 				}
 			});
+		m_layouts.push_back({Translate("TAB_KIT_SPELLS"), false,
+				[this](std::vector<std::unique_ptr<UITable>>& a_tables) {
+					DrawSpellLayout(a_tables);
+				}
+			});
 		m_layouts.push_back({Translate("TAB_KIT_BROWSER"), false,
 				[this](std::vector<std::unique_ptr<UITable>>& a_tables) {
 					DrawKitBrowserLayout(a_tables);
@@ -385,11 +414,18 @@ namespace Modex
 		kit->SetDragDropHandle(UITable::DragDropHandle::Kit);
 		kit->Refresh();
 
+		auto spellSource = std::make_unique<UITable>("Spell", true, Ownership::Spell, table_flags);
+		spellSource->SetDragDropHandle(UITable::DragDropHandle::SpellSource);
+
 		// Setup drag and drop target linkage.
 		table->AddDragDropTarget(kit->GetDragDropHandle(), kit.get());
 		kit->AddDragDropTarget(table->GetDragDropHandle(), table.get());
 
+		spellSource->AddDragDropTarget(kit->GetDragDropHandle(), kit.get());
+		kit->AddDragDropTarget(spellSource->GetDragDropHandle(), spellSource.get());
+
 		m_tables.push_back(std::move(table));
 		m_tables.push_back(std::move(kit));
+		m_tables.push_back(std::move(spellSource));
 	}
 }

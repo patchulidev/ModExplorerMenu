@@ -227,7 +227,7 @@
                         "rule": {
                             "property": "kArmorSlot",
                             "operator": "equals",
-                            "value": "Mod Pelvis"
+                            "value": "Mod Pelvis Primary"
                         }
                     },
                     {
@@ -254,7 +254,7 @@
                         "rule": {
                             "property": "kArmorSlot",
                             "operator": "equals",
-                            "value": "Mod Pelvis 2"
+                            "value": "Mod Pelvis Secondary"
                         }
                     },
                     {
@@ -290,7 +290,7 @@
                         "rule": {
                             "property": "kArmorSlot",
                             "operator": "equals",
-                            "value": "Mod Chest 2"
+                            "value": "Mod Chest Secondary"
                         }
                     },
                     {

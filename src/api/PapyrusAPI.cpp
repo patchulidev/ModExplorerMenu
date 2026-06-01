@@ -70,6 +70,32 @@ namespace Modex::PapyrusAPI
 		Commands::RemoveItemFromPlayerInventory(Ownership::None, a_form->GetFormID(), static_cast<uint32_t>(a_count));
 	}
 
+	static void AddSpellToPlayer(RE::StaticFunctionTag*, RE::SpellItem* a_spell)
+	{
+		if (!a_spell) {
+			Warn("Modex.AddSpellToPlayer: spell is None");
+			return;
+		}
+
+		auto* player = RE::PlayerCharacter::GetSingleton();
+		if (!player) return;
+
+		Commands::AddSpellToActor(Ownership::None, player->AsReference(), a_spell->GetFormID());
+	}
+
+	static void RemoveSpellFromPlayer(RE::StaticFunctionTag*, RE::SpellItem* a_spell)
+	{
+		if (!a_spell) {
+			Warn("Modex.RemoveSpellFromPlayer: spell is None");
+			return;
+		}
+
+		auto* player = RE::PlayerCharacter::GetSingleton();
+		if (!player) return;
+
+		Commands::RemoveSpellFromActor(Ownership::None, player->AsReference(), a_spell->GetFormID());
+	}
+
 	/// NPC / Reference Actions
 
 	static void TeleportPlayerTo(RE::StaticFunctionTag*, RE::TESObjectREFR* a_ref)
@@ -164,6 +190,8 @@ namespace Modex::PapyrusAPI
 	}
 
 	// Data / Cache Queries
+	// Cache type indices mirror ModexAPI::CacheType (kItem=0, kNPC=1, kObject=2, kCell=3,
+	// kOutfit=4, kKit=5, kSpell=6).
 	static int32_t GetCachedFormCount(RE::StaticFunctionTag*, int32_t a_cacheType)
 	{
 		auto* data = Data::GetSingleton();
@@ -174,6 +202,7 @@ namespace Modex::PapyrusAPI
 		case 2: return static_cast<int32_t>(data->GetObjectList().size());
 		case 3: return static_cast<int32_t>(data->GetTeleportList().size());
 		case 4: return static_cast<int32_t>(data->GetOutfitList().size());
+		case 6: return static_cast<int32_t>(data->GetSpellList().size());
 		default:
 			Warn("Modex.GetCachedFormCount: invalid cache type {}", a_cacheType);
 			return -1;
@@ -204,7 +233,8 @@ namespace Modex::PapyrusAPI
 		       search(data->GetNPCList()) ||
 		       search(data->GetObjectList()) ||
 		       search(data->GetTeleportList()) ||
-		       search(data->GetOutfitList());
+		       search(data->GetOutfitList()) ||
+		       search(data->GetSpellList());
 	}
 
 	// Modex Data layer finished initialization and ready for queries. I.e. Form Selection / Cache
@@ -216,9 +246,10 @@ namespace Modex::PapyrusAPI
 
 	/// Form Selector UI
 
-	// Pending options accumulator for the builder pattern.
-	// Populated by SetFormSelector* calls, consumed and reset by OpenFormSelector.
-	static FormSelectorOptions s_pendingOptions;
+	// Builder-pattern option buffers — one per selector so settings don't leak between them.
+	// Populated by Set*Selector* calls, consumed and reset by the corresponding Open* call.
+	static FormSelectorOptions s_pendingFormOptions;
+	static FormSelectorOptions s_pendingKitOptions;
 
 	// Selection buffer. Populated by the callback, consumed once by GetSelectedForms().
 	// Both writes (via AddTask) and reads (via Papyrus VM) run on the game thread.
@@ -263,42 +294,84 @@ namespace Modex::PapyrusAPI
 
 	static void SetFormSelectorSingleSelect(RE::StaticFunctionTag*, bool a_enable)
 	{
-		s_pendingOptions.singleSelect = a_enable;
+		s_pendingFormOptions.singleSelect = a_enable;
 	}
 
 	static void SetFormSelectorShowTotalCost(RE::StaticFunctionTag*, bool a_enable)
 	{
-		s_pendingOptions.showTotalCost = a_enable;
+		s_pendingFormOptions.showTotalCost = a_enable;
 	}
 
 	static void SetFormSelectorRequireTotalCost(RE::StaticFunctionTag*, bool a_enable)
 	{
-		s_pendingOptions.requireTotalCost = a_enable;
+		s_pendingFormOptions.requireTotalCost = a_enable;
 	}
 
 	static void SetFormSelectorMaxCost(RE::StaticFunctionTag*, int32_t a_maxCost)
 	{
-		s_pendingOptions.maxCost = a_maxCost;
+		s_pendingFormOptions.maxCost = a_maxCost;
 	}
 
 	static void SetFormSelectorMaxCount(RE::StaticFunctionTag*, int32_t a_maxCount)
 	{
-		s_pendingOptions.maxCount = a_maxCount;
+		s_pendingFormOptions.maxCount = a_maxCount;
 	}
 
 	static void SetFormSelectorCostMultiplier(RE::StaticFunctionTag*, float a_multiplier)
 	{
-		s_pendingOptions.costMultiplier = a_multiplier;
+		s_pendingFormOptions.costMultiplier = a_multiplier;
 	}
 
 	static void SetFormSelectorTitle(RE::StaticFunctionTag*, RE::BSFixedString a_title)
 	{
-		s_pendingOptions.title = a_title.c_str();
+		s_pendingFormOptions.title = a_title.c_str();
 	}
 
 	static void ResetFormSelectorOptions(RE::StaticFunctionTag*)
 	{
-		s_pendingOptions.Reset();
+		s_pendingFormOptions.Reset();
+	}
+
+	// Kit Selector Builder Setters
+
+	static void SetKitSelectorSingleSelect(RE::StaticFunctionTag*, bool a_enable)
+	{
+		s_pendingKitOptions.singleSelect = a_enable;
+	}
+
+	static void SetKitSelectorShowTotalCost(RE::StaticFunctionTag*, bool a_enable)
+	{
+		s_pendingKitOptions.showTotalCost = a_enable;
+	}
+
+	static void SetKitSelectorRequireTotalCost(RE::StaticFunctionTag*, bool a_enable)
+	{
+		s_pendingKitOptions.requireTotalCost = a_enable;
+	}
+
+	static void SetKitSelectorMaxCost(RE::StaticFunctionTag*, int32_t a_maxCost)
+	{
+		s_pendingKitOptions.maxCost = a_maxCost;
+	}
+
+	static void SetKitSelectorMaxCount(RE::StaticFunctionTag*, int32_t a_maxCount)
+	{
+		s_pendingKitOptions.maxCount = a_maxCount;
+	}
+
+	static void SetKitSelectorCostMultiplier(RE::StaticFunctionTag*, float a_multiplier)
+	{
+		s_pendingKitOptions.costMultiplier = a_multiplier;
+	}
+
+	static void SetKitSelectorTitle(RE::StaticFunctionTag*, RE::BSFixedString a_title)
+	{
+		s_pendingKitOptions.title = a_title.c_str();
+	}
+
+	static void ResetKitSelectorOptions(RE::StaticFunctionTag*)
+	{
+		s_pendingKitOptions.Reset();
 	}
 
 	static void OpenFormSelector(RE::StaticFunctionTag*, int32_t a_cacheType)
@@ -307,11 +380,12 @@ namespace Modex::PapyrusAPI
 
 		Ownership ownership;
 		switch (a_cacheType) {
-		case 0: ownership = Ownership::Item; break;
-		case 1: ownership = Ownership::Actor; break;
+		case 0: ownership = Ownership::Item;   break;
+		case 1: ownership = Ownership::Actor;  break;
 		case 2: ownership = Ownership::Object; break;
-		case 3: ownership = Ownership::Cell; break;
+		case 3: ownership = Ownership::Cell;   break;
 		case 4: ownership = Ownership::Outfit; break;
+		case 6: ownership = Ownership::Spell;  break;
 		default:
 			Warn("Modex.OpenFormSelector: invalid cache type {}, defaulting to Item", a_cacheType);
 			ownership = Ownership::Item;
@@ -319,8 +393,8 @@ namespace Modex::PapyrusAPI
 		}
 
 		// Consume pending options and reset for next use.
-		FormSelectorOptions options = s_pendingOptions;
-		s_pendingOptions.Reset();
+		FormSelectorOptions options = s_pendingFormOptions;
+		s_pendingFormOptions.Reset();
 
 		ui->OpenFormSelector(ownership, FormSelectorModEventCallback, options);
 	}
@@ -416,9 +490,8 @@ namespace Modex::PapyrusAPI
 	{
 		auto* ui = UIManager::GetSingleton();
 
-		// Consume pending options (shared with form selector builder) and reset.
-		FormSelectorOptions options = s_pendingOptions;
-		s_pendingOptions.Reset();
+		FormSelectorOptions options = s_pendingKitOptions;
+		s_pendingKitOptions.Reset();
 
 		ui->OpenKitSelector(KitSelectorModEventCallback, options);
 	}
@@ -451,6 +524,56 @@ namespace Modex::PapyrusAPI
 		return total;
 	}
 
+	/// Returns true if a kit exists in the cache for the given key.
+	static bool IsKitCached(RE::StaticFunctionTag*, RE::BSFixedString a_key)
+	{
+		return EquipmentConfig::KitLookup(a_key.c_str()) != nullptr;
+	}
+
+	static int32_t GetKitItemCount(RE::StaticFunctionTag*, RE::BSFixedString a_key)
+	{
+		auto* kit = EquipmentConfig::KitLookup(a_key.c_str());
+		return kit ? static_cast<int32_t>(kit->m_items.size()) : 0;
+	}
+
+	static int32_t GetKitSpellCount(RE::StaticFunctionTag*, RE::BSFixedString a_key)
+	{
+		auto* kit = EquipmentConfig::KitLookup(a_key.c_str());
+		return kit ? static_cast<int32_t>(kit->m_spells.size()) : 0;
+	}
+
+	static int32_t GetKitGoldValue(RE::StaticFunctionTag*, RE::BSFixedString a_key)
+	{
+		return KitSelectorModule::GetKitGoldValue(a_key.c_str());
+	}
+
+	/// Apply a kit (items + spells) to an arbitrary actor reference. No UI involved.
+	static void ApplyKitToActor(RE::StaticFunctionTag*, RE::BSFixedString a_key, RE::TESObjectREFR* a_target)
+	{
+		if (!a_target) {
+			Warn("Modex.ApplyKitToActor: target is None");
+			return;
+		}
+
+		auto* kit = EquipmentConfig::KitLookup(a_key.c_str());
+		if (!kit) {
+			Warn("Modex.ApplyKitToActor: kit '{}' not found", a_key.c_str());
+			return;
+		}
+
+		for (const auto& item : kit->m_items) {
+			if (item->m_equipped) {
+				Commands::AddAndEquipItemToInventory(Ownership::Kit, a_target, item->m_formID);
+			} else {
+				Commands::AddItemToRefInventory(Ownership::Kit, a_target, item->m_formID, static_cast<uint32_t>(item->m_amount));
+			}
+		}
+
+		for (const auto& spell : kit->m_spells) {
+			Commands::AddSpellToActor(Ownership::Kit, a_target, spell->m_formID);
+		}
+	}
+
 	static void ApplySelectedKitsToPlayer(RE::StaticFunctionTag*)
 	{
 		auto* player = RE::PlayerCharacter::GetSingleton();
@@ -470,6 +593,10 @@ namespace Modex::PapyrusAPI
 					Commands::AddItemToRefInventory(Ownership::Kit, playerRef, item->m_formID, static_cast<uint32_t>(item->m_amount));
 				}
 			}
+
+			for (const auto& spell : kit->m_spells) {
+				Commands::AddSpellToActor(Ownership::Kit, playerRef, spell->m_formID);
+			}
 		}
 
 		s_selectedKits.clear();
@@ -487,6 +614,8 @@ namespace Modex::PapyrusAPI
 		// Inventory
 		a_vm->RegisterFunction("AddItemToPlayer"sv, SCRIPT_NAME, AddItemToPlayer);
 		a_vm->RegisterFunction("RemoveItemFromPlayer"sv, SCRIPT_NAME, RemoveItemFromPlayer);
+		a_vm->RegisterFunction("AddSpellToPlayer"sv, SCRIPT_NAME, AddSpellToPlayer);
+		a_vm->RegisterFunction("RemoveSpellFromPlayer"sv, SCRIPT_NAME, RemoveSpellFromPlayer);
 
 		// NPC / Reference
 		a_vm->RegisterFunction("TeleportPlayerTo"sv, SCRIPT_NAME, TeleportPlayerTo);
@@ -514,6 +643,16 @@ namespace Modex::PapyrusAPI
 		a_vm->RegisterFunction("SetFormSelectorTitle"sv, SCRIPT_NAME, SetFormSelectorTitle);
 		a_vm->RegisterFunction("ResetFormSelectorOptions"sv, SCRIPT_NAME, ResetFormSelectorOptions);
 
+		// Kit Selector Options (Builder Pattern)
+		a_vm->RegisterFunction("SetKitSelectorSingleSelect"sv, SCRIPT_NAME, SetKitSelectorSingleSelect);
+		a_vm->RegisterFunction("SetKitSelectorShowTotalCost"sv, SCRIPT_NAME, SetKitSelectorShowTotalCost);
+		a_vm->RegisterFunction("SetKitSelectorRequireTotalCost"sv, SCRIPT_NAME, SetKitSelectorRequireTotalCost);
+		a_vm->RegisterFunction("SetKitSelectorMaxCost"sv, SCRIPT_NAME, SetKitSelectorMaxCost);
+		a_vm->RegisterFunction("SetKitSelectorMaxCount"sv, SCRIPT_NAME, SetKitSelectorMaxCount);
+		a_vm->RegisterFunction("SetKitSelectorCostMultiplier"sv, SCRIPT_NAME, SetKitSelectorCostMultiplier);
+		a_vm->RegisterFunction("SetKitSelectorTitle"sv, SCRIPT_NAME, SetKitSelectorTitle);
+		a_vm->RegisterFunction("ResetKitSelectorOptions"sv, SCRIPT_NAME, ResetKitSelectorOptions);
+
 		// Form Selector
 		a_vm->RegisterFunction("OpenFormSelector"sv, SCRIPT_NAME, OpenFormSelector);
 		a_vm->RegisterFunction("GetSelectedForms"sv, SCRIPT_NAME, GetSelectedForms);
@@ -527,7 +666,14 @@ namespace Modex::PapyrusAPI
 		a_vm->RegisterFunction("GetSelectedKitCost"sv, SCRIPT_NAME, GetSelectedKitCost);
 		a_vm->RegisterFunction("ApplySelectedKitsToPlayer"sv, SCRIPT_NAME, ApplySelectedKitsToPlayer);
 
-		Info("Registered {} Papyrus native functions for script '{}'.", 32, SCRIPT_NAME);
+		// Kit Queries / Apply
+		a_vm->RegisterFunction("IsKitCached"sv, SCRIPT_NAME, IsKitCached);
+		a_vm->RegisterFunction("GetKitItemCount"sv, SCRIPT_NAME, GetKitItemCount);
+		a_vm->RegisterFunction("GetKitSpellCount"sv, SCRIPT_NAME, GetKitSpellCount);
+		a_vm->RegisterFunction("GetKitGoldValue"sv, SCRIPT_NAME, GetKitGoldValue);
+		a_vm->RegisterFunction("ApplyKitToActor"sv, SCRIPT_NAME, ApplyKitToActor);
+
+		Info("Registered {} Papyrus native functions for script '{}'.", 47, SCRIPT_NAME);
 		return true;
 	}
 }

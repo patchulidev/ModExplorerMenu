@@ -87,8 +87,6 @@ namespace Modex
 		kSpellType,
 		kSpellCastType,
 		kSpellDelivery,
-		kSpellSkill,			// School of magic (Destruction/Restoration/Illusion/Conjuration/Alteration).
-		kKnownByTarget,			// True if the table's current target actor knows this spell.
 		kTomeSpell,
 		kTomeSkill,
 		kImGuiSeparator,        // Special ImGui Separator
@@ -103,6 +101,11 @@ namespace Modex
 		kLeveledUseAllFlag,
 		kLeveledSpecialFlag,
 		kLeveledChance,
+		// NEW entries must append here to preserve public API enum positions.
+		kSpellSkill,			// School of magic (Destruction/Restoration/Illusion/Conjuration/Alteration).
+		kKnownByTarget,			// True if the table's current target actor knows this spell.
+		kKitTags,				// CSV of tags; reads m_plugin on kit BaseObjects (where tags are stashed).
+		kKitGoldValue,			// Precomputed kit gold value; reads m_quantity on kit BaseObjects.
 		kTotal
 	};
 
@@ -285,6 +288,10 @@ namespace Modex
 				return ICON_LC_GRADUATION_CAP;
 			case PropertyType::kKnownByTarget:
 				return ICON_LC_BOOK_OPEN_CHECK;
+			case PropertyType::kKitTags:
+				return ICON_LC_TAG;
+			case PropertyType::kKitGoldValue:
+				return ICON_LC_COINS;
 			case PropertyType::kCell:
 				return ICON_LC_MAP_PIN;
 			case PropertyType::kLand:
@@ -383,10 +390,9 @@ namespace Modex
 		std::string ValidateName() const
 		{
 			if (!IsValid()) return "Error";
-			if (m_form->GetName() == nullptr) return po3_GetEditorID(m_form->formID);
-			if (m_form->GetName()[0] == '\0') return po3_GetEditorID(m_form->formID);
-
-			return m_form->GetName();
+			const char* name = m_form->GetName();
+			if (name == nullptr || name[0] == '\0') return po3_GetEditorID(m_form->formID);
+			return name;
 		}
 		
 		// Safe accessors with default fallbacks
@@ -1005,7 +1011,7 @@ namespace Modex
 					case RE::WEAPON_TYPE::kCrossbow:
 						return "Crossbow";
 					case RE::WEAPON_TYPE::kTotal:
-						return "Total";
+						break;  // sentinel, not a real type
 				}
 			}
 			
@@ -1104,15 +1110,10 @@ namespace Modex
 
 				if (spellList != nullptr && spellList->numSpells > 0) {
 					for (uint32_t i = 0; i < spellList->numSpells; i++) {
-						if (spellList->spells[i] == nullptr)
-							continue;
-
 						const auto* spell = spellList->spells[i];
-
-						if (spell != nullptr) {
-							if (spell->GetName() != nullptr) {
-								spells.push_back(spell->GetName());
-							}
+						if (spell == nullptr) continue;
+						if (const char* name = spell->GetName()) {
+							spells.push_back(name);
 						}
 					}
 				}
@@ -1202,9 +1203,6 @@ namespace Modex
 		inline bool IsDisabled() const
 		{
 			if (auto targetRefr = RE::TESForm::LookupByID<RE::TESObjectREFR>(m_refID)) {
-				if (targetRefr == nullptr)
-					return false;
-
 				return targetRefr->IsDisabled();
 			}
 
@@ -1214,13 +1212,13 @@ namespace Modex
 		inline bool HasFaction(const std::string& a_faction) const
 		{
 			const auto factions = GetMergedString(GetFactionList());
-			return factions.find(a_faction) != std::string::npos ? true : false;
+			return factions.find(a_faction) != std::string::npos;
 		}
 
 		inline bool HasSpell(const std::string& a_spell) const
 		{
 			const auto spells = GetMergedString(GetSpellList());
-			return spells.find(a_spell) != std::string::npos ? true : false;
+			return spells.find(a_spell) != std::string::npos;
 		}
 
 		inline bool HasKeyword(const std::string& a_keyword) const
@@ -1610,7 +1608,11 @@ namespace Modex
 				case PropertyType::kTomeSkill:
 					return GetBookSkill();
 				case PropertyType::kKitItemCount:
-					return std::to_string(m_quantity); 
+					return std::to_string(m_quantity);
+				case PropertyType::kKitTags:
+					return m_plugin;
+				case PropertyType::kKitGoldValue:
+					return std::to_string(m_quantity);
 				case PropertyType::kOutfitItems:
 					return GetOutfitItemCount();
 				case PropertyType::kLeveledItem: // Chance, flagged, count?
@@ -1683,7 +1685,7 @@ namespace Modex
 		int rank;
 	};
 
-	struct KitSpell : KitBase // unused
+	struct KitSpell : KitBase
 	{
 	};
 
@@ -1750,7 +1752,8 @@ namespace Modex
 	class Kit : public KitData
 	{
 	public:
-		std::vector<std::shared_ptr<KitItem>> m_items;
+		std::vector<std::shared_ptr<KitItem>>  m_items;
+		std::vector<std::shared_ptr<KitSpell>> m_spells;
 
 		// runtime
 		ImGuiID m_tableID = 0;

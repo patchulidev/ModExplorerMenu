@@ -127,8 +127,8 @@ namespace Modex
 					remove_index = i;
 				}
 
-				// Expand kit items
-				if (kit && !kit->m_items.empty()) {
+				// Expand kit contents (items + spells)
+				if (kit && (!kit->m_items.empty() || !kit->m_spells.empty())) {
 					Style::GroupIndent();
 					const float max_width = ImGui::GetContentRegionAvail().x;
 
@@ -145,6 +145,12 @@ namespace Modex
 						} else {
 							ImGui::Text("  %s", TRUNCATE(item->m_editorid, max_width * Style::Ratio::TruncateNameMid()).c_str());
 						}
+					}
+
+					for (const auto& spell : kit->m_spells) {
+						auto* form = RE::TESForm::LookupByEditorID(spell->m_editorid);
+						const auto label = form ? form->GetName() : spell->m_editorid.c_str();
+						ImGui::Text("%s %s", ICON_LC_WAND_SPARKLES, TRUNCATE(label, max_width * Style::Ratio::TruncateNameMid()).c_str());
 					}
 
 					Style::GroupUnindent();
@@ -276,15 +282,13 @@ namespace Modex
 		UIManager::GetSingleton()->Close();
 	}
 
-	KitSelectorModule::~KitSelectorModule()
-	{
-	}
+	KitSelectorModule::~KitSelectorModule() = default;
 
 	KitSelectorModule::KitSelectorModule(const FormSelectorOptions& a_options, SelectionCallback a_callback)
 		: m_options(a_options)
 		, m_callback(std::move(a_callback))
 	{
-		m_layouts.push_back({ Translate("TAB_FORMSELECTOR"), true, nullptr });
+		m_layouts.push_back({ Translate("TAB_KITSELECTOR"), true, nullptr });
 
 		constexpr auto table_flags =
 			UITable::ModexTableFlag_Base |
@@ -297,6 +301,11 @@ namespace Modex
 			for (const auto& key : keys) {
 				AddSelection(key);
 			}
+		});
+		table->SetSortColumns({
+			{0, PropertyType::kName},
+			{1, PropertyType::kKitTags},
+			{2, PropertyType::kKitGoldValue}
 		});
 
 		m_tables.push_back(std::move(table));

@@ -132,7 +132,8 @@ namespace Modex
 		enum class DragDropHandle {
 			Table,
 			Kit,
-			Inventory
+			Inventory,
+			SpellSource
 		};
 
 		void AddFlag(TableFlag flag) { flags |= flag; }
@@ -156,6 +157,7 @@ namespace Modex
 		using SelectionChangedCallback = std::function<void(const std::vector<RE::FormID>&)>;
 		using SelectionChangedStringCallback = std::function<void(const std::vector<std::string>&)>;
 		void                    SetKitPointer(Kit* a_kit) { selectedKitPtr = a_kit; }
+		void                    SetSortColumns(const std::vector<SortSystem::SortQuery>& a_columns);
 		void                    SetDragDropHandle(DragDropHandle a_handle);
 		void                    SetSelectionChangedCallback(SelectionChangedCallback a_callback) { m_selectionChangedCallback = std::move(a_callback); }
 		void                    SetSelectionChangedStringCallback(SelectionChangedStringCallback a_callback) { m_selectionChangedStringCallback = std::move(a_callback); }
@@ -166,7 +168,6 @@ namespace Modex
 		bool                    IsActionAllowed();
 		bool                    IsValidTargetReference(RE::TESObjectREFR* a_reference = nullptr);
 		bool                    IsValidSelectionReference() const;
-		bool                    SelectionContainsOnlyReferences();
 		RE::TESObjectREFR*      GetSelectedReference() const;
 		
 		//                      drag n drop behaviors

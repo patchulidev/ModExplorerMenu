@@ -84,14 +84,15 @@ namespace Modex
 		const auto lhs_value = a_lhs->GetPropertyByValue(property);
 		const auto rhs_value = a_rhs->GetPropertyByValue(property);
 
-		// Check if properties are empty/invalid - these should always go to the bottom
-		const bool lhs_empty = lhs_value.empty() || lhs_value == "0";
-		const bool rhs_empty = rhs_value.empty() || rhs_value == "0";
+		// Items missing the property (empty string) always go to the bottom. Numeric "0" is
+		// treated as a real value here so legitimate zeros (free spells, 0-gold items, etc.)
+		// sort like any other number.
+		const bool lhs_empty = lhs_value.empty();
+		const bool rhs_empty = rhs_value.empty();
 
-		// Items without the property always go to the bottom
-		if (lhs_empty && !rhs_empty) return false;  // lhs goes after rhs
-		if (!lhs_empty && rhs_empty) return true;   // lhs goes before rhs
-		if (lhs_empty && rhs_empty) return false;   // both empty, maintain order
+		if (lhs_empty && !rhs_empty) return false;
+		if (!lhs_empty && rhs_empty) return true;
+		if (lhs_empty && rhs_empty) return false;
 
 		int delta = 0;
 
@@ -145,6 +146,7 @@ namespace Modex
 			case PropertyType::kImGuiSeparator:
 			case PropertyType::kCell:
 			case PropertyType::kLand:
+			case PropertyType::kKitTags:
 			case PropertyType::kTotal: {
 				delta = rhs_value.compare(lhs_value);
 				break; // All direct string comparions.
@@ -161,7 +163,8 @@ namespace Modex
 				delta = lhs_is_armor - rhs_is_armor;
 				break;
 			}
-			case PropertyType::kKitItemCount: {
+			case PropertyType::kKitItemCount:
+			case PropertyType::kKitGoldValue: {
 				const auto lhs_count = std::stoi(lhs_value);
 				const auto rhs_count = std::stoi(rhs_value);
 				delta = lhs_count - rhs_count;

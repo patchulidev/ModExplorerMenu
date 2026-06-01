@@ -325,7 +325,7 @@ namespace Modex
 		if (tableList.empty())
 			return;
 
-		if (a_kit.m_items.empty())
+		if (a_kit.m_items.empty() && a_kit.m_spells.empty())
 			return;
 
 		if (!tableTargetRef)
@@ -333,10 +333,14 @@ namespace Modex
 
 		for (auto& kitItem : a_kit.m_items) {
 			if (kitItem->m_equipped) {
-				Commands::AddAndEquipItemToInventory(owner, tableTargetRef, kitItem->m_formID);
+				Commands::AddAndEquipItemToInventory(Ownership::Item, tableTargetRef, kitItem->m_formID);
 			} else {
-				Commands::AddItemToRefInventory(owner, tableTargetRef, kitItem->m_formID, static_cast<std::uint32_t>(kitItem->m_amount));
+				Commands::AddItemToRefInventory(Ownership::Item, tableTargetRef, kitItem->m_formID, static_cast<std::uint32_t>(kitItem->m_amount));
 			}
+		}
+
+		for (auto& kitSpell : a_kit.m_spells) {
+			Commands::AddSpellToActor(Ownership::Spell, tableTargetRef, kitSpell->m_formID);
 		}
 
 		UpdateActiveInventoryTables();
@@ -425,7 +429,7 @@ namespace Modex
 			while (selectionStorage.GetNextSelectedItem(&it, &id)) {
 				if (id < std::ssize(tableList) && id >= 0) {
 					const auto& item = tableList[id];
-					if (item && !itemPreview->IsDummy() && (item->IsArmor() || item->IsWeapon())) {
+					if (item && !item->IsDummy() && (item->IsArmor() || item->IsWeapon())) {
 						Commands::AddAndEquipItemToInventory(owner, tableTargetRef, item->GetBaseFormID());
 					}
 				}
@@ -460,29 +464,6 @@ namespace Modex
 				}
 			}
 		}
-	}
-
-	bool UITable::SelectionContainsOnlyReferences()
-	{
-		if (GetSelectionCount() == 0) {
-			if (itemPreview && !itemPreview->IsDummy()) {
-				return itemPreview->GetRefID() != 0;
-			}
-		}
-		else {
-			void* it = NULL;
-			ImGuiID id = 0;
-
-			while (selectionStorage.GetNextSelectedItem(&it, &id)) {
-				if (id < std::ssize(tableList) && id >= 0) {
-					const auto& item = tableList[id];
-					if (item->IsDummy()) return false;
-					if (item->GetRefID() == 0) return false;
-				}
-			}
-		}
-
-		return false;
 	}
 
 	void UITable::ExecuteCommandOnSelection(const std::function<void(const std::unique_ptr<BaseObject>&)>& a_command)
@@ -595,6 +576,13 @@ namespace Modex
 		dragDropHandle = a_id;
 	}
 
+	void UITable::SetSortColumns(const std::vector<SortSystem::SortQuery>& a_columns)
+	{
+		if (sortSystem) {
+			sortSystem->SetupColumns(a_columns);
+		}
+	}
+
 	const std::vector<std::unique_ptr<BaseObject>> UITable::GetSelection() const
 	{
 		std::vector<std::unique_ptr<BaseObject>> selectedItems;
@@ -645,13 +633,16 @@ namespace Modex
 
 	void UITable::AddPayloadToKit(const std::unique_ptr<BaseObject>& a_item)
 	{
+		// Spells are binary owned (HasSpell/AddSpell) — no quantity to merge.
+		auto* form = a_item->GetTESForm();
+		const bool is_spell = form && form->As<RE::SpellItem>();
+
 		bool has_item = false;
-		if (!tableList.empty()) {
-			for (auto& item : tableList) {
-				if (item->GetEditorID() == a_item->GetEditorID()) {
-					item->m_quantity++;
-					has_item = true;
-				}
+		for (auto& item : tableList) {
+			if (item->GetEditorID() == a_item->GetEditorID()) {
+				if (!is_spell) item->m_quantity++;
+				has_item = true;
+				break;
 			}
 		}
 
@@ -799,11 +790,14 @@ namespace Modex
 			if (selectedKitPtr && !selectedKitPtr->empty()) {
 				auto equipmentConfig = EquipmentConfig::GetSingleton();
 				selectedKitPtr->m_items.clear();
+				selectedKitPtr->m_spells.clear();
 
-				if (!this->tableList.empty()) {
-
-					for (auto& item : this->tableList) {
-						selectedKitPtr->m_items.emplace_back(EquipmentConfig::CreateKitItem(*item));
+				for (auto& entry : this->tableList) {
+					auto* form = entry->GetTESForm();
+					if (form && form->As<RE::SpellItem>()) {
+						selectedKitPtr->m_spells.emplace_back(EquipmentConfig::CreateKitSpell(*entry));
+					} else {
+						selectedKitPtr->m_items.emplace_back(EquipmentConfig::CreateKitItem(*entry));
 					}
 				}
 
@@ -1010,15 +1004,23 @@ namespace Modex
 		if (!selectedKitPtr)
 			return;
 
-		const auto& kit = selectedKitPtr->m_items;
-
-		for (const auto& item : kit) {
+		for (const auto& item : selectedKitPtr->m_items) {
 			RE::TESForm* form = RE::TESForm::LookupByEditorID(item->m_editorid);
 
 			if (form) {
-				tableList.emplace_back(std::make_unique<BaseObject>(form, owner, 0, 0, item->m_amount, item->m_equipped));
+				tableList.emplace_back(std::make_unique<BaseObject>(form, Ownership::Item, 0, 0, item->m_amount, item->m_equipped));
 			} else {
-				tableList.emplace_back(std::make_unique<BaseObject>(item->m_name, item->m_editorid, item->m_plugin, owner, 0, item->m_amount, item->m_equipped));
+				tableList.emplace_back(std::make_unique<BaseObject>(item->m_name, item->m_editorid, item->m_plugin, Ownership::Item, 0, item->m_amount, item->m_equipped));
+			}
+		}
+
+		for (const auto& spell : selectedKitPtr->m_spells) {
+			RE::TESForm* form = RE::TESForm::LookupByEditorID(spell->m_editorid);
+
+			if (form) {
+				tableList.emplace_back(std::make_unique<BaseObject>(form, Ownership::Spell));
+			} else {
+				tableList.emplace_back(std::make_unique<BaseObject>(spell->m_name, spell->m_editorid, spell->m_plugin, Ownership::Spell));
 			}
 		}
 
@@ -1033,7 +1035,15 @@ namespace Modex
 		kitObjects.reserve(cache.size());
 
 		for (const auto& [key, kit] : cache) {
-			kitObjects.emplace_back(kit.GetNameTail(), key, kit.m_collection, Ownership::Kit);
+			int gold = 0;
+			for (const auto& item : kit.m_items) {
+				if (auto* form = RE::TESForm::LookupByEditorID(item->m_editorid); form) {
+					gold += form->GetGoldValue() * (std::max)(1, item->m_amount);
+				}
+			}
+			// Dummy ctor positional args: name, editorid, plugin, owner, refid, tableID, quantity.
+			// Stashing gold value in quantity so kKitGoldValue can read it cheaply.
+			kitObjects.emplace_back(kit.GetNameTail(), key, kit.m_collection, Ownership::Kit, 0, 0, gold);
 		}
 
 		Filter(kitObjects);
@@ -1526,7 +1536,12 @@ namespace Modex
 										*pointer = std::move(new_kit);
 
 										for (const auto& item : *items) {
-											pointer->m_items.emplace_back(EquipmentConfig::CreateKitItem(*item));
+											auto* form = item->GetTESForm();
+											if (form && form->As<RE::SpellItem>()) {
+												pointer->m_spells.emplace_back(EquipmentConfig::CreateKitSpell(*item));
+											} else {
+												pointer->m_items.emplace_back(EquipmentConfig::CreateKitItem(*item));
+											}
 											destination->Refresh();
 										}
 									}
@@ -1569,7 +1584,7 @@ namespace Modex
 			}
 		}
 
-		if (a_item->IsDummy() && owner != Ownership::Cell) {
+		if (a_item->IsDummy() && owner != Ownership::Cell && owner != Ownership::Kit) {
 			UINotification::ShowTooltip(Translate("DUMMY_OBJECT_INFO"), ICON_LC_MESSAGE_CIRCLE_QUESTION);
 		}
 	}
@@ -1625,7 +1640,13 @@ namespace Modex
 				Commands::AddSpellToActor(owner, GetTableTargetRef(), a_item->GetBaseFormID());
 			}
 
-			// BUG: Returning to menu after double-click casues first left-click to not register ?
+			if (owner == Ownership::Outfit && tableTargetRef && !Commands::IsGameMenuOpen()) {
+				if (auto outfit = a_item->GetTESOutfit(); outfit) {
+					Commands::AddOutfitItemsToInventory(owner, tableTargetRef, outfit);
+				}
+			}
+
+			// BUG: Returning to menu after double-click causes first left-click to not register?
 
 			if (owner == Ownership::Cell) {
 				Commands::CenterOnCell(Ownership::Cell, a_item->GetEditorID());
@@ -2112,7 +2133,7 @@ namespace Modex
 			draw_list->AddRectFilled(bb.Min, bb.Max, colors.selected);
 		}
 
-		if (a_item->IsDummy() && owner != Ownership::Cell) {
+		if (a_item->IsDummy() && owner != Ownership::Cell && owner != Ownership::Kit) {
 			draw_list->AddRectFilled(bb.Min, bb.Max, colors.error);
 		}
 
@@ -2240,7 +2261,7 @@ namespace Modex
 		}
 
 		// Invalid / Missing plugin indicator
-		if (a_item->IsDummy() && owner != Ownership::Cell) {
+		if (a_item->IsDummy() && owner != Ownership::Cell && owner != Ownership::Kit) {
 			draw_list->AddRectFilled(bb.Min, bb.Max, colors.error);
 		}
 

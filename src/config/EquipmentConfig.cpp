@@ -195,7 +195,7 @@ namespace Modex
 				item->m_name = item_data.value("Name", "");
 				item->m_amount = item_data.value("Amount", 1);
 				item->m_equipped = item_data.value("Equipped", false);
-				
+
 				// Symptom from swapping from EditorID to FormID framework.
 				// Don't really want to store form ids either though.
 				if (auto form = RE::TESForm::LookupByEditorID(editorid); form != nullptr) {
@@ -206,7 +206,23 @@ namespace Modex
 			}
 		}
 
-		Info("Loaded Kit: '{}' with {} items", new_kit.m_key, new_kit.m_items.size());
+		// Optional — older kit files won't have this key.
+		if (kit_data.contains("Spells") && kit_data["Spells"].is_object()) {
+			for (auto& [editorid, spell_data] : kit_data["Spells"].items()) {
+				auto spell = std::make_shared<KitSpell>();
+				spell->m_editorid = editorid;
+				spell->m_plugin = spell_data.value("Plugin", "");
+				spell->m_name = spell_data.value("Name", "");
+
+				if (auto form = RE::TESForm::LookupByEditorID(editorid); form != nullptr) {
+					spell->m_formID = form->GetFormID();
+				}
+
+				new_kit.m_spells.emplace_back(spell);
+			}
+		}
+
+		Info("Loaded Kit: '{}' with {} items, {} spells", new_kit.m_key, new_kit.m_items.size(), new_kit.m_spells.size());
 		return new_kit;
 	}
 
@@ -222,17 +238,22 @@ namespace Modex
 		data[json_key] = nlohmann::json::object();
 		data[json_key]["Collection"] = a_kit.m_collection;
 
-		if (a_kit.m_items.empty()) {
-			data[json_key]["Items"] = nlohmann::json::object();
-		} else {
-			for (auto& item : a_kit.m_items) {
-				data[json_key]["Items"][item->m_editorid] = {
-					{ "Plugin", item->m_plugin },
-					{ "Name", item->m_name },
-					{ "Amount", item->m_amount },
-					{ "Equipped", item->m_equipped }
-				};
-			}
+		data[json_key]["Items"] = nlohmann::json::object();
+		for (auto& item : a_kit.m_items) {
+			data[json_key]["Items"][item->m_editorid] = {
+				{ "Plugin", item->m_plugin },
+				{ "Name", item->m_name },
+				{ "Amount", item->m_amount },
+				{ "Equipped", item->m_equipped }
+			};
+		}
+
+		data[json_key]["Spells"] = nlohmann::json::object();
+		for (auto& spell : a_kit.m_spells) {
+			data[json_key]["Spells"][spell->m_editorid] = {
+				{ "Plugin", spell->m_plugin },
+				{ "Name", spell->m_name }
+			};
 		}
 
 		try {
@@ -532,14 +553,26 @@ namespace Modex
 	std::shared_ptr<KitItem> EquipmentConfig::CreateKitItem(const BaseObject& a_item)
 	{
 		auto new_item = std::make_shared<KitItem>();
-		
+
 		new_item->m_plugin 	= a_item.GetPluginName();
 		new_item->m_name 		= a_item.GetName();
 		new_item->m_editorid 	= a_item.GetEditorID();
 		new_item->m_amount 	= a_item.GetQuantity();
 		new_item->m_equipped 	= a_item.GetEquipped();
 		new_item->m_formID 	    = a_item.GetBaseFormID();
-		
+
 		return new_item;
+	}
+
+	std::shared_ptr<KitSpell> EquipmentConfig::CreateKitSpell(const BaseObject& a_object)
+	{
+		auto new_spell = std::make_shared<KitSpell>();
+
+		new_spell->m_plugin   = a_object.GetPluginName();
+		new_spell->m_name     = a_object.GetName();
+		new_spell->m_editorid = a_object.GetEditorID();
+		new_spell->m_formID   = a_object.GetBaseFormID();
+
+		return new_spell;
 	}
 }

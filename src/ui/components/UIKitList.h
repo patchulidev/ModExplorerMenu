@@ -51,7 +51,8 @@ namespace Modex
 			std::vector<std::string> tags;         // parsed once from collection at BuildRows time
 			int weaponCount = 0;
 			int armorCount  = 0;
-			int totalCount  = 0;
+			int spellCount  = 0;
+			int totalCount  = 0;  // items + spells
 			int totalValue  = 0;
 			std::vector<std::string> missingItems; // editor IDs that failed LookupByEditorID
 		};
