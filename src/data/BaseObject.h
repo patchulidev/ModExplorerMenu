@@ -599,7 +599,7 @@ namespace Modex
 				slots.clear();
 
 				for (int i = 0; i < 32; i++) {
-					if (static_cast<int>(slotMask) & (1 << i)) {
+					if (slotMask.underlying() & (1u << i)) {
 						switch(static_cast<RE::BIPED_MODEL::BipedObjectSlot>(1 << i)) 
 						{
 							case RE::BIPED_MODEL::BipedObjectSlot::kHead:

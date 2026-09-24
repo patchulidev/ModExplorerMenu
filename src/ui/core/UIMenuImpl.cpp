@@ -8,26 +8,6 @@
 // Credit toward cyfewlp of SimpleIME for introducing this alternative to the DX present draw method.
 // https://github.com/cyfewlp/
 
-namespace RE
-{
-	class GFxCharEvent : public RE::GFxEvent
-	{
-	public:
-		GFxCharEvent() = default;
-
-		explicit GFxCharEvent(UINT32 a_wcharCode, UINT8 a_keyboardIndex = 0)
-			: GFxEvent(EventType::kCharEvent), wcharCode(a_wcharCode), keyboardIndex(a_keyboardIndex)
-		{
-		}
-
-		// @members
-		std::uint32_t wcharCode{};     // 04
-		std::uint32_t keyboardIndex{}; // 08
-	};
-
-	static_assert(sizeof(GFxCharEvent) == 0x0C);
-}
-
 struct
 {
 	RE::GFxKey::Code gfxCode;
@@ -101,8 +81,8 @@ namespace Modex
 
 		if (const auto& inputMgr = RE::BSInputDeviceManager::GetSingleton()) {
 			if (const auto& device = inputMgr->GetKeyboard()) {
-				device->Reset();
-				device->Process(0);
+				device->ClearInputState();
+				device->Poll(0);
 			}
 		}
 
@@ -160,7 +140,7 @@ namespace Modex
 	{
 		m_fShow = true;
 
-		RE::ControlMap::GetSingleton()->ToggleControls(kGameplayControls, false);
+		RE::ControlMap::GetSingleton()->ToggleControls(kGameplayControls, false, true);
 		UIManager::GetSingleton()->OnShow();
 		Item3DPreview::GetSingleton()->Begin();
 	}
@@ -170,7 +150,7 @@ namespace Modex
 		m_fShow = false;
 
 		Item3DPreview::GetSingleton()->End();
-		RE::ControlMap::GetSingleton()->ToggleControls(kGameplayControls, true);
+		RE::ControlMap::GetSingleton()->ToggleControls(kGameplayControls, true, true);
 		UIManager::GetSingleton()->OnClose();
 	}
 
@@ -321,7 +301,7 @@ namespace Modex
 	void ModexGUIMenu::OnCharEvent(RE::GFxEvent *event)
 	{
 		const auto charEvent = reinterpret_cast<RE::GFxCharEvent *>(event);
-		ImGui::GetIO().AddInputCharacter(charEvent->wcharCode);
+		ImGui::GetIO().AddInputCharacter(charEvent->wCharCode);
 	}
 
 	auto ModexGUIMenu::GFxKeyToImGuiKey(const RE::GFxKey::Code keyCode) -> ImGuiKey

@@ -586,8 +586,6 @@ namespace Modex::Commands
 				return UINotification::ShowError("Failed to cast to Book Object");
 
 			RE::NiPoint3 defaultPos{};
-			RE::BSString buf;
-			book->GetDescription(buf, nullptr);
 
 			RE::TESBoundObject* equipObject = nullptr;
 			RE::ExtraDataList* extraData = nullptr;
@@ -596,9 +594,8 @@ namespace Modex::Commands
 			if (found == 0)
 				return UINotification::ShowError("Unable to locate distributed Book in Inventory");
 
-			// bookRef is the world-placed instance; nullptr for an inventory book read.
-			RE::TESObjectREFR* bookRef = equipObject->As<RE::TESObjectREFR>();
-			RE::BookMenu::OpenBookMenu(buf, extraData, bookRef, book, defaultPos, defaultPos, 1.0f, true);
+			// Inventory book read: no world-placed reference, description is resolved from the base form.
+			RE::BookMenu::OpenMenuFromBaseForm(book, extraData, defaultPos, defaultPos, 1.0f, true);
 
 			return true;
 		});
