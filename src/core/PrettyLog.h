@@ -171,10 +171,10 @@ namespace Modex::PrettyLog
 
 #ifndef _NDEBUG 
 #	define ASSERT_MSG(condition, msg, ...)          \
-    PrettyLog::Assert(condition, msg, __VA_ARGS__)
+    PrettyLog::Assert(condition, msg __VA_OPT__(,) __VA_ARGS__)
 #else
 #define ASSERT_MSG(condition, msg, ...) \
-	if (auto _assert_msg = PrettyLog::Assert((condition), (msg), __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__); !_assert_msg.empty()) { \
+	if (auto _assert_msg = PrettyLog::Assert((condition), (msg), __FILE__, __LINE__, __FUNCTION__ __VA_OPT__(,) __VA_ARGS__); !_assert_msg.empty()) { \
 		stl::report_and_fail(_assert_msg.c_str()); \
 	}
 #endif

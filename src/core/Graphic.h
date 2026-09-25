@@ -1,5 +1,7 @@
 #pragma once
 
+#include <d3d11.h>
+
 namespace Modex
 {
 	// D3D11 Implementation Sourced from dTry's Wheeler and Llama's Tiny Hud. Adapted to NG.

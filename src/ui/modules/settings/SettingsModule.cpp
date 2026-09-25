@@ -186,18 +186,18 @@ namespace Modex
 				bool _throwaway = false;
 				if (UICustom::Settings_ToggleButton("Restore Control Map", _throwaway)) {
 					using UEFlag = RE::UserEvents::USER_EVENT_FLAG;
-					RE::ControlMap::GetSingleton()->ToggleControls(UEFlag::kMovement, true);
-					RE::ControlMap::GetSingleton()->ToggleControls(UEFlag::kLooking, true);
-					RE::ControlMap::GetSingleton()->ToggleControls(UEFlag::kActivate, true);
-					RE::ControlMap::GetSingleton()->ToggleControls(UEFlag::kMenu, true);
-					RE::ControlMap::GetSingleton()->ToggleControls(UEFlag::kConsole, true);
-					RE::ControlMap::GetSingleton()->ToggleControls(UEFlag::kPOVSwitch, true);
-					RE::ControlMap::GetSingleton()->ToggleControls(UEFlag::kFighting, true);
-					RE::ControlMap::GetSingleton()->ToggleControls(UEFlag::kSneaking, true);
-					RE::ControlMap::GetSingleton()->ToggleControls(UEFlag::kMainFour, true);
-					RE::ControlMap::GetSingleton()->ToggleControls(UEFlag::kWheelZoom, true);
-					RE::ControlMap::GetSingleton()->ToggleControls(UEFlag::kJumping, true);
-					RE::ControlMap::GetSingleton()->ToggleControls(UEFlag::kVATS, true);
+					RE::ControlMap::GetSingleton()->ToggleControls(UEFlag::kMovement, true, true);
+					RE::ControlMap::GetSingleton()->ToggleControls(UEFlag::kLooking, true, true);
+					RE::ControlMap::GetSingleton()->ToggleControls(UEFlag::kActivate, true, true);
+					RE::ControlMap::GetSingleton()->ToggleControls(UEFlag::kMenu, true, true);
+					RE::ControlMap::GetSingleton()->ToggleControls(UEFlag::kConsole, true, true);
+					RE::ControlMap::GetSingleton()->ToggleControls(UEFlag::kPOVSwitch, true, true);
+					RE::ControlMap::GetSingleton()->ToggleControls(UEFlag::kFighting, true, true);
+					RE::ControlMap::GetSingleton()->ToggleControls(UEFlag::kSneaking, true, true);
+					RE::ControlMap::GetSingleton()->ToggleControls(UEFlag::kMainFour, true, true);
+					RE::ControlMap::GetSingleton()->ToggleControls(UEFlag::kWheelZoom, true, true);
+					RE::ControlMap::GetSingleton()->ToggleControls(UEFlag::kJumping, true, true);
+					RE::ControlMap::GetSingleton()->ToggleControls(UEFlag::kVATS, true, true);
 				}
 			}
 
