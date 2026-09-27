@@ -19,8 +19,17 @@ namespace Modex
 		m_userDataConfig.SetFilePath(USERDATA_JSON_PATH);
 		m_userDataConfig.Load(true);
 
-		m_recent.items = m_userDataConfig.Get<std::vector<SerializedObject>>("Recently Used List", {});
 		m_favorites.items = m_userDataConfig.Get<std::vector<SerializedObject>>("Favorite List", {});
+
+		m_recent.items.clear();
+		auto* dataHandler = RE::TESDataHandler::GetSingleton();
+		for (const auto& item : m_userDataConfig.Get<std::vector<SerializedObject>>("Recently Used List", {})) {
+			if (dataHandler && !item.plugin.empty() && dataHandler->LookupModByName(item.plugin) == nullptr) {
+				continue;
+			}
+
+			m_recent.items.push_back(item);
+		}
 	}
 
 	bool UserData::IsFavorited(const std::string& a_editorid)
