@@ -1,5 +1,7 @@
 #include "UIManager.h"
 
+#include "api/ModexInterface.h"
+#include "core/Graphic.h"
 #include "ui/Menu.h"
 #include "config/UserConfig.h"
 #include "config/UserData.h"
@@ -91,6 +93,10 @@ namespace Modex
 
 	void UIManager::OpenFormSelector(Ownership a_ownership, FormSelectorCallback a_callback, const FormSelectorOptions& a_options)
 	{
+		if (!ModexInterface::GetSingleton()->IsDataReady()) {
+			return;
+		}
+
 		if (IsMenuOpen()) {
 			return;
 		}
@@ -106,6 +112,10 @@ namespace Modex
 
 	void UIManager::OpenKitSelector(KitSelectorCallback a_callback, const FormSelectorOptions& a_options)
 	{
+		if (!ModexInterface::GetSingleton()->IsDataReady()) {
+			return;
+		}
+
 		if (IsMenuOpen()) {
 			return;
 		}
@@ -120,6 +130,10 @@ namespace Modex
 
 	void UIManager::Open()
 	{
+		if (!ModexInterface::GetSingleton()->IsDataReady()) {
+			return;
+		}
+
 		PrettyLog::Trace("UIMananger Open() Sent");
 		if (auto *messageQueue = RE::UIMessageQueue::GetSingleton(); messageQueue != nullptr)
 		{
@@ -235,6 +249,10 @@ namespace Modex
 
 	void UIManager::Render()
 	{
+		if (!m_initialized.load()) {
+			return;
+		}
+
 		ImGui_ImplDX11_NewFrame();
 		ImGui_ImplWin32_NewFrame();
 
@@ -309,6 +327,12 @@ namespace Modex
 		ImGui::StyleColorsDark(); // ?
 
 		ThemeConfig::GetSingleton()->ApplyThemeToImGui();
+
+		FontManager::GetSingleton()->Load();
+		PrettyLog::Info("Language & FontManager Initialized.");
+
+		GraphicManager::Init(); // move to open
+		PrettyLog::Info("GraphicManager Initialized.");
 
 		return true;
 	}
