@@ -294,12 +294,24 @@ namespace Modex::Commands
 		return m_inventory;
 	}
 
+	static inline void WarnNonPlayerTarget(RE::TESObjectREFR* a_targetRef)
+	{
+		if (!a_targetRef || a_targetRef->IsPlayerRef() || UserData::Get<bool>("NonPlayerTargetWarned", false)) {
+			return;
+		}
+
+		UserData::Set<bool>("NonPlayerTargetWarned", true);
+		UINotification::ShowAction(Translate("NON_PLAYER_TARGET"), a_targetRef->GetDisplayFullName(), ICON_LC_TRIANGLE_ALERT, UIMessageType::Warning, 6.0f);
+	}
+
 	static inline void AddItemToInventory(Ownership a_owner, RE::TESObjectREFR* a_targetRef, RE::FormID a_item, uint32_t a_amount = 1)
 	{
 		if (!a_targetRef) {
 			UINotification::ShowError("Failed to obtain Target Reference");
 			return;
 		}
+
+		WarnNonPlayerTarget(a_targetRef);
 
 		SKSE::GetTaskInterface()->AddTask([a_owner, a_targetRef, a_item, a_amount]() {
 			auto form = RE::TESForm::LookupByID(a_item);
@@ -505,6 +517,8 @@ namespace Modex::Commands
 			UINotification::ShowError("Failed to obtain Target Reference");
 			return;
 		}
+
+		WarnNonPlayerTarget(a_targetRef);
 
 		SKSE::GetTaskInterface()->AddTask([a_owner, a_targetRef, a_formID, a_amount]() {
 			RE::TESForm* form = RE::TESForm::LookupByID(a_formID);

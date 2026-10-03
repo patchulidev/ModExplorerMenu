@@ -168,6 +168,11 @@ namespace Modex
 		}
 
 		BuildPluginList();
+
+		if (std::find(pluginList.begin(), pluginList.end(), selectedPlugin) == pluginList.end()) {
+			selectedPlugin = Translate("SHOWALL");
+		}
+
 		Refresh();
 	}
 
