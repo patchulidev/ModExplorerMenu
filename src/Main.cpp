@@ -19,33 +19,30 @@
 
 namespace
 {
+	void Load()
+	{
+		Modex::UserConfig::GetSingleton()->LoadSettings();
+		Modex::PrettyLog::Debug("UserConfig Initialized.");
+
+		Modex::Locale::GetSingleton()->Load(false);
+		Modex::PrettyLog::Debug("Localization Initialized.");
+
+		Modex::UserData::Load();
+		Modex::PrettyLog::Debug("UserData Initialized.");
+
+		Modex::ThemeConfig::GetSingleton()->Load(true);
+		Modex::PrettyLog::Debug("ThemeConfig Initialized.");
+
+		Modex::BlacklistConfig::GetSingleton()->Load(true);
+		Modex::PrettyLog::Debug("BlacklistConfig Initialized.");
+	}
+
 	void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 	{
 		switch (a_msg->type) {
 		case SKSE::MessagingInterface::kDataLoaded:  // Skypatcher loads here
-			Modex::UserConfig::GetSingleton()->LoadSettings();
-			Modex::PrettyLog::Debug("UserConfig Initialized.");
-
-			Modex::Locale::GetSingleton()->Load(false);
-			Modex::PrettyLog::Debug("Localization Initialized.");
-
-			Modex::UserData::Load();
-			Modex::PrettyLog::Debug("UserData Initialized.");
-
-			Modex::ThemeConfig::GetSingleton()->Load(true);
-			Modex::PrettyLog::Debug("ThemeConfig Initialized.");
-
-			Modex::BlacklistConfig::GetSingleton()->Load(true);
-			Modex::PrettyLog::Debug("BlacklistConfig Initialized.");
-
 			Modex::EquipmentConfig::GetSingleton()->Load();
 			Modex::PrettyLog::Debug("EquipmentConfig Initialized.");
-
-			Modex::FontManager::GetSingleton()->Load();
-			Modex::PrettyLog::Info("Language & FontManager Initialized.");
-			
-			Modex::GraphicManager::Init(); // move to open
-			Modex::PrettyLog::Info("GraphicManager Initialized.");
 
 			Modex::Data::GetSingleton()->Run();
 			Modex::PrettyLog::Info("Data Manager Initialized.");
@@ -96,6 +93,7 @@ SKSEPluginLoad(const SKSE::LoadInterface* a_skse)
 
 	SKSE::GetMessagingInterface()->RegisterListener(MessageHandler);
 	SKSE::GetPapyrusInterface()->Register(Modex::PapyrusAPI::Register);
+	Load();
 
 	return true;
 }

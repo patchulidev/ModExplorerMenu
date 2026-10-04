@@ -2507,7 +2507,8 @@ namespace Modex
 			}
 		} else {
 			const std::string name = tableTargetRef->GetName();
-			const std::string editorid = po3_GetEditorID(tableTargetRef->GetBaseObject()->formID);
+			const auto tableTargetBase = tableTargetRef->GetBaseObject();
+			const std::string editorid = tableTargetBase ? po3_GetEditorID(tableTargetBase->formID) : "";
 
 			if (name.empty()) {
 				status = std::format("({:08X}) - '{}'", tableTargetRef->GetFormID(), editorid);
