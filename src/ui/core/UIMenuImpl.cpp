@@ -65,8 +65,6 @@ namespace Modex
 		static_cast<std::underlying_type_t<UEFlag>>(UEFlag::kMovement)  |
 		static_cast<std::underlying_type_t<UEFlag>>(UEFlag::kLooking)   |
 		static_cast<std::underlying_type_t<UEFlag>>(UEFlag::kActivate)  |
-		static_cast<std::underlying_type_t<UEFlag>>(UEFlag::kFighting)  |
-		static_cast<std::underlying_type_t<UEFlag>>(UEFlag::kSneaking)  |
 		static_cast<std::underlying_type_t<UEFlag>>(UEFlag::kJumping)   |
 		static_cast<std::underlying_type_t<UEFlag>>(UEFlag::kPOVSwitch) |
 		static_cast<std::underlying_type_t<UEFlag>>(UEFlag::kMainFour)  |
