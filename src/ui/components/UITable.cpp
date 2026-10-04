@@ -31,8 +31,8 @@ namespace Modex
 			return false;
 		}
 
-		const auto baseObject = a_reference != nullptr ? a_reference : nullptr; // huh
-		return baseObject && (baseObject->IsActor() || baseObject->GetFormType() == RE::FormType::Container);
+		const auto baseObject = a_reference != nullptr ? a_reference->GetBaseObject() : nullptr;
+		return baseObject && (a_reference->IsActor() || baseObject->GetFormType() == RE::FormType::Container);
 	}
 
 	bool UITable::IsActionAllowed()
