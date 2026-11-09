@@ -44,6 +44,23 @@ namespace Modex
 		return reinterpret_cast<void*>(m_dstSRV);
 	}
 
+	void* Item3DPreview::GetCaptureTargetRTV()
+	{
+		auto* renderer = RE::BSGraphics::Renderer::GetSingleton();
+		if (!renderer) return nullptr;
+		const auto& data = renderer->GetRuntimeData();
+
+		// kFRAMEBUFFER is where the engine composites the UI, and where
+		// Inventory3DManager::Render draws the model. Community Shaders' HDR
+		// display (and its frame-gen UI path) repoints this RTV at a separate
+		// UI texture before menus draw, so the swap-chain back buffer never
+		// receives the model on that route.
+		if (auto* fb = data.renderTargets[RE::RENDER_TARGET::kFRAMEBUFFER].RTV) {
+			return reinterpret_cast<void*>(fb);
+		}
+		return reinterpret_cast<void*>(data.renderWindows[0].renderView);
+	}
+
 	bool Item3DPreview::Initialize()
 	{
 		if (m_initialized) return true;
@@ -54,10 +71,10 @@ namespace Modex
 		auto* device = reinterpret_cast<ID3D11Device*>(data.forwarder);
 		if (!device) return false;
 
-		// Source is the on-screen swap chain. Get the underlying texture.
+		// Source is the target the UI and Inventory3D pass render into.
+		// Get the underlying texture.
 
-		auto* rtv = reinterpret_cast<ID3D11RenderTargetView*>(
-			data.renderWindows[0].renderView);
+		auto* rtv = reinterpret_cast<ID3D11RenderTargetView*>(GetCaptureTargetRTV());
 		if (!rtv) return false;
 
 		ID3D11Resource* srcRes = nullptr;
@@ -72,6 +89,9 @@ namespace Modex
 		D3D11_TEXTURE2D_DESC srcDesc = {};
 		srcTex->GetDesc(&srcDesc);
 		srcTex->Release();
+
+		// CopySubresourceRegion can't resolve multisampled sources.
+		if (srcDesc.SampleDesc.Count != 1) return false;
 
 		D3D11_TEXTURE2D_DESC desc = {};
 		desc.Width            = kTexSize;
@@ -99,6 +119,17 @@ namespace Modex
 		if (FAILED(device->CreateTexture2D(&desc, nullptr, &scratch))) { Shutdown(); return false; }
 		m_scratchTex = reinterpret_cast<REX::W32::ID3D11Texture2D*>(scratch);
 
+		m_texFormat   = static_cast<unsigned int>(srcDesc.Format);
+		if (!m_loggedTarget) {
+			m_loggedTarget = true;
+			const bool redirected = rtv != reinterpret_cast<ID3D11RenderTargetView*>(data.renderWindows[0].renderView);
+			const unsigned int fmt = m_texFormat;
+			const unsigned int w = srcDesc.Width;
+			const unsigned int h = srcDesc.Height;
+			const char* route = redirected ? "kFRAMEBUFFER RTV (differs from swap-chain view)" : "kFRAMEBUFFER RTV (same as swap-chain view)";
+			Info("3D preview capturing from {} format={} size={}x{}", route, fmt, w, h);
+		}
+
 		m_initialized = true;
 		return true;
 	}
@@ -115,6 +146,7 @@ namespace Modex
 		release(m_dstSRV);
 		release(m_dstTex);
 		release(m_scratchTex);
+		m_texFormat   = 0;
 		m_initialized = false;
 	}
 
@@ -178,6 +210,29 @@ namespace Modex
 
 		// Don't paint backbuffer while fading out menu;
 		if (!UIManager::GetSingleton()->IsMenuFullyOpen()) return;
+
+		// The capture target can change format at runtime (e.g. HDR toggled in
+		// Community Shaders swaps the UI texture). Recreate to match, otherwise
+		// CopySubresourceRegion between mismatched formats silently does nothing.
+		if (m_initialized) {
+			if (auto* curRTV = reinterpret_cast<ID3D11RenderTargetView*>(GetCaptureTargetRTV())) {
+				ID3D11Resource* curRes = nullptr;
+				curRTV->GetResource(&curRes);
+				if (curRes) {
+					ID3D11Texture2D* curTex = nullptr;
+					curRes->QueryInterface(__uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&curTex));
+					curRes->Release();
+					if (curTex) {
+						D3D11_TEXTURE2D_DESC curDesc = {};
+						curTex->GetDesc(&curDesc);
+						curTex->Release();
+						if (static_cast<unsigned int>(curDesc.Format) != m_texFormat) {
+							Shutdown();
+						}
+					}
+				}
+			}
+		}
 		if (!m_initialized && !Initialize()) return;
 
 		auto* inv = RE::Inventory3DManager::GetSingleton();
@@ -224,8 +279,7 @@ namespace Modex
 		auto* context    = reinterpret_cast<ID3D11DeviceContext*>(data.context);
 		auto* dstTex     = reinterpret_cast<ID3D11Texture2D*>(m_dstTex);
 		auto* scratchTex = reinterpret_cast<ID3D11Texture2D*>(m_scratchTex);
-		auto* rtv        = reinterpret_cast<ID3D11RenderTargetView*>(
-			data.renderWindows[0].renderView);
+		auto* rtv        = reinterpret_cast<ID3D11RenderTargetView*>(GetCaptureTargetRTV());
 		if (!context || !dstTex || !scratchTex || !rtv) return;
 
 		ID3D11Resource* srcRes = nullptr;

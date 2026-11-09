@@ -41,6 +41,15 @@ namespace Modex
 		bool Initialize();
 		void Shutdown();
 
+		// Render target that the engine's Inventory3D pass and the UI draw into.
+		// This is kFRAMEBUFFER's RTV, which renderers such as Community Shaders
+		// (HDR / frame-gen UI buffer) redirect away from the swap-chain back buffer.
+		// Falls back to the swap-chain view when kFRAMEBUFFER has no RTV.
+		static void* GetCaptureTargetRTV();
+
+		unsigned int m_texFormat = 0;  // DXGI_FORMAT the capture textures were created with
+		bool         m_loggedTarget = false;
+
 		bool                m_initialized = false;
 		bool                m_running     = false;
 		bool                m_requested   = false;
